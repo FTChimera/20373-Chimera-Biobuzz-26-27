@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.library.hardware.webcam;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.CommandBuilder;
+import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -16,6 +19,10 @@ public class Limelight {
             LIMELIGHT_MOUNT_ANGLE_DEGREES = 0,
             LIMELIGHT_LENS_HEIGHT_INCHES = 0,
             TAG_HEIGHT_INCHES = 0;
+
+    public Command updateCommand() {
+        return Commands.infinite(Limelight.this::LLUpdate);
+    }
 
     public enum Pipeline {
         APRIL_TAG(0),

@@ -8,7 +8,6 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
@@ -20,7 +19,6 @@ public class TeleOp extends LinearOpMode {
     Intake intake;
     MecanumDrive drive;
     Limelight limelight;
-    GamepadEx gpad1, gpad2;
 
     // Constructor for TeleOp, takes in the alliance color.
     public TeleOp(AllianceColor col) {
@@ -37,8 +35,6 @@ public class TeleOp extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
-        gpad1 = new GamepadEx(gamepad1);
-        gpad2 = new GamepadEx(gamepad2);
         initializeGamepadSettings();
         intake = new Intake(hardwareMap);
         Pose startPose = Blackboard.pose;
@@ -55,24 +51,22 @@ public class TeleOp extends LinearOpMode {
         limelight.start(Limelight.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             // Update Mechanisms
-            gpad1.update();
-            gpad2.update();
             drive.periodic();
             limelight.LLUpdate();
 
             // Imu reset yaw
-            if (gpad1.isPressed(Button.BACK)) {
+            if (gamepad1.back) {
                 drive.resetHeading(0);
             }
 
             // Drive
-            double forward = gpad1.leftStickY(); // Don't need to negate because it is already negated
-            double strafe = gpad1.leftStickX();
-            double turn = gpad1.rightStickX();
+            double forward = gamepad1.left_stick_y; // Don't need to negate because it will be in drive vector
+            double strafe = gamepad1.left_stick_x;
+            double turn = gamepad1.right_stick_x;
             drive.setTeleOpDrive(new DriveVector(forward, strafe, turn));
 
             // Intake
-            intake.setPower(gpad1.rightTrigger.getValue() - gpad1.leftTrigger.getValue());
+            intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
 
             // Telemetry
             telemetry.addData("Pose", drive.getPose());
@@ -83,7 +77,6 @@ public class TeleOp extends LinearOpMode {
     }
 
     public void initializeGamepadSettings() {
-        gpad1.setStickCurve(x -> Math.signum(x)*x*x);
-        gpad2.setStickCurve(x -> Math.signum(x)*x*x);
+        drive.setStickCurve(x -> Math.signum(x)*x*x);
     }
 }

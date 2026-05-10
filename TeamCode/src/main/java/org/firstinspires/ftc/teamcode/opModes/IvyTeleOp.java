@@ -11,7 +11,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
@@ -22,7 +21,6 @@ public class IvyTeleOp extends LinearOpMode {
     Intake intake;
     MecanumDrive drive;
     Limelight limelight;
-    GamepadEx gpad1, gpad2;
 
     /**
      * Override this method and place your code here.
@@ -35,8 +33,6 @@ public class IvyTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         Scheduler.reset();
-        gpad1 = new GamepadEx(gamepad1);
-        gpad2 = new GamepadEx(gamepad2);
         setGamepadCurve();
         intake = new Intake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
@@ -45,10 +41,11 @@ public class IvyTeleOp extends LinearOpMode {
         limelight = new Limelight(hardwareMap, Constants.LIMELIGHT_CAMERA_NAME);
 
         Scheduler.schedule(
+                limelight.updateCommand(),
                 drive.periodicCommand(),
-                drive.teleOp(() -> new DriveVector(gpad1.leftStickY(), gpad1.leftStickX(), gpad1.rightStickX())),
-                Groups.loop(intake.setPowerCommand(() -> gpad1.rightTrigger.getValue() - gpad1.leftTrigger.getValue())),
-                Commands.infinite(() -> {if (gpad1.isPressed(Button.BACK)) {drive.resetHeading(0);}}).requiring(gpad1, drive)
+                drive.teleOp(() -> new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x)),
+                Groups.loop(intake.setPowerCommand(() -> (double) (gamepad1.right_trigger - gamepad1.left_trigger))),
+                Commands.infinite(() -> {if (gamepad1.back) {drive.resetHeading(0);}}).requiring(gamepad1, drive)
         );
 
         telemetry.addData("Status", "Initialized");
@@ -57,8 +54,6 @@ public class IvyTeleOp extends LinearOpMode {
         limelight.start(Limelight.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             // Update Mechanisms
-            gpad1.update();
-            gpad2.update();
             limelight.LLUpdate();
             Scheduler.execute();
 
@@ -71,7 +66,6 @@ public class IvyTeleOp extends LinearOpMode {
     }
 
     public void setGamepadCurve() {
-        gpad1.setStickCurve(x -> Math.signum(x)*x*x);
-        gpad2.setStickCurve(x -> Math.signum(x)*x*x);
+        drive.setStickCurve(x -> Math.signum(x)*x*x);
     }
 }

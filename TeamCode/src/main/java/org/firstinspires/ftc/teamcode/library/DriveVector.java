@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.library;
 
+import java.util.function.DoubleUnaryOperator;
+
 /** Utility Drive vector class with forward, strafe, rotate */
 public class DriveVector {
     public static DriveVector IDLE = new DriveVector(0, 0, 0, 0);
@@ -47,7 +49,11 @@ public class DriveVector {
     }
 
     public void setRobotHeading(double heading) {this.robotHeading = heading;}
-
+    public void applyStickCurve(DoubleUnaryOperator curve) {
+        this.forward = -curve.applyAsDouble(this.forward); // Invert forward for intuitive stick control
+        this.strafe = curve.applyAsDouble(this.strafe);
+        this.rotate = curve.applyAsDouble(this.rotate);
+    }
     public double[] rotateDrivePowers() {
         double[] motorPowers = new double[4];
         motorPowers[0] = forward + strafe + rotate; // Front Left

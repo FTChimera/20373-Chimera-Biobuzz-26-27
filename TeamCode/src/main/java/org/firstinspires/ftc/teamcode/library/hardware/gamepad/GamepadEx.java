@@ -43,6 +43,7 @@ import java.util.function.DoubleUnaryOperator;
  * gp1.runRumbleEffect(myEffect);
  * </pre>
  */
+@Deprecated
 @SuppressWarnings("SpellCheckingInspection")
 public class GamepadEx {
 

@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
 
 /**
@@ -34,7 +35,7 @@ public class MecanumDrive {
 
     // PedroPathing Follower that handles all localization
     public Follower follower;
-
+    DoubleUnaryOperator curve; // Stick Curve
     public Motor[] motors;
 
     // Last known pose (updated in periodic)
@@ -64,7 +65,8 @@ public class MecanumDrive {
         startTeleopDrive();
         // Set starting pose (use (0, 0, 0) if not provided)
         follower.setStartingPose(startingPose == null ? new Pose(0, 0, 0) : startingPose);
-
+        // Set initial curve
+        resetStickCurve();
         // Initial update to sync pose
         follower.update();
     }
@@ -90,6 +92,7 @@ public class MecanumDrive {
 
     public void setTeleOpDrive(DriveVector driveVector, boolean fieldCentric) {
         DriveVector vector = driveVector.copy();
+        vector.applyStickCurve(curve); // Apply stick curve if set
         if (fieldCentric) {
             vector.setRobotHeading(lastPose.getHeading());
             vector = vector.rotateFieldCentric();
@@ -191,5 +194,13 @@ public class MecanumDrive {
     /** Command to update the follower every iteration */
     public Command periodicCommand() {
         return Commands.infinite(this::periodic);
+    }
+
+    public void setStickCurve(DoubleUnaryOperator curve) {
+        this.curve = curve;
+    }
+
+    public void resetStickCurve() {
+        this.curve = DoubleUnaryOperator.identity(); // Identity function (no curve)
     }
 }
