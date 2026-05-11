@@ -9,7 +9,6 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
-import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
@@ -35,8 +34,8 @@ public class MecanumDrive {
 
     // PedroPathing Follower that handles all localization
     public Follower follower;
-    DoubleUnaryOperator curve; // Stick Curve
-    public Motor[] motors;
+    // Drivetrain for teleop control (don't use follower directly)
+    public Drivetrain drivetrain;
 
     // Last known pose (updated in periodic)
     public static Pose lastPose = new Pose(0, 0, 0);
@@ -47,7 +46,14 @@ public class MecanumDrive {
      * @param map HardwareMap for initializing motors and sensors
      * @param startingPose Initial robot pose (x, y, heading). If null, uses (0, 0, 0)
      */
-    public MecanumDrive(HardwareMap map, Pose startingPose, boolean customLocalizer) {
+
+    public static MecanumDrive customLocalizer(HardwareMap map, Pose startingPose) {
+        return new MecanumDrive(map, startingPose, true);
+    }
+    public static MecanumDrive pinpointLocalizer(HardwareMap map, Pose startingPose) {
+        return new MecanumDrive(map, startingPose, false);
+    }
+    MecanumDrive(HardwareMap map, Pose startingPose, boolean customLocalizer) {
         // Create follower using Constants configuration
         if (customLocalizer) {
             this.follower = Constants.customLocalizerFollower(map);
@@ -55,14 +61,8 @@ public class MecanumDrive {
             this.follower = Constants.pinpointFollower(map);
         }
 
-        // Initialize motors
-        motors = new Motor[] {
-                new Motor(map, Constants.FRONT_LEFT_MOTOR_NAME).setDirection(Constants.FRONT_LEFT_MOTOR_DIRECTION),
-                new Motor(map, Constants.FRONT_RIGHT_MOTOR_NAME).setDirection(Constants.FRONT_RIGHT_MOTOR_DIRECTION),
-                new Motor(map, Constants.BACK_LEFT_MOTOR_NAME).setDirection(Constants.BACK_LEFT_MOTOR_DIRECTION),
-                new Motor(map, Constants.BACK_RIGHT_MOTOR_NAME).setDirection(Constants.BACK_RIGHT_MOTOR_DIRECTION)
-        };
-        startTeleopDrive();
+        // Initialize drivetrain
+        drivetrain = new Drivetrain(map);
         // Set starting pose (use (0, 0, 0) if not provided)
         follower.setStartingPose(startingPose == null ? new Pose(0, 0, 0) : startingPose);
         // Set initial curve
@@ -91,18 +91,7 @@ public class MecanumDrive {
      */
 
     public void setTeleOpDrive(DriveVector driveVector, boolean fieldCentric) {
-        DriveVector vector = driveVector.copy();
-        vector.applyStickCurve(curve); // Apply stick curve if set
-        if (fieldCentric) {
-            vector.setRobotHeading(lastPose.getHeading());
-            vector = vector.rotateFieldCentric();
-        }
-        double[] motorPowers = vector.rotateDrivePowers();
-
-        // Set motor powers
-        for (int i = 0; i < motors.length; i++) {
-            motors[i].setPower(motorPowers[i]);
-        }
+        drivetrain.setTeleOpDrive(driveVector, fieldCentric, lastPose.getHeading());
     }
     /**
      * Set teleop drive
@@ -119,7 +108,7 @@ public class MecanumDrive {
      * Should be called once at the start of teleop
      */
     public void startTeleopDrive() {
-        setTeleOpDrive(DriveVector.IDLE);
+        drivetrain.startTeleopDrive();
     }
 
     /**
@@ -197,10 +186,10 @@ public class MecanumDrive {
     }
 
     public void setStickCurve(DoubleUnaryOperator curve) {
-        this.curve = curve;
+        drivetrain.setStickCurve(curve);
     }
 
     public void resetStickCurve() {
-        this.curve = DoubleUnaryOperator.identity(); // Identity function (no curve)
+        drivetrain.setStickCurve(DoubleUnaryOperator.identity());
     }
 }

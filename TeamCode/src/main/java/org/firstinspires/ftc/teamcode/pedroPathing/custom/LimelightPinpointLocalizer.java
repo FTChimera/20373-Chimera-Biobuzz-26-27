@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.custom;
 import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.ftc.localization.localizers.PinpointLocalizer;
+import com.pedropathing.geometry.PedroCoordinates;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.localization.Localizer;
 import com.pedropathing.math.Vector;
@@ -94,7 +95,7 @@ public class LimelightPinpointLocalizer implements Localizer {
             double heading = botpose.getOrientation().getYaw(AngleUnit.RADIANS);
             if (Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(heading)) return;
             Pose limelightPose = new Pose(x, y, heading);
-            pinpoint.setPose(limelightPose);
+            pinpoint.setPose(FTCCoordinates.INSTANCE.convertToPedro(limelightPose));
         } catch (Exception ignored) {
             // You can add stuff in here if you want, but it is ignored for now
         }

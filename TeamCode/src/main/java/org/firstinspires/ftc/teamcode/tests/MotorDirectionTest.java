@@ -30,7 +30,7 @@ public class MotorDirectionTest extends LinearOpMode {
     public void runOpMode() {
         waitForStart();
         do {
-            drive = new MecanumDrive(hardwareMap, new Pose(), false);
+            drive = MecanumDrive.pinpointLocalizer(hardwareMap, new Pose(0, 0, 0));
             intake = new Intake(hardwareMap);
             drive.setTeleOpDrive(new DriveVector(0.3, 0, 0));
             intake.setPower(0.3);

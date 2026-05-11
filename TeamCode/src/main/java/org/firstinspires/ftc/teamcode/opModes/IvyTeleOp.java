@@ -36,7 +36,7 @@ public class IvyTeleOp extends LinearOpMode {
         setGamepadCurve();
         intake = new Intake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
-        drive = new MecanumDrive(hardwareMap, startPose, true);
+        drive = MecanumDrive.customLocalizer(hardwareMap, startPose);
         drive.startTeleopDrive(); // Stop all motors
         limelight = new Limelight(hardwareMap, Constants.LIMELIGHT_CAMERA_NAME);
 
