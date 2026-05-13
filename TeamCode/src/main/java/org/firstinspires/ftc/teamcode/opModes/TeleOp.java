@@ -41,7 +41,7 @@ public class TeleOp extends LinearOpMode {
         if (startPose == null) {
             startPose = allianceColor == AllianceColor.RED ? Constants.RED_DEFAULT_START_POSE : Constants.BLUE_DEFAULT_START_POSE;
         }
-        drive = MecanumDrive.customLocalizer(hardwareMap, startPose);
+        drive = MecanumDrive.pinpointLocalizer(hardwareMap, startPose);
         drive.startTeleopDrive(); // Stop all motors
         limelight = new Limelight(hardwareMap, Constants.LIMELIGHT_CAMERA_NAME);
 

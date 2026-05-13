@@ -21,7 +21,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 
-@Autonomous(name = "Ivy Auton Test", group = "test")
 public class IvyAuton extends OpMode {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;

@@ -27,6 +27,7 @@ public class PreseasonWebcamAuto extends OpMode {
     State state = State.TO_RELEASE_PRELOADS;
     Timer opModeTimer;
     int iteration = 0;
+    long deltaTime = 0;
     static class Poses {
         static final Pose STARTING_POSE = new Pose(36, 12, Math.toRadians(180));
         static final Pose RELEASE_POSE = new Pose(36, 36, Math.toRadians(180));
@@ -115,6 +116,7 @@ public class PreseasonWebcamAuto extends OpMode {
     public void loop() {
         follower.update();
         limelight.LLUpdate();
+        deltaTime = opModeTimer.dt();
         // This is where we would normally fuse limelight pose estimates. Todo
         switch (state) {
             case TO_RELEASE_PRELOADS:
@@ -157,7 +159,7 @@ public class PreseasonWebcamAuto extends OpMode {
         telemetry.addData("Pose", follower.getPose());
         telemetry.addData("Path State", state);
         telemetry.addData("OpModeTimer", opModeTimer.get(TimeUnit.SECONDS));
-        telemetry.addData("Delta Time", opModeTimer.dt());
+        telemetry.addData("Delta Time", deltaTime);
         telemetry.update();
     }
 

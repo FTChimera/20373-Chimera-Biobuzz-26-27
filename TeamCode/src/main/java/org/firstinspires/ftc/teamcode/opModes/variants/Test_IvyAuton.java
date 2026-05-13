@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opModes.variants;
 
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -21,7 +22,8 @@ public class Test_IvyAuton extends IvyAuton {
         @Override
         public PathChain getPath1() {
             Path path1 = new Path(new BezierLine(STARTING_POSE, endPose));
-            return new PathChain(new Path());
+            path1.setHeadingInterpolation(HeadingInterpolator.linear(STARTING_POSE.getHeading(), endPose.getHeading()));
+            return new PathChain(path1);
         }
 
         @Override
