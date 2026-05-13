@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
+import androidx.annotation.NonNull;
+
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -7,14 +9,13 @@ import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
-import org.jetbrains.annotations.Async;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
-public class TeleOp extends LinearOpMode {
+public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
     Intake intake;
     MecanumDrive drive;
@@ -33,17 +34,15 @@ public class TeleOp extends LinearOpMode {
      * immediately afterward. Once the OpMode has been told to stop, your ability to
      * control hardware will be limited.
      */
+    @NonNull
+    protected abstract Pose getStartingPose();
     @Override
     public void runOpMode() {
         initializeGamepadSettings();
-        intake = new Intake(hardwareMap);
-        Pose startPose = Blackboard.pose;
-        if (startPose == null) {
-            startPose = allianceColor == AllianceColor.RED ? Constants.RED_DEFAULT_START_POSE : Constants.BLUE_DEFAULT_START_POSE;
-        }
-        drive = MecanumDrive.pinpointLocalizer(hardwareMap, startPose);
+        intake = Mechanisms.intake(hardwareMap);
+        drive = MecanumDrive.pinpointLocalizer(hardwareMap, getStartingPose());
         drive.startTeleopDrive(); // Stop all motors
-        limelight = new Limelight(hardwareMap, Constants.LIMELIGHT_CAMERA_NAME);
+        limelight = Mechanisms.limelight(hardwareMap);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
