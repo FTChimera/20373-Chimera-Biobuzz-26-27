@@ -14,6 +14,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+@Deprecated
 public class LimelightPinpointLocalizer implements Localizer {
     Limelight3A limelight;
     PinpointLocalizer pinpoint;

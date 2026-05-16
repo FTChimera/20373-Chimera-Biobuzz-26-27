@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 
-public class IvyAuton extends OpMode {
+public abstract class IvyAuton extends OpMode {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
     Follower follower;

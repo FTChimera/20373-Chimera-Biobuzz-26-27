@@ -56,7 +56,7 @@ public class MecanumDrive {
     MecanumDrive(HardwareMap map, Pose startingPose, boolean customLocalizer) {
         // Create follower using Constants configuration
         if (customLocalizer) {
-            this.follower = Constants.customLocalizerFollower(map);
+            /*this.follower = Constants.customLocalizerFollower(map);*/
         } else {
             this.follower = Constants.pinpointFollower(map);
         }
@@ -107,8 +107,9 @@ public class MecanumDrive {
      * Start teleop drive mode (stop all drive motors)
      * Should be called once at the start of teleop
      */
-    public void startTeleopDrive() {
-        drivetrain.startTeleopDrive();
+    public void startTeleOpDrive() {
+        drivetrain.startTeleOpDrive();
+        drivetrain.setTeleOpDrive(DriveVector.IDLE, 0);
     }
 
     /**
@@ -171,7 +172,7 @@ public class MecanumDrive {
     /** Command to set teleop drive with field centric options */
     public Command teleOp(Supplier<DriveVector> vector, boolean fieldCentric) {
         return Groups.sequential(
-                CommandConverter.toCommand(this::startTeleopDrive),
+                CommandConverter.toCommand(this::startTeleOpDrive),
                 Commands.infinite(() -> this.setTeleOpDrive(vector.get(), fieldCentric))
         );
     }

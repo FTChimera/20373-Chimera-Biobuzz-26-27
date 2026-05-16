@@ -78,6 +78,7 @@ public class Constants {
     }
 
     // Make sure color detection is not used if using this localizer
+    /*
     public static Follower customLocalizerFollower(HardwareMap hardwareMap) {
         return new FollowerBuilder(followerConstants, hardwareMap)
                 .pathConstraints(pathConstraints)
@@ -85,4 +86,5 @@ public class Constants {
                 .setLocalizer(new LimelightPinpointLocalizer(pinpointConstants, hardwareMap, LIMELIGHT_CAMERA_NAME, 0))
                 .build();
     }
+     */
 }

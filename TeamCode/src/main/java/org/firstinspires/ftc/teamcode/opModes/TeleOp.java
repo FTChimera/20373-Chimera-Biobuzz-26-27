@@ -5,8 +5,6 @@ import androidx.annotation.NonNull;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.Blackboard;
-import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
@@ -41,7 +39,7 @@ public abstract class TeleOp extends LinearOpMode {
         initializeGamepadSettings();
         intake = Mechanisms.intake(hardwareMap);
         drive = MecanumDrive.pinpointLocalizer(hardwareMap, getStartingPose());
-        drive.startTeleopDrive(); // Stop all motors
+        drive.startTeleOpDrive(); // Stop all motors
         limelight = Mechanisms.limelight(hardwareMap);
 
         telemetry.addData("Status", "Initialized");

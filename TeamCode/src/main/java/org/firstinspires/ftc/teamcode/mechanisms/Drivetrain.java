@@ -18,7 +18,7 @@ public class Drivetrain {
                 new Motor(map, Constants.BACK_LEFT_MOTOR_NAME).setDirection(Constants.BACK_LEFT_MOTOR_DIRECTION),
                 new Motor(map, Constants.BACK_RIGHT_MOTOR_NAME).setDirection(Constants.BACK_RIGHT_MOTOR_DIRECTION)
         };
-        startTeleopDrive();
+        startTeleOpDrive();
         setStickCurve(DoubleUnaryOperator.identity()); // Identity curve f(x) = x
     }
 
@@ -61,7 +61,7 @@ public class Drivetrain {
      * Start teleop drive mode (stop all drive motors)
      * Should be called once at the start of teleop
      */
-    public void startTeleopDrive() {
+    public void startTeleOpDrive() {
         setTeleOpDrive(DriveVector.IDLE, 0);
     }
 

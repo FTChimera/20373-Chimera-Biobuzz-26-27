@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.ivy.groups.Groups;
@@ -10,7 +9,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
@@ -38,7 +36,7 @@ public class IvyTeleOp extends LinearOpMode {
         intake = Mechanisms.intake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
         drive = MecanumDrive.pinpointLocalizer(hardwareMap, startPose);
-        drive.startTeleopDrive(); // Stop all motors
+        drive.startTeleOpDrive(); // Stop all motors
         limelight = Mechanisms.limelight(hardwareMap);
 
         Scheduler.schedule(
