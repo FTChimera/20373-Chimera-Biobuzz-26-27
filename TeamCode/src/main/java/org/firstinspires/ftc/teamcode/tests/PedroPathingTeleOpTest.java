@@ -29,7 +29,7 @@ public class PedroPathingTeleOpTest extends OpMode {
 
     @Override
     public void init() {
-        follower = Constants.pinpointFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? Constants.RED_DEFAULT_START_POSE: startingPose);
         follower.update();
         telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();

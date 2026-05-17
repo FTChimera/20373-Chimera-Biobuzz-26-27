@@ -1,0 +1,190 @@
+package org.firstinspires.ftc.teamcode.library.robot;
+
+import com.pedropathing.control.PredictiveBrakingCoefficients;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.FollowerBuilder;
+import com.pedropathing.ftc.drivetrains.MecanumConstants;
+import com.pedropathing.ftc.localization.constants.PinpointConstants;
+import com.pedropathing.paths.PathConstraints;
+import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+/**
+ * A utility base constants class to hold all Pedro pathing constants for a bot
+ * Not to be confused with RobotConfigurations, which is a utility class to hold all the bot constants
+ */
+public class RobotConstants {
+    public String FRONT_LEFT_MOTOR_NAME = "frontLeft";
+    public String FRONT_RIGHT_MOTOR_NAME = "frontRight";
+    public String BACK_LEFT_MOTOR_NAME = "backLeft";
+    public String BACK_RIGHT_MOTOR_NAME = "backRight";
+    public String PINPOINT_LOCALIZER_NAME = "pinpoint";
+
+    public DcMotorSimple.Direction FRONT_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public DcMotorSimple.Direction FRONT_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    public DcMotorSimple.Direction BACK_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
+    public DcMotorSimple.Direction BACK_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    public GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+    public GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+    public double FORWARD_POD_Y_INCH = 0;
+    public double STRAFE_POD_X_INCH = 0;
+    public double MAX_POWER = 0.9;
+    public double X_VELOCITY = 0;
+    public double Y_VELOCITY = 0;
+
+    public double T_VALUE_CONSTRAINT = 0.99;
+    public double TIMEOUT_CONSTRAINT = 100;
+    public double BRAKING_STRENGTH = 1;
+    public double BRAKING_START = 1;
+
+    public double PREDICTIVE_BRAKING_COEFFICIENTS_PROPORTIONAL = 0;
+    public double PREDICTIVE_BRAKING_COEFFICIENTS_LINEAR_BRAKING = 0;
+    public double PREDICTIVE_BRAKING_COEFFICIENTS_QUADRATIC_FRICTION = 0;
+    public double HEADING_PIDF_COEFFICIENTS_PROPORTIONAL = 0;
+    public double HEADING_PIDF_COEFFICIENTS_INTEGRAL = 0;
+    public double HEADING_PIDF_COEFFICIENTS_DERIVATIVE = 0;
+    public double HEADING_PIDF_COEFFICIENTS_FEEDFORWARD = 0;
+    public double CENTRIPETAL_SCALING = 0;
+
+    /** Default Constructor */
+    public RobotConstants() {}
+
+    public RobotConstants frontLeftMotorName(String name) {
+        this.FRONT_LEFT_MOTOR_NAME = name;
+        return this;
+    }
+    public RobotConstants frontRightMotorName(String name) {
+        this.FRONT_RIGHT_MOTOR_NAME = name;
+        return this;
+    }
+    public RobotConstants backLeftMotorName(String name) {
+        this.BACK_LEFT_MOTOR_NAME = name;
+        return this;
+    }
+    public RobotConstants backRightMotorName(String name) {
+        this.BACK_RIGHT_MOTOR_NAME = name;
+        return this;
+    }
+    public RobotConstants pinpointLocalizerName(String name) {
+        this.PINPOINT_LOCALIZER_NAME = name;
+        return this;
+    }
+    public RobotConstants frontLeftMotorDirection(DcMotorSimple.Direction direction) {
+        this.FRONT_LEFT_MOTOR_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants frontRightMotorDirection(DcMotorSimple.Direction direction) {
+        this.FRONT_RIGHT_MOTOR_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants backLeftMotorDirection(DcMotorSimple.Direction direction) {
+        this.BACK_LEFT_MOTOR_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants backRightMotorDirection(DcMotorSimple.Direction direction) {
+        this.BACK_RIGHT_MOTOR_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants pinpointForwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection direction) {
+        this.PINPOINT_FORWARD_ENCODER_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants pinpointStrafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection direction) {
+        this.PINPOINT_STRAFE_ENCODER_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants forwardPodYInch(double forwardPodYInch) {
+        this.FORWARD_POD_Y_INCH = forwardPodYInch;
+        return this;
+    }
+    public RobotConstants strafePodXInch(double strafePodXInch) {
+        this.STRAFE_POD_X_INCH = strafePodXInch;
+        return this;
+    }
+    public RobotConstants maxPower(double maxPower) {
+        this.MAX_POWER = maxPower;
+        return this;
+    }
+    public RobotConstants xVelocity(double xVelocity) {
+        this.X_VELOCITY = xVelocity;
+        return this;
+    }
+    public RobotConstants yVelocity(double yVelocity) {
+        this.Y_VELOCITY = yVelocity;
+        return this;
+    }
+    public RobotConstants tValueConstraint(double tValueConstraint) {
+        this.T_VALUE_CONSTRAINT = tValueConstraint;
+        return this;
+    }
+    public RobotConstants timeoutConstraint(double timeoutConstraint) {
+        this.TIMEOUT_CONSTRAINT = timeoutConstraint;
+        return this;
+    }
+    public RobotConstants brakingStrength(double brakingStrength) {
+        this.BRAKING_STRENGTH = brakingStrength;
+        return this;
+    }
+    public RobotConstants brakingStart(double brakingStart) {
+        this.BRAKING_START = brakingStart;
+        return this;
+    }
+    public RobotConstants predictiveBrakingCoefficients(double proportional, double linearBraking, double quadraticFriction) {
+        this.PREDICTIVE_BRAKING_COEFFICIENTS_PROPORTIONAL = proportional;
+        this.PREDICTIVE_BRAKING_COEFFICIENTS_LINEAR_BRAKING = linearBraking;
+        this.PREDICTIVE_BRAKING_COEFFICIENTS_QUADRATIC_FRICTION = quadraticFriction;
+        return this;
+    }
+    public RobotConstants headingPIDFCoefficients(double proportional, double integral, double derivative, double feedforward) {
+        this.HEADING_PIDF_COEFFICIENTS_PROPORTIONAL = proportional;
+        this.HEADING_PIDF_COEFFICIENTS_INTEGRAL = integral;
+        this.HEADING_PIDF_COEFFICIENTS_DERIVATIVE = derivative;
+        this.HEADING_PIDF_COEFFICIENTS_FEEDFORWARD = feedforward;
+        return this;
+    }
+    public RobotConstants centripetalScaling(double centripetalScaling) {
+        this.CENTRIPETAL_SCALING = centripetalScaling;
+        return this;
+    }
+
+
+    public Follower createFollower(HardwareMap map) {
+        // Pedro Pathing Follower configuration
+        FollowerConstants followerConstants = new FollowerConstants()
+                .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(PREDICTIVE_BRAKING_COEFFICIENTS_PROPORTIONAL,PREDICTIVE_BRAKING_COEFFICIENTS_LINEAR_BRAKING,PREDICTIVE_BRAKING_COEFFICIENTS_QUADRATIC_FRICTION))
+                .headingPIDFCoefficients(new com.pedropathing.control.PIDFCoefficients(HEADING_PIDF_COEFFICIENTS_PROPORTIONAL, HEADING_PIDF_COEFFICIENTS_INTEGRAL, HEADING_PIDF_COEFFICIENTS_DERIVATIVE, HEADING_PIDF_COEFFICIENTS_FEEDFORWARD))
+                .centripetalScaling(CENTRIPETAL_SCALING);
+        MecanumConstants mecanumConstants = new MecanumConstants()
+                .maxPower(MAX_POWER)
+                .leftFrontMotorName(FRONT_LEFT_MOTOR_NAME)
+                .rightFrontMotorName(FRONT_RIGHT_MOTOR_NAME)
+                .leftRearMotorName(BACK_LEFT_MOTOR_NAME)
+                .rightRearMotorName(BACK_RIGHT_MOTOR_NAME)
+                .leftFrontMotorDirection(FRONT_LEFT_MOTOR_DIRECTION)
+                .rightFrontMotorDirection(FRONT_RIGHT_MOTOR_DIRECTION)
+                .leftRearMotorDirection(BACK_LEFT_MOTOR_DIRECTION)
+                .rightRearMotorDirection(BACK_RIGHT_MOTOR_DIRECTION)
+                .xVelocity(X_VELOCITY)
+                .yVelocity(Y_VELOCITY);
+
+        PinpointConstants pinpointConstants = new PinpointConstants()
+                .forwardPodY(FORWARD_POD_Y_INCH)
+                .strafePodX(STRAFE_POD_X_INCH)
+                .distanceUnit(DistanceUnit.INCH)
+                .hardwareMapName(PINPOINT_LOCALIZER_NAME)
+                .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
+                .forwardEncoderDirection(PINPOINT_FORWARD_ENCODER_DIRECTION)
+                .strafeEncoderDirection(PINPOINT_STRAFE_ENCODER_DIRECTION);
+        PathConstraints pathConstraints = new PathConstraints(T_VALUE_CONSTRAINT, TIMEOUT_CONSTRAINT, BRAKING_STRENGTH, BRAKING_START);
+
+        return new FollowerBuilder(followerConstants, map)
+                .pathConstraints(pathConstraints)
+                .mecanumDrivetrain(mecanumConstants)
+                .pinpointLocalizer(pinpointConstants)
+                .build();
+    }
+}

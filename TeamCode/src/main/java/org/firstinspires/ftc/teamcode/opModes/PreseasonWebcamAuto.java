@@ -6,7 +6,6 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.PathPoint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -95,7 +94,7 @@ public class PreseasonWebcamAuto extends OpMode {
     public void init() {
         // Don't use the limelight fusion as we are going to use color detection pipelines.
         // We will fuse in loop
-        follower = Constants.pinpointFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(Poses.STARTING_POSE);
         intake = new Intake(hardwareMap);
         limelight = new Limelight(hardwareMap, Constants.LIMELIGHT_CAMERA_NAME);

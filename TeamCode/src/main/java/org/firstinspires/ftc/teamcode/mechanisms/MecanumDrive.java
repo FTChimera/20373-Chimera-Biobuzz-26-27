@@ -58,7 +58,7 @@ public class MecanumDrive {
         if (customLocalizer) {
             /*this.follower = Constants.customLocalizerFollower(map);*/
         } else {
-            this.follower = Constants.pinpointFollower(map);
+            this.follower = Constants.createFollower(map);
         }
 
         // Initialize drivetrain
