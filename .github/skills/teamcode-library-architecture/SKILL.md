@@ -14,7 +14,8 @@ Use this skill to stay aligned with the current repo structure and naming patter
 - `opModes/`: shared op mode logic.
 - `opModes/variants/`: annotated concrete teleop/autonomous entries.
 - `pedroPathing/`: Pedro-specific helpers, tuning, and adapters.
-- `Constants.java`: hardware names, directions, default poses, and follower configuration.
+- `library/robot/`: robot profiles and follower-builder configuration such as `RobotConstants` and `RobotConfigurations`.
+- `Constants.java`: thin global constants surface for non-drive names, default poses, and active robot-profile selection.
 - `Blackboard.java`: static cross-opmode state.
 
 ## Current design intent
@@ -22,7 +23,7 @@ Use this skill to stay aligned with the current repo structure and naming patter
 1. Low-level hardware access belongs in wrappers under `library/hardware/`.
 2. Robot behavior belongs in mechanisms under `mechanisms/`.
 3. Op modes orchestrate mechanisms; they should not become the main place for motor math or camera APIs.
-4. Shared configuration belongs in `Constants`.
+4. Shared configuration belongs in `Constants` or `library/robot/`, depending on whether it is a global constant or an active robot profile.
 5. Reusable alliance-agnostic logic belongs in shared base classes, with variants providing annotations and alliance choice.
 
 ## Existing wrappers to reuse
@@ -33,18 +34,21 @@ Use this skill to stay aligned with the current repo structure and naming patter
 - `mechanisms.Intake`
 - `mechanisms.Drivetrain`
 - `mechanisms.MecanumDrive`
+- `library.robot.RobotConstants`
+- `library.robot.RobotConfigurations`
 
 ## Rules
 
 - Prefer extending the existing wrappers over bypassing them.
 - Preserve existing naming unless you are cleaning up the whole abstraction you touched.
-- When adding hardware, add the hardware name and default direction to `Constants` first.
+- When adding drive hardware configuration, update `library/robot/RobotConstants` and `RobotConfigurations`; keep non-drive globals in `Constants`.
 - Keep pose transfer through `Blackboard.pose` if autonomous and teleop need to share localization state.
 - Match the repo's split between mechanism logic and op mode orchestration.
 
 ## Good places to edit for common tasks
 
-- New hardware constant: `Constants.java`
+- New non-drive hardware constant: `Constants.java`
+- New drive profile or Pedro follower constant set: `library/robot/...`
 - New simple actuator wrapper: `library/hardware/...`
 - New subsystem behavior: `mechanisms/...`
 - New teleop or autonomous entry: `opModes/variants/...`

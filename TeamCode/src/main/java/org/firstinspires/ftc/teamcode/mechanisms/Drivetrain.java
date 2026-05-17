@@ -13,10 +13,10 @@ public class Drivetrain {
     DoubleUnaryOperator stickCurve;
     public Drivetrain(HardwareMap map) {
         motors = new Motor[] {
-                new Motor(map, Constants.FRONT_LEFT_MOTOR_NAME).setDirection(Constants.FRONT_LEFT_MOTOR_DIRECTION),
-                new Motor(map, Constants.FRONT_RIGHT_MOTOR_NAME).setDirection(Constants.FRONT_RIGHT_MOTOR_DIRECTION),
-                new Motor(map, Constants.BACK_LEFT_MOTOR_NAME).setDirection(Constants.BACK_LEFT_MOTOR_DIRECTION),
-                new Motor(map, Constants.BACK_RIGHT_MOTOR_NAME).setDirection(Constants.BACK_RIGHT_MOTOR_DIRECTION)
+                new Motor(map, Constants.currentBot.FRONT_LEFT_MOTOR_NAME).setDirection(Constants.currentBot.FRONT_LEFT_MOTOR_DIRECTION),
+                new Motor(map, Constants.currentBot.FRONT_RIGHT_MOTOR_NAME).setDirection(Constants.currentBot.FRONT_RIGHT_MOTOR_DIRECTION),
+                new Motor(map, Constants.currentBot.BACK_LEFT_MOTOR_NAME).setDirection(Constants.currentBot.BACK_LEFT_MOTOR_DIRECTION),
+                new Motor(map, Constants.currentBot.BACK_RIGHT_MOTOR_NAME).setDirection(Constants.currentBot.BACK_RIGHT_MOTOR_DIRECTION)
         };
         startTeleOpDrive();
         setStickCurve(DoubleUnaryOperator.identity()); // Identity curve f(x) = x

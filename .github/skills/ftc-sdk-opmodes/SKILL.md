@@ -11,7 +11,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 
 - The app uses FTC SDK `11.1.0`.
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
-- Shared robot constants live in `Constants.java`.
+- Shared robot constants live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
 - Pose handoff between op modes lives in `Blackboard.java`.
 - Team op modes live under `opModes/`, with `variants/` holding annotated wrappers such as `Blue_TeleOp` and `Red_TeleOp`.
 
@@ -19,7 +19,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 
 1. Put reusable op mode logic in a shared base class under `opModes/`.
 2. Put driver-station-visible wrappers in `opModes/variants/` and annotate those with `@TeleOp` or `@Autonomous`.
-3. Resolve hardware names from `Constants` instead of hardcoding strings in op modes.
+3. Resolve hardware names from `Constants` or `library/robot/RobotConstants` instead of hardcoding strings in op modes.
 4. Build mechanisms first, then wire them into the op mode.
 5. If teleop needs the last autonomous pose, read and write `Blackboard.pose`.
 
@@ -36,7 +36,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - Keep FTC annotations on concrete, selectable classes only.
 - Prefer adding alliance-specific wrappers over duplicating whole op modes.
 - Do not bypass mechanism wrappers with raw `DcMotorEx` or `Limelight3A` access unless the wrapper is being improved.
-- Keep hardware names and motor directions centralized in `Constants`.
+- Keep hardware names and motor directions centralized in `Constants` and `library/robot/RobotConstants`.
 - Preserve FTC lifecycle expectations: initialize hardware before using it, update telemetry in the loop, and stop or persist state in `stop()` when needed.
 
 ## Examples in this repo
