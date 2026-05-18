@@ -1,171 +1,111 @@
 package org.firstinspires.ftc.teamcode.opModes;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.math.Vector;
-import com.pedropathing.paths.HeadingInterpolator;
-import com.pedropathing.paths.Path;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import org.firstinspires.ftc.teamcode.library.control.*;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.teamcode.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.Timer;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
-import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
-import java.util.concurrent.TimeUnit;
 
-// This is a sample OpMode, we don't need variants for this
-@Autonomous()
-public class PreseasonWebcamAuto extends OpMode {
-    Follower follower;
-    Intake intake;
-    Limelight limelight;
-    State state = State.TO_RELEASE_PRELOADS;
-    Timer opModeTimer;
-    int iteration = 0;
-    long deltaTime = 0;
-    static class Poses {
-        static final Pose STARTING_POSE = new Pose(36, 12, Math.toRadians(180));
-        static final Pose RELEASE_POSE = new Pose(36, 36, Math.toRadians(180));
-        static final Pose PARK_POSE = new Pose(24, 12, Math.toRadians(180));
-        static final double PERCENTAGE_TURN_BACK_TO_RELEASE = 0.7; // percentage of the path to turn back to release
-        static Path PRELOAD() {
-            Path preload = new Path(new BezierLine(STARTING_POSE, RELEASE_POSE));
-            preload.setLinearHeadingInterpolation(STARTING_POSE.getHeading(), RELEASE_POSE.getHeading());
-            return preload;
-        }
-        static Path generateIntakePath() {
-            return null;
-        }
-        static Path PARK(double heading) {
-            Path park = new Path(new BezierLine(RELEASE_POSE, PARK_POSE));
-            park.setLinearHeadingInterpolation(heading, PARK_POSE.getHeading());
-            return park;
-        }
-        static Path goPast(Pose pose) {
-            double heading = pose.getHeading();
-            Vector direction = new Vector(Math.cos(heading), Math.sin(heading));
-            direction.setMagnitude(10); // go 10 inches past the current position
-            Path goPast = new Path(new BezierLine(pose, pose.plus(new Pose(direction.getXComponent(), direction.getYComponent()))));
-            goPast.setLinearHeadingInterpolation(heading, heading);
-            return goPast;
-        }
-        static Path backToRelease(Pose pose) {
-            double heading = pose.getHeading();
-            Path backToRelease = new Path(new BezierLine(pose, RELEASE_POSE));
-            backToRelease.setHeadingInterpolation(HeadingInterpolator.piecewise(
-                    new HeadingInterpolator.PiecewiseNode(0, PERCENTAGE_TURN_BACK_TO_RELEASE, HeadingInterpolator.linear(heading, heading + Math.toRadians(180))),
-                    new HeadingInterpolator.PiecewiseNode(PERCENTAGE_TURN_BACK_TO_RELEASE, 1, HeadingInterpolator.constant(heading))));
-            return backToRelease;
-        }
-    }
-    enum State {
-        TO_RELEASE_PRELOADS,
-        TO_RELEASE,
-        RELEASING,
-        TO_INTAKE,
-        INTAKING,
-        TO_PARK,
-        IDLE;
-        final int MAX_ITERATIONS = 5;
-        Timer timer;
-        State() {timer = new Timer();}
-        public State next(int iteration) {
-            if (this == TO_RELEASE_PRELOADS) return RELEASING;
-            else if (this == RELEASING && iteration >= MAX_ITERATIONS) return TO_PARK;
-            else return values()[(ordinal() + 1) % values().length];
-        }
-        public long getElapsedTime() {
-            return timer.get(); // return in milliseconds
-        }
-         public void resetTimer() {
-             timer.reset();
-         }
-    }
+/** A Proof of concept
+ * This has been tested on the 20373 RMS Chimera Decode Gen 2 robot on Sun May 17, 2026
+ * Results: Because of factors such as the lighting, the limelight was not able to detect the artifact reliably, and
+ * the PIDF values haven't been tuned much. However, the robot was able to somewhat move towards whatever was detected.
+ */
+@TeleOp(name = "Preseason Artifact Sensor Auto", group = "Test")
+public class PreseasonWebcamAuto extends LinearOpMode {
+    // CONSTANTS
+
+    com.qualcomm.robotcore.hardware.PIDFCoefficients forwardPIDF = new com.qualcomm.robotcore.hardware.PIDFCoefficients(0.9, 0, 0, 0);
+    com.qualcomm.robotcore.hardware.PIDFCoefficients strafePIDF = new com.qualcomm.robotcore.hardware.PIDFCoefficients(0, 0, 0, 0);
+    com.qualcomm.robotcore.hardware.PIDFCoefficients headingPIDF = new com.qualcomm.robotcore.hardware.PIDFCoefficients(0.001, 0, 0, 0);
+
     /**
-     * User-defined init method
+     * Override this method and place your code here.
      * <p>
-     * This method will be called once, when the INIT button is pressed.
+     * Please do not catch {@link InterruptedException}s that are thrown in your OpMode
+     * unless you are doing it to perform some brief cleanup, in which case you must exit
+     * immediately afterward. Once the OpMode has been told to stop, your ability to
+     * control hardware will be limited.
+     *
+     * @throws InterruptedException When the OpMode is stopped while calling a method
+     *                              that can throw {@link InterruptedException}
      */
     @Override
-    public void init() {
-        // Don't use the limelight fusion as we are going to use color detection pipelines.
-        // We will fuse in loop
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(Poses.STARTING_POSE);
-        intake = new Intake(hardwareMap);
-        limelight = new Limelight(hardwareMap, Constants.LIMELIGHT_CAMERA_NAME);
-    }
-    @Override
-    public void start() {
-        limelight.start(Limelight.Pipeline.COLOR);
-        follower.followPath(Poses.PRELOAD());
-        opModeTimer = new Timer();
-    }
-    /**
-     * User-defined loop method
-     * <p>
-     * This method will be called repeatedly during the period between when
-     * the play button is pressed and when the OpMode is stopped.
-     */
-    @Override
-    public void loop() {
-        follower.update();
-        limelight.LLUpdate();
-        deltaTime = opModeTimer.dt();
-        // This is where we would normally fuse limelight pose estimates. Todo
-        switch (state) {
-            case TO_RELEASE_PRELOADS:
-            case TO_RELEASE:
-                if (!follower.isBusy()) {
-                    state = state.next(iteration);
-                    intake.ReverseFullPower();
+    public void runOpMode() throws InterruptedException {
+        Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        Follower follower = Constants.createFollower(hardwareMap);
+        follower.setStartingPose(new Pose());
+        limelight.pipelineSwitch(1); // Color detection pipeline
+        PIDFController<Pose> controller = getController();
+        waitForStart();
+        limelight.start();
+        follower.startTeleopDrive();
+        while (opModeIsActive()) {
+            LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+                // Detect Artifact
+                try {
+                    LLResultTypes.ColorResult colorResult = result.getColorResults().get(0);
+                    double tx = colorResult.getTargetXPixels();
+                    double area = Range.clip(colorResult.getTargetArea(), 2, 70);
+                    double distanceProportionalApprox = 1 / Math.sqrt(area); // Almost Proportional to distance
+                    controller.setTarget(new Pose(0, -distanceProportionalApprox, tx));
+                    controller.update(new Pose());
+                    Pose output = controller.getOutput();
+                    telemetry.addData("Controller Output", "x: %.2f, y: %.2f, heading: %.2f", output.getX(), output.getY(), output.getHeading());
+                    follower.setTeleOpDrive(
+                            -output.getY(),
+                            -output.getX(),
+                            -output.getHeading(),
+                            true
+                    );
+                    telemetry.addData("Artifact Detection", "Artifact detected at tx: %.2f, area: %.2f", tx, area);
+                } catch (Exception e) {
+                    if (e instanceof IndexOutOfBoundsException) {
+                        telemetry.addData("Artifact Detection", "No artifact detected");
+                    } else {
+                        telemetry.addData("Artifact Detection", "Error: " + e.getMessage());
+                    }
+                    controller.reset();
                 }
-                break;
-            case RELEASING:
-                if (state.getElapsedTime() >= 1000) {
-                    state = state.next(iteration);
-                    intake.FullPower();
-                    if (state != State.TO_PARK) follower.followPath(Poses.generateIntakePath());
-                }
-                break;
-            case TO_INTAKE:
-                if (!follower.isBusy()) {
-                    state = state.next(iteration);
-                    follower.followPath(Poses.goPast(follower.getPose()));
-                }
-                break;
-            case INTAKING:
-                if (!follower.isBusy()) {
-                    state = state.next(iteration);
-                    follower.followPath(Poses.backToRelease(follower.getPose()));
-                }
-                break;
-            case TO_PARK:
-                if (!follower.isBusy()) {
-                    follower.followPath(Poses.PARK(follower.getHeading()));
-                }
-                break;
-            case IDLE:
-                 if (!follower.isBusy()) {
-                     requestOpModeStop();
-                 }
-                 break;
-        }
-        telemetry.addData("Pose", follower.getPose());
-        telemetry.addData("Path State", state);
-        telemetry.addData("OpModeTimer", opModeTimer.get(TimeUnit.SECONDS));
-        telemetry.addData("Delta Time", deltaTime);
-        telemetry.update();
-    }
+            }
 
-    @Override
-    public void stop() {
+            // MANUAL CONTROL
+            if (gamepad1.backWasPressed()) {
+                controller.reset();
+            }
+
+            if (gamepad1.a) {
+                follower.setTeleOpDrive(0,0,0, true);
+            }
+
+            follower.update();
+            telemetry.update();
+        }
         limelight.stop();
-        follower.update();
-        Blackboard.pose = follower.getPose();
+    }
+
+    PIDFCoefficients getPIDFCoeff() {
+        return new PIDFCoefficients(
+                new double[]{strafePIDF.p, forwardPIDF.p, headingPIDF.p},
+                new double[]{strafePIDF.i, forwardPIDF.i, headingPIDF.i},
+                new double[]{strafePIDF.d, forwardPIDF.d, headingPIDF.d},
+                new double[]{strafePIDF.f, forwardPIDF.f, headingPIDF.f},
+                new double[]{0.5, 0.5, 0.5}, // Tolerance
+                new double[]{1.0, 1.0, 1.0} // Integral limit
+        );
+    }
+    PIDFController<Pose> getController() {
+        PIDFController<Pose> controller = new PIDFController<>(getPIDFCoeff());
+        controller.setStateSupplier(pose -> new double[]{pose.getX(), pose.getY(), pose.getHeading()});
+        controller.setInverseStateSupplier(array -> new Pose(array[0], array[1], array[2]));
+        return controller;
     }
 }

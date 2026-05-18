@@ -12,5 +12,9 @@ We are an FTC Team based in Saratoga, CA. Learn more about us at [our website](h
 Refer to the project files for details.
 
 ## Libraries
-We use Pedro Pathing for consistent localization and path following and autos
+We use Pedro Pathing for consistent localization and path following and autos. Along with Pedro Pathing, we like to use Pedro's additional Ivy for easier auto programming using the command-based paradigm.
+
 Learn more at [the Pedro Pathing Website](https://pedropathing.com)
+
+Our software team has also made a few classes to make programming easier, during the offseason/preseason and the previous (DECODE, 2025-26) season. They are found in the library folder under teamcode. 
+
