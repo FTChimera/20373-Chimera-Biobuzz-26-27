@@ -5,12 +5,12 @@ import androidx.annotation.NonNull;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public abstract class TeleOp extends LinearOpMode {
@@ -37,10 +37,10 @@ public abstract class TeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         initializeGamepadSettings();
-        intake = Mechanisms.intake(hardwareMap);
+        intake = Constants.createIntake(hardwareMap);
         drive = MecanumDrive.pinpointLocalizer(hardwareMap, getStartingPose());
         drive.startTeleOpDrive(); // Stop all motors
-        limelight = Mechanisms.limelight(hardwareMap);
+        limelight = Constants.createLimelight(hardwareMap);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();

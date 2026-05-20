@@ -27,6 +27,20 @@ import java.util.List;
  */
 @SuppressWarnings("SpellCheckingInspection")
 public class LogitechWebcam {
+    /** Parameters for the Logitech webcam. */
+    public static class LOGITECH_WEBCAM_PARAMS {
+        public final String HARDWAREMAP_NAME = "Webcam 1";
+        public final boolean SET_DRAW_AXES = true;
+        public final boolean SET_DRAW_CUBE_PROJECTION = true;
+        public final boolean SET_DRAW_TAG_ID = true;
+        public final boolean SET_DRAW_TAG_OUTLINE = true;
+        public final DistanceUnit OUTPUT_DISTANCE_UNIT = DistanceUnit.INCH;
+        public final AngleUnit OUTPUT_ANGLE_UNIT = AngleUnit.RADIANS;
+        public final int CAMERA_RESOLUTION_WIDTH = 640;
+        public final int CAMERA_RESOLUTION_HEIGHT = 480;
+
+    }
+    public LOGITECH_WEBCAM_PARAMS params;
     private final boolean isBeingUsed;
     private AprilTagProcessor tagProcessor;
     private VisionPortal visionPortal;
@@ -49,13 +63,8 @@ public class LogitechWebcam {
 
     // ==================== CONSTRUCTORS ====================
 
-    /** Constructs with default camera name "Webcam 1". */
-    public LogitechWebcam(HardwareMap hwMap) {
-        this(hwMap, "Webcam 1");
-    }
-
     /** Constructs with a specific camera hardware name. */
-    public LogitechWebcam(HardwareMap hwMap, String cameraName) {
+    public LogitechWebcam(HardwareMap hwMap, LOGITECH_WEBCAM_PARAMS params) {
         tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
@@ -65,11 +74,12 @@ public class LogitechWebcam {
                 .build();
         visionPortal = new VisionPortal.Builder()
                 .addProcessor(tagProcessor)
-                .setCamera(hwMap.get(WebcamName.class, cameraName))
+                .setCamera(hwMap.get(WebcamName.class, params.HARDWAREMAP_NAME))
                 .setCameraResolution(new android.util.Size(640, 480))
                 .build();
         isBeingUsed = true;
         isDisconnected = false;
+        this.params = params;
     }
 
     /** No-op constructor when the camera is not being used. */
@@ -106,10 +116,10 @@ public class LogitechWebcam {
             AprilTagPose = tag.ftcPose;
             id = tag.id;
 
-            Position position = new Position(DistanceUnit.INCH,
+            Position position = new Position(params.OUTPUT_DISTANCE_UNIT,
                     AprilTagPose.x, AprilTagPose.y, AprilTagPose.z, 0);
             YawPitchRollAngles orientation = new YawPitchRollAngles(
-                    AngleUnit.RADIANS,
+                    params.OUTPUT_ANGLE_UNIT,
                     AprilTagPose.yaw, AprilTagPose.pitch, AprilTagPose.roll, 0);
             botpose = new Pose3D(position, orientation);
             pedroPose = toPedro(botpose);

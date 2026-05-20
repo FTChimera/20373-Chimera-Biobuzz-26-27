@@ -62,7 +62,7 @@ public class MecanumDrive {
         }
 
         // Initialize drivetrain
-        drivetrain = Mechanisms.drivetrain(map);
+        drivetrain = Constants.createDrivetrain(map);
         // Set starting pose (use (0, 0, 0) if not provided)
         follower.setStartingPose(startingPose == null ? new Pose(0, 0, 0) : startingPose);
         // Set initial curve

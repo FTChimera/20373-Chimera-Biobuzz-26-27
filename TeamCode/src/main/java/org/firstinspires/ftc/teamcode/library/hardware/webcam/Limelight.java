@@ -15,11 +15,14 @@ import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Limelight {
-    private static final double
-            LIMELIGHT_MOUNT_ANGLE_DEGREES = 0,
-            LIMELIGHT_LENS_HEIGHT_INCHES = 0,
-            TAG_HEIGHT_INCHES = 0;
-
+    public static class LIMELIGHT_PARAMS {
+        public final double
+                LIMELIGHT_MOUNT_ANGLE_DEGREES = 0,
+                LIMELIGHT_LENS_HEIGHT_INCHES = 0,
+                TAG_HEIGHT_INCHES = 0;
+        public final String HARDWAREMAP_NAME = "limelight";
+    }
+    public LIMELIGHT_PARAMS params;
     public Command updateCommand() {
         return Commands.infinite(Limelight.this::LLUpdate);
     }
@@ -34,8 +37,9 @@ public class Limelight {
         public int getIndex() { return pipelineIndex; }
     }
     private final boolean isBeingUsed;
-    public Limelight(HardwareMap hwMap, String name) {
-        limelight1 = hwMap.get(Limelight3A.class, name);
+    public Limelight(HardwareMap hwMap, LIMELIGHT_PARAMS params) {
+        limelight1 = hwMap.get(Limelight3A.class, params.HARDWAREMAP_NAME);
+        this.params = params;
         isBeingUsed = true;
     }
     public Limelight() {
@@ -74,11 +78,11 @@ public class Limelight {
         }
         return null;
     }
-    public static double calculateDistance(LLResultTypes.FiducialResult result) {
+    public double calculateDistance(LLResultTypes.FiducialResult result) {
         double ty = result.getTargetYDegrees();
 
-        double ANGLE_TO_TAG_RADIANS = Math.toRadians(LIMELIGHT_MOUNT_ANGLE_DEGREES + ty);
-        return (TAG_HEIGHT_INCHES - LIMELIGHT_LENS_HEIGHT_INCHES) / Math.tan(ANGLE_TO_TAG_RADIANS);
+        double ANGLE_TO_TAG_RADIANS = Math.toRadians(params.LIMELIGHT_MOUNT_ANGLE_DEGREES + ty);
+        return (params.TAG_HEIGHT_INCHES - params.LIMELIGHT_LENS_HEIGHT_INCHES) / Math.tan(ANGLE_TO_TAG_RADIANS);
     }
     public double findDistanceFromTag(int tagId) {
         if (!isBeingUsed) return Double.NaN;

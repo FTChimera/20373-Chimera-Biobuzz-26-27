@@ -5,18 +5,19 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
 
 public class Drivetrain {
     Motor[] motors;
     DoubleUnaryOperator stickCurve;
-    public Drivetrain(HardwareMap map) {
+    public Drivetrain(HardwareMap map, RobotConstants bot) {
         motors = new Motor[] {
-                new Motor(map, Constants.currentBot.FRONT_LEFT_MOTOR_NAME).setDirection(Constants.currentBot.FRONT_LEFT_MOTOR_DIRECTION),
-                new Motor(map, Constants.currentBot.FRONT_RIGHT_MOTOR_NAME).setDirection(Constants.currentBot.FRONT_RIGHT_MOTOR_DIRECTION),
-                new Motor(map, Constants.currentBot.BACK_LEFT_MOTOR_NAME).setDirection(Constants.currentBot.BACK_LEFT_MOTOR_DIRECTION),
-                new Motor(map, Constants.currentBot.BACK_RIGHT_MOTOR_NAME).setDirection(Constants.currentBot.BACK_RIGHT_MOTOR_DIRECTION)
+                new Motor(map, bot.FRONT_LEFT_MOTOR_NAME).setDirection(bot.FRONT_LEFT_MOTOR_DIRECTION),
+                new Motor(map, bot.FRONT_RIGHT_MOTOR_NAME).setDirection(bot.FRONT_RIGHT_MOTOR_DIRECTION),
+                new Motor(map, bot.BACK_LEFT_MOTOR_NAME).setDirection(bot.BACK_LEFT_MOTOR_DIRECTION),
+                new Motor(map, bot.BACK_RIGHT_MOTOR_NAME).setDirection(bot.BACK_RIGHT_MOTOR_DIRECTION)
         };
         startTeleOpDrive();
         setStickCurve(DoubleUnaryOperator.identity()); // Identity curve f(x) = x

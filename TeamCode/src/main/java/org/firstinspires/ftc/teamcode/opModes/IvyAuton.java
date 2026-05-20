@@ -44,7 +44,7 @@ public abstract class IvyAuton extends OpMode {
         Scheduler.reset();
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        intake = new Intake(hardwareMap);
+        intake = Constants.createIntake(hardwareMap);
     }
 
     public void start() {

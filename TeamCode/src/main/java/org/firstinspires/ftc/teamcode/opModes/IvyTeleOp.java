@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 
 @TeleOp(name = "Red Ivy TeleOp", group = "0: TeleOp")
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
@@ -33,11 +32,11 @@ public class IvyTeleOp extends LinearOpMode {
     public void runOpMode() {
         Scheduler.reset();
         setGamepadCurve();
-        intake = Mechanisms.intake(hardwareMap);
+        intake = Constants.createIntake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
         drive = MecanumDrive.pinpointLocalizer(hardwareMap, startPose);
         drive.startTeleOpDrive(); // Stop all motors
-        limelight = Mechanisms.limelight(hardwareMap);
+        limelight = Constants.createLimelight(hardwareMap);
 
         Scheduler.schedule(
                 limelight.updateCommand(),

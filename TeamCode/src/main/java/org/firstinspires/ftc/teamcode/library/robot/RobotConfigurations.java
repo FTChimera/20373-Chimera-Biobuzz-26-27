@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.library.robot;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -7,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  * A utility class to hold all of the robot constants for each bot
  * Not to be confused with RobotConstants, which is a base class for all constants
  */
+@Configurable
 public class RobotConfigurations {
     public static RobotConstants starterBot() {
         return new RobotConstants()

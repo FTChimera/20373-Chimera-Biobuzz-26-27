@@ -4,6 +4,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
@@ -31,7 +32,7 @@ public class MotorDirectionTest extends LinearOpMode {
         waitForStart();
         do {
             drive = MecanumDrive.pinpointLocalizer(hardwareMap, new Pose(0, 0, 0));
-            intake = new Intake(hardwareMap);
+            intake = Constants.createIntake(hardwareMap);
             drive.setTeleOpDrive(new DriveVector(0.3, 0, 0));
             intake.setPower(0.3);
         }
