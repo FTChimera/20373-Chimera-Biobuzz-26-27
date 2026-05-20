@@ -20,10 +20,17 @@ This folder contains repo-specific skills for working on `20373-Chimera-Biobuzz-
 - `ftc-sdk-hardwaremap-and-lifecycle/` — FTC SDK API usage, `HardwareMap`, annotations, and lifecycle rules
 - `limelight-wrapper-and-pipelines/` — Limelight wrapper usage and pipeline conventions
 - `autonomous-path-patterns/` — state-machine and `PathChain` patterns used in autonomous
-- `gamepad-and-driver-input/` — raw FTC gamepad APIs and the repo’s input wrappers
+- `gamepad-and-driver-input/` — raw FTC gamepad APIs plus `GamepadEx` / `DualGamepad` wrapper conventions
 - `tests-and-tuning-opmodes/` — test op modes, Pedro tuning, and validation habits
 
 ## Notes
 
 Most skills are intentionally narrow and repo-specific. Prefer the focused skill when the task clearly matches one of these areas, and use the broader skills for cross-cutting changes.
+
+Across the skill set, the current house style is:
+
+- define mechanism- or wrapper-specific params types with the mechanism/wrapper class
+- keep the shared editable params instance centrally in `Constants`
+- add `Constants.create...(...)` factories for subsystem construction
+- keep drivetrain and Pedro follower profile data in `library/robot/RobotConstants` and `RobotConfigurations`
 

@@ -29,13 +29,25 @@ Use this skill when validating changes or diagnosing why the project does or doe
 ## What static review should focus on
 
 - FTC annotation placement and op mode lifecycle ordering
-- Hardware names and directions in `Constants`
+- Central subsystem factories and params instances in `Constants`
+- Mechanism constructors accepting the expected params object
 - Pedro follower and localizer wiring
 - Alliance-specific wrapper classes under `opModes/variants`
 - Camera pipeline assumptions versus localization mode
 
+## Centralized mechanism validation checklist
+
+When a change adds or modifies a mechanism, confirm all of these:
+
+1. The mechanism or wrapper class defines its own params type.
+2. `Constants` owns the shared params instance used for Dashboard/panels.
+3. `Constants` exposes a `create...(...)` factory for the mechanism.
+4. Op modes use the `Constants` factory instead of direct construction.
+5. Drive-related configuration still lives in `RobotConstants` / `RobotConfigurations`, not mixed into unrelated mechanism params.
+
 ## Current repo-specific warning signs
 
-- Placeholder drivetrain and localization tuning values exist in `Constants`.
+- Placeholder drivetrain and localization tuning values still exist in `RobotConfigurations` and related config objects.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.
 - This repo does not currently expose a dedicated JVM unit-test suite; most validation is build-time plus robot runtime checks.
+- Documentation or code that still references a `Mechanisms.java` factory surface is stale; the repo now uses `Constants` factories.

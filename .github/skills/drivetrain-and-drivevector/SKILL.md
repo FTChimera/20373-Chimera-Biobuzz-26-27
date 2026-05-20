@@ -9,6 +9,7 @@ This skill covers the team’s custom teleop-drive stack.
 
 ## Key files
 
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Drivetrain.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
@@ -20,8 +21,9 @@ This skill covers the team’s custom teleop-drive stack.
 1. `DriveVector` stores forward, strafe, rotate, and robot heading values.
 2. `DriveVector.applyStickCurve(...)` applies the selected joystick curve and flips forward for driver-friendly stick behavior.
 3. `Drivetrain.setTeleOpDrive(...)` optionally rotates the vector for field-centric drive and writes power to the four `Motor` wrappers.
-4. `MecanumDrive.periodic()` updates the Pedro follower and caches `lastPose`.
-5. Teleop code usually calls `MecanumDrive.setTeleOpDrive(new DriveVector(...))` while Pedro handles localization.
+4. `MecanumDrive` obtains its follower and drivetrain through `Constants`-based creation paths.
+5. `MecanumDrive.periodic()` updates the Pedro follower and caches `lastPose`.
+6. Teleop code usually calls `MecanumDrive.setTeleOpDrive(new DriveVector(...))` while Pedro handles localization.
 
 ## Repo-specific conventions
 
@@ -30,18 +32,29 @@ This skill covers the team’s custom teleop-drive stack.
 - Heading reset is usually mapped to `gamepad1.back`.
 - `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
 
+## How drive fits the new creation pattern
+
+- Non-drive mechanisms expose their shared params instances centrally from `Constants`.
+- Drive profile and follower configuration live in `RobotConstants` / `RobotConfigurations`.
+- `Constants.createDrivetrain(hardwareMap)` is the central creation point for the low-level drive mechanism.
+- Higher-level drive code such as `MecanumDrive.pinpointLocalizer(...)` should keep delegating to those central factories instead of rebuilding hardware inline.
+
+If a new drive-adjacent mechanism is added, give it its own params type and central `Constants` factory unless the data is truly robot-profile data that belongs in `RobotConstants`.
+
 ## Rules
 
 - Keep drive-input shaping in one place: `DriveVector` or the selected stick curve, not scattered sign flips across op modes.
 - If field-centric math changes, verify both `DriveVector.rotateFieldCentric()` and the heading passed in from `MecanumDrive`.
 - Preserve `periodic()` calling `follower.update()` exactly once per loop path.
 - Prefer extending `MecanumDrive` APIs over having op modes reach inside `drivetrain` and `follower` directly.
+- Keep drivetrain profile data in `RobotConstants`; keep non-drive shared params in `Constants`.
 
 ## Common edit targets
 
 - Change response curve or deadband behavior: `DriveVector.java`
 - Change motor-power mapping or field-centric handling: `Drivetrain.java`
 - Change public teleop-facing drive behavior or pose resets: `MecanumDrive.java`
+- Change drive hardware names, directions, or follower tuning: `RobotConfigurations.java` / `RobotConstants.java`
 
 ## Validation ideas
 

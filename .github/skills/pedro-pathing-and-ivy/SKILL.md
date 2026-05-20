@@ -23,7 +23,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 1. Follower creation is exposed through `Constants.createFollower(...)`.
 2. The actual Pedro drivetrain, Pinpoint, and path-constraint values live under `library/robot/RobotConstants` and `RobotConfigurations`.
 3. `MecanumDrive` wraps a Pedro `Follower` plus the team `Drivetrain`.
-4. `LimelightPinpointLocalizer` exists as a custom localizer path, but the normal flow is Pinpoint through the active robot profile.
+4. Non-drive mechanisms and wrappers are also expected to be created through `Constants.create...(...)` factories so the whole robot uses one consistent construction path.
 5. Ivy-based autonomous code usually defines an `IvyAuton_Paths` implementation in a variant class and passes it into `IvyAuton`.
 
 ## Use these patterns
@@ -33,6 +33,17 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 3. Return a `PathChain` from autonomous path builders, even for a single `Path`.
 4. For teleop with Ivy, schedule subsystem periodic commands and long-running control commands through the scheduler.
 5. For non-Ivy pathing code, call `follower.update()` every loop.
+
+## Central params pattern around Pedro mechanisms
+
+If a Pedro-related task adds a new mechanism or helper that owns robot behavior:
+
+- define a nested params type on that class
+- keep the shared editable params instance in `Constants`
+- add a `Constants.create...(...)` factory
+- do not scatter constructor calls across op modes
+
+This applies around Pedro code too. `RobotConstants` remains the place for drivetrain/localizer/follower profile data, while mechanism-specific params stay central in `Constants`.
 
 ## Ivy command construction
 
@@ -80,8 +91,8 @@ public final class IntakeCommand extends CommandBuilder {
 
 - `RobotConfigurations.starterBot()` still contains placeholder tuning values for follower, drivetrain, and pinpoint offsets; do not assume those numbers are competition-ready.
 - `customLocalizerFollower(...)` uses Limelight plus Pinpoint fusion. The source comment explicitly warns not to use it when the camera is needed for color detection.
-- `Tuning.java` is the Pedro tuning entry point and already uses `Constants.pinpointFollower(...)`.
 - `MecanumDrive.pinpointLocalizer(...)` is the normal teleop entry point.
+- If a new Pedro-adjacent mechanism is created, it should still follow the central `Constants` factory plus shared params-instance pattern.
 
 ## Rules
 
@@ -89,10 +100,12 @@ public final class IntakeCommand extends CommandBuilder {
 - Keep localization decisions explicit: choose Pinpoint-only or Limelight-plus-Pinpoint based on the active vision pipeline.
 - Do not add duplicate drive update loops; there should be one consistent source of `follower.update()`.
 - Prefer Pedro/Ivy commands for path following in Ivy op modes instead of custom busy loops.
+- Keep non-drive mechanism params out of `RobotConstants`; centralize them in `Constants`.
 
 ## Example workflow
 
 1. Define or update path geometry in an `IvyAuton_Paths` subclass.
 2. Keep start pose and `PathChain` together.
 3. In `IvyAuton.start()`, compose behavior with `Groups.sequential(...)`.
-4. Stop the op mode through `CommandConverter.toCommand(this::requestOpModeStop)` when the sequence finishes.
+4. If the routine adds a new subsystem, expose it through `Constants.create...(...)` before wiring it into the command sequence.
+5. Stop the op mode through `CommandConverter.toCommand(this::requestOpModeStop)` when the sequence finishes.

@@ -18,13 +18,25 @@ Use this skill for direct FTC SDK integration work.
 - `opModes/TeleOp.java` uses `LinearOpMode` with `waitForStart()` and `while (opModeIsActive())`.
 - `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
 - `opModes/IvyAuton.java` and `opModes/PreseasonWebcamAuto.java` use iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
-- Mechanism constructors typically accept `HardwareMap` and resolve devices immediately.
+- Mechanism and wrapper constructors typically accept `HardwareMap` plus a params object and resolve devices immediately.
 
 ## HardwareMap rules in this repo
 
 - Resolve hardware once during initialization, not repeatedly inside the active loop.
-- Prefer team wrappers such as `new Motor(map, name)` or `new Limelight(map, name)` over direct device access in op modes.
-- Keep hardware names centralized in `Constants` or `library/robot/RobotConstants` depending on the device type.
+- Prefer team wrappers and mechanisms over raw device access in op modes.
+- Prefer `Constants.create...(...)` factories over direct `new Mechanism(...)` calls in op modes.
+- Keep hardware names and editable subsystem params centralized in `Constants` unless they are drive/follower profile data that belong in `library/robot/RobotConstants`.
+
+## New mechanism pattern tied to lifecycle
+
+When a task asks for a new mechanism or wrapper:
+
+1. define a nested params type in the mechanism or wrapper class
+2. create one shared params instance in `Constants`
+3. add `Constants.createMechanism(hardwareMap)`
+4. initialize the mechanism once during `init()` or before `waitForStart()`
+
+Do not create a fresh params object every loop. The team wants one central Dashboard-editable params instance in `Constants` and one constructed mechanism instance per op mode.
 
 ## Lifecycle rules
 
@@ -44,11 +56,13 @@ Use this skill for direct FTC SDK integration work.
 - If you need a new selectable mode, create a concrete annotated class.
 - If you need reusable lifecycle behavior, put it in an abstract base class and keep the annotation on the concrete subclass.
 - Use `requestOpModeStop()` rather than custom termination flags when the op mode should end.
+- If a subsystem is already factory-created from `Constants`, keep using that path instead of mixing direct constructors into one op mode.
 
 ## Common mistakes to avoid
 
 - Re-fetching devices from `hardwareMap` in every loop.
 - Writing FTC annotations on abstract base classes.
 - Mixing `LinearOpMode` flow control into iterative `OpMode` subclasses.
+- Building mechanism params ad hoc in multiple places instead of centralizing them in `Constants`.
 - Forgetting that many runtime issues are hardware-config dependent even when the project builds.
 

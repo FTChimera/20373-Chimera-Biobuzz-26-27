@@ -23,12 +23,21 @@ Use this skill for localization-specific Pedro work that is narrower than genera
 4. `MecanumDrive.periodic()` keeps the follower pose fresh and mirrors it into `lastPose`.
 5. `Blackboard.pose` may persist the latest pose across op modes.
 
+## Configuration split to preserve
+
+- Keep Pinpoint geometry, hardware naming, encoder directions, and follower tuning in `RobotConstants` / `RobotConfigurations`.
+- Keep non-drive mechanism and wrapper params centralized in `Constants`.
+- If a localization task also touches a vision wrapper like `Limelight`, continue creating that wrapper through `Constants.createLimelight(...)`.
+
+This repo intentionally separates Pedro/drive profile data from subsystem-specific params so Dashboard-editable mechanism values stay central without polluting the drivetrain profile.
+
 ## Rules
 
 - Keep Pinpoint hardware naming, offsets, and encoder directions in `RobotConstants` / `RobotConfigurations`.
 - When changing localization math, be explicit about coordinate-system conversion.
 - If the Limelight pipeline is needed for vision tasks, prefer Pinpoint-only following unless the fusion plan is intentionally revisited.
 - Do not add multiple competing pose-update loops for the same follower.
+- Do not move non-drive mechanism params into the robot-profile layer just because a localization task touches them.
 
 ## Things to watch
 
@@ -41,4 +50,5 @@ Use this skill for localization-specific Pedro work that is narrower than genera
 - Pinpoint geometry or encoder configuration: `RobotConfigurations.java` / `RobotConstants.java`
 - Custom fusion logic: `LimelightPinpointLocalizer.java`
 - Pose consumption in teleop/autonomous: `MecanumDrive.java` or the relevant op mode
+- Limelight wrapper params or factory behavior: `Constants.java` / `Limelight.java`
 

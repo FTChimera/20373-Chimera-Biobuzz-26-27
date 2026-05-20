@@ -9,6 +9,7 @@ This skill covers the repo’s Pedro Ivy usage.
 
 ## Relevant files
 
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
@@ -27,8 +28,26 @@ This skill covers the repo’s Pedro Ivy usage.
 ## Common repo examples
 
 - `IvyTeleOp` schedules Limelight updates, drive periodic updates, teleop drive, intake power, and heading reset behavior together.
-- `IvyAuton.start()` composes a sequential routine with intake commands, `PedroCommands.follow(...)`, waits, and an op-mode stop request.
+- `IvyAuton.start()` composes a sequential routine with intake commands, Pedro follow commands, waits, and an op-mode stop request.
 - `MecanumDrive.teleOp(...)` returns a command that starts teleop drive once and then runs continuous drive updates.
+
+## Input-wrapper Ivy convention
+
+If an input wrapper exposes Ivy support, prefer one command that updates the full wrapper state.
+
+- `DualGamepad.updateCommand()` should be preferred over building separate commands that update `gamepad1` and `gamepad2` independently.
+- Keep input-update ownership in one place so button edges, touchpad state, and stick deltas stay synchronized across both pads.
+- If a wrapper already has `update()` plus `updateCommand()`, reuse that pair instead of rebuilding the same `Commands.infinite(...)` inline everywhere.
+
+## How Ivy work should construct subsystems
+
+Ivy commands should operate on mechanisms that were created through `Constants` factories.
+
+- create the mechanism once through `Constants.create...(...)`
+- schedule commands against that mechanism instance
+- if a new mechanism is needed, add its params type and shared `Constants` instance first
+
+Do not hide subsystem config inside a custom command class if it really belongs in the mechanism params object or the central `Constants` surface.
 
 ## Rules
 
@@ -37,6 +56,7 @@ This skill covers the repo’s Pedro Ivy usage.
 - Prefer mechanism-level command helpers for reusable actions instead of rebuilding the same command inline in every op mode.
 - Use `Commands.infinite(...)`, `Groups.sequential(...)`, and related Pedro Ivy primitives before inventing a custom loop.
 - Use `CommandConverter.toCommand(...)` for simple instant actions; use full command composition for ongoing behaviors.
+- If a task adds a new commandable mechanism, also add its `Constants.create...(...)` factory and central params instance.
 
 ## When to use `Ivy.run(...)`
 
@@ -47,4 +67,5 @@ This skill covers the repo’s Pedro Ivy usage.
 - Do not forget `Scheduler.execute()` in iterative command-driven op modes.
 - Avoid scheduling duplicate periodic loops that both call into the same mechanism every frame.
 - Avoid mixing busy loops with Ivy scheduling when Pedro already provides a command form.
+- Avoid creating mechanism params ad hoc inside commands when the shared Dashboard-editable instance should live in `Constants`.
 

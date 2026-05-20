@@ -14,6 +14,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Timer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/...`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 
 ## Design intent
 
@@ -28,12 +29,22 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
+## Boundary with the new mechanism pattern
+
+- If a change adds robot behavior, it probably belongs in `mechanisms/`, not in `library/`.
+- If a wrapper in `library/hardware/...` needs configurable fields, give the wrapper its own params type.
+- Keep the shared editable params instance for that wrapper in `Constants`.
+- Do not move mechanism params into generic utility classes just because they are shared.
+
+In other words: the type definition can live with the wrapper, but the live shared config instance should usually be centralized in `Constants`.
+
 ## Rules
 
 - Prefer small, focused types.
 - If a class starts owning physical behavior, move that behavior into `mechanisms/`.
 - If a helper depends heavily on FTC lifecycle or telemetry, question whether it belongs in an op mode instead.
 - Keep shared types dependency-light when practical so they remain broadly reusable across TeamCode.
+- Keep drivetrain/follower profile data in `library/robot/RobotConstants`; keep non-drive subsystem params surfaced centrally through `Constants`.
 
 ## Good use cases
 
@@ -46,4 +57,5 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - Putting match-specific routines in `library/`.
 - Hiding robot state machines in utility classes.
 - Adding large framework abstractions when a small helper class would do.
+- Using `library/` as a dumping ground for subsystem params instances that should instead be exposed through `Constants`.
 
