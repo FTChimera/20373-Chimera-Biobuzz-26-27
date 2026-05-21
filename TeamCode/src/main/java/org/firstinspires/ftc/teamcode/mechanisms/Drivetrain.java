@@ -41,7 +41,7 @@ public class Drivetrain {
             vector.setRobotHeading(robotHeading);
             vector = vector.rotateFieldCentric();
         }
-        double[] motorPowers = vector.rotateDrivePowers();
+        double[] motorPowers = vector.calculateDrivePowers();
 
         // Set motor powers
         for (int i = 0; i < motors.length; i++) {

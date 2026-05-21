@@ -54,7 +54,7 @@ public class DriveVector {
         this.strafe = curve.applyAsDouble(this.strafe);
         this.rotate = curve.applyAsDouble(this.rotate);
     }
-    public double[] rotateDrivePowers() {
+    public double[] calculateDrivePowers() {
         double[] motorPowers = new double[4];
         motorPowers[0] = forward + strafe + rotate; // Front Left
         motorPowers[1] = forward - strafe - rotate; // Front Right
