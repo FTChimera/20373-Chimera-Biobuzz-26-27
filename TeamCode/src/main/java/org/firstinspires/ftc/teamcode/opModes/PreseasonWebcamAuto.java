@@ -92,20 +92,18 @@ public class PreseasonWebcamAuto extends LinearOpMode {
         limelight.stop();
     }
 
-    PIDFCoefficients getPIDFCoeff() {
-        return new PIDFCoefficients(
+    PIDFCoefficients<Pose> getPIDFCoeff() {
+        return new PIDFCoefficients<>(
+                pose -> new double[]{pose.getX(), pose.getY(), pose.getHeading()},
+                array -> new Pose(array[0], array[1], array[2])
+        ).setPIDF(
                 new double[]{strafePIDF.p, forwardPIDF.p, headingPIDF.p},
                 new double[]{strafePIDF.i, forwardPIDF.i, headingPIDF.i},
                 new double[]{strafePIDF.d, forwardPIDF.d, headingPIDF.d},
-                new double[]{strafePIDF.f, forwardPIDF.f, headingPIDF.f},
-                new double[]{0.5, 0.5, 0.5}, // Tolerance
-                new double[]{1.0, 1.0, 1.0} // Integral limit
-        );
+                new double[]{strafePIDF.f, forwardPIDF.f, headingPIDF.f}
+        ).setTolerance(0.5).setIntegralLimit(1.0);
     }
     PIDFController<Pose> getController() {
-        PIDFController<Pose> controller = new PIDFController<>(getPIDFCoeff());
-        controller.setStateSupplier(pose -> new double[]{pose.getX(), pose.getY(), pose.getHeading()});
-        controller.setInverseStateSupplier(array -> new Pose(array[0], array[1], array[2]));
-        return controller;
+        return new PIDFController<>(getPIDFCoeff());
     }
 }
