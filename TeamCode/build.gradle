@@ -22,6 +22,11 @@ android {
         jniLibs.useLegacyPackaging true
     }
 }
+repositories {
+    maven { url = "https://repo.dairy.foundation/releases" }
+    maven { url = "https://repo.dairy.foundation/snapshots" }
+}
+
 dependencies {
     implementation project(':FtcRobotController')
     testImplementation 'junit:junit:4.13.2'
