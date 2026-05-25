@@ -50,6 +50,10 @@ public class RobotConstants {
     public double HEADING_PIDF_COEFFICIENTS_FEEDFORWARD = 0;
     public double CENTRIPETAL_SCALING = 0;
 
+    public boolean USE_INTAKE = false;
+    public boolean USE_LIMELIGHT = false;
+    public boolean USE_LOGITECH_WEBCAM = false;
+
     /** Default Constructor */
     public RobotConstants() {}
 
@@ -151,7 +155,18 @@ public class RobotConstants {
         return this;
     }
 
-
+    public RobotConstants useIntake(boolean useIntake) {
+        this.USE_INTAKE = useIntake;
+        return this;
+    }
+    public RobotConstants useLimelight(boolean useLimelight) {
+        this.USE_LIMELIGHT = useLimelight;
+        return this;
+    }
+    public RobotConstants useLogitechWebcam(boolean useLogitechWebcam) {
+        this.USE_LOGITECH_WEBCAM = useLogitechWebcam;
+        return this;
+    }
     public Follower createFollower(HardwareMap map) {
         // Pedro Pathing Follower configuration
         FollowerConstants followerConstants = new FollowerConstants()

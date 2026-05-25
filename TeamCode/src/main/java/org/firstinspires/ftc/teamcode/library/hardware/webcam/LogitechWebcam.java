@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
@@ -29,15 +30,21 @@ import java.util.List;
 public class LogitechWebcam {
     /** Parameters for the Logitech webcam. */
     public static class LOGITECH_WEBCAM_PARAMS {
-        public final String HARDWAREMAP_NAME = "Webcam 1";
-        public final boolean SET_DRAW_AXES = true;
-        public final boolean SET_DRAW_CUBE_PROJECTION = true;
-        public final boolean SET_DRAW_TAG_ID = true;
-        public final boolean SET_DRAW_TAG_OUTLINE = true;
-        public final DistanceUnit OUTPUT_DISTANCE_UNIT = DistanceUnit.INCH;
-        public final AngleUnit OUTPUT_ANGLE_UNIT = AngleUnit.RADIANS;
-        public final int CAMERA_RESOLUTION_WIDTH = 640;
-        public final int CAMERA_RESOLUTION_HEIGHT = 480;
+        public String HARDWAREMAP_NAME = "Webcam 1";
+        public boolean SET_DRAW_AXES = true;
+        public boolean SET_DRAW_CUBE_PROJECTION = true;
+        public boolean SET_DRAW_TAG_ID = true;
+        public boolean SET_DRAW_TAG_OUTLINE = true;
+        public DistanceUnit OUTPUT_DISTANCE_UNIT = DistanceUnit.INCH;
+        public AngleUnit OUTPUT_ANGLE_UNIT = AngleUnit.RADIANS;
+        public int CAMERA_RESOLUTION_WIDTH = 640;
+        public int CAMERA_RESOLUTION_HEIGHT = 480;
+        public boolean ISBEINGUSED = true;
+        public void updateFromBot(RobotConstants bot) {
+            if (!ISBEINGUSED) return;
+            HARDWAREMAP_NAME = bot.USE_LOGITECH_WEBCAM ? HARDWAREMAP_NAME : "";
+            ISBEINGUSED = bot.USE_LOGITECH_WEBCAM;
+        }
 
     }
     public LOGITECH_WEBCAM_PARAMS params;
@@ -64,7 +71,7 @@ public class LogitechWebcam {
     // ==================== CONSTRUCTORS ====================
 
     /** Constructs with a specific camera hardware name. */
-    public LogitechWebcam(HardwareMap hwMap, LOGITECH_WEBCAM_PARAMS params) {
+    public LogitechWebcam(HardwareMap hwMap, LOGITECH_WEBCAM_PARAMS params, RobotConstants bot) {
         tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
@@ -77,9 +84,10 @@ public class LogitechWebcam {
                 .setCamera(hwMap.get(WebcamName.class, params.HARDWAREMAP_NAME))
                 .setCameraResolution(new android.util.Size(640, 480))
                 .build();
-        isBeingUsed = true;
         isDisconnected = false;
         this.params = params;
+        this.params.updateFromBot(bot);
+        isBeingUsed = params.ISBEINGUSED;
     }
 
     /** No-op constructor when the camera is not being used. */

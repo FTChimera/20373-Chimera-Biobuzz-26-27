@@ -27,11 +27,11 @@ public class Constants {
     }
 
     public static Intake createIntake(HardwareMap hardwareMap) {
-        return new Intake(hardwareMap, INTAKE_PARAMS);
+        return new Intake(hardwareMap, INTAKE_PARAMS, currentBot);
     }
 
     public static Limelight createLimelight(HardwareMap hardwareMap) {
-        return new Limelight(hardwareMap, LIMELIGHT_PARAMS);
+        return new Limelight(hardwareMap, LIMELIGHT_PARAMS, currentBot);
     }
 
     public static Drivetrain createDrivetrain(HardwareMap hardwareMap) {

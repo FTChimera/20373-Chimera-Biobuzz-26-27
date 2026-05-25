@@ -37,6 +37,10 @@ public class RobotConfigurations {
                 .brakingStart(1)
                 .predictiveBrakingCoefficients(0,0,0)
                 .headingPIDFCoefficients(0,0,0,0)
-                .centripetalScaling(0);
+                .centripetalScaling(0)
+                // MECHANISM USAGE
+                .useIntake(false)
+                .useLimelight(false)
+                .useLogitechWebcam(false);
     }
 }

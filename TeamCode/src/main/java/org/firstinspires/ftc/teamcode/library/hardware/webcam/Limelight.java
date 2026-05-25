@@ -10,17 +10,24 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Limelight {
     public static class LIMELIGHT_PARAMS {
-        public final double
+        public double
                 LIMELIGHT_MOUNT_ANGLE_DEGREES = 0,
                 LIMELIGHT_LENS_HEIGHT_INCHES = 0,
                 TAG_HEIGHT_INCHES = 0;
-        public final String HARDWAREMAP_NAME = "limelight";
+        public String HARDWAREMAP_NAME = "limelight";
+        public boolean ISBEINGUSED = true;
+         public void updateFromBot(RobotConstants bot) {
+             if (!ISBEINGUSED) return;
+             HARDWAREMAP_NAME = bot.USE_LIMELIGHT ? HARDWAREMAP_NAME : "";
+             ISBEINGUSED = bot.USE_LIMELIGHT;
+         }
     }
     public LIMELIGHT_PARAMS params;
     public Command updateCommand() {
@@ -37,13 +44,17 @@ public class Limelight {
         public int getIndex() { return pipelineIndex; }
     }
     private final boolean isBeingUsed;
-    public Limelight(HardwareMap hwMap, LIMELIGHT_PARAMS params) {
+    public Limelight(HardwareMap hwMap, LIMELIGHT_PARAMS params, RobotConstants bot) {
+        if (!params.ISBEINGUSED) {
+            this.params = params;
+            this.params.updateFromBot(bot);
+            isBeingUsed = false;
+            return;
+        }
         limelight1 = hwMap.get(Limelight3A.class, params.HARDWAREMAP_NAME);
         this.params = params;
+        this.params.updateFromBot(bot);
         isBeingUsed = true;
-    }
-    public Limelight() {
-        isBeingUsed = false;
     }
     public double tx=0,ty=0,ta=0,tid=0, dist=0;
     public boolean isDisconnected;

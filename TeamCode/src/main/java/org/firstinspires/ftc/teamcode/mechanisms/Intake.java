@@ -5,29 +5,43 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.Supplier;
 
 public class Intake {
     public static class INTAKE_PARAMS {
-        public final double FULL_POWER = 1.0;
-        public final double HALF_POWER = 0.5;
-        public final double REVERSE_FULL_POWER = -1.0;
-        public final double STOP_POWER = 0.0;
-        public final String HARDWAREMAP_NAME = "intake";
-        public final DcMotorSimple.Direction INTAKE_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+        public double FULL_POWER = 1.0;
+        public double HALF_POWER = 0.5;
+        public double REVERSE_FULL_POWER = -1.0;
+        public double STOP_POWER = 0.0;
+        public String HARDWAREMAP_NAME = "intake";
+        public DcMotorSimple.Direction INTAKE_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+        public boolean ISBEINGUSED = true;
+        public void updateFromBot(RobotConstants bot) {
+            if (!ISBEINGUSED) return;
+            HARDWAREMAP_NAME = bot.USE_INTAKE ? HARDWAREMAP_NAME : "";
+            ISBEINGUSED = bot.USE_INTAKE;
+        }
     }
     public Motor Intake_Motor;
     public INTAKE_PARAMS params;
-    public Intake(HardwareMap map, INTAKE_PARAMS params) {
+    public Intake(HardwareMap map, INTAKE_PARAMS params, RobotConstants bot) {
+        if (!params.ISBEINGUSED) {
+            this.params = params;
+            this.params.updateFromBot(bot);
+            return;
+        }
         this.Intake_Motor = new Motor(map, params.HARDWAREMAP_NAME);
         Intake_Motor.setDirection(params.INTAKE_MOTOR_DIRECTION);
         this.params = params;
+        this.params.updateFromBot(bot);
         Stop();
     }
 
     public void setPower(double power) {
+        if (!params.ISBEINGUSED) return;
         Intake_Motor.setPower(power);
     }
     public void FullPower() {
@@ -44,6 +58,7 @@ public class Intake {
     }
 
     public double getTargetPower() {
+        if (!params.ISBEINGUSED) return 0;
         return Intake_Motor.getTargetPower();
     }
 
@@ -66,6 +81,7 @@ public class Intake {
      }
         /** set custom power as an ivy command*/
      public Command setPowerCommand(Supplier<Double> power) {
+         if (!params.ISBEINGUSED) return CommandConverter.toCommand(() -> {});
          return CommandConverter.toCommand(() -> this.setPower(power.get()));
      }
 

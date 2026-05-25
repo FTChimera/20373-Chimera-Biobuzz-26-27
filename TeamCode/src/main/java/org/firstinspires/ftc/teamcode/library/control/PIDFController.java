@@ -3,10 +3,8 @@ package org.firstinspires.ftc.teamcode.library.control;
 import java.util.function.Function;
 
 public class PIDFController<T> {
-    private PIDFCoefficients coefficients;
+    private PIDFCoefficients<T> coefficients;
     private T target;
-    Function<T, double[]> stateSupplier;
-    Function<double[], T> inverseStateSupplier;
     private T output;
     private double[] lastError;
     private double[] integral;
@@ -14,15 +12,20 @@ public class PIDFController<T> {
     public double dt;
     private double lastTime;
     public void setStateSupplier(Function<T,double[]> stateSupplier) {
-        this.stateSupplier = stateSupplier;
+        this.coefficients.stateSupplier = stateSupplier;
     }
     public void setInverseStateSupplier(Function<double[],T> inverseStateSupplier) {
-        this.inverseStateSupplier = inverseStateSupplier;
+        this.coefficients.inverseStateSupplier = inverseStateSupplier;
     }
-    public PIDFController(PIDFCoefficients coefficients) {
+    public PIDFController(PIDFCoefficients<T> coefficients) {
+        setCoefficients(coefficients);
+    }
+    public PIDFController() {
+        setCoefficients(new PIDFCoefficients<>(null, null));
+    }
+    public void setCoefficients(PIDFCoefficients<T> coefficients) {
         this.coefficients = coefficients;
     }
-
     public void setTarget(T target) {
         this.target = target;
     }
@@ -31,7 +34,7 @@ public class PIDFController<T> {
         return target;
     }
 
-    public PIDFCoefficients getCoefficients() {
+    public PIDFCoefficients<T> getCoefficients() {
         return coefficients;
     }
     public void reset() {
@@ -57,20 +60,21 @@ public class PIDFController<T> {
     public void update(T state) {
         try {
             if (!firstUpdate) {
-                lastError = new double[stateSupplier.apply(state).length];
-                integral = new double[stateSupplier.apply(state).length];
+                lastError = new double[coefficients.stateSupplier.apply(state).length];
+                integral = new double[coefficients.stateSupplier.apply(state).length];
                 lastTime = System.nanoTime();
                 firstUpdate = true;
             }
             dt = (System.nanoTime() - lastTime) / 1e9;
             lastTime = System.nanoTime();
-            double[] currentStateArray = stateSupplier.apply(state);
-            double[] targetArray = stateSupplier.apply(target);
+            double[] currentStateArray = coefficients.stateSupplier.apply(state);
+            double[] targetArray = coefficients.stateSupplier.apply(target);
 
             double[] error = new double[currentStateArray.length];
             for (int i = 0; i < currentStateArray.length; i++) {
                 error[i] = targetArray[i] - currentStateArray[i];
             }
+            coefficients.update(error);
             double[] outputArray = new double[error.length];
             for (int i = 0; i < error.length; i++) {
                 integral[i] += error[i] * dt;
@@ -84,7 +88,7 @@ public class PIDFController<T> {
                 outputArray[i] += coefficients.f[i] * Math.signum(error[i]);
                 if (atTarget()) outputArray[i] = 0;
             }
-            this.output = inverseStateSupplier.apply(outputArray);
+            this.output = coefficients.inverseStateSupplier.apply(outputArray);
             lastError = error;
         } catch (Exception e) {
             e.printStackTrace();
