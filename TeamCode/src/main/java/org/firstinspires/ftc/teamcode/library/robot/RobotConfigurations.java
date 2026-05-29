@@ -10,7 +10,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  */
 @Configurable
 public class RobotConfigurations {
-    public static RobotConstants starterBot() {
+
+    public static RobotConstants offseasonREVTestBot() {
         return new RobotConstants()
                 // DRIVE CONSTANTS
                 .maxPower(0.9)
@@ -41,6 +42,8 @@ public class RobotConfigurations {
                 // MECHANISM USAGE
                 .useIntake(false)
                 .useLimelight(false)
-                .useLogitechWebcam(false);
+                .useLogitechWebcam(false)
+                // COMPATIBILITY
+                .followerTeleopDriveCompatible(true);
     }
 }

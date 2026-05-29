@@ -34,7 +34,8 @@ public class IvyTeleOp extends LinearOpMode {
         setGamepadCurve();
         intake = Constants.createIntake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
-        drive = MecanumDrive.pinpointLocalizer(hardwareMap, startPose);
+        drive = Constants.createTeleOpFollower(hardwareMap);
+        drive.setStartingPose(startPose);
         drive.startTeleOpDrive(); // Stop all motors
         limelight = Constants.createLimelight(hardwareMap);
 
@@ -43,7 +44,7 @@ public class IvyTeleOp extends LinearOpMode {
                 drive.periodicCommand(),
                 drive.teleOp(() -> new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x)),
                 Groups.loop(intake.setPowerCommand(() -> (double) (gamepad1.right_trigger - gamepad1.left_trigger))),
-                Commands.infinite(() -> {if (gamepad1.back) {drive.resetHeading(0);}}).requiring(gamepad1, drive)
+                Commands.infinite(() -> {if (gamepad1.back) {drive.zeroHeadingOffset();}}).requiring(gamepad1, drive)
         );
 
         telemetry.addData("Status", "Initialized");

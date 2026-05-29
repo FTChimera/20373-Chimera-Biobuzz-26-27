@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
@@ -10,6 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.DoubleUnaryOperator;
@@ -36,9 +38,11 @@ public class MecanumDrive {
     public Follower follower;
     // Drivetrain for teleop control (don't use follower directly)
     public Drivetrain drivetrain;
+    public boolean useManualDrive; // Set to false to use follower for teleop drive
 
     // Last known pose (updated in periodic)
     public static Pose lastPose = new Pose(0, 0, 0);
+    public double headingOffset = 0; // Offset to apply to heading for field-centric control
 
     /**
      * Constructor - Initializes the Follower with starting pose
@@ -47,20 +51,10 @@ public class MecanumDrive {
      * @param startingPose Initial robot pose (x, y, heading). If null, uses (0, 0, 0)
      */
 
-    public static MecanumDrive customLocalizer(HardwareMap map, Pose startingPose) {
-        return new MecanumDrive(map, startingPose, true);
-    }
-    public static MecanumDrive pinpointLocalizer(HardwareMap map, Pose startingPose) {
-        return new MecanumDrive(map, startingPose, false);
-    }
-    MecanumDrive(HardwareMap map, Pose startingPose, boolean customLocalizer) {
+    public MecanumDrive(HardwareMap map, Pose startingPose, RobotConstants bot) {
         // Create follower using Constants configuration
-        if (customLocalizer) {
-            /*this.follower = Constants.customLocalizerFollower(map);*/
-        } else {
-            this.follower = Constants.createFollower(map);
-        }
-
+        this.follower = Constants.createFollower(map);
+        useManualDrive = !bot.FOLLOWER_TELEOP_DRIVE_COMPATIBLE;
         // Initialize drivetrain
         drivetrain = Constants.createDrivetrain(map);
         // Set starting pose (use (0, 0, 0) if not provided)
@@ -71,6 +65,9 @@ public class MecanumDrive {
         follower.update();
     }
 
+    public void setStartingPose(Pose pose) {
+        follower.setStartingPose(pose);
+    }
     /**
      * Periodic update - should be called every loop iteration
      * Updates pose tracking and follower state
@@ -91,7 +88,13 @@ public class MecanumDrive {
      */
 
     public void setTeleOpDrive(DriveVector driveVector, boolean fieldCentric) {
-        drivetrain.setTeleOpDrive(driveVector, fieldCentric, lastPose.getHeading());
+        if (useManualDrive) {
+            drivetrain.setTeleOpDrive(driveVector, fieldCentric, lastPose.getHeading() - headingOffset);
+        } else {
+            follower.setTeleOpDrive(
+                    driveVector.forward, driveVector.strafe, driveVector.rotate, fieldCentric, fieldCentric ? headingOffset : 0
+            );
+        }
     }
     /**
      * Set teleop drive
@@ -108,8 +111,13 @@ public class MecanumDrive {
      * Should be called once at the start of teleop
      */
     public void startTeleOpDrive() {
-        drivetrain.startTeleOpDrive();
-        drivetrain.setTeleOpDrive(DriveVector.IDLE, 0);
+        if (useManualDrive) {
+            drivetrain.startTeleOpDrive();
+        } else {
+            follower.startTeleopDrive();
+            follower.setTeleOpDrive(0, 0, 0, false); // Stop all motion
+        }
+
     }
 
     /**
@@ -130,6 +138,22 @@ public class MecanumDrive {
     public void resetHeading(double newHeading) {
         Pose currentPose = follower.getPose();
         follower.setPose(currentPose.setHeading(newHeading));
+    }
+    /**
+     * Set robot heading offset to a new value
+     * Useful for field-centric control adjustments
+     *
+     * @param newHeading New heading in radians
+     */
+    public void setHeadingOffset(double newHeading) {
+        headingOffset = newHeading;
+    }
+    /**
+     * Set robot heading offset to the current heading
+     * Useful for resetting field-centric control to current orientation
+     */
+    public void zeroHeadingOffset() {
+        headingOffset = follower.getPose().getHeading();
     }
     /**
      * Reset robot position to a new pose

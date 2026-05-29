@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 
@@ -14,7 +15,7 @@ public class MotorDirectionTest extends LinearOpMode {
     /**
      * Use the panels configurable on constants to set directions.
      */
-    MecanumDrive drive;
+    Drivetrain drive;
     Intake intake;
     /**
      * Override this method and place your code here.
@@ -31,9 +32,10 @@ public class MotorDirectionTest extends LinearOpMode {
     public void runOpMode() {
         waitForStart();
         do {
-            drive = MecanumDrive.pinpointLocalizer(hardwareMap, new Pose(0, 0, 0));
+            drive = Constants.createDrivetrain(hardwareMap);
+            drive.startTeleOpDrive();
             intake = Constants.createIntake(hardwareMap);
-            drive.setTeleOpDrive(new DriveVector(0.3, 0, 0));
+            drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), 0);
             intake.setPower(0.3);
         }
         while (opModeIsActive());

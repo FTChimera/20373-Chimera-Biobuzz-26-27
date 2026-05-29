@@ -45,7 +45,6 @@ dependencies {
     testImplementation "io.mockk:mockk-agent:1.14.5"
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
     androidTestImplementation 'junit:junit:4.13.2'
     implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
 }

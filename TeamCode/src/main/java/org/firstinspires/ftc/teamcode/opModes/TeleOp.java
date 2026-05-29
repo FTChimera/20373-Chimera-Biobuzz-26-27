@@ -38,7 +38,8 @@ public abstract class TeleOp extends LinearOpMode {
     public void runOpMode() {
         initializeGamepadSettings();
         intake = Constants.createIntake(hardwareMap);
-        drive = MecanumDrive.pinpointLocalizer(hardwareMap, getStartingPose());
+        drive = Constants.createTeleOpFollower(hardwareMap);
+        drive.setStartingPose(getStartingPose());
         drive.startTeleOpDrive(); // Stop all motors
         limelight = Constants.createLimelight(hardwareMap);
 
@@ -53,7 +54,7 @@ public abstract class TeleOp extends LinearOpMode {
 
             // Imu reset yaw
             if (gamepad1.back) {
-                drive.resetHeading(0);
+                drive.zeroHeadingOffset();
             }
 
             // Drive

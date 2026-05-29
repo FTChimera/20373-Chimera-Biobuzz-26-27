@@ -54,6 +54,8 @@ public class RobotConstants {
     public boolean USE_LIMELIGHT = false;
     public boolean USE_LOGITECH_WEBCAM = false;
 
+    public boolean FOLLOWER_TELEOP_DRIVE_COMPATIBLE = true; // Our team had issues with this last year, then finally got it to work.
+
     /** Default Constructor */
     public RobotConstants() {}
 
@@ -165,6 +167,10 @@ public class RobotConstants {
     }
     public RobotConstants useLogitechWebcam(boolean useLogitechWebcam) {
         this.USE_LOGITECH_WEBCAM = useLogitechWebcam;
+        return this;
+    }
+    public RobotConstants followerTeleopDriveCompatible(boolean followerTeleopDriveCompatible) {
+        this.FOLLOWER_TELEOP_DRIVE_COMPATIBLE = followerTeleopDriveCompatible;
         return this;
     }
     public Follower createFollower(HardwareMap map) {
