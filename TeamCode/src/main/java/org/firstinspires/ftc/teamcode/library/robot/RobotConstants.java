@@ -8,10 +8,10 @@ import com.pedropathing.ftc.drivetrains.MecanumConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 
 /**
  * A utility base constants class to hold all Pedro pathing constants for a bot
@@ -24,10 +24,10 @@ public class RobotConstants {
     public String BACK_RIGHT_MOTOR_NAME = "backRight";
     public String PINPOINT_LOCALIZER_NAME = "pinpoint";
 
-    public DcMotorSimple.Direction FRONT_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    public DcMotorSimple.Direction FRONT_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
-    public DcMotorSimple.Direction BACK_LEFT_MOTOR_DIRECTION = DcMotorSimple.Direction.FORWARD;
-    public DcMotorSimple.Direction BACK_RIGHT_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+    public Direction FRONT_LEFT_MOTOR_DIRECTION = Direction.FORWARD;
+    public Direction FRONT_RIGHT_MOTOR_DIRECTION = Direction.REVERSE;
+    public Direction BACK_LEFT_MOTOR_DIRECTION = Direction.FORWARD;
+    public Direction BACK_RIGHT_MOTOR_DIRECTION = Direction.REVERSE;
     public GoBildaPinpointDriver.EncoderDirection PINPOINT_FORWARD_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
     public GoBildaPinpointDriver.EncoderDirection PINPOINT_STRAFE_ENCODER_DIRECTION = GoBildaPinpointDriver.EncoderDirection.FORWARD;
     public double FORWARD_POD_Y_INCH = 0;
@@ -79,19 +79,19 @@ public class RobotConstants {
         this.PINPOINT_LOCALIZER_NAME = name;
         return this;
     }
-    public RobotConstants frontLeftMotorDirection(DcMotorSimple.Direction direction) {
+    public RobotConstants frontLeftMotorDirection(Direction direction) {
         this.FRONT_LEFT_MOTOR_DIRECTION = direction;
         return this;
     }
-    public RobotConstants frontRightMotorDirection(DcMotorSimple.Direction direction) {
+    public RobotConstants frontRightMotorDirection(Direction direction) {
         this.FRONT_RIGHT_MOTOR_DIRECTION = direction;
         return this;
     }
-    public RobotConstants backLeftMotorDirection(DcMotorSimple.Direction direction) {
+    public RobotConstants backLeftMotorDirection(Direction direction) {
         this.BACK_LEFT_MOTOR_DIRECTION = direction;
         return this;
     }
-    public RobotConstants backRightMotorDirection(DcMotorSimple.Direction direction) {
+    public RobotConstants backRightMotorDirection(Direction direction) {
         this.BACK_RIGHT_MOTOR_DIRECTION = direction;
         return this;
     }
@@ -185,10 +185,10 @@ public class RobotConstants {
                 .rightFrontMotorName(FRONT_RIGHT_MOTOR_NAME)
                 .leftRearMotorName(BACK_LEFT_MOTOR_NAME)
                 .rightRearMotorName(BACK_RIGHT_MOTOR_NAME)
-                .leftFrontMotorDirection(FRONT_LEFT_MOTOR_DIRECTION)
-                .rightFrontMotorDirection(FRONT_RIGHT_MOTOR_DIRECTION)
-                .leftRearMotorDirection(BACK_LEFT_MOTOR_DIRECTION)
-                .rightRearMotorDirection(BACK_RIGHT_MOTOR_DIRECTION)
+                .leftFrontMotorDirection(FRONT_LEFT_MOTOR_DIRECTION.toFtcSdk())
+                .rightFrontMotorDirection(FRONT_RIGHT_MOTOR_DIRECTION.toFtcSdk())
+                .leftRearMotorDirection(BACK_LEFT_MOTOR_DIRECTION.toFtcSdk())
+                .rightRearMotorDirection(BACK_RIGHT_MOTOR_DIRECTION.toFtcSdk())
                 .xVelocity(X_VELOCITY)
                 .yVelocity(Y_VELOCITY);
 

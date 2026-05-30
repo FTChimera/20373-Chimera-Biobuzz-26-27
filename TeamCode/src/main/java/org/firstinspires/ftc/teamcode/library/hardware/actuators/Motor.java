@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.library.hardware.actuators;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
@@ -89,8 +88,8 @@ public class Motor {
         targetPower = 0;
     }
 
-    public Motor setDirection(DcMotorSimple.Direction motorDirection) {
-        if (motor.getDirection() != motorDirection) {
+    public Motor setDirection(Direction motorDirection) {
+        if (motor.getDirection() != motorDirection.toFtcSdk()) {
             reverseDirection();
         }
         return this;

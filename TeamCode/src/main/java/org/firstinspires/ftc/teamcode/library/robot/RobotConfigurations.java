@@ -2,7 +2,8 @@ package org.firstinspires.ftc.teamcode.library.robot;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
+import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 
 /**
  * A utility class to hold all of the robot constants for each bot
@@ -19,10 +20,10 @@ public class RobotConfigurations {
                 .frontRightMotorName("frontRight")
                 .backLeftMotorName("backLeft")
                 .backRightMotorName("backRight")
-                .frontLeftMotorDirection(DcMotorSimple.Direction.FORWARD)
-                .frontRightMotorDirection(DcMotorSimple.Direction.REVERSE)
-                .backLeftMotorDirection(DcMotorSimple.Direction.FORWARD)
-                .backRightMotorDirection(DcMotorSimple.Direction.REVERSE)
+                .frontLeftMotorDirection(Direction.FORWARD)
+                .frontRightMotorDirection(Direction.REVERSE)
+                .backLeftMotorDirection(Direction.FORWARD)
+                .backRightMotorDirection(Direction.REVERSE)
                 .xVelocity(0)
                 .yVelocity(0)
                 // PINPOINT CONSTANTS

@@ -1,9 +1,9 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.pedropathing.ivy.Command;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
@@ -17,7 +17,7 @@ public class Intake {
         public double REVERSE_FULL_POWER = -1.0;
         public double STOP_POWER = 0.0;
         public String HARDWAREMAP_NAME = "intake";
-        public DcMotorSimple.Direction INTAKE_MOTOR_DIRECTION = DcMotorSimple.Direction.REVERSE;
+        public Direction INTAKE_MOTOR_DIRECTION = Direction.REVERSE;
         public boolean ISBEINGUSED = true;
         public void updateFromBot(RobotConstants bot) {
             if (!ISBEINGUSED) return;
