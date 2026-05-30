@@ -19,10 +19,12 @@ This skill covers both the raw FTC gamepad APIs already used in TeamCode and the
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
 
 ## Current repo usage
 
 - Most active op modes use raw SDK gamepads like `gamepad1.left_stick_y`, `gamepad1.back`, or edge helpers such as `aWasPressed()`.
+- `MecanumTeleOp` is a current raw-input example that uses `dpadLeftWasPressed()`, `dpadRightWasPressed()`, `backWasPressed()`, and the face-button edge helpers to change drive modes and flip motor directions.
 - `GamepadEx` exists as a richer wrapper with buttons, sticks, triggers, touchpad, LED, and rumble support.
 - `DualGamepad` wraps two `GamepadEx` objects and is the repo’s dual-controller utility surface when one abstraction needs to manage both `gamepad1` and `gamepad2` together.
 - `GamepadEx` is marked `@Deprecated`, so treat it as optional rather than the default style for new work.

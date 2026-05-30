@@ -34,3 +34,9 @@ Across the skill set, the current house style is:
 - add `Constants.create...(...)` factories for subsystem construction
 - keep drivetrain and Pedro follower profile data in `library/robot/RobotConstants` and `RobotConfigurations`
 
+Current repo details worth remembering while using these skills:
+
+- drive motor directions are now represented with `library/hardware/actuators/Direction.java`, then converted to FTC SDK directions at the wrapper/profile boundary
+- `TeamCode/build.gradle` now wires Project Lombok annotation processing and the Sloth load / hot-reload tooling, so build troubleshooting should account for both
+- `tests/MecanumTeleOp.java` is now a first-class iterative test op mode for robot-centric drive, field-centric drive, IMU yaw reset, and manual motor-direction checks
+

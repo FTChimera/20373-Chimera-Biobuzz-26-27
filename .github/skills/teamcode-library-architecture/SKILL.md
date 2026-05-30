@@ -9,7 +9,7 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 
 ## Package layout
 
-- `library/`: small reusable types and hardware wrappers such as `DriveVector`, `Timer`, `AllianceColor`, `Motor`, gamepad helpers, and webcam helpers.
+- `library/`: small reusable types and hardware wrappers such as `DriveVector`, `Timer`, `AllianceColor`, `Motor`, `Direction`, gamepad helpers, and webcam helpers.
 - `mechanisms/`: robot subsystems such as `Intake`, `Drivetrain`, and `MecanumDrive`.
 - `opModes/`: shared base op mode logic.
 - `opModes/variants/`: concrete driver-station-visible wrappers with FTC annotations.
@@ -35,12 +35,13 @@ This centralization is important because `Constants` is the place the team wants
 ## Where configuration belongs
 
 - Put non-drive subsystem params in the subsystem or wrapper class, but keep the shared instance in `Constants`.
-- Put drive motor names, directions, Pinpoint data, follower tuning, and path constraints in `library/robot/RobotConstants` / `RobotConfigurations`.
+- Put drive motor names, `Direction`-based drive directions, Pinpoint data, follower tuning, and path constraints in `library/robot/RobotConstants` / `RobotConfigurations`.
 - Put default poses and cross-mechanism toggles in `Constants`.
 - Do not move non-drive mechanism params into `RobotConstants`; that class is for robot-profile and Pedro drive configuration.
 
 ## Existing wrappers and mechanisms to reuse
 
+- `library.hardware.actuators.Direction`
 - `library.hardware.actuators.Motor`
 - `library.hardware.webcam.Limelight`
 - `library.DriveVector`
@@ -72,3 +73,8 @@ This centralization is important because `Constants` is the place the team wants
 - Generic FTC sample patterns from `FtcRobotController/external/samples/` are not the house style for TeamCode.
 - New mechanisms should not be instantiated directly from op modes when a `Constants.create...(...)` factory belongs there.
 - The Dashboard-editable params instance should live centrally in `Constants`, not as a second static params object hidden inside each mechanism.
+
+## Current build-tooling note
+
+- `TeamCode/build.gradle` now wires Project Lombok annotation processing and Sloth load / runtime support, so architecture or cleanup work should preserve that module-level tooling unless the codebase is intentionally being migrated away from it.
+

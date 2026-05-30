@@ -25,6 +25,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 3. `MecanumDrive` wraps a Pedro `Follower` plus the team `Drivetrain`.
 4. Non-drive mechanisms and wrappers are also expected to be created through `Constants.create...(...)` factories so the whole robot uses one consistent construction path.
 5. Ivy-based autonomous code usually defines an `IvyAuton_Paths` implementation in a variant class and passes it into `IvyAuton`.
+6. Drive motor directions inside the robot profile now use the shared `library.hardware.actuators.Direction` enum before converting to the FTC SDK types Pedro expects.
 
 ## Use these patterns
 
@@ -89,7 +90,7 @@ public final class IntakeCommand extends CommandBuilder {
 
 ## Important repo-specific constraints
 
-- `RobotConfigurations.starterBot()` still contains placeholder tuning values for follower, drivetrain, and pinpoint offsets; do not assume those numbers are competition-ready.
+- `RobotConfigurations.OldDECODERobotTesting()` still contains placeholder tuning values for follower, drivetrain, and pinpoint offsets; do not assume those numbers are competition-ready.
 - `customLocalizerFollower(...)` uses Limelight plus Pinpoint fusion. The source comment explicitly warns not to use it when the camera is needed for color detection.
 - `MecanumDrive.pinpointLocalizer(...)` is the normal teleop entry point.
 - If a new Pedro-adjacent mechanism is created, it should still follow the central `Constants` factory plus shared params-instance pattern.

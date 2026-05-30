@@ -8,16 +8,18 @@ description: Use this skill when asked to edit robot profiles, drivetrain naming
 Use this skill for robot-profile work centered around:
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 
 ## How this repo is wired
 
 1. `Constants.currentBot` selects the active robot profile.
-2. `RobotConfigurations` defines named robot presets such as `starterBot()`.
-3. `RobotConstants` is a builder-style container for drive names, directions, Pinpoint offsets, follower tuning, and path constraints.
+2. `RobotConfigurations` currently defines named robot presets such as `OldDECODERobotTesting()`.
+3. `RobotConstants` is a builder-style container for drive names, drive directions, Pinpoint offsets, follower tuning, and path constraints.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
+6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 
 ## What belongs where
 
@@ -26,6 +28,7 @@ Use this skill for robot-profile work centered around:
 - Put drive motor names, drive directions, Pinpoint encoder directions, and follower/pathing tuning in `RobotConstants`.
 - Put concrete robot presets in `RobotConfigurations`.
 - Prefer selecting a profile through `Constants.currentBot` instead of scattering conditionals throughout mechanisms or op modes.
+- Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles; keep GoBILDA Pinpoint encoder directions on the SDK enum that Pedro expects.
 
 ## Important separation of concerns
 
@@ -55,6 +58,7 @@ That separation lets Dashboard-editable mechanism params live in one central con
 - Reuse the existing fluent builder methods on `RobotConstants` instead of introducing parallel drivetrain configuration objects.
 - Keep all four drive motor names and directions together when changing a drivetrain profile.
 - Keep Pinpoint geometry and encoder-direction updates in the same robot profile change.
+- Keep drive motor directions on the shared `Direction` enum so `Drivetrain` and `RobotConstants.createFollower(...)` stay aligned.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
 - Do not move mechanism-specific params into `RobotConstants` just because they are editable; those should stay central in `Constants`.
 - Treat the current values as placeholders unless they were explicitly measured on the robot.
@@ -72,4 +76,5 @@ That separation lets Dashboard-editable mechanism params live in one central con
 - `Constants` is intentionally the central factory/config surface for non-drive mechanisms.
 - `MecanumDrive` depends on `Constants.createFollower(...)`, so follower changes affect teleop and autonomous.
 - `RobotConstants.createFollower(...)` currently assumes Pinpoint localization and the GoBILDA 4-bar pod resolution.
+- Any doc or patch that still talks about `starterBot()` is stale; the current attached preset is `OldDECODERobotTesting()`.
 

@@ -10,6 +10,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MotorDirectionTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Tuning.java`
@@ -23,7 +24,8 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 
 ## Existing examples
 
-- `MotorDirectionTest` is a simple low-speed sanity check for drive direction and intake direction.
+- `MecanumTeleOp` is a raw FTC iterative test op mode with robot-centric mode, field-centric mode, IMU yaw reset, and a built-in motor-direction test mode.
+- `MotorDirectionTest` is a simple low-speed sanity check for the constants-driven drivetrain profile and intake direction.
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `Tuning.java` contains localization, velocity, braking, PIDF, centripetal, and path-shape tuners.
 
@@ -47,4 +49,5 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Build after changing tuning or test classes.
 - Prefer a robot-side sanity check before claiming tuning-related behavior is correct.
 - If a test touches drive direction, check it with the robot safely off the ground first when practical.
+- Use `MecanumTeleOp` when you need direct SDK-level drive and IMU behavior checks; use `MotorDirectionTest` when you want to validate the current `Constants` / `RobotConfigurations` drivetrain wiring at low speed.
 

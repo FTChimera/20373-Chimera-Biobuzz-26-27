@@ -11,10 +11,12 @@ This skill covers the team’s custom teleop-drive stack.
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Drivetrain.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
 
 ## Current architecture
 
@@ -31,6 +33,7 @@ This skill covers the team’s custom teleop-drive stack.
 - `TeleOp` and `IvyTeleOp` square the stick inputs with `x -> Math.signum(x) * x * x`.
 - Heading reset is usually mapped to `gamepad1.back`.
 - `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
+- Drive motor directions in robot profiles now use `library.hardware.actuators.Direction`; `Drivetrain` applies them through `Motor.setDirection(...)`.
 
 ## How drive fits the new creation pattern
 
@@ -60,5 +63,6 @@ If a new drive-adjacent mechanism is added, give it its own params type and cent
 
 - Check that forward stick still drives the robot in the intended direction.
 - Check field-centric orientation after a heading reset.
-- If motor-power math changed, use `MotorDirectionTest` or another safe low-speed test op mode before trusting match play.
+- Use `tests/MecanumTeleOp.java` when you need a direct SDK-based robot-centric / field-centric check or want to flip individual motor directions interactively.
+- Use `MotorDirectionTest` when you want to validate the constants-driven drivetrain profile and intake direction at low speed.
 

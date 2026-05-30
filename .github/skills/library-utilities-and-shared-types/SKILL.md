@@ -12,6 +12,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Timer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/...`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
@@ -26,6 +27,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `AllianceColor` carries alliance-level intent for shared op mode bases.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
+- `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
@@ -51,6 +53,13 @@ In other words: the type definition can live with the wrapper, but the live shar
 - Add a small enum, value object, or utility method.
 - Add helper behavior to `DriveVector` or another reusable math/configuration class.
 - Add a wrapper or adapter that makes raw FTC devices easier to use from mechanisms.
+- Add shared conversion helpers like the `Direction` bridge between repo-level configuration and FTC SDK device APIs.
+
+## Direction-specific guidance
+
+- For drive or wrapper configuration that should stay FTC-SDK-agnostic, prefer `library.hardware.actuators.Direction` over threading `DcMotorSimple.Direction` through higher-level config objects.
+- Keep conversion to FTC SDK enums at the boundary, such as `Direction.toFtcSdk()` inside wrappers or drivetrain-profile builders.
+- If a change only needs drive-direction intent, extend `Direction` or reuse it rather than creating a second repo-local forward/reverse enum.
 
 ## Avoid
 

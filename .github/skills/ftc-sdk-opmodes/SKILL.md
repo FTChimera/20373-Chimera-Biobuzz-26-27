@@ -46,6 +46,7 @@ The mechanism should store the params instance on the object, but the shared edi
 - Limelight usage is wrapped by `library/hardware/webcam/Limelight.java` and created through `Constants`.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
+- `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 
 ## Rules
 
@@ -61,8 +62,10 @@ The mechanism should store the params instance on the object, but the shared edi
 - Ivy teleop: `opModes/IvyTeleOp.java`
 - Ivy autonomous base: `opModes/IvyAuton.java`
 - Annotated wrappers: `opModes/variants/Blue_TeleOp.java`, `opModes/variants/Red_TeleOp.java`, `opModes/variants/Test_IvyAuton.java`
+- Standalone validation op mode: `tests/MecanumTeleOp.java`
 
 ## Validation
 
 - Build with Gradle before concluding changes are done.
 - This project uses Android Gradle Plugin `8.7.0`, so builds require Java 11 or newer.
+- `TeamCode/build.gradle` now also includes Lombok annotation processing and Sloth load / runtime wiring, so build troubleshooting should include those pieces.

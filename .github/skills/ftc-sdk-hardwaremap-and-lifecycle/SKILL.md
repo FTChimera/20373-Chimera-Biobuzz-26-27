@@ -18,6 +18,7 @@ Use this skill for direct FTC SDK integration work.
 - `opModes/TeleOp.java` uses `LinearOpMode` with `waitForStart()` and `while (opModeIsActive())`.
 - `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
 - `opModes/IvyAuton.java` and `opModes/PreseasonWebcamAuto.java` use iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
+- `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
 - Mechanism and wrapper constructors typically accept `HardwareMap` plus a params object and resolve devices immediately.
 
 ## HardwareMap rules in this repo
@@ -48,7 +49,7 @@ Do not create a fresh params object every loop. The team wants one central Dashb
 ## FTC SDK details already used here
 
 - The repo uses FTC annotation discovery with `@TeleOp` and `@Autonomous`.
-- SDK gamepad edge helpers like `aWasPressed()` and `backWasPressed()` are already used in the codebase.
+- SDK gamepad edge helpers like `aWasPressed()`, `backWasPressed()`, `dpadLeftWasPressed()`, and `dpadRightWasPressed()` are already used in the codebase.
 - `telemetry.addData(...)` plus `telemetry.update()` is the common reporting pattern.
 
 ## Good practice

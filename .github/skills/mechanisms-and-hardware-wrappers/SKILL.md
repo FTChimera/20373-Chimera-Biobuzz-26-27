@@ -10,6 +10,7 @@ Use this skill when extending the team’s abstraction layers instead of writing
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Drivetrain.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
@@ -41,6 +42,7 @@ Why: the team wants Dashboard/panels to edit subsystem params from one central p
 ## Existing patterns to reuse
 
 - `Intake` wraps one `Motor`, keeps an `INTAKE_PARAMS` instance, and is created via `Constants.createIntake(hardwareMap)`.
+- `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
 - `Limelight` keeps a `LIMELIGHT_PARAMS` instance and is created via `Constants.createLimelight(hardwareMap)`.
 - `Drivetrain` is created via `Constants.createDrivetrain(hardwareMap)` using the active `RobotConstants` profile.
 - `MecanumDrive` combines a Pedro `Follower` with the team `Drivetrain` wrapper and delegates follower/drivetrain creation through `Constants`.
@@ -51,6 +53,7 @@ Why: the team wants Dashboard/panels to edit subsystem params from one central p
 - Add robot behavior under `mechanisms/...` second.
 - Add the central shared params instance and factory in `Constants` as part of the same feature.
 - Preserve chainable convenience methods where a wrapper already uses them, as `Motor` does.
+- If a wrapper or profile needs reusable drive direction state, prefer the shared `Direction` enum instead of pushing `DcMotorSimple.Direction` through higher-level config.
 - If a mechanism already exposes Ivy command helpers, prefer extending that API instead of duplicating inline commands in op modes.
 - Do not create a second static params singleton inside the mechanism class.
 

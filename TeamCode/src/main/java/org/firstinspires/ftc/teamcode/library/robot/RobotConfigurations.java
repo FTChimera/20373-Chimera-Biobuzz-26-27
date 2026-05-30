@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 @Configurable
 public class RobotConfigurations {
 
-    public static RobotConstants offseasonREVTestBot() {
+    public static RobotConstants OldDECODERobotTesting() {
         return new RobotConstants()
                 // DRIVE CONSTANTS
                 .maxPower(0.9)
