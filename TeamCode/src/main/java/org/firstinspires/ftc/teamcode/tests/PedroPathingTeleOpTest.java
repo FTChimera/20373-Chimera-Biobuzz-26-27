@@ -25,7 +25,7 @@ public class PedroPathingTeleOpTest extends OpMode {
     boolean isRobotCentric = false;
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
-    public static int DegreesOffset = 90;
+    public static double DegreesOffset = 90;
 
     @Override
     public void init() {
@@ -64,7 +64,7 @@ public class PedroPathingTeleOpTest extends OpMode {
 
         }
         if (gamepad1.backWasPressed()) {
-            isRobotCentric = !isRobotCentric;
+            DegreesOffset = Math.toDegrees(follower.getPose().getHeading());
         }
 
         //Automated PathFollowing
