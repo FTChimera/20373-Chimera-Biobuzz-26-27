@@ -33,13 +33,13 @@ Use this skill when working on the repo’s shared-base-class plus thin-wrapper 
 
 ## Mechanism construction rule for shared bases
 
-Shared base op modes should initialize mechanisms through `Constants.create...(...)` so every variant uses the same params instances and factories.
+Shared base op modes should initialize mechanisms through `Constants.create...(...)` so every variant uses the same profile-aware factories.
 
 If a new subsystem is introduced for a base op mode:
 
-1. define its params type on the mechanism or wrapper
-2. add the shared editable instance to `Constants`
-3. add `Constants.create...(...)`
+1. make it follow the repo’s `Mechanism` + `(HardwareMap, RobotConstants)` constructor pattern when it is a profile-managed subsystem
+2. register it in the active robot profile with `.addMechanism(...)`
+3. add `Constants.create...(...)` when the shared base should access it directly
 4. initialize it in the shared base, not separately in every variant wrapper
 
 ## Rules
@@ -48,7 +48,7 @@ If a new subsystem is introduced for a base op mode:
 - Prefer adding a new wrapper class in `opModes/variants/` over copy-pasting a full base class.
 - If teleop needs autonomous pose handoff, read from and write to `Blackboard.pose` intentionally.
 - Keep alliance-specific differences explicit through constructor parameters, paths, or start poses.
-- Keep subsystem factories and shared params centralized in `Constants`, not redefined per variant.
+- Keep subsystem factories centralized through `Constants` / `RobotConstants.createMechanism(...)`, not redefined per variant.
 
 ## Good use cases
 

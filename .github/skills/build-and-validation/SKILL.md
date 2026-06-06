@@ -37,9 +37,11 @@ Use this skill when validating changes or diagnosing why the project does or doe
 ## What static review should focus on
 
 - FTC annotation placement and op mode lifecycle ordering
-- Central subsystem factories and params instances in `Constants`
-- Mechanism constructors accepting the expected params object
+- `Constants` convenience factories versus the underlying `RobotConstants.createMechanism(...)` flow
+- Mechanism constructors matching the expected `(HardwareMap, RobotConstants)` signature
+- `RobotConfigurations` registration through `.addMechanism(...)`
 - Pedro follower and localizer wiring
+- `EquationCurve` / `Polynomial` contracts if custom path geometry changed
 - Alliance-specific wrapper classes under `opModes/variants`
 - Camera pipeline assumptions versus localization mode
 
@@ -47,16 +49,17 @@ Use this skill when validating changes or diagnosing why the project does or doe
 
 When a change adds or modifies a mechanism, confirm all of these:
 
-1. The mechanism or wrapper class defines its own params type.
-2. `Constants` owns the shared params instance used for Dashboard/panels.
-3. `Constants` exposes a `create...(...)` factory for the mechanism.
-4. Op modes use the `Constants` factory instead of direct construction.
-5. Drive-related configuration still lives in `RobotConstants` / `RobotConfigurations`, not mixed into unrelated mechanism params.
+1. The mechanism or wrapper extends `Mechanism` if it should participate in the normal robot-subsystem flow.
+2. Its constructor matches `(HardwareMap, RobotConstants)`.
+3. The active robot profile registers it with `.addMechanism(...)`.
+4. `Constants` exposes or reuses a `create...(...)` helper when callers should not spell out `currentBot.createMechanism(...)` directly.
+5. Op modes use the normal factory path instead of direct construction.
+6. Drive-related configuration still lives in `RobotConstants` / `RobotConfigurations`, not mixed into unrelated mechanism logic.
 
 ## Current repo-specific warning signs
 
 - Placeholder drivetrain and localization tuning values still exist in `RobotConfigurations` and related config objects.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.
 - This repo does not currently expose a dedicated JVM unit-test suite; most validation is build-time plus robot runtime checks.
-- Documentation or code that still references a `Mechanisms.java` factory surface is stale; the repo now uses `Constants` factories.
+- Documentation or code that still assumes every subsystem is wired by a central params singleton in `Constants` is stale; uniform construction now centers on `Mechanism` plus `RobotConstants.createMechanism(...)`.
 - Build guidance that ignores Lombok or Sloth is stale; both are now part of the TeamCode module wiring.

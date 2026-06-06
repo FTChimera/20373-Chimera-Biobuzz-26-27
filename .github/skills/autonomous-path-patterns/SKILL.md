@@ -10,9 +10,11 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
 
 ## Two autonomous styles in this repo
@@ -23,15 +25,17 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 ## Path-building conventions
 
 - Use `PathChain` for Ivy autonomous builders, even when there is only one `Path`.
-- Use `BezierLine` or `BezierCurve` for geometry depending on whether the motion is straight or curved.
+- Use `BezierLine`, `BezierCurve`, or `EquationCurve` depending on whether the motion is straight, control-point-based, or easiest to express as `y = f(x)`.
 - Keep start pose and path geometry near each other.
 - Set heading interpolation explicitly rather than relying on implicit defaults.
+- If using `EquationCurve`, make sure the chosen `Polynomial` passes exactly through the start and end poses because the current constructor validates endpoints with exact equality.
 
 ## Repo examples
 
 - `Test_IvyAuton.Paths` returns a `PathChain` built from one `Path`.
 - `PreseasonWebcamAuto` uses nested static pose/path helpers and a `State` enum to coordinate release, intake, and park behavior.
 - `PedroPathingTeleOpTest` uses `follower.pathBuilder()` lazily to create a path from the current pose.
+- `EquationCurve` plus `Polynomial` are now available for custom curve work even if no current autonomous routine uses them heavily yet.
 
 ## Mechanism creation rule for autonomous work
 
@@ -39,12 +43,12 @@ If autonomous needs a new subsystem or vision wrapper, do not construct it ad ho
 
 Instead:
 
-1. add or update the mechanism/wrapper params type
-2. expose the shared editable params instance in `Constants`
-3. add `Constants.create...(...)`
-4. instantiate through `Constants` during op mode initialization
+1. make the subsystem follow the repo’s `Mechanism` + `(HardwareMap, RobotConstants)` constructor pattern
+2. register it in the active robot profile with `.addMechanism(...)`
+3. add or reuse a `Constants.create...(...)` helper when that improves readability
+4. instantiate through that normal creation path during op mode initialization
 
-That keeps autonomous and teleop using the same subsystem construction path and lets Dashboard/panels tune params centrally.
+That keeps autonomous and teleop using the same subsystem construction path.
 
 ## Rules
 
@@ -53,6 +57,7 @@ That keeps autonomous and teleop using the same subsystem construction path and 
 - If a path needs a specific heading profile, encode it in the path builder next to the geometry.
 - If the autonomous is variant-specific, put geometry in the variant class and keep shared orchestration in the base.
 - Create mechanisms through `Constants`, not direct constructors sprinkled through state-machine branches.
+- Keep `Polynomial` math helpers in `library/` and Pedro-specific curve wiring in `EquationCurve` or the path builder layer.
 
 ## Things to watch
 

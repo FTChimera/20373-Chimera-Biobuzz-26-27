@@ -19,25 +19,26 @@ Use this skill for direct FTC SDK integration work.
 - `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
 - `opModes/IvyAuton.java` and `opModes/PreseasonWebcamAuto.java` use iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
 - `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
-- Mechanism and wrapper constructors typically accept `HardwareMap` plus a params object and resolve devices immediately.
+- Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
 
 ## HardwareMap rules in this repo
 
 - Resolve hardware once during initialization, not repeatedly inside the active loop.
 - Prefer team wrappers and mechanisms over raw device access in op modes.
 - Prefer `Constants.create...(...)` factories over direct `new Mechanism(...)` calls in op modes.
-- Keep hardware names and editable subsystem params centralized in `Constants` unless they are drive/follower profile data that belong in `library/robot/RobotConstants`.
+- Keep drive/profile hardware names in `RobotConstants`, and let `Constants.create...(...)` delegate to the active profile for profile-managed subsystems.
 
 ## New mechanism pattern tied to lifecycle
 
 When a task asks for a new mechanism or wrapper:
 
-1. define a nested params type in the mechanism or wrapper class
-2. create one shared params instance in `Constants`
-3. add `Constants.createMechanism(hardwareMap)`
-4. initialize the mechanism once during `init()` or before `waitForStart()`
+1. make it extend `Mechanism` if it belongs in the standard robot subsystem flow
+2. give it the `(HardwareMap, RobotConstants)` constructor that `RobotConstants.createMechanism(...)` expects
+3. register it in the active robot profile with `.addMechanism(...)`
+4. add or reuse a `Constants.create...(...)` helper when higher-level code should access it directly
+5. initialize the mechanism once during `init()` or before `waitForStart()`
 
-Do not create a fresh params object every loop. The team wants one central Dashboard-editable params instance in `Constants` and one constructed mechanism instance per op mode.
+Do not create fresh subsystem instances every loop. The team wants one constructed mechanism instance per op mode, created through the normal profile-aware factory path.
 
 ## Lifecycle rules
 
@@ -64,6 +65,6 @@ Do not create a fresh params object every loop. The team wants one central Dashb
 - Re-fetching devices from `hardwareMap` in every loop.
 - Writing FTC annotations on abstract base classes.
 - Mixing `LinearOpMode` flow control into iterative `OpMode` subclasses.
-- Building mechanism params ad hoc in multiple places instead of centralizing them in `Constants`.
+- Bypassing the `Mechanism` / `RobotConstants.createMechanism(...)` pattern for profile-managed subsystems.
 - Forgetting that many runtime issues are hardware-config dependent even when the project builds.
 

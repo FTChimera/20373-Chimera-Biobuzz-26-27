@@ -78,7 +78,7 @@ Do not collapse finger-specific or touchpad-specific queries into a single ambig
 - If you need reusable input behavior like toggles, edge detection, touchpad tracking, or controller LED support, extend the wrapper utilities instead of recreating them ad hoc.
 - Call wrapper `update()` methods once per loop before reading values.
 - Keep stick-curve logic consistent with drive expectations; the repo often applies shaping in `MecanumDrive` / `DriveVector`, not directly in every button handler.
-- When a new button action needs a new mechanism, add that mechanism through the `Constants` factory plus central params pattern before wiring buttons to it.
+- When a new button action needs a new mechanism, add that mechanism through the normal `Mechanism` / `RobotConstants.createMechanism(...)` flow before wiring buttons to it.
 - For a dual-controller wrapper, keep one combined update flow and separate per-pad accessors instead of mixing both styles inconsistently.
 
 ## Good use cases for wrappers

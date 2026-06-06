@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
+import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -47,7 +48,8 @@ public class RobotConfigurations {
                 // MECHANISM USAGE
                 .addMechanism(Intake.class)
                 .addMechanism(Limelight.class)
-                .addMechanism(LogitechWebcam.class)
+                .addMechanism(RGBIndicator.class)
+                .addMechanism(MecanumDrive.class)
                 // COMPATIBILITY
                 .followerTeleopDriveCompatible(true);
     }

@@ -27,12 +27,14 @@ This repository currently mixes GoBILDA Pinpoint odometry with Limelight usage, 
 
 Vision wrappers should follow the same pattern as other mechanisms:
 
-- define a nested params type on the wrapper, such as `LIMELIGHT_PARAMS`
-- keep the shared editable params instance in `Constants`
+- define wrapper-specific helper params on the wrapper when they belong there, such as `LIMELIGHT_PARAMS`
+- extend `Mechanism` when the wrapper should participate in the standard robot-subsystem flow
+- keep the constructor shape `(HardwareMap, RobotConstants)`
+- register the wrapper in the active robot profile with `.addMechanism(...)`
 - expose construction through `Constants.createLimelight(...)`
 - avoid direct wrapper construction in every op mode
 
-That centralization is important because the team wants Dashboard/panels to edit vision params from one place.
+That keeps vision wrappers aligned with the same profile-aware construction path as the rest of the robot.
 
 ## Repo-specific constraints
 
@@ -47,11 +49,11 @@ That centralization is important because the team wants Dashboard/panels to edit
 - Avoid mixing color-detection logic with the custom Limelight fusion localizer unless the camera pipeline plan is intentionally revisited.
 - When adjusting pose fusion, keep coordinate-system conversion explicit.
 - Do not introduce silent pose overwrites without checking for invalid or missing vision data.
-- If a new camera wrapper is added, give it its own params type plus a `Constants.create...(...)` factory.
+- If a new camera wrapper is added, make it fit the `Mechanism` + `RobotConstants.createMechanism(...)` pattern and expose a `Constants.create...(...)` helper if higher-level code should call it directly.
 
 ## Example decisions
 
 - Need AprilTag-assisted pose estimate while driving: consider the custom localizer path.
 - Need color detection in autonomous: keep Pinpoint as the follower localizer and use the Limelight separately for vision.
 - Need tag metadata or botpose telemetry: extend the `Limelight` wrapper rather than scattering direct SDK calls.
-- Need a new vision mechanism or camera wrapper: add its params type in the wrapper, its shared instance in `Constants`, and its factory in `Constants` before wiring it into op modes.
+- Need a new vision mechanism or camera wrapper: add it to the normal profile-managed construction flow before wiring it into op modes.

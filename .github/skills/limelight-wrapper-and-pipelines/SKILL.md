@@ -18,7 +18,7 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 ## Existing abstraction
 
 - `Constants.createLimelight(hardwareMap)` is the normal factory entry point.
-- `Constants` owns the shared `Limelight.LIMELIGHT_PARAMS` instance so Dashboard/panels can edit it centrally.
+- `Limelight` extends `Mechanism`, so the normal factory path is `Constants.createLimelight(...)` → `currentBot.createMechanism(...)`.
 - `Limelight.Pipeline` currently exposes `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR`.
 - `start(...)` chooses a pipeline and starts the FTC `Limelight3A` device.
 - `LLUpdate()` pulls the latest result, tracks disconnect state, and caches fiducials, colors, and detectors.
@@ -34,12 +34,14 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 
 When working on `Limelight` or adding a similar wrapper:
 
-1. keep the params type with the wrapper class
-2. keep the shared editable params instance in `Constants`
-3. expose construction through `Constants.create...(...)`
-4. avoid direct wrapper construction in op modes unless the task is specifically refactoring the factory surface
+1. keep wrapper-specific helper params with the wrapper class when they belong there
+2. make the wrapper extend `Mechanism` if it should participate in the standard robot-subsystem flow
+3. keep the constructor shape `(HardwareMap, RobotConstants)` so `RobotConstants.createMechanism(...)` can instantiate it
+4. register the wrapper in the active robot profile with `.addMechanism(...)`
+5. expose construction through `Constants.create...(...)`
+6. avoid direct wrapper construction in op modes unless the task is specifically refactoring the factory surface
 
-The mechanism/wrapper instance can store `params` normally, but the shared config instance should stay centralized in `Constants`.
+The important repo-level uniformity point is the shared `Mechanism` + `RobotConstants.createMechanism(...)` construction path.
 
 ## Rules
 
@@ -47,7 +49,7 @@ The mechanism/wrapper instance can store `params` normally, but the shared confi
 - Keep pipeline selection explicit in the op mode or mechanism that owns the behavior.
 - Extend the wrapper when new camera behavior is needed rather than scattering `Limelight3A` calls across op modes.
 - Tolerate missing or invalid results; `LLUpdate()` already handles absent data as a normal runtime condition.
-- If new vision tuning fields are added, add them to `LIMELIGHT_PARAMS` and keep the shared instance in `Constants`.
+- If new vision tuning fields are added, keep them on `LIMELIGHT_PARAMS` or the wrapper itself rather than scattering them through op modes.
 
 ## Current limitations to remember
 
@@ -60,5 +62,5 @@ The mechanism/wrapper instance can store `params` normally, but the shared confi
 - Add helper methods that interpret fiducial, color, or detector results.
 - Add telemetry-friendly summary methods.
 - Add pipeline-specific convenience behavior while keeping pipeline numbers hidden behind the enum.
-- If adding a new camera wrapper class, mirror the same nested-params plus `Constants.create...(...)` pattern used here.
+- If adding a new camera wrapper class, mirror the same `Mechanism` + `(HardwareMap, RobotConstants)` + `Constants.create...(...)` pattern used here.
 

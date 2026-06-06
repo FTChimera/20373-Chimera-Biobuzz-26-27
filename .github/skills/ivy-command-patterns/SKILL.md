@@ -45,9 +45,9 @@ Ivy commands should operate on mechanisms that were created through `Constants` 
 
 - create the mechanism once through `Constants.create...(...)`
 - schedule commands against that mechanism instance
-- if a new mechanism is needed, add its params type and shared `Constants` instance first
+- if a new mechanism is needed, make it fit the `Mechanism` + `RobotConstants.createMechanism(...)` pattern first
 
-Do not hide subsystem config inside a custom command class if it really belongs in the mechanism params object or the central `Constants` surface.
+Do not hide subsystem construction or configuration policy inside a custom command class if it really belongs in the mechanism or robot-profile layer.
 
 ## Rules
 
@@ -56,7 +56,7 @@ Do not hide subsystem config inside a custom command class if it really belongs 
 - Prefer mechanism-level command helpers for reusable actions instead of rebuilding the same command inline in every op mode.
 - Use `Commands.infinite(...)`, `Groups.sequential(...)`, and related Pedro Ivy primitives before inventing a custom loop.
 - Use `CommandConverter.toCommand(...)` for simple instant actions; use full command composition for ongoing behaviors.
-- If a task adds a new commandable mechanism, also add its `Constants.create...(...)` factory and central params instance.
+- If a task adds a new commandable mechanism, also add its profile registration and `Constants.create...(...)` helper when needed.
 
 ## When to use `Ivy.run(...)`
 
@@ -67,5 +67,5 @@ Do not hide subsystem config inside a custom command class if it really belongs 
 - Do not forget `Scheduler.execute()` in iterative command-driven op modes.
 - Avoid scheduling duplicate periodic loops that both call into the same mechanism every frame.
 - Avoid mixing busy loops with Ivy scheduling when Pedro already provides a command form.
-- Avoid creating mechanism params ad hoc inside commands when the shared Dashboard-editable instance should live in `Constants`.
+- Avoid creating or wiring profile-managed subsystems ad hoc inside commands; initialize them through the normal factory path first.
 

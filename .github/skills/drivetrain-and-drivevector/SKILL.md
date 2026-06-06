@@ -37,12 +37,12 @@ This skill covers the team’s custom teleop-drive stack.
 
 ## How drive fits the new creation pattern
 
-- Non-drive mechanisms expose their shared params instances centrally from `Constants`.
 - Drive profile and follower configuration live in `RobotConstants` / `RobotConfigurations`.
-- `Constants.createDrivetrain(hardwareMap)` is the central creation point for the low-level drive mechanism.
-- Higher-level drive code such as `MecanumDrive.pinpointLocalizer(...)` should keep delegating to those central factories instead of rebuilding hardware inline.
+- `Drivetrain` and `MecanumDrive` both participate in the shared `Mechanism` creation flow.
+- `Constants.createDrivetrain(hardwareMap)` is a convenience wrapper around `currentBot.createMechanism(hardwareMap, Drivetrain.class)`.
+- Higher-level drive code should keep delegating to those normal factories instead of rebuilding hardware inline.
 
-If a new drive-adjacent mechanism is added, give it its own params type and central `Constants` factory unless the data is truly robot-profile data that belongs in `RobotConstants`.
+If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(HardwareMap, RobotConstants)` constructor pattern and register it in the robot profile unless the change is purely a reusable math helper.
 
 ## Rules
 
@@ -50,7 +50,7 @@ If a new drive-adjacent mechanism is added, give it its own params type and cent
 - If field-centric math changes, verify both `DriveVector.rotateFieldCentric()` and the heading passed in from `MecanumDrive`.
 - Preserve `periodic()` calling `follower.update()` exactly once per loop path.
 - Prefer extending `MecanumDrive` APIs over having op modes reach inside `drivetrain` and `follower` directly.
-- Keep drivetrain profile data in `RobotConstants`; keep non-drive shared params in `Constants`.
+- Keep drivetrain profile data in `RobotConstants`; keep subsystem construction on the existing `Constants` / `RobotConstants.createMechanism(...)` path.
 
 ## Common edit targets
 
