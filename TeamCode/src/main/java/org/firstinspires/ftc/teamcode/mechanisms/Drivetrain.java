@@ -10,10 +10,11 @@ import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
 
-public class Drivetrain {
+public class Drivetrain extends Mechanism {
     Motor[] motors;
     DoubleUnaryOperator stickCurve;
     public Drivetrain(HardwareMap map, RobotConstants bot) {
+        super(map, bot);
         motors = new Motor[] {
                 new Motor(map, bot.FRONT_LEFT_MOTOR_NAME).setDirection(bot.FRONT_LEFT_MOTOR_DIRECTION),
                 new Motor(map, bot.FRONT_RIGHT_MOTOR_NAME).setDirection(bot.FRONT_RIGHT_MOTOR_DIRECTION),

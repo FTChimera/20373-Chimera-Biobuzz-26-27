@@ -1,13 +1,16 @@
 package org.firstinspires.ftc.teamcode.library.hardware.leds;
 
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 @SuppressWarnings("SpellCheckingInspection")
 /*
  * GOBILDA PRODUCT INSIGHT: https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2275/15126/3118-0808-0002-Product-Insight-4__88285.1757516465.png?c=1
  */
-public class RGBIndicator {
+public class RGBIndicator extends Mechanism {
     public enum Color {
         BLACK(BLACK_PWM),
         RED(RED_PWM),
@@ -57,14 +60,12 @@ public class RGBIndicator {
     public static double WHITE_PWM = 1.0;
 
     private Servo rgb;
-    private boolean isBeingUsed;
-    public RGBIndicator(HardwareMap hardwareMap){
+    private final boolean isBeingUsed;
+    public RGBIndicator(HardwareMap hardwareMap, RobotConstants bot) {
+        super(hardwareMap, bot);
         this.rgb = hardwareMap.get(Servo.class, "rgb");
         rgb.setPosition(BLACK_PWM);
-        isBeingUsed=true;
-    }
-    public RGBIndicator() {
-        isBeingUsed = false;
+        isBeingUsed=bot.Mechanisms.contains(RGBIndicator.class);
     }
     public void setCustomPWM(double val) {
         if (!isBeingUsed) return;

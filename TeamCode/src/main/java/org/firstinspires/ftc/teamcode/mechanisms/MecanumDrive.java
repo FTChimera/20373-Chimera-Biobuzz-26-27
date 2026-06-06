@@ -32,7 +32,7 @@ import java.util.function.Supplier;
  * @author Team
  * @version 1.0 - Initial implementation based on DuneStrider
  */
-public class MecanumDrive {
+public class MecanumDrive extends Mechanism {
 
     // PedroPathing Follower that handles all localization
     public Follower follower;
@@ -48,17 +48,15 @@ public class MecanumDrive {
      * Constructor - Initializes the Follower with starting pose
      *
      * @param map HardwareMap for initializing motors and sensors
-     * @param startingPose Initial robot pose (x, y, heading). If null, uses (0, 0, 0)
      */
 
-    public MecanumDrive(HardwareMap map, Pose startingPose, RobotConstants bot) {
+    public MecanumDrive(HardwareMap map, RobotConstants bot) {
+        super(map, bot);
         // Create follower using Constants configuration
         this.follower = Constants.createFollower(map);
         useManualDrive = !bot.FOLLOWER_TELEOP_DRIVE_COMPATIBLE;
         // Initialize drivetrain
         drivetrain = Constants.createDrivetrain(map);
-        // Set starting pose (use (0, 0, 0) if not provided)
-        follower.setStartingPose(startingPose == null ? new Pose(0, 0, 0) : startingPose);
         // Set initial curve
         resetStickCurve();
         // Initial update to sync pose
@@ -150,6 +148,7 @@ public class MecanumDrive {
     }
     /**
      * Set robot heading offset to the current heading
+     * <p>
      * Useful for resetting field-centric control to current orientation
      */
     public void zeroHeadingOffset() {
@@ -157,6 +156,7 @@ public class MecanumDrive {
     }
     /**
      * Reset robot position to a new pose
+     * <p>
      * Useful for relocalization
      *
      * @param pose New pose

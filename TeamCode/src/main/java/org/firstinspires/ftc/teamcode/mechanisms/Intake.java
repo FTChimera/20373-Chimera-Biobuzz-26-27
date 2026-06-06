@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.Supplier;
 
-public class Intake {
+public class Intake extends Mechanism {
     public static class INTAKE_PARAMS {
         public double FULL_POWER = 1.0;
         public double HALF_POWER = 0.5;
@@ -21,22 +21,21 @@ public class Intake {
         public boolean ISBEINGUSED = true;
         public void updateFromBot(RobotConstants bot) {
             if (!ISBEINGUSED) return;
-            HARDWAREMAP_NAME = bot.USE_INTAKE ? HARDWAREMAP_NAME : "";
-            ISBEINGUSED = bot.USE_INTAKE;
+            HARDWAREMAP_NAME = bot.Mechanisms.contains(Intake.class) ? HARDWAREMAP_NAME : "";
+            ISBEINGUSED = bot.Mechanisms.contains(Intake.class);
         }
     }
     public Motor Intake_Motor;
     public INTAKE_PARAMS params;
-    public Intake(HardwareMap map, INTAKE_PARAMS params, RobotConstants bot) {
+    public Intake(HardwareMap map, RobotConstants bot) {
+        super(map, bot);
+        this.params = new INTAKE_PARAMS();
+        this.params.updateFromBot(bot);
         if (!params.ISBEINGUSED) {
-            this.params = params;
-            this.params.updateFromBot(bot);
             return;
         }
         this.Intake_Motor = new Motor(map, params.HARDWAREMAP_NAME);
         Intake_Motor.setDirection(params.INTAKE_MOTOR_DIRECTION);
-        this.params = params;
-        this.params.updateFromBot(bot);
         Stop();
     }
 

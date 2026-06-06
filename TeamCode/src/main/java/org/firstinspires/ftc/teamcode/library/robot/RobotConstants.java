@@ -12,6 +12,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
+import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A utility base constants class to hold all Pedro pathing constants for a bot
@@ -49,11 +55,7 @@ public class RobotConstants {
     public double HEADING_PIDF_COEFFICIENTS_DERIVATIVE = 0;
     public double HEADING_PIDF_COEFFICIENTS_FEEDFORWARD = 0;
     public double CENTRIPETAL_SCALING = 0;
-
-    public boolean USE_INTAKE = false;
-    public boolean USE_LIMELIGHT = false;
-    public boolean USE_LOGITECH_WEBCAM = false;
-
+    public List<Class<? extends Mechanism>> Mechanisms = new ArrayList<>(Collections.singleton(MecanumDrive.class));
     public boolean FOLLOWER_TELEOP_DRIVE_COMPATIBLE = true; // Our team had issues with this last year, then finally got it to work.
 
     /** Default Constructor */
@@ -156,17 +158,8 @@ public class RobotConstants {
         this.CENTRIPETAL_SCALING = centripetalScaling;
         return this;
     }
-
-    public RobotConstants useIntake(boolean useIntake) {
-        this.USE_INTAKE = useIntake;
-        return this;
-    }
-    public RobotConstants useLimelight(boolean useLimelight) {
-        this.USE_LIMELIGHT = useLimelight;
-        return this;
-    }
-    public RobotConstants useLogitechWebcam(boolean useLogitechWebcam) {
-        this.USE_LOGITECH_WEBCAM = useLogitechWebcam;
+    public RobotConstants addMechanism(Class<? extends Mechanism> mechanismClass) {
+        Mechanisms.add(mechanismClass);
         return this;
     }
     public RobotConstants followerTeleopDriveCompatible(boolean followerTeleopDriveCompatible) {
@@ -207,5 +200,15 @@ public class RobotConstants {
                 .mecanumDrivetrain(mecanumConstants)
                 .pinpointLocalizer(pinpointConstants)
                 .build();
+    }
+    public <T> T createMechanism(HardwareMap map, Class<? extends T> mechanismClass) {
+        try {
+            if (!(Mechanisms.contains(mechanismClass))) {
+                throw new IllegalArgumentException("Mechanism " + mechanismClass.getSimpleName() + " is not configured for this robot.");
+            }
+            return mechanismClass.cast(mechanismClass.getConstructor(HardwareMap.class, RobotConstants.class).newInstance(map, this));
+        } catch (Exception e) {
+            throw new RuntimeException("Error creating mechanism: " + mechanismClass.getSimpleName(), e);
+        }
     }
 }

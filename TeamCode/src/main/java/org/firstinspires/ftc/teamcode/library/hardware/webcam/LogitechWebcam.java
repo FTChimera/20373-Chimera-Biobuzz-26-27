@@ -8,6 +8,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
@@ -27,7 +28,7 @@ import java.util.List;
  * </pre>
  */
 @SuppressWarnings("SpellCheckingInspection")
-public class LogitechWebcam {
+public class LogitechWebcam extends Mechanism {
     /** Parameters for the Logitech webcam. */
     public static class LOGITECH_WEBCAM_PARAMS {
         public String HARDWAREMAP_NAME = "Webcam 1";
@@ -42,8 +43,8 @@ public class LogitechWebcam {
         public boolean ISBEINGUSED = true;
         public void updateFromBot(RobotConstants bot) {
             if (!ISBEINGUSED) return;
-            HARDWAREMAP_NAME = bot.USE_LOGITECH_WEBCAM ? HARDWAREMAP_NAME : "";
-            ISBEINGUSED = bot.USE_LOGITECH_WEBCAM;
+            HARDWAREMAP_NAME = bot.Mechanisms.contains(LogitechWebcam.class) ? HARDWAREMAP_NAME : "";
+            ISBEINGUSED = bot.Mechanisms.contains(LogitechWebcam.class);
         }
 
     }
@@ -71,7 +72,9 @@ public class LogitechWebcam {
     // ==================== CONSTRUCTORS ====================
 
     /** Constructs with a specific camera hardware name. */
-    public LogitechWebcam(HardwareMap hwMap, LOGITECH_WEBCAM_PARAMS params, RobotConstants bot) {
+    public LogitechWebcam(HardwareMap hwMap, RobotConstants bot) {
+        super(hwMap, bot);
+        this.params = new LOGITECH_WEBCAM_PARAMS();
         tagProcessor = new AprilTagProcessor.Builder()
                 .setDrawAxes(true)
                 .setDrawCubeProjection(true)
@@ -85,15 +88,8 @@ public class LogitechWebcam {
                 .setCameraResolution(new android.util.Size(640, 480))
                 .build();
         isDisconnected = false;
-        this.params = params;
         this.params.updateFromBot(bot);
         isBeingUsed = params.ISBEINGUSED;
-    }
-
-    /** No-op constructor when the camera is not being used. */
-    public LogitechWebcam() {
-        isBeingUsed = false;
-        isDisconnected = true;
     }
 
     // ==================== UPDATE ====================

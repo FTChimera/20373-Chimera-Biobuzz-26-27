@@ -14,9 +14,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 
 @Configurable
 public class Constants {
-    // Params
-    public static final Intake.INTAKE_PARAMS INTAKE_PARAMS = new Intake.INTAKE_PARAMS();
-    public static final Limelight.LIMELIGHT_PARAMS LIMELIGHT_PARAMS = new Limelight.LIMELIGHT_PARAMS();
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final boolean DRIVE_FIELD_RELATIVE = false;
@@ -27,19 +24,19 @@ public class Constants {
         return currentBot.createFollower(hardwareMap);
     }
     public static MecanumDrive createTeleOpFollower(HardwareMap hardwareMap) {
-        return new MecanumDrive(hardwareMap, null, currentBot);
+        return currentBot.createMechanism(hardwareMap, MecanumDrive.class);
     }
 
     public static Intake createIntake(HardwareMap hardwareMap) {
-        return new Intake(hardwareMap, INTAKE_PARAMS, currentBot);
+        return currentBot.createMechanism(hardwareMap, Intake.class);
     }
 
     public static Limelight createLimelight(HardwareMap hardwareMap) {
-        return new Limelight(hardwareMap, LIMELIGHT_PARAMS, currentBot);
+        return currentBot.createMechanism(hardwareMap, Limelight.class);
     }
 
     public static Drivetrain createDrivetrain(HardwareMap hardwareMap) {
-        return new Drivetrain(hardwareMap, currentBot);
+        return currentBot.createMechanism(hardwareMap, Drivetrain.class);
     }
 
 }
