@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode.library.robot;
 
 import com.bylazar.configurables.annotations.Configurable;
+import com.pedropathing.follower.FollowerConstants;
+import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 
@@ -32,17 +33,13 @@ public class RobotConfigurations {
                 .xVelocity(0)
                 .yVelocity(0)
                 // PINPOINT CONSTANTS
-                .pinpointLocalizerName("pinpoint")
-                .forwardPodYInch(0)
-                .strafePodXInch(0)
-                .pinpointForwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-                .pinpointStrafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
+                .pinpointConstants(new PinpointConstants())
                 // FOLLOWER CONSTANTS AND PATH CONSTRAINTS
                 .tValueConstraint(0.99)
                 .timeoutConstraint(100)
                 .brakingStrength(1)
                 .brakingStart(1)
-                .predictiveBrakingCoefficients(0,0,0)
+                .driveConstants(new FollowerConstants())
                 .headingPIDFCoefficients(0,0,0,0)
                 .centripetalScaling(0)
                 // MECHANISM USAGE
@@ -51,6 +48,6 @@ public class RobotConfigurations {
                 .addMechanism(RGBIndicator.class)
                 .addMechanism(MecanumDrive.class)
                 // COMPATIBILITY
-                .followerTeleopDriveCompatible(true);
+                .useFollowerDrive(true);
     }
 }

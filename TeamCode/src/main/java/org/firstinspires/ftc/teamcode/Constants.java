@@ -16,8 +16,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 public class Constants {
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
-    public static final boolean DRIVE_FIELD_RELATIVE = false;
-
     public static final RobotConstants currentBot = RobotConfigurations.OldDECODERobotTesting();
 
     public static Follower createFollower(HardwareMap hardwareMap) {

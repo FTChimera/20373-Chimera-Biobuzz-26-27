@@ -5,7 +5,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
 
-import org.firstinspires.ftc.teamcode.library.Polynomial;
+import org.firstinspires.ftc.teamcode.library.math.Polynomial;
 
 /**
  * EquationCurve - A custom curve defined by a polynomial equation

@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
@@ -9,8 +8,10 @@ import com.pedropathing.ivy.groups.Groups;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
@@ -54,7 +55,7 @@ public class MecanumDrive extends Mechanism {
         super(map, bot);
         // Create follower using Constants configuration
         this.follower = Constants.createFollower(map);
-        useManualDrive = !bot.FOLLOWER_TELEOP_DRIVE_COMPATIBLE;
+        useManualDrive = !bot.USE_FOLLOWER_DRIVE;
         // Initialize drivetrain
         drivetrain = Constants.createDrivetrain(map);
         // Set initial curve
@@ -101,7 +102,8 @@ public class MecanumDrive extends Mechanism {
      * */
 
     public void setTeleOpDrive(DriveVector vector) {
-       setTeleOpDrive(vector, Constants.DRIVE_FIELD_RELATIVE);
+        Driver currentDriver = Blackboard.get(Blackboard.Caption.DRIVER) != null ? Blackboard.get(Blackboard.Caption.DRIVER).getValue() : Driver.DEFAULT;
+        setTeleOpDrive(vector, currentDriver.USE_FIELD_CENTRIC);
     }
 
     /**
@@ -202,7 +204,8 @@ public class MecanumDrive extends Mechanism {
     }
     /** Command to set teleop drive */
     public Command teleOp(Supplier<DriveVector> vector) {
-        return teleOp(vector, Constants.DRIVE_FIELD_RELATIVE);
+        Driver currentDriver = Blackboard.get(Blackboard.Caption.DRIVER) != null ? Blackboard.get(Blackboard.Caption.DRIVER).getValue() : Driver.DEFAULT;
+        return teleOp(vector, currentDriver.USE_FIELD_CENTRIC);
     }
 
     /** Command to update the follower every iteration */

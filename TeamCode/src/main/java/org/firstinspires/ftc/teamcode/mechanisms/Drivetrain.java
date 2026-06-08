@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.ExportClassToBlocks;
-import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
+import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
@@ -57,7 +57,8 @@ public class Drivetrain extends Mechanism {
      * */
 
     public void setTeleOpDrive(DriveVector vector, double robotHeading) {
-        setTeleOpDrive(vector, Constants.DRIVE_FIELD_RELATIVE, robotHeading);
+        Driver currentDriver = Blackboard.get(Blackboard.Caption.DRIVER) != null ? Blackboard.get(Blackboard.Caption.DRIVER).getValue() : Driver.DEFAULT;
+        setTeleOpDrive(vector, currentDriver.USE_FIELD_CENTRIC, robotHeading);
     }
 
     /**

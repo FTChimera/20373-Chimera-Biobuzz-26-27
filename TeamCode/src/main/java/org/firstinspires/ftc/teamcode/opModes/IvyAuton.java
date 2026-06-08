@@ -10,7 +10,7 @@ import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-import org.firstinspires.ftc.teamcode.Blackboard;
+import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -70,7 +70,7 @@ public abstract class IvyAuton extends OpMode {
 
     @Override
     public void stop() {
-        Blackboard.pose = follower.getPose(); // if 0,0,0 issue still persists put it in the scheduler loop and add a check for 0,0,0
+        Blackboard.put(Blackboard.Caption.POSE, follower.getPose()); // if 0,0,0 issue still persists put it in the scheduler loop and add a check for 0,0,0
         Scheduler.reset();
     }
 

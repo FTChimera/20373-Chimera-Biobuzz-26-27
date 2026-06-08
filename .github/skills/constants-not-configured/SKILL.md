@@ -1,0 +1,108 @@
+---
+name: constants-not-configured
+description: Use this skill when asked to fill in TeamCode constant values that are still placeholders because the final robot, field, or game data is not fully known yet.
+---
+
+# Constants Not Configured for this FTC Repo
+
+Use this skill when needing to change constants that were left blank because of unknowns.
+
+## Autonomous and Field Setup
+
+- The Field Setup and scoring elements will be released September 2026.
+- The Autonomouses under opModes and opModes/variants are all tests and they need to change once the BIOBUZZ game is released and the robot is fully built.
+- The mechanisms used are drivetrain (MecanumDrive, Drivetrain, pedropathing Follower) and intake (Intake). However, once the scoring elements are released one or multiple subsystems need to be added.
+- These will mostly be updated manually.
+
+## Pedro Pathing Follower Configuration and Robot Constants
+
+- The Preseason Robot (everything coded under TeamCode) hasn't completely been assembled as of mid-June 2026.
+- <MECHANISM_NAME>_PARAMS, Follower, Drivetrain, and Pinpoint Constants haven't been tuned yet, so they are filled with 0.
+- When asked to update constants, update every relevent mechanisms_PARAMS (which include classes in library/hardware such as Limelight and LogitechWebcam) and RobotConstants, but don't forget to update all relevant OpModes under tests/
+
+## Where those constants actually live
+
+- `Constants.java` is the top-level op-mode-facing entry point. It holds:
+  - `RED_DEFAULT_START_POSE`
+  - `BLUE_DEFAULT_START_POSE`
+  - `currentBot`, which currently points to `RobotConfigurations.OldDECODERobotTesting()`
+  - factory helpers like `createFollower(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, and `createDrivetrain(...)`
+- `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
+  - drive motor names and directions
+  - `xVelocity(...)` and `yVelocity(...)`
+  - `PinpointConstants`
+  - Pedro follower constants and heading PIDF
+  - path constraints and centripetal scaling
+  - enabled mechanism registration via `.addMechanism(...)`
+- `library/robot/RobotConstants.java` is the base profile object consumed by the factory helpers. If a constant affects follower construction or drivetrain hardware wiring, it usually belongs here or in `RobotConfigurations`.
+- Mechanism-specific placeholder values still live inside the owning classes:
+  - `mechanisms/Intake.java` -> `INTAKE_PARAMS`
+  - `library/hardware/webcam/Limelight.java` -> `LIMELIGHT_PARAMS`
+  - `library/hardware/webcam/LogitechWebcam.java` -> `LOGITECH_WEBCAM_PARAMS`
+- Some preseason tuning constants still live directly inside op modes, especially `opModes/PreseasonWebcamAuto.java`.
+
+## Placeholder values that are real calibration targets in this repo
+
+- `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE` are both still `new Pose(0, 0, 0)`.
+- `RobotConfigurations.OldDECODERobotTesting()` still uses placeholder drivetrain and follower values such as:
+  - `.xVelocity(0)`
+  - `.yVelocity(0)`
+  - `.pinpointConstants(new PinpointConstants())`
+  - `.headingPIDFCoefficients(0,0,0,0)`
+  - `.centripetalScaling(0)`
+- `Limelight.LIMELIGHT_PARAMS` still has `LIMELIGHT_MOUNT_ANGLE_DEGREES`, `LIMELIGHT_LENS_HEIGHT_INCHES`, and `TAG_HEIGHT_INCHES` at `0`.
+- `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` contains the default hardware name, overlay toggles, output units, and resolution that may need real robot-specific values.
+- `Intake.INTAKE_PARAMS` contains intake power presets, motor direction, and hardware name defaults.
+- `PreseasonWebcamAuto` contains local PIDF constants that are not sourced from `Constants` or `RobotConfigurations`.
+
+## What is usually a real constant request versus a normal zero
+
+- Usually update these when the user asks for missing constants:
+  - hardware names
+  - motor directions
+  - robot start poses
+  - Limelight mount geometry
+  - follower tuning values
+  - Pinpoint offsets / directions / resolution choices
+  - path constraints and drive calibration
+  - mechanism enablement for the active robot profile
+- Usually do **not** treat these as missing configuration just because they are `0`:
+  - stop powers like `STOP_POWER = 0.0`
+  - temporary loop variables
+  - reset values
+  - idle vectors and PID controller state
+  - math accumulators or indexing variables
+
+## How to handle a constants task in this repo
+
+1. Identify whether the requested value belongs in `Constants`, `RobotConfigurations`, `RobotConstants`, or a nested `*_PARAMS` class.
+2. Update the active robot profile first if the value is robot-wide.
+3. Update the owning mechanism params class if the value is specific to one wrapper or subsystem and is not currently profile-managed.
+4. Search for tests or op modes that duplicate the same constant or bypass the wrapper and update those too.
+5. Keep the factory flow intact: op modes should still use `Constants.create...(...)` helpers rather than new ad hoc constructors.
+
+## Op modes and tests that are especially affected by constant changes
+
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` use `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`.
+- `opModes/IvyAuton.java` uses `Constants.createFollower(...)`, `Constants.createIntake(...)`, and the path starting pose.
+- `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
+- `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring.
+- `opModes/variants/Red_TeleOp.java` and `Blue_TeleOp.java` return the default alliance start poses.
+- `opModes/PreseasonWebcamAuto.java` bypasses the Limelight wrapper and uses raw hardware access with `"limelight"` plus local PIDF values, so camera-name or vision-tuning updates may need to touch it explicitly.
+
+## Repo-specific warning signs
+
+- `Constants.currentBot` currently hardcodes `RobotConfigurations.OldDECODERobotTesting()`. If the user wants a different robot preset, changing nested constants alone is not enough.
+- `RobotConstants.createMechanism(...)` throws if the mechanism class is not registered in `Mechanisms`. If a constant change introduces or enables a subsystem, also check `.addMechanism(...)`.
+- `MecanumDrive` internally calls `Constants.createDrivetrain(...)`, so drivetrain registration and drive constants need to stay coherent with the teleop follower path.
+- `Limelight` and `LogitechWebcam` toggle themselves off based on whether their class is present in `bot.Mechanisms`.
+- `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
+- This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
+
+## Rules
+
+- Prefer changing the active profile and existing params owners instead of inventing a new constants file.
+- Keep drivetrain, follower, and localization constants under `RobotConfigurations` / `RobotConstants`.
+- Keep per-wrapper values in the wrapper’s nested params class unless the repo already treats them as robot-profile-wide.
+- Update all relevant tests and op modes that consume duplicated constants or raw hardware names.
+- Do not blindly replace every `0`; only replace values that are acting as real placeholders for hardware, tuning, geometry, or field setup.

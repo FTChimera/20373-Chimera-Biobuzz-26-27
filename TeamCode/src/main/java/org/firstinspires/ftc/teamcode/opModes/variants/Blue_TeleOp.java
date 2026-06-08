@@ -4,7 +4,7 @@ import androidx.annotation.NonNull;
 
 import com.pedropathing.geometry.Pose;
 
-import org.firstinspires.ftc.teamcode.Blackboard;
+import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.opModes.TeleOp;
@@ -26,8 +26,9 @@ public class Blue_TeleOp extends TeleOp {
     @NonNull
     @Override
     protected Pose getStartingPose() {
-        if (Blackboard.pose != null && (Blackboard.pose.getX() != 0 && Blackboard.pose.getY() != 0 && Blackboard.pose.getHeading() != 0)) {
-            return Blackboard.pose; // If it is not null or 0,0,0 (bug: given by follower at end of auto)
+        Pose pose = Blackboard.get(Blackboard.Caption.POSE).getValue();
+        if (pose != null && (pose.getX() != 0 && pose.getY() != 0 && pose.getHeading() != 0)) {
+            return pose; // If it is not null or 0,0,0 (bug: given by follower at end of auto)
         }
         return Constants.BLUE_DEFAULT_START_POSE;
     }

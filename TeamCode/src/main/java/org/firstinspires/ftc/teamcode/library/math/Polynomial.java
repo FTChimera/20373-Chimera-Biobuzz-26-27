@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.library;
+package org.firstinspires.ftc.teamcode.library.math;
 
 import androidx.annotation.NonNull;
 

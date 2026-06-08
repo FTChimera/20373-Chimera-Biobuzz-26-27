@@ -33,7 +33,9 @@ public class PIDFController<T> {
     public T getTarget() {
         return target;
     }
-
+    public T lastError() {
+        return coefficients.inverseStateSupplier.apply(lastError);
+    }
     public PIDFCoefficients<T> getCoefficients() {
         return coefficients;
     }
