@@ -1,16 +1,22 @@
-package org.firstinspires.ftc.teamcode.teachEason;
+package org.firstinspires.ftc.teamcode.learning.teachEason;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.Scheduler;
+import com.pedropathing.ivy.commands.Commands;
+import com.pedropathing.ivy.pedro.PedroCommands;
 import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
 
-@TeleOp(name = "Pedro Test", group = "Teach Eason")
-public class PedroTest extends LinearOpMode {
+@Autonomous
+public class IvyTest extends LinearOpMode {
+
     Pose startPose = new Pose(86.59, 9.18, 90);
     Path path1 = new Path(new BezierLine(startPose, new Pose(84, 12, 65.56)));
     /**
@@ -26,16 +32,15 @@ public class PedroTest extends LinearOpMode {
      */
     @Override
     public void runOpMode() throws InterruptedException {
+        Scheduler.reset();
         path1.setLinearHeadingInterpolation(90, 65.56);
         Follower follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         waitForStart();
-        follower.followPath(path1);
+        Command followPath1 = PedroCommands.follow(follower, new PathChain(path1));
+        Scheduler.schedule(followPath1, Commands.infinite(follower::update));
         while (opModeIsActive()) {
-            follower.update();
-            if (!follower.isBusy()) {
-                requestOpModeStop();
-            }
+            Scheduler.execute();
         }
     }
 }

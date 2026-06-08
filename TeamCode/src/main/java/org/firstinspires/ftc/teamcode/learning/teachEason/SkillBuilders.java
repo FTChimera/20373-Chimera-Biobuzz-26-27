@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.teachEason;
+package org.firstinspires.ftc.teamcode.learning.teachEason;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
