@@ -17,7 +17,7 @@ Use this skill when needing to change constants that were left blank because of 
 ## Pedro Pathing Follower Configuration and Robot Constants
 
 - The Preseason Robot (everything coded under TeamCode) hasn't completely been assembled as of mid-June 2026.
-- <MECHANISM_NAME>_PARAMS, Follower, Drivetrain, and Pinpoint Constants haven't been tuned yet, so they are filled with 0.
+- MECHANISM_NAME_PARAMS, Follower, Drivetrain, and Pinpoint Constants haven't been tuned yet, so they are filled with 0.
 - When asked to update constants, update every relevent mechanisms_PARAMS (which include classes in library/hardware such as Limelight and LogitechWebcam) and RobotConstants, but don't forget to update all relevant OpModes under tests/
 
 ## Where those constants actually live
