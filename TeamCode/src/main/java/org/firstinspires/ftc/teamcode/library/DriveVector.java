@@ -40,9 +40,8 @@ public class DriveVector {
         this(0, 0, 0, 0);
     }
     public DriveVector rotateFieldCentric() {
-        // IF FIELD CENTRIC BREAKS, REPLACE ROBOT HEADING WITH NEGATIVE ROBOT HEADING
-        double cosA = Math.cos(robotHeading);
-        double sinA = Math.sin(robotHeading);
+        double cosA = Math.cos(-robotHeading);
+        double sinA = Math.sin(-robotHeading);
         double newForward = forward * cosA + strafe * sinA;
         double newStrafe = -forward * sinA + strafe * cosA;
         return new DriveVector(newForward, newStrafe, rotate, 0);
@@ -77,5 +76,11 @@ public class DriveVector {
 
     public DriveVector copy() {
         return new DriveVector(forward, strafe, rotate, robotHeading);
+    }
+
+    public DriveVector wStickCurve(DoubleUnaryOperator curve) {
+        DriveVector returned = copy();
+        returned.applyStickCurve(curve);
+        return returned;
     }
 }
