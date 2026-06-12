@@ -102,4 +102,12 @@ public class Polynomial {
          }
          return new Polynomial(dCoefs);
      }
+    public Polynomial indefiniteIntegral() {
+        double[] iCoefs = new double[coefs.length + 1];
+        int degree = getDegree();
+        for (int i = 0; i <= degree; i++) {
+            iCoefs[i] = coefs[i] / (degree - i + 1);
+        }
+        return new Polynomial(iCoefs);
+    }
 }
