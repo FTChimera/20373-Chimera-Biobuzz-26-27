@@ -16,20 +16,21 @@ Use this skill for robot-profile work centered around:
 
 1. `Constants.currentBot` selects the active robot profile.
 2. `RobotConfigurations` currently defines named robot presets such as `OldDECODERobotTesting()`.
-3. `RobotConstants` is a builder-style container for drive names, drive directions, Pinpoint offsets, follower tuning, path constraints, and the list of enabled `Mechanism` classes.
+3. `RobotConstants` is a builder-style container for drive names, drive directions, Pinpoint constants, follower tuning, path constraints, and the set of enabled `Mechanism` classes.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
+8. `Constants` now also exposes helper methods such as `createRGB(...)`, `createWebcam(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
 
 ## What belongs where
 
-- Put drive motor names, drive directions, Pinpoint encoder directions, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
+- Put drive motor names, drive directions, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
 - Put concrete robot presets in `RobotConfigurations`.
-- Put top-level convenience helpers such as `createIntake(...)` and `createLimelight(...)` in `Constants` when they make op-mode code cleaner.
+- Put top-level convenience helpers such as `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` in `Constants` when they make op-mode code cleaner.
 - Keep mechanism-specific behavior and optional nested params types in the owning mechanism or wrapper class.
 - Prefer selecting a profile through `Constants.currentBot` instead of scattering conditionals throughout mechanisms or op modes.
-- Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles; keep GoBILDA Pinpoint encoder directions on the SDK enum that Pedro expects.
+- Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles.
 
 ## Important separation of concerns
 
@@ -45,22 +46,22 @@ That separation keeps the robot profile focused on what varies per bot while reu
 `RobotConstants` already owns:
 
 - drive motor names and directions
-- Pinpoint hardware name and encoder directions
-- Pinpoint pod offsets in inches
+- `PinpointConstants PINPOINT_LOCALIZER_CONSTANTS`
 - max drivetrain power
 - Pedro x/y velocity values
 - path constraint tuning
-- predictive braking coefficients
 - heading PIDF coefficients
 - centripetal scaling
-- enabled mechanism classes via `Mechanisms` and `addMechanism(...)`
+- enabled mechanism classes via the `Mechanisms` `Set`, `configureDriveMechanisms()`, and `addMechanism(...)`
+- follower-drive compatibility through `USE_FOLLOWER_DRIVE`
 
 ## Rules
 
 - Reuse the existing fluent builder methods on `RobotConstants` instead of introducing parallel drivetrain configuration objects.
 - Keep all four drive motor names and directions together when changing a drivetrain profile.
-- Keep Pinpoint geometry and encoder-direction updates in the same robot profile change.
+- Keep Pinpoint-related updates bundled through `pinpointConstants(...)`.
 - Keep drive motor directions on the shared `Direction` enum so `Drivetrain` and `RobotConstants.createFollower(...)` stay aligned.
+- Use `configureDriveMechanisms()` when you want the normal drive stack (`MecanumDrive` + `Drivetrain`) enabled by default.
 - When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)` and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
 - Do not move mechanism-specific params into `RobotConstants` unless they truly vary by robot profile.
@@ -71,14 +72,16 @@ That separation keeps the robot profile focused on what varies per bot while reu
 1. Add or update a preset in `RobotConfigurations`.
 2. Point `Constants.currentBot` at that preset.
 3. Confirm `RobotConstants.createFollower(...)` still matches the chosen localizer and drivetrain style.
-4. If a new mechanism is involved, register it with `.addMechanism(...)`, confirm its constructor matches `(HardwareMap, RobotConstants)`, and optionally expose a `Constants.create...(...)` helper.
+4. If the preset should support the normal drive stack, include `.configureDriveMechanisms()`.
+5. If a new mechanism is involved, register it with `.addMechanism(...)`, confirm its constructor matches `(HardwareMap, RobotConstants)`, and optionally expose a `Constants.create...(...)` helper.
 5. Validate any op mode or mechanism that depends on the follower.
 
 ## Common pitfalls in this repo
 
 - `Constants` is a convenience surface, but the actual uniform mechanism factory logic now lives in `RobotConstants.createMechanism(...)`.
-- `MecanumDrive` depends on `Constants.createFollower(...)`, so follower changes affect teleop and autonomous.
+- `MecanumDrive` depends on the same active robot profile, so follower changes affect teleop and autonomous.
 - `RobotConstants.createFollower(...)` currently assumes Pinpoint localization and the GoBILDA 4-bar pod resolution.
 - `RobotConstants.createMechanism(...)` throws if the requested class is not present in the active profile’s `Mechanisms` list.
+- `Constants.assertHasMechanism(...)` now fails earlier for convenience factory calls, so profile registration issues can show up before reflection-based construction.
 - Any doc or patch that still talks about `starterBot()` is stale; the current attached preset is `OldDECODERobotTesting()`.
 

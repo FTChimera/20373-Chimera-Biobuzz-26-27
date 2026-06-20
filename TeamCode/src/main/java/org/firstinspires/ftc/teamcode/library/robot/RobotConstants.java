@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -48,7 +49,7 @@ public class RobotConstants {
     public DoublePIDFCoeffs HEADING_PIDF_COEFFICIENTS = new DoublePIDFCoeffs(0,0,0,0);
     public double CENTRIPETAL_SCALING = 0;
 
-    public Set<Class<? extends Mechanism>> Mechanisms = Collections.singleton(MecanumDrive.class);
+    public Set<Class<? extends Mechanism>> Mechanisms = new HashSet<>();
 
     public boolean USE_FOLLOWER_DRIVE = true; // Our team had issues with this last year, then finally got it to work.
 

@@ -11,9 +11,17 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Timer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/PIDFController.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/DoublePIDFController.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/DoublePIDFCoeffs.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/filters/NoiseFilter.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/filters/LowPassFilter.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LinearInterp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LagrangeInterp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/...`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
@@ -28,8 +36,12 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `AllianceColor` carries alliance-level intent for shared op mode bases.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
-- `Polynomial` is a lightweight reusable math helper with evaluation, scaling, multiplication, addition, and derivative support.
+- `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
+- `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
+- `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
+- `Polynomial` now lives under `library/math/` and is the reusable math primitive used by `EquationCurve`.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
+- `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
@@ -37,6 +49,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - If a change adds robot behavior, it probably belongs in `mechanisms/`, not in `library/`.
 - If a wrapper in `library/hardware/...` participates in the robot-profile creation flow, it should usually extend `Mechanism` and accept `(HardwareMap, RobotConstants)`.
+- If a wrapper is a lower-level adapter like `Motor`, it can stay outside the `Mechanism` hierarchy and still be reused by mechanisms.
 - Keep robot-profile state in `RobotConstants` / `RobotConfigurations`, not in generic utility classes.
 - Do not move mechanism behavior into `library/` just because it needs a helper type.
 
@@ -54,7 +67,9 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 
 - Add a small enum, value object, or utility method.
 - Add helper behavior to `DriveVector` or another reusable math/configuration class.
-- Add math helpers such as polynomial evaluation or transformation logic that can be reused outside one op mode.
+- Add math helpers such as interpolation, polynomial evaluation, or transformation logic that can be reused outside one op mode.
+- Add reusable control helpers that are still generic and not tied to one specific subsystem implementation.
+- Add reusable filtering helpers for noisy sensor or signal data.
 - Add a wrapper or adapter that makes raw FTC devices easier to use from mechanisms.
 - Add shared conversion helpers like the `Direction` bridge between repo-level configuration and FTC SDK device APIs.
 
@@ -63,7 +78,21 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 - `Polynomial` stores coefficients highest-degree first.
 - `getY(x)` evaluates the polynomial at `x`.
 - `derivative()` returns a new `Polynomial`, which is what `EquationCurve` uses for derivative and curvature calculations.
-- Because it is in `library/`, keep it math-focused and free of FTC lifecycle assumptions.
+- `toString()` now formats decimal coefficients safely with locale-stable fixed-point formatting instead of fragile substring truncation.
+- Because it is in `library/math/`, keep it math-focused and free of FTC lifecycle assumptions.
+
+## Interpolation-specific guidance
+
+- `LinearInterp` is the lightweight piecewise-linear helper for table-based lookup.
+- `LagrangeInterp` builds a reusable `Polynomial` from known `(x, y)` samples.
+- If an interpolation task is still fundamentally robot-agnostic math, keep it here instead of moving it into an op mode or mechanism.
+
+## Control/filter guidance
+
+- `PIDFController<T>` should stay generic; if a change starts depending on one specific mechanism’s lifecycle or telemetry, that logic likely belongs higher up.
+- `DoublePIDFCoeffs` is the lightweight bridge for one-dimensional PIDF use cases.
+- `PIDFCoefficients<T>` now supports scalar broadcasting for multi-dimensional state types more safely: scalar `setPIDF(...)`, `setTolerance(...)`, and `setIntegralLimit(...)` resolve the configured state dimension or infer it from the suppliers instead of trying to build a state from a zero-length array.
+- `NoiseFilter` and `LowPassFilter` should stay algorithm-focused; avoid hiding robot-specific state machines inside them.
 
 ## Relationship to `EquationCurve`
 

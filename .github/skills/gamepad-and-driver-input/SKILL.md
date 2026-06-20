@@ -27,7 +27,7 @@ This skill covers both the raw FTC gamepad APIs already used in TeamCode and the
 - `MecanumTeleOp` is a current raw-input example that uses `dpadLeftWasPressed()`, `dpadRightWasPressed()`, `backWasPressed()`, and the face-button edge helpers to change drive modes and flip motor directions.
 - `GamepadEx` exists as a richer wrapper with buttons, sticks, triggers, touchpad, LED, and rumble support.
 - `DualGamepad` wraps two `GamepadEx` objects and is the repo’s dual-controller utility surface when one abstraction needs to manage both `gamepad1` and `gamepad2` together.
-- `GamepadEx` is marked `@Deprecated`, so treat it as optional rather than the default style for new work.
+- `GamepadEx` and `DualGamepad` are available utilities, but most current match-oriented op modes still use raw FTC gamepad reads.
 
 ## `DualGamepad` conventions
 
@@ -80,6 +80,7 @@ Do not collapse finger-specific or touchpad-specific queries into a single ambig
 - Keep stick-curve logic consistent with drive expectations; the repo often applies shaping in `MecanumDrive` / `DriveVector`, not directly in every button handler.
 - When a new button action needs a new mechanism, add that mechanism through the normal `Mechanism` / `RobotConstants.createMechanism(...)` flow before wiring buttons to it.
 - For a dual-controller wrapper, keep one combined update flow and separate per-pad accessors instead of mixing both styles inconsistently.
+- If you introduce wrappers into an op mode that was previously raw-FTC-only, document whether the wrapper is replacing or just augmenting the old style.
 
 ## Good use cases for wrappers
 

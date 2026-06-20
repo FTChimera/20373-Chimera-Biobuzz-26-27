@@ -13,7 +13,7 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/PreseasonWebcamAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 
 ## Existing abstraction
 
@@ -27,7 +27,7 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 ## Repo conventions
 
 - Teleop starts the camera in `APRIL_TAG` mode.
-- `PreseasonWebcamAuto` starts the camera in `COLOR` mode.
+- `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
 - Code usually reads from the wrapper’s cached fields instead of calling the raw SDK directly from multiple places.
 
 ## Params and creation pattern
@@ -50,12 +50,13 @@ The important repo-level uniformity point is the shared `Mechanism` + `RobotCons
 - Extend the wrapper when new camera behavior is needed rather than scattering `Limelight3A` calls across op modes.
 - Tolerate missing or invalid results; `LLUpdate()` already handles absent data as a normal runtime condition.
 - If new vision tuning fields are added, keep them on `LIMELIGHT_PARAMS` or the wrapper itself rather than scattering them through op modes.
+- If the wrapper can be disabled by profile selection, make sure it decides that before touching hardware.
 
 ## Current limitations to remember
 
 - The distance helper uses placeholder mounting constants, so those values are not trustworthy until measured.
 - `isDisconnected` depends on repeated updates and the internal timer.
-- The wrapper supports operating in a no-device mode via the no-arg constructor; guard logic accordingly.
+- The wrapper supports operating in a no-device mode by setting `params.ISBEINGUSED` false before hardware lookup; guard logic accordingly.
 
 ## Good extension points
 

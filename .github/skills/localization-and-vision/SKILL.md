@@ -11,8 +11,9 @@ This repository currently mixes GoBILDA Pinpoint odometry with Limelight usage, 
 
 - `Constants.java`
 - `library/hardware/webcam/Limelight.java`
+- `library/hardware/webcam/LogitechWebcam.java`
 - `pedroPathing/custom/LimelightPinpointLocalizer.java`
-- `opModes/PreseasonWebcamAuto.java`
+- `tests/PreseasonWebcamAuto.java`
 - `opModes/IvyTeleOp.java`
 - `opModes/TeleOp.java`
 
@@ -20,8 +21,9 @@ This repository currently mixes GoBILDA Pinpoint odometry with Limelight usage, 
 
 1. `Limelight` wraps `Limelight3A` and supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines.
 2. Teleop code creates the wrapper through `Constants.createLimelight(hardwareMap)`, starts it in `APRIL_TAG` mode, and updates it every loop.
-3. `PreseasonWebcamAuto` starts the Limelight in `COLOR` mode and uses Pinpoint-only localization.
-4. `LimelightPinpointLocalizer` updates Pinpoint first, then attempts to fuse in a Limelight MT2 botpose reading.
+3. `tests/PreseasonWebcamAuto` starts the raw Limelight device in `COLOR` mode as a proof-of-concept vision-following test.
+4. `LogitechWebcam` is a separate AprilTag / VisionPortal wrapper that can also be profile-managed through `Constants.createWebcam(...)`.
+5. `LimelightPinpointLocalizer` exists as a deprecated custom fusion helper; it is not the default follower path.
 
 ## Vision-wrapper configuration pattern
 
@@ -42,6 +44,7 @@ That keeps vision wrappers aligned with the same profile-aware construction path
 - `Limelight.LLUpdate()` must be called regularly to keep results fresh and disconnected-state tracking meaningful.
 - Vision results can be absent or invalid; code must tolerate null or invalid readings.
 - Distance helpers in `Limelight.java` still use placeholder mounting constants and should not be trusted until measured values are filled in.
+- If a vision wrapper is optional, it should decide whether it is enabled before calling `hardwareMap.get(...)`.
 
 ## Rules
 
@@ -53,7 +56,7 @@ That keeps vision wrappers aligned with the same profile-aware construction path
 
 ## Example decisions
 
-- Need AprilTag-assisted pose estimate while driving: consider the custom localizer path.
+- Need AprilTag-assisted pose estimate while driving: consider whether the deprecated custom localizer path is really necessary, because the default follower still uses Pinpoint only.
 - Need color detection in autonomous: keep Pinpoint as the follower localizer and use the Limelight separately for vision.
-- Need tag metadata or botpose telemetry: extend the `Limelight` wrapper rather than scattering direct SDK calls.
+- Need tag metadata or botpose telemetry: extend the `Limelight` or `LogitechWebcam` wrapper rather than scattering direct SDK calls.
 - Need a new vision mechanism or camera wrapper: add it to the normal profile-managed construction flow before wiring it into op modes.

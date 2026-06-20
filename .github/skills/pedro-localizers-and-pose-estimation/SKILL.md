@@ -13,15 +13,17 @@ Use this skill for localization-specific Pedro work that is narrower than genera
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/PreseasonWebcamAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 
 ## Current localization flow
 
 1. The default follower path uses Pinpoint through `RobotConstants.createFollower(...)`.
-2. `MecanumDrive.pinpointLocalizer(...)` is the normal drive entry point.
-3. `LimelightPinpointLocalizer` exists as a custom fusion localizer but is marked `@Deprecated`.
+2. `RobotConstants.createFollower(...)` currently wires that by calling `.pinpointLocalizer(pinpointConstants)` on `FollowerBuilder`.
+3. `LimelightPinpointLocalizer` exists as a custom fusion localizer but is marked `@Deprecated` and is not the default follower path.
 4. `MecanumDrive.periodic()` keeps the follower pose fresh and mirrors it into `lastPose`.
-5. `Blackboard.pose` may persist the latest pose across op modes.
+5. `Blackboard.Caption.POSE` may persist the latest pose across op modes.
+6. `tests/PreseasonWebcamAuto.java` uses the normal follower plus a separate raw Limelight color-detection loop; it does not replace the default localizer.
 
 ## Configuration split to preserve
 
@@ -44,6 +46,7 @@ This repo intentionally separates Pedro/drive profile data from subsystem implem
 - `LimelightPinpointLocalizer.update()` first updates Pinpoint, then tries to override pose from Limelight MT2 botpose.
 - The fusion class currently swallows exceptions, so missing vision data is treated as a normal condition.
 - Some code comments explicitly warn against using custom fusion when the camera is needed for color detection.
+- The default follower path still assumes Pinpoint-only localization, so changes to fusion code do not automatically affect `Constants.createFollower(...)`.
 
 ## Good edit targets
 

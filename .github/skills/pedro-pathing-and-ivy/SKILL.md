@@ -10,7 +10,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 ## Key files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
@@ -20,6 +20,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 
 ## How this repo is wired
 
@@ -29,7 +30,8 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 4. Reusable mechanisms and wrappers now share a `Mechanism` base class and are instantiated uniformly through `RobotConstants.createMechanism(...)`, usually via `Constants.create...(...)` convenience helpers.
 5. Ivy-based autonomous code usually defines an `IvyAuton_Paths` implementation in a variant class and passes it into `IvyAuton`.
 6. Drive motor directions inside the robot profile now use the shared `library.hardware.actuators.Direction` enum before converting to the FTC SDK types Pedro expects.
-7. Custom path geometry can now use `library/Polynomial` plus `pedroPathing/custom/EquationCurve` when Bezier primitives are not the best fit.
+7. Custom path geometry can now use `library/math/Polynomial` plus `pedroPathing/custom/EquationCurve` when Bezier primitives are not the best fit.
+8. `RobotConstants.createFollower(...)` currently builds a Pinpoint-based follower by default; `LimelightPinpointLocalizer` exists separately and is not wired into the default factory.
 
 ## Use these patterns
 
@@ -58,9 +60,10 @@ Use `EquationCurve` when the path is easier to describe as `y = f(x)` than as co
 
 - `EquationCurve` extends Pedro `CustomCurve`.
 - It takes `startPose`, `endPose`, and a `Polynomial`.
-- The constructor currently validates the endpoints with exact equality, so choose polynomial coefficients and poses that match exactly or expect an `IllegalArgumentException`.
+- The constructor currently validates endpoints with `MathFunctions.roughlyEquals(..., 1e-3)`, so the polynomial still needs to match the endpoint poses closely.
 - `t` is mapped linearly across the start and end `x` positions.
 - Derivatives are computed from `Polynomial.derivative()`, so math changes in `Polynomial` directly affect curve-following behavior.
+- `Polynomial.toString()` is safe to use for debugging/telemetry-style inspection of decimal coefficients; it no longer relies on fragile fixed substring lengths.
 
 ## Ivy command construction
 
@@ -107,8 +110,9 @@ public final class IntakeCommand extends CommandBuilder {
 ## Important repo-specific constraints
 
 - `RobotConfigurations.OldDECODERobotTesting()` still contains placeholder tuning values for follower, drivetrain, and pinpoint offsets; do not assume those numbers are competition-ready.
-- `customLocalizerFollower(...)` uses Limelight plus Pinpoint fusion. The source comment explicitly warns not to use it when the camera is needed for color detection.
-- `MecanumDrive.pinpointLocalizer(...)` is the normal teleop entry point.
+- `LimelightPinpointLocalizer` is deprecated and should be treated as an opt-in experiment, not the default path.
+- `tests/PreseasonWebcamAuto.java` is a proof-of-concept validation op mode that uses the follower plus raw Limelight color results; it is not the shared match autonomous architecture.
+- `tests/PreseasonWebcamAuto.java` also relies on generic `PIDFCoefficients<Pose>` scalar broadcasting, so utility changes in `library/control/` can affect that test flow directly.
 - If a new Pedro-adjacent mechanism is created, it should still follow the `Mechanism` + `RobotConstants.createMechanism(...)` pattern.
 
 ## Rules

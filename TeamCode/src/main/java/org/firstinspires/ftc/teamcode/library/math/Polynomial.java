@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.library.math;
 
 import androidx.annotation.NonNull;
 
+import java.util.Locale;
+
 /**
  Length 1 polynomial – 0th degree, length 2 polynomial - 1st degree, etc.
  0th term – highest degree term
@@ -61,7 +63,7 @@ public class Polynomial {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
-        double[] coefficients = coefs;
+        double[] coefficients = coefs.clone();
         int degree = coefficients.length;
         for (int i = 0; i < degree; i ++) {
             if (coefficients[i] > 0 && !s.toString().isEmpty()) {
@@ -78,7 +80,7 @@ public class Polynomial {
                     }
                 }
                 else {
-                    s.append(Double.toString(coefficients[i]).substring(0, 4));
+                    s.append(String.format(Locale.US, "%.2f", coefficients[i]));
                 }
             }
             if (coefficients[i] != 0) {

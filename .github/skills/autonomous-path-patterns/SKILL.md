@@ -10,17 +10,17 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 
 ## Two autonomous styles in this repo
 
 1. Ivy-driven sequencing, as in `IvyAuton`, where a variant supplies `IvyAuton_Paths` and the shared base schedules Pedro commands.
-2. Manual iterative state machines, as in `PreseasonWebcamAuto`, where `loop()` checks follower state and advances enum-based stages.
+2. Standalone proof-of-concept loops, as in `tests/PreseasonWebcamAuto`, where a `LinearOpMode` drives a follower from sensor feedback instead of using an `IvyAuton_Paths` variant.
 
 ## Path-building conventions
 
@@ -28,12 +28,12 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 - Use `BezierLine`, `BezierCurve`, or `EquationCurve` depending on whether the motion is straight, control-point-based, or easiest to express as `y = f(x)`.
 - Keep start pose and path geometry near each other.
 - Set heading interpolation explicitly rather than relying on implicit defaults.
-- If using `EquationCurve`, make sure the chosen `Polynomial` passes exactly through the start and end poses because the current constructor validates endpoints with exact equality.
+- If using `EquationCurve`, make sure the chosen `Polynomial` passes through the start and end poses within the current rough-equality tolerance (`1e-3`).
 
 ## Repo examples
 
 - `Test_IvyAuton.Paths` returns a `PathChain` built from one `Path`.
-- `PreseasonWebcamAuto` uses nested static pose/path helpers and a `State` enum to coordinate release, intake, and park behavior.
+- `tests/PreseasonWebcamAuto` is a color-tracking proof of concept that uses a follower plus a generic `PIDFController<Pose>` rather than a reusable autonomous base class.
 - `PedroPathingTeleOpTest` uses `follower.pathBuilder()` lazily to create a path from the current pose.
 - `EquationCurve` plus `Polynomial` are now available for custom curve work even if no current autonomous routine uses them heavily yet.
 
@@ -61,7 +61,7 @@ That keeps autonomous and teleop using the same subsystem construction path.
 
 ## Things to watch
 
-- `PreseasonWebcamAuto.Poses.generateIntakePath()` is still a stub, so do not assume every sample path is complete.
+- `tests/PreseasonWebcamAuto` is a test/proof-of-concept op mode, not a shared match autonomous architecture example.
 - Follower-localization choice matters if the camera pipeline is needed for vision tasks.
 - Preserve pose handoff if the autonomous is expected to feed teleop state.
 
