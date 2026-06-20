@@ -12,12 +12,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.control.DoublePIDFCoeffs;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
+import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 /**
  * A utility base constants class to hold all Pedro pathing constants for a bot
@@ -48,7 +48,7 @@ public class RobotConstants {
     public DoublePIDFCoeffs HEADING_PIDF_COEFFICIENTS = new DoublePIDFCoeffs(0,0,0,0);
     public double CENTRIPETAL_SCALING = 0;
 
-    public List<Class<? extends Mechanism>> Mechanisms = new ArrayList<>(Collections.singleton(MecanumDrive.class));
+    public Set<Class<? extends Mechanism>> Mechanisms = Collections.singleton(MecanumDrive.class);
 
     public boolean USE_FOLLOWER_DRIVE = true; // Our team had issues with this last year, then finally got it to work.
 
@@ -139,6 +139,13 @@ public class RobotConstants {
         this.USE_FOLLOWER_DRIVE = useFollowerDrive;
         return this;
     }
+
+    public RobotConstants configureDriveMechanisms() {
+        addMechanism(MecanumDrive.class);
+        addMechanism(Drivetrain.class);
+        return this;
+    }
+
     public Follower createFollower(HardwareMap map) {
         // Pedro Pathing Follower configuration
         FollowerConstants followerConstants = DRIVE_CONSTANTS

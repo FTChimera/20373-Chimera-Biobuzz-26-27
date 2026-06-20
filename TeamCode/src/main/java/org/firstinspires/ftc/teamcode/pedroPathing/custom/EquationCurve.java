@@ -37,8 +37,8 @@ public class EquationCurve extends CustomCurve {
     }
 
     private boolean polynomialPassesThroughStartEnd(Polynomial polynomial, Pose startPose, Pose endPose) {
-        boolean startMatches = polynomial.getY(startPose.getX()) == startPose.getY();
-        boolean endMatches = polynomial.getY(endPose.getX()) == endPose.getY();
+        boolean startMatches = MathFunctions.roughlyEquals(polynomial.getY(startPose.getX()), startPose.getY(), 1e-3);
+        boolean endMatches = MathFunctions.roughlyEquals(polynomial.getY(endPose.getX()), endPose.getY(), 1e-3);
         return startMatches&&endMatches;
     }
 

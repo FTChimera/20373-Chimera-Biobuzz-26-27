@@ -24,7 +24,7 @@ public class Polynomial {
     }
 
     public Polynomial(double[] a) {
-        coefs = a;
+        coefs = a.clone();
     }
 
     public Polynomial scale(double k) {
@@ -35,7 +35,7 @@ public class Polynomial {
         return new Polynomial(b);
     }
 
-    public Polynomial copy() {return new Polynomial(coefs);}
+    public Polynomial copy() {return new Polynomial(coefs.clone());}
 
     public Polynomial multiply(Polynomial other) {
         int degA = getDegree();
@@ -51,7 +51,7 @@ public class Polynomial {
 
     public Polynomial add(Polynomial other) {
         int degree = getDegree();
-        double[] c = new double[degree];
+        double[] c = new double[degree+1];
         for (int i = 0; i <= degree; i ++) {
             c[i] = coefs[i] + other.coefs[i];
         }
@@ -61,26 +61,27 @@ public class Polynomial {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
-        int degree = coefs.length;
+        double[] coefficients = coefs;
+        int degree = coefficients.length;
         for (int i = 0; i < degree; i ++) {
-            if (coefs[i] > 0 && !s.toString().isEmpty()) {
+            if (coefficients[i] > 0 && !s.toString().isEmpty()) {
                 s.append("  +  ");
             }
-            if (coefs[i] < 0) {
-                coefs[i]*= -1;
+            if (coefficients[i] < 0) {
+                coefficients[i]*= -1;
                 s.append("  -  ");
             }
-            if (coefs[i] != 0) {
-                if (coefs[i] == (int) coefs[i]) {
-                    if (coefs[i] != 1 || (coefs[i] == 1 && degree-i-1 == 0)) {
-                        s.append((int) coefs[i]);
+            if (coefficients[i] != 0) {
+                if (coefficients[i] == (int) coefficients[i]) {
+                    if (coefficients[i] != 1 || (coefficients[i] == 1 && degree-i-1 == 0)) {
+                        s.append((int) coefficients[i]);
                     }
                 }
                 else {
-                    s.append(Double.toString(coefs[i]).substring(0, 4));
+                    s.append(Double.toString(coefficients[i]).substring(0, 4));
                 }
             }
-            if (coefs[i] != 0) {
+            if (coefficients[i] != 0) {
                 if (degree-i-1 == 1) {
                     s.append("x");
                 }

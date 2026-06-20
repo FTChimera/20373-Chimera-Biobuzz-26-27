@@ -63,7 +63,7 @@ public class Blackboard {
     public static class Item {
         protected Object val;
         protected Caption cap;
-        protected Object defaultV;
+        protected final Object defaultV;
         public Item(Caption caption, Object value) {
             if (caption.clazz != value.getClass()) {
                 throw new IllegalArgumentException("The value class does not match the caption");

@@ -43,10 +43,10 @@ public class RobotConfigurations {
                 .headingPIDFCoefficients(0,0,0,0)
                 .centripetalScaling(0)
                 // MECHANISM USAGE
+                .configureDriveMechanisms()
                 .addMechanism(Intake.class)
                 .addMechanism(Limelight.class)
                 .addMechanism(RGBIndicator.class)
-                .addMechanism(MecanumDrive.class)
                 // COMPATIBILITY
                 .useFollowerDrive(true);
     }

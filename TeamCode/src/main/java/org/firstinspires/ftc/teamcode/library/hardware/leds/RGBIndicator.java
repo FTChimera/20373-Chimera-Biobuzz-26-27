@@ -11,6 +11,13 @@ import com.qualcomm.robotcore.hardware.Servo;
  * GOBILDA PRODUCT INSIGHT: https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2275/15126/3118-0808-0002-Product-Insight-4__88285.1757516465.png?c=1
  */
 public class RGBIndicator extends Mechanism {
+    public static class RGBIndicator_PARAMS {
+        public boolean ISBEINGUSED = true;
+        public String HARDWAREMAP_NAME = "rgb";
+        public void updateFromBot(RobotConstants bot) {
+            ISBEINGUSED = bot.Mechanisms.contains(RGBIndicator.class);
+        }
+    }
     public enum Color {
         BLACK(BLACK_PWM),
         RED(RED_PWM),
@@ -60,12 +67,16 @@ public class RGBIndicator extends Mechanism {
     public static double WHITE_PWM = 1.0;
 
     private Servo rgb;
+    public RGBIndicator_PARAMS params;
     private final boolean isBeingUsed;
     public RGBIndicator(HardwareMap hardwareMap, RobotConstants bot) {
         super(hardwareMap, bot);
-        this.rgb = hardwareMap.get(Servo.class, "rgb");
+        this.params = new RGBIndicator_PARAMS();
+        this.params.updateFromBot(bot);
+        isBeingUsed = params.ISBEINGUSED;
+        if (!isBeingUsed) return;
+        this.rgb = hardwareMap.get(Servo.class, params.HARDWAREMAP_NAME);
         rgb.setPosition(BLACK_PWM);
-        isBeingUsed=bot.Mechanisms.contains(RGBIndicator.class);
     }
     public void setCustomPWM(double val) {
         if (!isBeingUsed) return;
@@ -74,24 +85,5 @@ public class RGBIndicator extends Mechanism {
     public void setColor(Color col) {
         if (!isBeingUsed) return;
         rgb.setPosition(col.getPWM());
-    }
-    public void updateUsingLL(Limelight ll) {
-        if (!isBeingUsed) return;
-        if (ll.isDisconnected) {
-            this.setColor(RGBIndicator.Color.BLACK); // Limelight not looking at target
-        }
-        else if (ll.getRGBScore() < 0.9) {
-            // GREEN
-            this.setColor(RGBIndicator.Color.GREEN);
-        } else if (ll.getRGBScore() < 5) {
-            // YELLOW
-            this.setColor(RGBIndicator.Color.YELLOW);
-        } else if (ll.getRGBScore() < 12.5) {
-            // ORANGE
-            this.setColor(RGBIndicator.Color.ORANGE);
-        } else {
-            // OFF
-            this.setColor(RGBIndicator.Color.BLACK);
-        }
     }
 }

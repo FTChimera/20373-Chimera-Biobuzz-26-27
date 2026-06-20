@@ -17,8 +17,8 @@ import org.firstinspires.ftc.teamcode.Constants;
 @Autonomous
 public class IvyTest extends LinearOpMode {
 
-    Pose startPose = new Pose(86.59, 9.18, 90);
-    Path path1 = new Path(new BezierLine(startPose, new Pose(84, 12, 65.56)));
+    Pose startPose = new Pose(86.59, 9.18, Math.toRadians(90));
+    Path path1 = new Path(new BezierLine(startPose, new Pose(84, 12, Math.toRadians(65.56))));
     /**
      * Override this method and place your code here.
      * <p>
@@ -33,7 +33,7 @@ public class IvyTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Scheduler.reset();
-        path1.setLinearHeadingInterpolation(90, 65.56);
+        path1.setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(65.56));
         Follower follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startPose);
         waitForStart();

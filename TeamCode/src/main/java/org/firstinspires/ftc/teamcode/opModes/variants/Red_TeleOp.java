@@ -27,7 +27,7 @@ public class Red_TeleOp extends TeleOp {
     @Override
     protected Pose getStartingPose() {
         Pose pose = Blackboard.get(Blackboard.Caption.POSE).getValue();
-        if (pose != null && (pose.getX() != 0 && pose.getY() != 0 && pose.getHeading() != 0)) {
+        if (pose != null && (pose.getX() != 0 || pose.getY() != 0 || pose.getHeading() != 0)) {
             return pose; // If it is not null or 0,0,0 (bug: given by follower at end of auto)
         }
         return Constants.RED_DEFAULT_START_POSE;

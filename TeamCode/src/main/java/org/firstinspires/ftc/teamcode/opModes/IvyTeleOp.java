@@ -51,8 +51,6 @@ public class IvyTeleOp extends LinearOpMode {
         waitForStart();
         limelight.start(Limelight.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
-            // Update Mechanisms
-            limelight.LLUpdate();
             Scheduler.execute();
 
             // Telemetry

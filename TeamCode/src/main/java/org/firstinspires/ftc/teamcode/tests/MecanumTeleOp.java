@@ -60,7 +60,11 @@ public class MecanumTeleOp extends OpMode {
         MOTOR_DIRECTION_TEST;
 
         public Mode next(int amt) {
-            return values()[(ordinal() + amt) % values().length];
+            int returnIndex = (this.ordinal() + amt) % values().length;
+            while (returnIndex < 0) {
+                returnIndex += values().length;
+            }
+            return values()[returnIndex];
         }
     }
 
@@ -197,8 +201,8 @@ public class MecanumTeleOp extends OpMode {
                 leftStickX = Math.copySign(Math.pow(Math.abs(leftStickX), JOYSTICK_CURVE_EXPONENT), leftStickX);
                 leftStickY = Math.copySign(Math.pow(Math.abs(leftStickY), JOYSTICK_CURVE_EXPONENT), leftStickY);
                 rightStickX = Math.copySign(Math.pow(Math.abs(rightStickX), JOYSTICK_CURVE_EXPONENT), rightStickX);
-                forward = -leftStickX;
-                strafe = leftStickY * STRAFE_POWER_COMPENSATION;
+                forward = -leftStickY;
+                strafe = leftStickX * STRAFE_POWER_COMPENSATION;
                 rotate = rightStickX;
                 break;
             case FIELD_CENTRIC_TELEOP:
@@ -209,15 +213,16 @@ public class MecanumTeleOp extends OpMode {
                 leftStickX = Math.copySign(Math.pow(Math.abs(leftStickX), JOYSTICK_CURVE_EXPONENT), leftStickX);
                 leftStickY = Math.copySign(Math.pow(Math.abs(leftStickY), JOYSTICK_CURVE_EXPONENT), leftStickY);
                 rightStickX = Math.copySign(Math.pow(Math.abs(rightStickX), JOYSTICK_CURVE_EXPONENT), rightStickX);
-                forward = -leftStickX;
-                strafe = leftStickY * STRAFE_POWER_COMPENSATION;
+                forward = -leftStickY;
+                strafe = leftStickX * STRAFE_POWER_COMPENSATION;
                 rotate = rightStickX;
                 // For field centric, we need to rotate the inputs by the direction of the robot to turn them into robot centric inputs
                 double robotHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
                 double cosA = Math.cos(robotHeading);
                 double sinA = Math.sin(robotHeading);
-                forward = forward * cosA + strafe * sinA;
+                double tempForward = forward * cosA + strafe * sinA;
                 strafe = -forward * sinA + strafe * cosA;
+                forward = tempForward;
                 break;
             case MOTOR_DIRECTION_TEST:
                 // In this mode, the motors move forward based on gamepad right trigger. This allows you to easily see if any motors are reversed or not, and adjust the motor directions accordingly.

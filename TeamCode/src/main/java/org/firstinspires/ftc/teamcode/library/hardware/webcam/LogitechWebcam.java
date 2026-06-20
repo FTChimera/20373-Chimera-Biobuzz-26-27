@@ -75,21 +75,22 @@ public class LogitechWebcam extends Mechanism {
     public LogitechWebcam(HardwareMap hwMap, RobotConstants bot) {
         super(hwMap, bot);
         this.params = new LOGITECH_WEBCAM_PARAMS();
+        this.params.updateFromBot(bot);
+        isBeingUsed = params.ISBEINGUSED;
+        if (!isBeingUsed) return;
         tagProcessor = new AprilTagProcessor.Builder()
-                .setDrawAxes(true)
-                .setDrawCubeProjection(true)
-                .setDrawTagID(true)
-                .setDrawTagOutline(true)
-                .setOutputUnits(DistanceUnit.INCH, AngleUnit.RADIANS)
+                .setDrawAxes(params.SET_DRAW_AXES)
+                .setDrawCubeProjection(params.SET_DRAW_CUBE_PROJECTION)
+                .setDrawTagID(params.SET_DRAW_TAG_ID)
+                .setDrawTagOutline(params.SET_DRAW_TAG_OUTLINE)
+                .setOutputUnits(params.OUTPUT_DISTANCE_UNIT, params.OUTPUT_ANGLE_UNIT)
                 .build();
         visionPortal = new VisionPortal.Builder()
                 .addProcessor(tagProcessor)
                 .setCamera(hwMap.get(WebcamName.class, params.HARDWAREMAP_NAME))
-                .setCameraResolution(new android.util.Size(640, 480))
+                .setCameraResolution(new android.util.Size(params.CAMERA_RESOLUTION_WIDTH, params.CAMERA_RESOLUTION_HEIGHT))
                 .build();
         isDisconnected = false;
-        this.params.updateFromBot(bot);
-        isBeingUsed = params.ISBEINGUSED;
     }
 
     // ==================== UPDATE ====================

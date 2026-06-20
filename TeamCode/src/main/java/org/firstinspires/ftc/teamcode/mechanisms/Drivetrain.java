@@ -21,8 +21,8 @@ public class Drivetrain extends Mechanism {
                 new Motor(map, bot.BACK_LEFT_MOTOR_NAME).setDirection(bot.BACK_LEFT_MOTOR_DIRECTION),
                 new Motor(map, bot.BACK_RIGHT_MOTOR_NAME).setDirection(bot.BACK_RIGHT_MOTOR_DIRECTION)
         };
-        startTeleOpDrive();
         setStickCurve(DoubleUnaryOperator.identity()); // Identity curve f(x) = x
+        startTeleOpDrive();
     }
 
     /** set stick curve for teleop drive (applied to all drive inputs) */

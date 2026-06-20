@@ -54,10 +54,10 @@ public class MecanumDrive extends Mechanism {
     public MecanumDrive(HardwareMap map, RobotConstants bot) {
         super(map, bot);
         // Create follower using Constants configuration
-        this.follower = Constants.createFollower(map);
+        this.follower = bot.createFollower(map);
         useManualDrive = !bot.USE_FOLLOWER_DRIVE;
         // Initialize drivetrain
-        drivetrain = Constants.createDrivetrain(map);
+        drivetrain = new Drivetrain(map, bot);
         // Set initial curve
         resetStickCurve();
         // Initial update to sync pose
@@ -90,6 +90,7 @@ public class MecanumDrive extends Mechanism {
         if (useManualDrive) {
             drivetrain.setTeleOpDrive(driveVector, fieldCentric, lastPose.getHeading() - headingOffset);
         } else {
+            driveVector.applyStickCurve(drivetrain.stickCurve);
             follower.setTeleOpDrive(
                     driveVector.forward, driveVector.strafe, driveVector.rotate, fieldCentric, fieldCentric ? headingOffset : 0
             );
