@@ -10,7 +10,18 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
  * Custom Motor class that wraps around the DcMotorEx class and provides additional functionality for easier motor control.
  * <pre>
  * Not callable with hardwareMap.get() for now
+ *
+ * TODO Add a constructor Motor(DcMotorControllerEx controller, int port) to allow hardware Map get from SDK
+ * Then use the controller Ex instead of the DcMotorEx
+ * Uncomment the below
  */
+
+/*@MotorType(ticksPerRev = 28, gearing = 3, maxRPM = 2000) // random default values
+@DeviceProperties(
+        name = "Motor",
+        xmlTag = "Motor",
+        compatibleControlSystems = {ControlSystem.REV_HUB}
+)*/
 public class Motor implements HardwareDevice {
     double targetPower, targetVelocity;
     DcMotorEx motor;

@@ -31,7 +31,8 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-
+    compileSdk 37
+    defaultConfig {minSdk 24}
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
