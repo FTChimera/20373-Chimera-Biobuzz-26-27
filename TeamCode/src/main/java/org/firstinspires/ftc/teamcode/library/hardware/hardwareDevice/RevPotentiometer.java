@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.library.hardware;
+package org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice;
 
 import com.qualcomm.robotcore.hardware.AnalogInputController;
 import com.qualcomm.robotcore.hardware.ControlSystem;

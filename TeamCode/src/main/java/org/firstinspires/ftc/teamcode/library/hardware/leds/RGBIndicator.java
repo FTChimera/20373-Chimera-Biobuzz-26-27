@@ -17,73 +17,12 @@ import com.qualcomm.robotcore.hardware.configuration.annotations.ServoType;
 /*
  * GOBILDA PRODUCT INSIGHT: https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2275/15126/3118-0808-0002-Product-Insight-4__88285.1757516465.png?c=1
  */
-@ServoType(flavor = ServoFlavor.CUSTOM)
-@DeviceProperties(
-        name = "GoBilda RGB Indicator",
-        xmlTag = "RGBIndicator",
-        compatibleControlSystems = {ControlSystem.REV_HUB})
-public class RGBIndicator extends Mechanism implements HardwareDevice {
-    private ServoControllerEx controller;
-    private int port;
-    private boolean calledBySdk = false;
+public class RGBIndicator extends Mechanism {
     /**
      * Returns an indication of the manufacturer of this device.
      *
      * @return the device's manufacturer
      */
-    @Override
-    public Manufacturer getManufacturer() {
-        return Manufacturer.GoBilda;
-    }
-
-    /**
-     * Returns a string suitable for display to the user as to the type of device.
-     * Note that this is a device-type-specific name; it has nothing to do with the
-     * name by which a user might have configured the device in a robot configuration.
-     *
-     * @return device manufacturer and name
-     */
-    @Override
-    public String getDeviceName() {
-        return "GoBilda RGB Indicator";
-    }
-
-    /**
-     * Get connection information about this device in a human readable format
-     *
-     * @return connection info
-     */
-    @Override
-    public String getConnectionInfo() {
-        return "null";
-    }
-
-    /**
-     * Version
-     *
-     * @return get the version of this device
-     */
-    @Override
-    public int getVersion() {
-        return 1;
-    }
-
-    /**
-     * Resets the device's configuration to that which is expected at the beginning of an OpMode.
-     * For example, motors will reset the their direction to 'forward'.
-     */
-    @Override
-    public void resetDeviceConfigurationForOpMode() {
-        setColor(Color.BLACK);
-    }
-
-    /**
-     * Closes this device
-     */
-    @Override
-    public void close() {
-        setColor(Color.BLACK);
-    }
 
     public static class RGBIndicator_PARAMS {
         public enum Type {ONLY_HARDWARE, ONLY_VIRTUAL, BOTH, NAN; public boolean panels() {return this == ONLY_VIRTUAL || this == BOTH;} public boolean hardware() {return this == ONLY_HARDWARE || this == BOTH;}}
@@ -107,7 +46,8 @@ public class RGBIndicator extends Mechanism implements HardwareDevice {
         BLUE(BLUE_PWM),
         INDIGO(INDIGO_PWM),
         VIOLET(VIOLET_PWM),
-        WHITE(WHITE_PWM);
+        WHITE(WHITE_PWM),
+        UNKNOWN(BLACK_PWM);
         private final double pwmValue;
         Color(double pwmValue) {
             this.pwmValue = pwmValue;
@@ -147,15 +87,6 @@ public class RGBIndicator extends Mechanism implements HardwareDevice {
     public RGBIndicator_PARAMS params;
     private final boolean isBeingUsed;
     com.bylazar.lights.RGBIndicator panelsRGB;
-
-    public RGBIndicator(ServoControllerEx controller, int port) {
-        super(null, null);
-        this.controller = controller;
-        this.port = port;
-        this.params = new RGBIndicator_PARAMS();
-        this.calledBySdk = true;
-        this.isBeingUsed = true;
-    }
     public RGBIndicator(HardwareMap hardwareMap, RobotConstants bot) {
         super(hardwareMap, bot);
         this.params = new RGBIndicator_PARAMS();
@@ -168,7 +99,6 @@ public class RGBIndicator extends Mechanism implements HardwareDevice {
             panelsRGB = new com.bylazar.lights.RGBIndicator(params.PANELS_NAME);
             PanelsLights.INSTANCE.getLights().initLights(panelsRGB);
         }
-        this.calledBySdk = false;
     }
     public void setCustomPWM(double val) {
         if (!isBeingUsed) return;
@@ -178,18 +108,32 @@ public class RGBIndicator extends Mechanism implements HardwareDevice {
         if (!isBeingUsed) return;
         internalSetPwm(col.getPWM());
     }
-    private void internalSetPwm(double pwm) {
-        if (calledBySdk && controller != null) {
-            // This must be hardware then
-            controller.setServoPosition(port, pwm);
-        } else {
-            if (params.type.hardware()) {
-                rgb.setPosition(pwm);
-            }
-            if (params.type.panels()) {
-                panelsRGB.update(pwm);
-                PanelsLights.INSTANCE.getLights().update();
+    public double getPWM() {
+        if (!isBeingUsed) return 0.0;
+        if (params.type.hardware()) return rgb.getPosition();
+        if (params.type.panels()) return panelsRGB.getValue();
+        return 0.0;
+    }
+
+    public Color getColor() {
+        if (!isBeingUsed) return Color.UNKNOWN;
+        double pwm = getPWM();
+        for (Color color : Color.values()) {
+            if (Math.abs(color.getPWM() - pwm) < 0.01) {
+                return color;
             }
         }
+        return Color.UNKNOWN;
     }
+
+    private void internalSetPwm(double pwm) {
+        if (params.type.hardware()) {
+                rgb.setPosition(pwm);
+        }
+        if (params.type.panels()) {
+            panelsRGB.update(pwm);
+            PanelsLights.INSTANCE.getLights().update();
+        }
+    }
+
 }
