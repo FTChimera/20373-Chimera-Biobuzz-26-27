@@ -33,17 +33,17 @@ class OpModeHelper {
         }
     }
 
-
-    var state = State.UN_INITIALIZED
+    constructor(hardwareMap: HardwareMap) {
+        state = State.UN_INITIALIZED
+        init(hardwareMap)
+    }
+    var state: State
 
     lateinit var hardwareMap: HardwareMap
     lateinit var dtTimer: Timer
     var dt: Long = 0L
     lateinit var allHubs: List<LynxModule>
 
-    fun getState(): State {
-        return state
-    }
     fun init(hardwareMap: HardwareMap) {
         if (state != State.UN_INITIALIZED) {
             throw IllegalStateException("OpModeHelper is already initialized")

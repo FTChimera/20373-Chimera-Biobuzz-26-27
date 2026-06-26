@@ -34,7 +34,7 @@ public class MotorDirectionTest extends LinearOpMode {
         drive.startTeleOpDrive();
         intake = Constants.createIntake(hardwareMap);
         waitForStart();
-        drive.setTeleOpDrive(new DriveVector(0.1, 0, 0), 0);
+        drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), 0);
         intake.setPower(0.3);
     }
 }

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.RGBIndicator_PARAMS;
 import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
@@ -13,7 +14,8 @@ import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 public class RGBIndicatorTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, Gamepad gamepad1, Gamepad gamepad2, Telemetry telemetry) {
-        RGBIndicator rgbIndicator = hardwareMap.get(RGBIndicator.class, "rgb");
+        RGBIndicator_PARAMS params = new RGBIndicator_PARAMS();
+        RGBIndicator rgbIndicator = hardwareMap.get(RGBIndicator.class, params.HARDWAREMAP_NAME);
         rgbIndicator.setColor(RGBIndicator.Color.RED);
         // should show red
         sleep(2000);

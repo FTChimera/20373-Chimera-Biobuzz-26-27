@@ -36,10 +36,10 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Constants;
 
 /*
  * This file includes a teleop (driver-controlled) file for a
@@ -96,10 +96,10 @@ public class MecanumTeleOp extends OpMode {
          * to 'get' must correspond to the names assigned during the robot configuration
          * step.
          */
-        leftFront = hardwareMap.get(DcMotor.class, "leftFrontMotor");
-        rightFront = hardwareMap.get(DcMotor.class, "rightFrontMotor");
-        leftBack = hardwareMap.get(DcMotor.class, "leftBackMotor");
-        rightBack = hardwareMap.get(DcMotor.class, "rightBackMotor");
+        leftFront = hardwareMap.get(DcMotor.class, Constants.currentBot.FRONT_LEFT_MOTOR_NAME);
+        rightFront = hardwareMap.get(DcMotor.class, Constants.currentBot.FRONT_RIGHT_MOTOR_NAME);
+        leftBack = hardwareMap.get(DcMotor.class, Constants.currentBot.BACK_LEFT_MOTOR_NAME);
+        rightBack = hardwareMap.get(DcMotor.class, Constants.currentBot.BACK_RIGHT_MOTOR_NAME);
 
         /*
          * To drive forward, most robots need the motors on one side to be reversed,
@@ -108,8 +108,10 @@ public class MecanumTeleOp extends OpMode {
          * Note: The settings here assume direct drive on left and right wheels. Gear
          * Reduction or 90 Deg drives may require direction flips
          */
-        rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(Constants.currentBot.FRONT_LEFT_MOTOR_DIRECTION.toFtcSdk());
+        rightFront.setDirection(Constants.currentBot.FRONT_RIGHT_MOTOR_DIRECTION.toFtcSdk());
+        leftBack.setDirection(Constants.currentBot.BACK_LEFT_MOTOR_DIRECTION.toFtcSdk());
+        rightBack.setDirection(Constants.currentBot.BACK_RIGHT_MOTOR_DIRECTION.toFtcSdk());
 
         /*
          * Initialize the IMU. To do that we have to tell it which direction it is facing.

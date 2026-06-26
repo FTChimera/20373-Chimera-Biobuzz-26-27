@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 
 
 /** A Proof of concept
@@ -39,7 +40,8 @@ public class PreseasonWebcamAuto extends LinearOpMode {
      */
     @Override
     public void runOpMode() throws InterruptedException {
-        Limelight3A limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        Limelight.LIMELIGHT_PARAMS limelightParams = new Limelight.LIMELIGHT_PARAMS();
+        Limelight3A limelight = hardwareMap.get(Limelight3A.class, limelightParams.HARDWAREMAP_NAME);
         Follower follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose());
         limelight.pipelineSwitch(1); // Color detection pipeline
