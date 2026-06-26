@@ -12,6 +12,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - The app uses FTC SDK `11.1.0`.
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
 - Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
+- Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
 - Shared match op modes live under `opModes/`, with `variants/` holding annotated wrappers such as `Blue_TeleOp` and `Red_TeleOp`.
 - Validation and proof-of-concept op modes live under `tests/`.
@@ -26,6 +27,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 4. Let `Constants.create...(...)` delegate to the active robot profile when the subsystem is profile-managed.
 5. If teleop needs the last autonomous pose or configured driver preference, read and write `configs.Blackboard` intentionally.
 6. Use `tests/` for proof-of-concept or validation flows that are not part of the shared match architecture.
+7. If an op mode wants loop timing or manual bulk-cache clearing, reuse `library/OpModeHelper.kt` instead of inventing a second helper with the same role.
 
 ## Central mechanism-creation convention
 
@@ -51,10 +53,13 @@ The important repo contract is that profile-managed subsystems can be created un
 - Intake is wrapped by `mechanisms/Intake.java` and created through `Constants`.
 - Limelight usage is wrapped by `library/hardware/webcam/Limelight.java` and created through `Constants`.
 - Logitech webcam and RGB indicator wrappers are also profile-managed and have `Constants` helpers.
+- `mechanisms/Slides1.java` is the current slide mechanism shell, layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
+- `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that intentionally uses direct Limelight SDK access for color-based artifact tracking.
+- `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
 - `configs/ConfigOpMode.java` is the shared base for the blackboard-reset / driver-selection op modes.
 
 ## Rules
@@ -62,6 +67,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Keep FTC annotations on concrete, selectable classes only.
 - Prefer adding alliance-specific wrappers over duplicating whole op modes.
 - Do not bypass mechanism wrappers with raw `DcMotorEx` or `Limelight3A` access unless the wrapper is being improved.
+- If an SDK-level test intentionally bypasses a wrapper, keep the hardware naming aligned with `RobotConfigurations` or the owning params class.
 - Keep subsystem creation on the `Constants` / `RobotConstants.createMechanism(...)` path; keep drive/follower profile data in `library/robot/RobotConstants`.
 - Preserve FTC lifecycle expectations: initialize hardware before using it, update telemetry in the loop, and stop or persist state in `stop()` when needed.
 

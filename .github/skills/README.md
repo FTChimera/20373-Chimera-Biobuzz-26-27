@@ -13,7 +13,7 @@ This folder contains repo-specific skills for working on `20373-Chimera-Biobuzz-
 ## Additional focused skills
 
 - `robot-configurations-and-follower-builder/` — robot profiles, `RobotConstants`, `RobotConfigurations`, `addMechanism(...)`, and Pedro follower / mechanism creation
-- `mechanisms-and-hardware-wrappers/` — wrapper and subsystem patterns in `library/hardware` and `mechanisms`
+- `mechanisms-and-hardware-wrappers/` — wrapper, custom `HardwareDevice`, and subsystem patterns in `library/hardware` and `mechanisms`
 - `drivetrain-and-drivevector/` — drive math, `DriveVector`, `Drivetrain`, and `MecanumDrive`
 - `opmode-variants-and-pose-handoff/` — shared op mode bases, variants, and `configs.Blackboard` pose / driver-state handoff
 - `ivy-command-patterns/` — Pedro Ivy scheduling, command construction, and `CommandConverter`
@@ -22,6 +22,8 @@ This folder contains repo-specific skills for working on `20373-Chimera-Biobuzz-
 - `autonomous-path-patterns/` — state-machine, `PathChain`, and custom-curve patterns used in autonomous
 - `gamepad-and-driver-input/` — raw FTC gamepad APIs plus `GamepadEx` / `DualGamepad` wrapper conventions
 - `tests-and-tuning-opmodes/` — test op modes, Pedro tuning, and validation habits
+- `skill-updates/` — how to update `.github/skills/README.md` and the relevant `SKILL.md` files from recent commit history without over-editing unrelated skills
+- `build-and-validation/` — Has an additional section on validating all of the files/classes in the `TeamCode` folder.
 
 ## Notes
 
@@ -38,7 +40,11 @@ Across the skill set, the current house style is:
 Current repo details worth remembering while using these skills:
 
 - drive motor directions are represented with `library/hardware/actuators/Direction.java`, then converted to FTC SDK directions at the wrapper/profile boundary
+- custom SDK-registerable hardware now lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`
+- `library/OpModeHelper.kt` is available as a lightweight manual-bulk-read and loop-`dt` helper for op modes that need one
 - `TeamCode/build.gradle` wires Project Lombok annotation processing and the Sloth load / hot-reload tooling, so build troubleshooting should account for both
+- `mechanisms/Slides1.java` is the current profile-style slide mechanism shell layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`
 - `tests/MecanumTeleOp.java` is a first-class iterative test op mode for robot-centric drive, field-centric drive, IMU yaw reset, and manual motor-direction checks
+- `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` now intentionally pull hardware names from `RobotConfigurations` or the owning `*_PARAMS` class instead of stale test-only string literals
 - `library/math/Polynomial.java` and `pedroPathing/custom/EquationCurve.java` are now part of the custom pathing toolbox when Bezier geometry is not the right fit
 

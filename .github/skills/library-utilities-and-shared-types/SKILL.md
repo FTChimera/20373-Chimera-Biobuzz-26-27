@@ -11,6 +11,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Timer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/PIDFController.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/DoublePIDFController.java`
@@ -19,6 +20,9 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/filters/LowPassFilter.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LinearInterp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LagrangeInterp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
@@ -42,6 +46,8 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `Polynomial` now lives under `library/math/` and is the reusable math primitive used by `EquationCurve`.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
+- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing, and it belongs here because it is a reusable lifecycle helper rather than robot behavior.
+- `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
@@ -50,6 +56,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - If a change adds robot behavior, it probably belongs in `mechanisms/`, not in `library/`.
 - If a wrapper in `library/hardware/...` participates in the robot-profile creation flow, it should usually extend `Mechanism` and accept `(HardwareMap, RobotConstants)`.
 - If a wrapper is a lower-level adapter like `Motor`, it can stay outside the `Mechanism` hierarchy and still be reused by mechanisms.
+- If a class is a custom FTC `HardwareDevice` under `library/hardware/hardwareDevice/`, keep it focused on SDK device behavior rather than profile registration or mechanism orchestration.
 - Keep robot-profile state in `RobotConstants` / `RobotConfigurations`, not in generic utility classes.
 - Do not move mechanism behavior into `library/` just because it needs a helper type.
 
@@ -71,6 +78,7 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 - Add reusable control helpers that are still generic and not tied to one specific subsystem implementation.
 - Add reusable filtering helpers for noisy sensor or signal data.
 - Add a wrapper or adapter that makes raw FTC devices easier to use from mechanisms.
+- Add a reusable op-mode helper like `OpModeHelper` when the behavior is generic lifecycle plumbing rather than robot-specific control logic.
 - Add shared conversion helpers like the `Direction` bridge between repo-level configuration and FTC SDK device APIs.
 
 ## Polynomial-specific guidance

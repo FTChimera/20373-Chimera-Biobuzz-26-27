@@ -12,6 +12,7 @@ Use this skill when working on the repo’s shared-base-class plus thin-wrapper 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/ConfigOpMode.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
@@ -34,6 +35,7 @@ Use this skill when working on the repo’s shared-base-class plus thin-wrapper 
 - `Test_IvyAuton` provides a nested `Paths` implementation and passes it to the shared base.
 - `IvyAuton.stop()` writes `follower.getPose()` into `Blackboard.Caption.POSE`.
 - The config op modes under `configs/` mutate `Blackboard` entries such as `POSE` and `DRIVER`.
+- `OpModeHelper.kt` is available as shared lifecycle plumbing if a future base op mode needs loop timing or manual bulk-cache handling, but it is not itself an annotated op mode base.
 
 ## Mechanism construction rule for shared bases
 

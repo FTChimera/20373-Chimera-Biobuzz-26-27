@@ -7,6 +7,11 @@ description: Use this skill when asked to add or modify TeamCode wrappers, hardw
 
 Use this skill when extending the team’s abstraction layers instead of writing raw FTC SDK calls directly in op modes.
 
+This includes both:
+
+- profile-managed wrappers and subsystems built around `Mechanism`
+- custom SDK-registerable hardware under `library/hardware/hardwareDevice/`
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
@@ -18,9 +23,13 @@ Use this skill when extending the team’s abstraction layers instead of writing
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Drivetrain.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/leds/RGBIndicator.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Slides1.java`
 
 ## Design intent in this repo
 
@@ -29,6 +38,10 @@ Use this skill when extending the team’s abstraction layers instead of writing
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
 4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
+
+There is also a lower layer for custom FTC devices:
+
+6. If a class is meant to be selectable via the FTC robot configuration UI with `hardwareMap.get(CustomType.class, ...)`, it belongs under `library/hardware/hardwareDevice/` and should implement or extend FTC `HardwareDevice` infrastructure directly.
 
 ## Required pattern for new mechanisms
 
@@ -51,6 +64,10 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, so it can behave more like an FTC device in tests or helper code.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
 - `Limelight` extends `Mechanism`, keeps a `LIMELIGHT_PARAMS` instance, and is created via `Constants.createLimelight(hardwareMap)`.
+- `Slides1` extends `Mechanism`, owns `SLIDES1_PARAMS`, and currently wraps a `SlidesMotor` retrieved by its params-defined hardware-map name.
+- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or thin mechanism shells.
+- `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
+- There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
 - `RGBIndicator` extends `Mechanism`, owns `RGBIndicator_PARAMS`, and now checks its enabled state before looking up the servo.
 - `LogitechWebcam` extends `Mechanism`, owns `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
 - `Drivetrain` extends `Mechanism` and reads drive motor names/directions directly from the active `RobotConstants` profile.
@@ -59,6 +76,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 ## Rules
 
 - Add new reusable hardware access under `library/hardware/...` first.
+- Add custom FTC robot-configuration devices under `library/hardware/hardwareDevice/...` when the goal is `hardwareMap.get(CustomType.class, ...)` support.
 - Add robot behavior under `mechanisms/...` second.
 - For a profile-managed subsystem, add the `Mechanism` subclass, register it in `RobotConfigurations`, and expose a `Constants.create...(...)` helper when it should be easy to consume.
 - If the wrapper is optional, do not fetch hardware until its params or profile say it is in use.
@@ -74,6 +92,8 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - New robot-profile registration or creation eligibility: `RobotConfigurations.java` / `RobotConstants.java`
 - New top-level subsystem convenience helper: `Constants.java`
 - New LED indicator behavior or params: `RGBIndicator.java`
+- New custom FTC device registration or controller/port behavior: `library/hardware/hardwareDevice/...`
+- New slides mechanism behavior: `Slides1.java` or `SlidesMotor.java`, depending on whether the change is subsystem-level or raw-device-level
 - New drive behavior or teleop helper: `Drivetrain.java` or `MecanumDrive.java`
 - New camera wrapper behavior: `Limelight.java` or `LogitechWebcam.java`
 
@@ -84,4 +104,6 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - Instantiating the same mechanism differently in every op mode.
 - Forgetting to add a new mechanism class to `RobotConfigurations`; `RobotConstants.createMechanism(...)` intentionally refuses to create classes that are not registered in the active profile.
 - Forgetting that `Constants.assertHasMechanism(...)` now enforces profile registration on the convenience-factory path too.
+- Confusing the device-level `library.hardware.hardwareDevice.RGBIndicator` with the profile-managed `library.hardware.leds.RGBIndicator` wrapper.
+- Putting a custom FTC device in the `Mechanism` factory flow when it is really meant to be used directly through `hardwareMap.get(...)`.
 

@@ -34,6 +34,7 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 
 - `Test_IvyAuton.Paths` returns a `PathChain` built from one `Path`.
 - `tests/PreseasonWebcamAuto` is a color-tracking proof of concept that uses a follower plus a generic `PIDFController<Pose>` rather than a reusable autonomous base class.
+- Even though `PreseasonWebcamAuto` still uses raw `Limelight3A` access, it now pulls the camera hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a stale hardcoded test-only string.
 - `PedroPathingTeleOpTest` uses `follower.pathBuilder()` lazily to create a path from the current pose.
 - `EquationCurve` plus `Polynomial` are now available for custom curve work even if no current autonomous routine uses them heavily yet.
 
@@ -58,6 +59,7 @@ That keeps autonomous and teleop using the same subsystem construction path.
 - If the autonomous is variant-specific, put geometry in the variant class and keep shared orchestration in the base.
 - Create mechanisms through `Constants`, not direct constructors sprinkled through state-machine branches.
 - Keep `Polynomial` math helpers in `library/` and Pedro-specific curve wiring in `EquationCurve` or the path builder layer.
+- If a proof-of-concept test intentionally bypasses the normal wrapper, still source hardware names from `RobotConfigurations` or the owning `*_PARAMS` class instead of introducing duplicate literals.
 
 ## Things to watch
 

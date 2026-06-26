@@ -11,6 +11,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
@@ -32,6 +33,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 6. Drive motor directions inside the robot profile now use the shared `library.hardware.actuators.Direction` enum before converting to the FTC SDK types Pedro expects.
 7. Custom path geometry can now use `library/math/Polynomial` plus `pedroPathing/custom/EquationCurve` when Bezier primitives are not the best fit.
 8. `RobotConstants.createFollower(...)` currently builds a Pinpoint-based follower by default; `LimelightPinpointLocalizer` exists separately and is not wired into the default factory.
+9. `OpModeHelper.kt` is a reusable utility if a Pedro-related op mode wants manual bulk-cache clearing or loop timing without re-implementing that plumbing.
 
 ## Use these patterns
 
@@ -112,6 +114,7 @@ public final class IntakeCommand extends CommandBuilder {
 - `RobotConfigurations.OldDECODERobotTesting()` still contains placeholder tuning values for follower, drivetrain, and pinpoint offsets; do not assume those numbers are competition-ready.
 - `LimelightPinpointLocalizer` is deprecated and should be treated as an opt-in experiment, not the default path.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept validation op mode that uses the follower plus raw Limelight color results; it is not the shared match autonomous architecture.
+- That proof-of-concept Limelight test now still sources its camera hardware name from `Limelight.LIMELIGHT_PARAMS`, even though it bypasses the wrapper for behavior.
 - `tests/PreseasonWebcamAuto.java` also relies on generic `PIDFCoefficients<Pose>` scalar broadcasting, so utility changes in `library/control/` can affect that test flow directly.
 - If a new Pedro-adjacent mechanism is created, it should still follow the `Mechanism` + `RobotConstants.createMechanism(...)` pattern.
 

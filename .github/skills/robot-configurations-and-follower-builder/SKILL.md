@@ -83,5 +83,6 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - `RobotConstants.createFollower(...)` currently assumes Pinpoint localization and the GoBILDA 4-bar pod resolution.
 - `RobotConstants.createMechanism(...)` throws if the requested class is not present in the active profile’s `Mechanisms` list.
 - `Constants.assertHasMechanism(...)` now fails earlier for convenience factory calls, so profile registration issues can show up before reflection-based construction.
+- `tests/MecanumTeleOp.java` now reads drivetrain motor names and default directions from `Constants.currentBot`, so drivetrain-profile renames should keep that test aligned automatically.
 - Any doc or patch that still talks about `starterBot()` is stale; the current attached preset is `OldDECODERobotTesting()`.
 

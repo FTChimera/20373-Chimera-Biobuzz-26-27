@@ -30,6 +30,7 @@ This skill covers the repo’s Pedro Ivy usage.
 - `IvyTeleOp` schedules Limelight updates, drive periodic updates, teleop drive, intake power, and heading reset behavior together.
 - `IvyAuton.start()` composes a sequential routine with intake commands, Pedro follow commands, waits, and an op-mode stop request.
 - `MecanumDrive.teleOp(...)` returns a command that starts teleop drive once and then runs continuous drive updates.
+- `Slides1` exists as a mechanism shell but does not yet expose Ivy command helpers or active-profile registration, so new command work around slides may need both subsystem and profile follow-up.
 
 ## Input-wrapper Ivy convention
 
@@ -68,4 +69,5 @@ Do not hide subsystem construction or configuration policy inside a custom comma
 - Avoid scheduling duplicate periodic loops that both call into the same mechanism every frame.
 - Avoid mixing busy loops with Ivy scheduling when Pedro already provides a command form.
 - Avoid creating or wiring profile-managed subsystems ad hoc inside commands; initialize them through the normal factory path first.
+- If a test or proof-of-concept command intentionally bypasses a wrapper, still keep hardware naming centralized through the active profile or the owning params class.
 

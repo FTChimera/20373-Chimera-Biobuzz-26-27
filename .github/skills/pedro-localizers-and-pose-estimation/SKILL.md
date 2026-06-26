@@ -24,6 +24,7 @@ Use this skill for localization-specific Pedro work that is narrower than genera
 4. `MecanumDrive.periodic()` keeps the follower pose fresh and mirrors it into `lastPose`.
 5. `Blackboard.Caption.POSE` may persist the latest pose across op modes.
 6. `tests/PreseasonWebcamAuto.java` uses the normal follower plus a separate raw Limelight color-detection loop; it does not replace the default localizer.
+7. That proof-of-concept test now still sources the Limelight hardware name from `Limelight.LIMELIGHT_PARAMS`, even though it bypasses the wrapper for behavior.
 
 ## Configuration split to preserve
 

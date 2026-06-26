@@ -12,6 +12,7 @@ Use this skill for direct FTC SDK integration work.
 - The project depends on FTC SDK `11.1.0`.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
+- The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
 
@@ -22,6 +23,7 @@ Use this skill for direct FTC SDK integration work.
 - `configs/ConfigOpMode.java` is a one-shot iterative config helper that runs a `Runnable` in `start()` and then requests stop.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows.
 - `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
+- `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
 
 ## HardwareMap rules in this repo
@@ -31,6 +33,7 @@ Use this skill for direct FTC SDK integration work.
 - Prefer `Constants.create...(...)` factories over direct `new Mechanism(...)` calls in op modes.
 - Keep drive/profile hardware names in `RobotConstants`, and let `Constants.create...(...)` delegate to the active profile for profile-managed subsystems.
 - If a wrapper can be disabled by robot profile, make sure it decides that before calling `hardwareMap.get(...)`.
+- If a class is a custom FTC `HardwareDevice` like `SlidesMotor`, `RevPotentiometer`, or the device-level `RGBIndicator`, fetch it directly from `hardwareMap` and keep it distinct from the profile-managed `Mechanism` wrappers.
 
 ## New mechanism pattern tied to lifecycle
 
@@ -43,6 +46,8 @@ When a task asks for a new mechanism or wrapper:
 5. initialize the mechanism once during `init()` or before `waitForStart()`
 
 Do not create fresh subsystem instances every loop. The team wants one constructed mechanism instance per op mode, created through the normal profile-aware factory path.
+
+If the task is instead about a custom SDK device type, put that class under `library/hardware/hardwareDevice/` and use normal FTC constructor/annotation rules rather than the `Mechanism` factory flow.
 
 ## Lifecycle rules
 
@@ -65,6 +70,7 @@ Do not create fresh subsystem instances every loop. The team wants one construct
 - Use `requestOpModeStop()` rather than custom termination flags when the op mode should end.
 - If a subsystem is already factory-created from `Constants`, keep using that path instead of mixing direct constructors into one op mode.
 - Use `configs/ConfigOpMode` for one-shot configuration mutations rather than re-implementing that pattern in each config class.
+- If a proof-of-concept or SDK-level test bypasses the wrapper path, still source hardware names from `RobotConfigurations` or the owning `*_PARAMS` class when those names already exist.
 
 ## Common mistakes to avoid
 
@@ -72,6 +78,7 @@ Do not create fresh subsystem instances every loop. The team wants one construct
 - Writing FTC annotations on abstract base classes.
 - Mixing `LinearOpMode` flow control into iterative `OpMode` subclasses.
 - Bypassing the `Mechanism` / `RobotConstants.createMechanism(...)` pattern for profile-managed subsystems.
+- Confusing the device-level `library.hardware.hardwareDevice.RGBIndicator` with the profile-managed `library.hardware.leds.RGBIndicator` wrapper.
 - Forgetting that many runtime issues are hardware-config dependent even when the project builds.
 - Forgetting that `tests/` may intentionally contain proof-of-concept code that uses more direct SDK access than shared match op modes.
 

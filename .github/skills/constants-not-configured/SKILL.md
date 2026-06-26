@@ -36,8 +36,10 @@ Use this skill when needing to change constants that were left blank because of 
   - path constraints and centripetal scaling
   - enabled mechanism registration via `configureDriveMechanisms()` and `.addMechanism(...)`
 - `library/robot/RobotConstants.java` is the base profile object consumed by the factory helpers. If a constant affects follower construction or drivetrain hardware wiring, it usually belongs here or in `RobotConfigurations`.
+- `library/hardware/hardwareDevice/` now contains custom FTC `HardwareDevice` definitions such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`; these are lower-level SDK types, not profile-managed mechanisms.
 - Mechanism-specific placeholder values still live inside the owning classes:
   - `mechanisms/Intake.java` -> `INTAKE_PARAMS`
+  - `mechanisms/Slides1.java` -> `SLIDES1_PARAMS`
   - `library/hardware/webcam/Limelight.java` -> `LIMELIGHT_PARAMS`
   - `library/hardware/webcam/LogitechWebcam.java` -> `LOGITECH_WEBCAM_PARAMS`
   - `library/hardware/leds/RGBIndicator.java` -> `RGBIndicator_PARAMS`
@@ -55,6 +57,7 @@ Use this skill when needing to change constants that were left blank because of 
 - `Limelight.LIMELIGHT_PARAMS` still has `LIMELIGHT_MOUNT_ANGLE_DEGREES`, `LIMELIGHT_LENS_HEIGHT_INCHES`, and `TAG_HEIGHT_INCHES` at `0`.
 - `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` contains the default hardware name, overlay toggles, output units, and resolution that may need real robot-specific values.
 - `RGBIndicator.RGBIndicator_PARAMS` contains the current LED hardware name and enablement gate.
+- `Slides1.SLIDES1_PARAMS` contains the current slides hardware-map name and enablement gate.
 - `Intake.INTAKE_PARAMS` contains intake power presets, motor direction, and hardware name defaults.
 - `tests/PreseasonWebcamAuto` contains local PIDF constants that are not sourced from `Constants` or `RobotConfigurations`.
 
@@ -92,7 +95,9 @@ Use this skill when needing to change constants that were left blank because of 
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
 - `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring.
 - `opModes/variants/Red_TeleOp.java` and `Blue_TeleOp.java` return the default alliance start poses.
-- `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper and uses raw hardware access with `"limelight"` plus local PIDF values, so camera-name or vision-tuning updates may need to touch it explicitly.
+- `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper for behavior, but now still sources the camera name from `Limelight.LIMELIGHT_PARAMS`; camera-name or vision-tuning updates may still need to touch it explicitly.
+- `tests/MecanumTeleOp.java` now pulls drivetrain motor names and default directions from `Constants.currentBot`, so drive-profile renames should stay aligned automatically.
+- `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` now source hardware names from the owning params classes instead of stale standalone literals.
 
 ## Repo-specific warning signs
 
@@ -102,6 +107,7 @@ Use this skill when needing to change constants that were left blank because of 
 - `MecanumDrive` and `Drivetrain` are normally enabled together through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` toggle themselves off based on whether their class is present in `bot.Mechanisms`.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
+- `Slides1` exists as a mechanism shell, but it is not currently registered in `RobotConfigurations.OldDECODERobotTesting()`, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
 - This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
 
 ## Rules

@@ -22,8 +22,9 @@ This repository currently mixes GoBILDA Pinpoint odometry with Limelight usage, 
 1. `Limelight` wraps `Limelight3A` and supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines.
 2. Teleop code creates the wrapper through `Constants.createLimelight(hardwareMap)`, starts it in `APRIL_TAG` mode, and updates it every loop.
 3. `tests/PreseasonWebcamAuto` starts the raw Limelight device in `COLOR` mode as a proof-of-concept vision-following test.
-4. `LogitechWebcam` is a separate AprilTag / VisionPortal wrapper that can also be profile-managed through `Constants.createWebcam(...)`.
-5. `LimelightPinpointLocalizer` exists as a deprecated custom fusion helper; it is not the default follower path.
+4. Even when a test bypasses the wrapper for behavior, the repo now prefers sourcing hardware names from the wrapper params or robot profile instead of duplicating literals.
+5. `LogitechWebcam` is a separate AprilTag / VisionPortal wrapper that can also be profile-managed through `Constants.createWebcam(...)`.
+6. `LimelightPinpointLocalizer` exists as a deprecated custom fusion helper; it is not the default follower path.
 
 ## Vision-wrapper configuration pattern
 

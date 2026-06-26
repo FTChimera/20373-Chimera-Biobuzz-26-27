@@ -11,7 +11,9 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 
 - `configs/`: `Blackboard` plus one-shot configuration op modes such as `ZeroPose`, `ResetAllBlackboard`, and `Set*Driver`.
 - `library/`: small reusable types and wrappers, now split across areas such as `control/`, `filters/`, `hardware/`, `interpolation/`, `math/`, and `robot/`.
+- `library/hardware/hardwareDevice/`: SDK-registerable custom devices such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`.
 - `mechanisms/`: robot subsystems plus the shared abstract base class `Mechanism`.
+- `library/OpModeHelper.kt`: optional op-mode utility for manual Lynx bulk caching and loop `dt` tracking.
 - `opModes/`: shared base op mode logic.
 - `opModes/variants/`: thin FTC-annotated wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`.
 - `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
@@ -32,7 +34,7 @@ Use this pattern:
 5. Instantiate from `RobotConstants.createMechanism(...)`, usually through a small convenience helper in `Constants` such as `createIntake(hardwareMap)`.
 6. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
-Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, or `RGBIndicator.RGBIndicator_PARAMS`, but the uniform repo-level construction pattern is now based on `Mechanism` plus `RobotConstants.createMechanism(...)`.
+Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, but the uniform repo-level construction pattern is now based on `Mechanism` plus `RobotConstants.createMechanism(...)`.
 
 ## Where configuration belongs
 
@@ -47,6 +49,9 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 
 - `library.hardware.actuators.Direction`
 - `library.hardware.actuators.Motor`
+- `library.hardware.hardwareDevice.RevPotentiometer`
+- `library.hardware.hardwareDevice.SlidesMotor`
+- `library.hardware.hardwareDevice.RGBIndicator`
 - `library.hardware.leds.RGBIndicator`
 - `library.hardware.webcam.Limelight`
 - `library.hardware.webcam.LogitechWebcam`
@@ -59,6 +64,7 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - `mechanisms.Intake`
 - `mechanisms.Drivetrain`
 - `mechanisms.MecanumDrive`
+- `mechanisms.Slides1`
 - `mechanisms.Mechanism`
 - `library.robot.RobotConstants`
 - `library.robot.RobotConfigurations`
@@ -79,6 +85,7 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - New top-level subsystem convenience factory or active-profile selection: `Constants.java`
 - New drive profile or Pedro follower constant set: `library/robot/...`
 - New simple hardware wrapper: `library/hardware/...`
+- New custom SDK hardware device definition: `library/hardware/hardwareDevice/...`
 - New subsystem behavior: `mechanisms/...`
 - New shared blackboard/configuration preference: `configs/...`
 - New teleop or autonomous entry: `opModes/variants/...` or `tests/...`, depending on whether it is match logic or validation logic
@@ -92,6 +99,7 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - A mechanism no longer needs a centrally shared params singleton in `Constants` to fit repo style; the important uniformity point is the `Mechanism` + `RobotConstants.createMechanism(...)` construction flow.
 - `Polynomial` now lives under `library/math/`, while `EquationCurve` is the Pedro-specific adapter that turns polynomial geometry into a `CustomCurve`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
+- The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.
 
 ## Current build-tooling note
 

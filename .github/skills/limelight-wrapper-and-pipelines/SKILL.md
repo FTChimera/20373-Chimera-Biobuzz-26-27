@@ -28,6 +28,7 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 
 - Teleop starts the camera in `APRIL_TAG` mode.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
+- Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
 - Code usually reads from the wrapper’s cached fields instead of calling the raw SDK directly from multiple places.
 
 ## Params and creation pattern

@@ -10,6 +10,7 @@ This skill covers both the raw FTC gamepad APIs already used in TeamCode and the
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/DualGamepad.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GamepadEx.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Buttons.java`
@@ -25,9 +26,11 @@ This skill covers both the raw FTC gamepad APIs already used in TeamCode and the
 
 - Most active op modes use raw SDK gamepads like `gamepad1.left_stick_y`, `gamepad1.back`, or edge helpers such as `aWasPressed()`.
 - `MecanumTeleOp` is a current raw-input example that uses `dpadLeftWasPressed()`, `dpadRightWasPressed()`, `backWasPressed()`, and the face-button edge helpers to change drive modes and flip motor directions.
+- `MecanumTeleOp` now also stays aligned with the active drivetrain profile by sourcing motor names and default directions from `Constants.currentBot`.
 - `GamepadEx` exists as a richer wrapper with buttons, sticks, triggers, touchpad, LED, and rumble support.
 - `DualGamepad` wraps two `GamepadEx` objects and is the repo’s dual-controller utility surface when one abstraction needs to manage both `gamepad1` and `gamepad2` together.
 - `GamepadEx` and `DualGamepad` are available utilities, but most current match-oriented op modes still use raw FTC gamepad reads.
+- `OpModeHelper.kt` is available for loop timing and manual bulk-caching work, but it is separate from the input wrappers and should not become a second button/joystick abstraction.
 
 ## `DualGamepad` conventions
 
