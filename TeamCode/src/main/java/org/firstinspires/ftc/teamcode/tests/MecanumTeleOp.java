@@ -36,6 +36,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -75,6 +76,7 @@ public class MecanumTeleOp extends OpMode {
     private DcMotor rightBack = null;
     private IMU imu = null;
     Mode teleopMode = Mode.ROBOT_CENTRIC_TELEOP;
+    double[] motorPowers = new double[4];
 
     /* Constants */
     private final double DRIVE_POWER_SCALAR = 0.9; // Scalar for drive power to prevent overpowering the motors, and easier driving.
@@ -130,6 +132,7 @@ public class MecanumTeleOp extends OpMode {
          * Tell the driver that initialization is complete.
          */
         telemetry.addData("Status", "Initialized Hardware Components");
+        telemetry.update();
     }
 
     /*
@@ -161,7 +164,7 @@ public class MecanumTeleOp extends OpMode {
      */
     @Override
     public void start() {
-
+        telemetry.update();
     }
 
     /*
@@ -216,14 +219,15 @@ public class MecanumTeleOp extends OpMode {
                 leftStickY = Math.copySign(Math.pow(Math.abs(leftStickY), JOYSTICK_CURVE_EXPONENT), leftStickY);
                 rightStickX = Math.copySign(Math.pow(Math.abs(rightStickX), JOYSTICK_CURVE_EXPONENT), rightStickX);
                 forward = -leftStickY;
-                strafe = leftStickX * STRAFE_POWER_COMPENSATION;
+                strafe = leftStickX;
                 rotate = rightStickX;
                 // For field centric, we need to rotate the inputs by the direction of the robot to turn them into robot centric inputs
                 double robotHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-                double cosA = Math.cos(robotHeading);
-                double sinA = Math.sin(robotHeading);
+                double cosA = Math.cos(-robotHeading);
+                double sinA = Math.sin(-robotHeading);
                 double tempForward = forward * cosA + strafe * sinA;
                 strafe = -forward * sinA + strafe * cosA;
+                strafe *= STRAFE_POWER_COMPENSATION;
                 forward = tempForward;
                 break;
             case MOTOR_DIRECTION_TEST:
@@ -248,26 +252,51 @@ public class MecanumTeleOp extends OpMode {
                 telemetry.addLine("Use B to invert right front motor direction");
                 telemetry.addLine("Use X to invert left back motor direction");
                 telemetry.addLine("Use Y to invert right back motor direction");
+                telemetry.addData("Motor Directions", getMotorDirectionsString());
                 break;
         }
 
         // Now, calculate drive powers based on the forward, strafe, and rotate values, and set the motor powers.
-        double[] motorPowers = new double[4];
-        motorPowers[0] = (forward + strafe + rotate) * DRIVE_POWER_SCALAR; // Front Left
-        motorPowers[1] = (forward - strafe - rotate) * DRIVE_POWER_SCALAR; // Front Right
-        motorPowers[2] = (forward - strafe + rotate) * DRIVE_POWER_SCALAR; // Back Left
-        motorPowers[3] = (forward + strafe - rotate) * DRIVE_POWER_SCALAR; // Back Right
 
+        motorPowers[0] = (forward + strafe + rotate); // Front Left
+        motorPowers[1] = (forward - strafe - rotate); // Front Right
+        motorPowers[2] = (forward - strafe + rotate); // Back Left
+        motorPowers[3] = (forward + strafe - rotate); // Back Right
+        double max = Math.max(
+                1,
+                Math.max(
+                        Math.abs(motorPowers[0]),
+                        Math.max(
+                                Math.abs(motorPowers[1]),
+                                Math.max(Math.abs(motorPowers[2]), Math.abs(motorPowers[3]))
+                        )
+                )
+        );
+
+        for (int i = 0; i < 4; i++) {
+            motorPowers[i] /= max;
+            motorPowers[i] *= DRIVE_POWER_SCALAR;
+        }
         // Now, set powers to motors
         leftFront.setPower(motorPowers[0]);
         rightFront.setPower(motorPowers[1]);
         leftBack.setPower(motorPowers[2]);
         rightBack.setPower(motorPowers[3]);
-
+        /*
+         * Here we use the dpad Left/Right to switch between teleop modes.
+         * The selection is shown on the driver station via telemetry.
+         */
+        if (gamepad1.dpadLeftWasPressed()) {
+            teleopMode = teleopMode.next(1);
+        }
+        if (gamepad1.dpadRightWasPressed()) {
+            teleopMode = teleopMode.next(-1);
+        }
         /*
          * Show motor powers on the Driver Station via telemetry.
          */
         telemetry.addData("TeleOp Mode", teleopMode);
+        telemetry.addData("Instructions", "Press DPAD Left/Right to switch modes");
         telemetry.addData("Drive Power", "forward (%.2f), strafe (%.2f), rotate (%.2f)", forward, strafe, rotate);
         telemetry.addData("IMU Yaw", "(%.3f) degrees", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         telemetry.addLine("Use Back/Share to reset IMU Yaw");
@@ -285,4 +314,18 @@ public class MecanumTeleOp extends OpMode {
         leftBack.setPower(0);
         rightBack.setPower(0);
     }
+
+    String getMotorDirectionsString() {
+        return getDirString(0) + " " + getDirString(1) + " " + getDirString(2) + " " + getDirString(3);
+    }
+
+    String getDirString(int idx) {
+        DcMotor motor;
+        switch (idx) {
+            case 0: motor = leftFront; break;
+            case 1: motor = rightFront; break;
+            case 2: motor = leftBack; break;
+            default: motor = rightBack;
+        }
+        return motor.getDirection() == DcMotorSimple.Direction.FORWARD ? "F" : "R";}
 }
