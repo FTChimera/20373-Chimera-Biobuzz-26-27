@@ -69,6 +69,11 @@ public class Drivetrain extends Mechanism {
         setTeleOpDrive(DriveVector.IDLE, 0);
     }
 
-
+    /**
+     * Returns the drive motors as a Motor[]
+     */
+    public Motor[] getDriveMotors() {
+        return motors;
+    }
 }
 

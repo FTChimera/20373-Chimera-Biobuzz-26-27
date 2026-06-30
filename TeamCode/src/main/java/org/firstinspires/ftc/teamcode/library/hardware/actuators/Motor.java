@@ -111,6 +111,9 @@ public class Motor implements HardwareDevice {
         }
         return this;
     }
+    public Direction getDirection() {
+        return Direction.values()[motor.getDirection().ordinal()];
+    }
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         motor.setZeroPowerBehavior(zeroPowerBehavior);
     }
