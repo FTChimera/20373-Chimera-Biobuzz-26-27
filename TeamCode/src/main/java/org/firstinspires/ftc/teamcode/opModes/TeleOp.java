@@ -39,6 +39,7 @@ public abstract class TeleOp extends LinearOpMode {
         intake = Constants.createIntake(hardwareMap);
         drive = Constants.createTeleOpFollower(hardwareMap);
         drive.setStartingPose(getStartingPose());
+        drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
         limelight = Constants.createLimelight(hardwareMap);
 
@@ -60,7 +61,7 @@ public abstract class TeleOp extends LinearOpMode {
             double forward = gamepad1.left_stick_y; // Don't need to negate because it will be in drive vector
             double strafe = gamepad1.left_stick_x;
             double turn = gamepad1.right_stick_x;
-            drive.setTeleOpDrive(new DriveVector(forward, strafe, turn).wStickCurve(x -> Math.signum(x)*x*x));
+            drive.setTeleOpDrive(new DriveVector(forward, strafe, turn));
 
             // Intake
             intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);

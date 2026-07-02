@@ -38,34 +38,37 @@ public class MotorDirectionTest extends LinearOpMode {
         drive.startTeleOpDrive();
         intake = Constants.createIntake(hardwareMap);
         waitForStart();
-        if (gamepad1.dpadDownWasPressed()) {
-            reverseDriveMotor(0);
+        while (opModeIsActive()) {
+            if (gamepad1.dpadDownWasPressed()) {
+                reverseDriveMotor(0);
+            }
+            if (gamepad1.dpadUpWasPressed()) {
+                reverseDriveMotor(1);
+            }
+            if (gamepad1.dpadLeftWasPressed()) {
+                reverseDriveMotor(2);
+            }
+            if (gamepad1.dpadRightWasPressed()) {
+                reverseDriveMotor(3);
+            }
+            if (gamepad1.aWasPressed()) {
+                reverseIntake();
+            }
+            drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), 0);
+            intake.setPower(0.3);
+            telemetry.addLine("-".repeat(30));
+            telemetry.addLine("INSTRUCTIONS");
+            telemetry.addLine("-".repeat(30));
+            telemetry.addData("Drive Motors", "Check if the robot is moving forward");
+            telemetry.addData("0:Front Left Motor", "Dpad Down");
+            telemetry.addData("1:Front Right Motor", "Dpad Up");
+            telemetry.addData("2:Back Left Motor", "Dpad Left");
+            telemetry.addData("3:Back Right Motor", "Dpad Right");
+            telemetry.addData("4:Intake", "A");
+            telemetry.addLine("-".repeat(30));
+            telemetry.addData("Motor Directions", getMotorDirectionsString());
+            telemetry.update();
         }
-        if (gamepad1.dpadUpWasPressed()) {
-            reverseDriveMotor(1);
-        }
-        if (gamepad1.dpadLeftWasPressed()) {
-            reverseDriveMotor(2);
-        }
-        if (gamepad1.dpadRightWasPressed()) {
-            reverseDriveMotor(3);
-        }
-        if (gamepad1.aWasPressed()) {
-            reverseIntake();
-        }
-        drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), 0);
-        intake.setPower(0.3);
-        telemetry.addLine("-".repeat(30));
-        telemetry.addLine("INSTRUCTIONS");
-        telemetry.addLine("-".repeat(30));
-        telemetry.addData("Drive Motors", "Check if the robot is moving forward");
-        telemetry.addData("0:Front Left Motor", "Dpad Down");
-        telemetry.addData("1:Front Right Motor", "Dpad Up");
-        telemetry.addData("2:Back Left Motor", "Dpad Left");
-        telemetry.addData("3:Back Right Motor", "Dpad Right");
-        telemetry.addData("4:Intake", "A");
-        telemetry.addLine("-".repeat(30));
-        telemetry.addData("Motor Directions", getMotorDirectionsString());
     }
 
     void reverseDriveMotor(int index) {

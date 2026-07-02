@@ -20,6 +20,7 @@ public abstract class androidTest extends LinearOpMode {
         telemetry.addData("Test Name", getTestName());
         waitForStart();
         test(hardwareMap, gamepad1, gamepad2, telemetry);
-        while (opModeIsActive());
+        sleep(2000); // Sleep for 2 seconds then stop opmode
+        requestOpModeStop();
     }
 }

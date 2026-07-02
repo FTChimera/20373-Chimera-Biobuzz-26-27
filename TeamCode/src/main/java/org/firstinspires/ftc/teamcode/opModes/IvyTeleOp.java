@@ -35,13 +35,14 @@ public class IvyTeleOp extends LinearOpMode {
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
         drive = Constants.createTeleOpFollower(hardwareMap);
         drive.setStartingPose(startPose);
+        drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
         limelight = Constants.createLimelight(hardwareMap);
 
         Scheduler.schedule(
                 limelight.updateCommand(),
                 drive.periodicCommand(),
-                drive.teleOp(() -> new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x).wStickCurve(x -> Math.signum(x)*x*x)),
+                drive.teleOp(() -> new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x)),
                 Groups.loop(intake.setPowerCommand(() -> (double) (gamepad1.right_trigger - gamepad1.left_trigger))),
                 Commands.infinite(() -> {if (gamepad1.back) {drive.zeroHeadingOffset();}}).requiring(gamepad1, drive)
         );

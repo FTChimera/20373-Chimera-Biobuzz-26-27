@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Reads the PS4/PS5 touchpad state, providing finger positions, edge detection
@@ -53,7 +54,7 @@ public class Touchpad {
 
         @Override
         public String toString() {
-            return String.format("TouchPoint(%.2f, %.2f)", x, y);
+            return String.format(Locale.ROOT, "TouchPoint(%.2f, %.2f)", x, y);
         }
     }
 

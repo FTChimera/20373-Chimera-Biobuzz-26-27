@@ -24,8 +24,6 @@ public class RGBIndicatorTest extends androidTest {
         sleep(2000);
         rgbIndicator.close();
         org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator rgb2 = new org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator(hardwareMap, new RobotConstants().addMechanism(org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.class));
-        rgb2.params.type = org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.RGBIndicator_PARAMS.Type.ONLY_HARDWARE; // for now
-        // test panels later
         rgb2.setColor(org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.Color.BLUE);
         // should show blue
         telemetry.addData("Color2 (should be BLUE)", rgb2.getColor());

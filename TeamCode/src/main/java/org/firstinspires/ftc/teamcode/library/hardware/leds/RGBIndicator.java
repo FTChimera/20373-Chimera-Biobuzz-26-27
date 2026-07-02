@@ -27,7 +27,7 @@ public class RGBIndicator extends Mechanism {
     public static class RGBIndicator_PARAMS {
         public enum Type {ONLY_HARDWARE, ONLY_VIRTUAL, BOTH, NAN; public boolean panels() {return this == ONLY_VIRTUAL || this == BOTH;} public boolean hardware() {return this == ONLY_HARDWARE || this == BOTH;}}
         public boolean ISBEINGUSED = true;
-        public Type type = Type.BOTH; // for now
+        public Type type = Type.ONLY_HARDWARE; // for now
         public String HARDWAREMAP_NAME = "rgb";
         public String PANELS_NAME = "RGB INDICATOR";
         public void updateFromBot(RobotConstants bot) {

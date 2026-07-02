@@ -48,17 +48,21 @@ public class PIDFController<T> {
     }
 
     public boolean atTarget() {
+        return atTarget(lastError);
+    }
+    public boolean atTarget(double[] error) {
         if (!firstUpdate) return false;
-        for (int i = 0; i < lastError.length; i++) {
-            if (Math.abs(lastError[i]) > coefficients.tolerance[i]) return false;
+        for (int i = 0; i < error.length; i++) {
+            if (Math.abs(error[i]) > coefficients.tolerance[i]) return false;
         }
         return true;
     }
 
 
-    /** Updates the PIDF Controller. Should be called periodically.
-     * @param state the current reading from sensor or elsewhere
-     * */
+
+        /** Updates the PIDF Controller. Should be called periodically.
+         * @param state the current reading from sensor or elsewhere
+         * */
     public void update(T state) {
         try {
             if (!firstUpdate) {
@@ -88,7 +92,7 @@ public class PIDFController<T> {
                 outputArray[i] += coefficients.d[i] * (error[i] - lastError[i]) / dt;
                 outputArray[i] += coefficients.i[i] * integral[i];
                 outputArray[i] += coefficients.f[i] * Math.signum(error[i]);
-                if (atTarget()) outputArray[i] = 0;
+                if (atTarget(error)) outputArray[i] = 0;
             }
             this.output = coefficients.inverseStateSupplier.apply(outputArray);
             lastError = error;

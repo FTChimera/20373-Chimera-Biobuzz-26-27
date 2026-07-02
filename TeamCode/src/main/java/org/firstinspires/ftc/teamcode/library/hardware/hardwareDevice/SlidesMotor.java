@@ -52,11 +52,10 @@ public class SlidesMotor extends DcMotorImplEx {
     public void setPosition(int position, double MaxPower) {
         setTargetPosition(position);
         setMode(RunMode.RUN_TO_POSITION);
-        setPower(MaxPower);
+        super.setPower(MaxPower);
     }
     public void setPosition(int position) {
-        setTargetPosition(position);
-        setMode(RunMode.RUN_TO_POSITION);
+        setPosition(position, Math.signum(position - getCurrentPosition()));
     }
 
     public void setPositionPercentage(double percentage) {

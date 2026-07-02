@@ -26,7 +26,7 @@ class OpModeHelper {
                 UN_INITIALIZED -> INITIALIZED
                 INITIALIZED -> STARTED
                 STARTED -> LOOP
-                LOOP -> LOOP
+                LOOP -> STOP // Will only be called on transition
                 STOP -> STOPPED
                 STOPPED -> STOPPED
             }
@@ -68,6 +68,9 @@ class OpModeHelper {
     fun update() {
         if (state != State.STARTED && state != State.LOOP) {
             throw IllegalStateException("OpModeHelper is not started or already closed")
+        }
+        if (state == State.STARTED) {
+            state = state.next()
         }
         for (hub in allHubs) {
             hub.clearBulkCache()
