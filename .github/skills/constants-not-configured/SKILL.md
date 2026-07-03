@@ -43,6 +43,7 @@ Use this skill when needing to change constants that were left blank because of 
   - `library/hardware/webcam/Limelight.java` -> `LIMELIGHT_PARAMS`
   - `library/hardware/webcam/LogitechWebcam.java` -> `LOGITECH_WEBCAM_PARAMS`
   - `library/hardware/leds/RGBIndicator.java` -> `RGBIndicator_PARAMS`
+- FTC AutoTune calibration values now also live in `pid/autoTune/TuningConstants.java`; those constants are for tuning op modes only and are not robot-profile-wide production defaults.
 - Some preseason tuning constants still live directly inside op modes, especially `tests/PreseasonWebcamAuto.java`.
 
 ## Placeholder values that are real calibration targets in this repo
@@ -60,6 +61,7 @@ Use this skill when needing to change constants that were left blank because of 
 - `Slides1.SLIDES1_PARAMS` contains the current slides hardware-map name and enablement gate.
 - `Intake.INTAKE_PARAMS` contains intake power presets, motor direction, and hardware name defaults.
 - `tests/PreseasonWebcamAuto` contains local PIDF constants that are not sourced from `Constants` or `RobotConfigurations`.
+- `pid/autoTune/TuningConstants.java` contains additional tune-target placeholders such as `MOTOR_NAME`, `MOTOR_NAME_2`, `TARGET_RPM`, `TICKS_PER_REV`, `RELAY_AMPLITUDE`, and relay/feedforward test settings.
 
 ## What is usually a real constant request versus a normal zero
 
@@ -84,7 +86,7 @@ Use this skill when needing to change constants that were left blank because of 
 1. Identify whether the requested value belongs in `Constants`, `RobotConfigurations`, `RobotConstants`, or a nested `*_PARAMS` class.
 2. Update the active robot profile first if the value is robot-wide.
 3. Update the owning mechanism params class if the value is specific to one wrapper or subsystem and is not currently profile-managed.
-4. Search for tests or op modes that duplicate the same constant or bypass the wrapper and update those too.
+4. Search for tests or op modes that duplicate the same constant or bypass the wrapper and update those too, including `pid/autoTune/` when the change affects tuner motor names, target RPM, or relay-test settings.
 5. If the change affects mechanism availability, update the `Mechanisms` set through `configureDriveMechanisms()` and/or `.addMechanism(...)`.
 6. Keep the factory flow intact: op modes should still use `Constants.create...(...)` helpers rather than new ad hoc constructors.
 
@@ -98,6 +100,7 @@ Use this skill when needing to change constants that were left blank because of 
 - `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper for behavior, but now still sources the camera name from `Limelight.LIMELIGHT_PARAMS`; camera-name or vision-tuning updates may still need to touch it explicitly.
 - `tests/MecanumTeleOp.java` now pulls drivetrain motor names and default directions from `Constants.currentBot`, so drive-profile renames should stay aligned automatically.
 - `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` now source hardware names from the owning params classes instead of stale standalone literals.
+- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` depend directly on `pid/autoTune/TuningConstants.java` for motor names, reversal booleans, target speed/position, and relay-test settings.
 
 ## Repo-specific warning signs
 
@@ -108,6 +111,7 @@ Use this skill when needing to change constants that were left blank because of 
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` toggle themselves off based on whether their class is present in `bot.Mechanisms`.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
 - `Slides1` exists as a mechanism shell, but it is not currently registered in `RobotConfigurations.OldDECODERobotTesting()`, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
+- `pid/autoTune/` is intentionally not on the normal `Constants.create...(...)` mechanism-factory path; if the task is about those tuner op modes, update `TuningConstants` instead of trying to thread the values through `RobotConfigurations`.
 - This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
 
 ## Rules

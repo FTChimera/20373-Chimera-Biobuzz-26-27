@@ -43,8 +43,11 @@ Current repo details worth remembering while using these skills:
 - custom SDK-registerable hardware now lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`
 - `library/OpModeHelper.kt` is available as a lightweight manual-bulk-read and loop-`dt` helper for op modes that need one
 - `TeamCode/build.gradle` wires Project Lombok annotation processing and the Sloth load / hot-reload tooling, so build troubleshooting should account for both
+- `build.dependencies.gradle` now also brings in JitPack plus the `com.github.aaravdhawan25.FtcAutoTune` relay-feedback PID/PIDF auto-tuner artifacts, and `pid/autoTune/` contains the driver-station-facing wrappers around that library
 - `mechanisms/Slides1.java` is the current profile-style slide mechanism shell layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`
 - `tests/MecanumTeleOp.java` is a first-class iterative test op mode for robot-centric drive, field-centric drive, IMU yaw reset, and manual motor-direction checks
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` now set their stick curve once on `MecanumDrive` via `setStickCurve(...)` and then pass raw `DriveVector` values, so future drive edits should avoid double-applying stick shaping in the op mode layer
 - `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` now intentionally pull hardware names from `RobotConfigurations` or the owning `*_PARAMS` class instead of stale test-only string literals
+- `tests/ftcSdk/androidTest.java` is now a scripted SDK-test base that runs one validation flow, sleeps briefly, and then calls `requestOpModeStop()` instead of spinning in an empty active loop
 - `library/math/Polynomial.java` and `pedroPathing/custom/EquationCurve.java` are now part of the custom pathing toolbox when Bezier geometry is not the right fit
 

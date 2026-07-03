@@ -16,6 +16,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
 - Shared match op modes live under `opModes/`, with `variants/` holding annotated wrappers such as `Blue_TeleOp` and `Red_TeleOp`.
 - Validation and proof-of-concept op modes live under `tests/`.
+- FTC AutoTune calibration op modes live under `pid/autoTune/`.
 - One-shot configuration op modes live under `configs/`.
 - Learning or scratch op modes live under `learning/`.
 
@@ -27,7 +28,8 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 4. Let `Constants.create...(...)` delegate to the active robot profile when the subsystem is profile-managed.
 5. If teleop needs the last autonomous pose or configured driver preference, read and write `configs.Blackboard` intentionally.
 6. Use `tests/` for proof-of-concept or validation flows that are not part of the shared match architecture.
-7. If an op mode wants loop timing or manual bulk-cache clearing, reuse `library/OpModeHelper.kt` instead of inventing a second helper with the same role.
+7. Use `pid/autoTune/` for driver-station-visible relay-feedback tuning utilities that wrap the external FTC AutoTune library.
+8. If an op mode wants loop timing or manual bulk-cache clearing, reuse `library/OpModeHelper.kt` instead of inventing a second helper with the same role.
 
 ## Central mechanism-creation convention
 
@@ -60,6 +62,8 @@ The important repo contract is that profile-managed subsystems can be created un
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that intentionally uses direct Limelight SDK access for color-based artifact tracking.
 - `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
+- `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.
+- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they are thin wrappers around `com.aaravdhawan25.pidautotuner.ftc` plus the repo-local `TuningConstants` class.
 - `configs/ConfigOpMode.java` is the shared base for the blackboard-reset / driver-selection op modes.
 
 ## Rules
@@ -68,6 +72,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Prefer adding alliance-specific wrappers over duplicating whole op modes.
 - Do not bypass mechanism wrappers with raw `DcMotorEx` or `Limelight3A` access unless the wrapper is being improved.
 - If an SDK-level test intentionally bypasses a wrapper, keep the hardware naming aligned with `RobotConfigurations` or the owning params class.
+- The `pid/autoTune/` op modes are an intentional exception to the normal `Constants.create...(...)` factory rule: their direct motor-name configuration lives in `TuningConstants` because the relay-test logic is owned by the external library.
 - Keep subsystem creation on the `Constants` / `RobotConstants.createMechanism(...)` path; keep drive/follower profile data in `library/robot/RobotConstants`.
 - Preserve FTC lifecycle expectations: initialize hardware before using it, update telemetry in the loop, and stop or persist state in `stop()` when needed.
 
@@ -79,6 +84,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Annotated wrappers: `opModes/variants/Blue_TeleOp.java`, `opModes/variants/Red_TeleOp.java`, `opModes/variants/Test_IvyAuton.java`
 - Standalone validation op mode: `tests/MecanumTeleOp.java`
 - Proof-of-concept test op mode: `tests/PreseasonWebcamAuto.java`
+- FTC AutoTune calibration op modes: `pid/autoTune/PositionPIDTunerOpMode.java`, `pid/autoTune/VelocityPIDFTunerOpMode.java`, `pid/autoTune/DualVelocityPIDFTunerOpMode.java`
 - One-shot config op mode family: `configs/ResetAllBlackboard.java`, `configs/ZeroPose.java`, `configs/Set*Driver.java`
 
 ## Validation

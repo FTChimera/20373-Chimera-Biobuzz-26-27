@@ -95,6 +95,8 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 - changes to how tests should reference hardware names or profile-managed factories
 - new op mode base classes, variants, or pose-handoff patterns
 - new Pedro/Ivy workflow changes
+- new tuning packages or calibration op modes such as `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pid/autoTune/`
+- new third-party build wiring in `build.dependencies.gradle`, especially new repositories or driver-station-facing libraries
 - new build, lint, or validation expectations
 - new skill directories or renamed skills
 
@@ -116,6 +118,12 @@ Examples:
   - `library-utilities-and-shared-types`
   - `ftc-sdk-hardwaremap-and-lifecycle`
   - possibly `teamcode-library-architecture`
+- If the change adds a new tuning package or driver-station-visible calibration flow like `pid/autoTune`, update:
+  - `tests-and-tuning-opmodes`
+  - `build-and-validation`
+  - `ftc-sdk-opmodes`
+  - `ftc-sdk-hardwaremap-and-lifecycle`
+  - `constants-not-configured` if the new package introduces its own configurable tuning constants
 
 ## Rules for editing the skills docs
 

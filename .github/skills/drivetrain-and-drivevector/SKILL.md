@@ -32,11 +32,12 @@ This skill covers the team’s custom teleop-drive stack.
 ## Repo-specific conventions
 
 - Driver preference for field-centric versus robot-centric mode is stored in `configs.Blackboard` through `Blackboard.Caption.DRIVER` and the `Driver` enum.
-- `TeleOp` and `IvyTeleOp` square the stick inputs with `x -> Math.signum(x) * x * x`.
+- `TeleOp` and `IvyTeleOp` now set their stick curve once on `MecanumDrive` via `drive.setStickCurve(x -> Math.signum(x) * x * x)` and then pass raw stick values into `new DriveVector(...)`.
 - Heading reset is usually mapped to `gamepad1.back`.
 - `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
 - Drive motor directions in robot profiles now use `library.hardware.actuators.Direction`; `Drivetrain` applies them through `Motor.setDirection(...)`.
 - `tests/MecanumTeleOp.java` now pulls drivetrain motor names and initial directions from `Constants.currentBot` rather than keeping separate stale test-only drive strings.
+- `MotorDirectionTest` is now a live low-speed loop that keeps drivetrain/intake direction telemetry updating while you flip directions, so drive-sign edits should stay compatible with that constants-driven sanity check.
 - `OpModeHelper.kt` is available if a drive-focused op mode needs manual Lynx bulk-cache clearing and loop-time tracking without inventing another helper.
 
 ## How drive fits the new creation pattern

@@ -18,12 +18,15 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - FTC SDK and Pedro dependencies are declared in `build.dependencies.gradle`
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
 - Custom SDK-registerable hardware now also lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and a device-level `RGBIndicator`
+- `build.dependencies.gradle` now also pulls JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core` and `pidautotuner-ftc`
+- TeamCode now includes `pid/autoTune/` relay-feedback tuner op modes plus `pid/autoTune/TuningConstants.java`
 
 ## Known build requirement
 
 - The root `build.gradle` uses Android Gradle Plugin `8.7.0`.
 - That plugin requires Java 11 or newer.
 - A build launched under Java 8 fails during Gradle configuration before Java sources are compiled.
+- The checked-in `gradle.properties` currently caps Gradle at `org.gradle.jvmargs=-Xmx1024M`; after the FTC AutoTune dependency addition, a clean `:TeamCode:assembleDebug` can run out of heap during `:TeamCode:dexBuilderDebug` on some machines, so retrying once with a larger heap / fewer workers is a valid way to distinguish tooling memory pressure from a source error.
 
 ## Primary validation steps
 
@@ -55,7 +58,7 @@ Treat that as a repo-wide audit request, not as permission to start fixing code 
 ### Recommended audit workflow
 
 1. Read the repo instructions and the relevant skills first.
-2. Map the `TeamCode/` package structure so you know which areas are op modes, mechanisms, library code, configs, Pedro helpers, tests, and learning/scratch code.
+2. Map the `TeamCode/` package structure so you know which areas are op modes, mechanisms, library code, configs, Pedro helpers, `pid/autoTune` tuners, tests, and learning/scratch code.
 3. Review recent history before drawing conclusions about “stale” code or architecture intent.
 
 Useful commands:
@@ -151,6 +154,7 @@ git --no-pager grep -nE 'hardwareMap\.get\(.*".+"' -- TeamCode/src/main/java/org
 - each test should have one clear purpose
 - proof-of-concept code should be documented as such
 - test op modes should stay aligned with centralized hardware naming and current wrappers/factories where appropriate
+- `pid/autoTune/` op modes are calibration utilities, not match logic; direct motor-name configuration through `TuningConstants` is expected there because the relay-test implementation lives in the external library
 
 #### 9. Control/utilities robustness
 
@@ -184,6 +188,7 @@ git --no-pager grep -nE 'TODO|FIXME|printStackTrace|catch \(Exception|while \(op
 - If build errors mention missing generated code or annotation processing, confirm the Lombok processor line is still present in `TeamCode/build.gradle` even if the current source set only uses Lombok lightly.
 - If build errors mention Kotlin plugin setup, check the root `kotlin_version`, the root Kotlin classpath entry, and the `org.jetbrains.kotlin.android` plugin in `TeamCode/build.gradle`.
 - If build errors mention `dev.frozenmilk`, `Load`, or `Sloth`, check the extra Dairy Foundation repositories, the `buildscript` classpath entry, the applied plugin line, and the Sloth runtime dependency in `TeamCode/build.gradle`.
+- If build errors mention `com.aaravdhawan25`, `pidautotuner`, or missing tuner classes, check the JitPack repository entry and the `pidautotuner-core` / `pidautotuner-ftc` dependency lines in `build.dependencies.gradle`.
 - Treat Sloth and Lombok as intentional build wiring, not dead code to remove casually during cleanup.
 
 ## What static review should focus on
@@ -201,6 +206,7 @@ git --no-pager grep -nE 'TODO|FIXME|printStackTrace|catch \(Exception|while \(op
 - Alliance-specific wrapper classes under `opModes/variants`
 - Camera pipeline assumptions versus localization mode
 - Test/proof-of-concept code under `tests/` versus shared match logic under `opModes/`
+- The `pid/autoTune/` package as a tuning-only exception to the normal `Constants.create...(...)` subsystem factory flow
 
 ## Centralized mechanism validation checklist
 
@@ -220,6 +226,8 @@ When a change adds or modifies a mechanism, confirm all of these:
 
 - Placeholder drivetrain and localization tuning values still exist in `RobotConfigurations` and related config objects.
 - Several tests now intentionally centralize hardware names through `Constants.currentBot` or nested params classes; new test edits should preserve that instead of reintroducing ad hoc strings.
+- `pid/autoTune/` is intentionally driver-station-visible tuning code that uses raw motor names and direction booleans from `TuningConstants` rather than the profile-managed mechanism factory path.
+- After the FTC AutoTune integration, a clean dex build may need more than the checked-in 1 GB Gradle heap on some machines; if `:TeamCode:dexBuilderDebug` OOMs, confirm that it succeeds with a larger heap before blaming recent source edits.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.
 - This repo does not currently expose a dedicated JVM unit-test suite; most validation is build-time plus robot runtime checks.
 - Documentation or code that still assumes every subsystem is wired by a central params singleton in `Constants` is stale; uniform construction now centers on `Mechanism` plus `RobotConstants.createMechanism(...)`.

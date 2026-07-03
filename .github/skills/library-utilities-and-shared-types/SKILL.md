@@ -46,7 +46,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `Polynomial` now lives under `library/math/` and is the reusable math primitive used by `EquationCurve`.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
-- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing, and it belongs here because it is a reusable lifecycle helper rather than robot behavior.
+- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it now enforces a simple state machine and promotes `STARTED -> LOOP` on the first `update()` call.
 - `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
@@ -98,6 +98,7 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 ## Control/filter guidance
 
 - `PIDFController<T>` should stay generic; if a change starts depending on one specific mechanism’s lifecycle or telemetry, that logic likely belongs higher up.
+- `PIDFController<T>` now has both `atTarget()` and `atTarget(double[] error)` so callers and internal updates can evaluate the current error vector against configured tolerances before zeroing output.
 - `DoublePIDFCoeffs` is the lightweight bridge for one-dimensional PIDF use cases.
 - `PIDFCoefficients<T>` now supports scalar broadcasting for multi-dimensional state types more safely: scalar `setPIDF(...)`, `setTolerance(...)`, and `setIntegralLimit(...)` resolve the configured state dimension or infer it from the suppliers instead of trying to build a state from a zero-length array.
 - `NoiseFilter` and `LowPassFilter` should stay algorithm-focused; avoid hiding robot-specific state machines inside them.

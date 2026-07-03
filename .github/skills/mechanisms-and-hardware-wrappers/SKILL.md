@@ -61,14 +61,14 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 ## Existing patterns to reuse
 
 - `Intake` extends `Mechanism`, wraps one `Motor`, owns an `INTAKE_PARAMS` helper, and is created via `Constants.createIntake(hardwareMap)` → `currentBot.createMechanism(...)`.
-- `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, so it can behave more like an FTC device in tests or helper code.
+- `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
 - `Limelight` extends `Mechanism`, keeps a `LIMELIGHT_PARAMS` instance, and is created via `Constants.createLimelight(hardwareMap)`.
 - `Slides1` extends `Mechanism`, owns `SLIDES1_PARAMS`, and currently wraps a `SlidesMotor` retrieved by its params-defined hardware-map name.
-- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or thin mechanism shells.
+- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or thin mechanism shells, and it now exposes convenience helpers like `setUp()`, `setDown()`, and `setPositionPercentage(...)` on that raw-device layer.
 - `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
 - There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
-- `RGBIndicator` extends `Mechanism`, owns `RGBIndicator_PARAMS`, and now checks its enabled state before looking up the servo.
+- `RGBIndicator` extends `Mechanism`, owns `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
 - `LogitechWebcam` extends `Mechanism`, owns `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
 - `Drivetrain` extends `Mechanism` and reads drive motor names/directions directly from the active `RobotConstants` profile.
 - `MecanumDrive` extends `Mechanism`, combines a Pedro `Follower` with the team `Drivetrain` wrapper, and uses the active `RobotConstants` profile for both.
