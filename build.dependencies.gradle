@@ -1,6 +1,7 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
+    maven { url = 'https://jitpack.io' } // auto tune
     maven { url = "https://mymaven.bylazar.com/releases" }
 }
 
@@ -14,6 +15,9 @@ dependencies {
     implementation 'org.firstinspires.ftc:FtcCommon:11.1.0'
     implementation 'org.firstinspires.ftc:Vision:11.1.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
+    // FTC-AutoTune — relay-feedback PID/PIDF auto tuner
+    implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7'
+    implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-ftc:v0.3.7'
 
     implementation 'com.pedropathing:ftc:2.1.2'
     implementation 'com.pedropathing:telemetry:1.0.0'
