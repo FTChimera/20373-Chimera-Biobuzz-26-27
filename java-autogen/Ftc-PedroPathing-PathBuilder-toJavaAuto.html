@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <title>Pedro Path Builder -> FTC Java Auto</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg: #0b1020;
+            --panel: #020617;
+            --border: #334155;
+            --text: #e5e7eb;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --accent-strong: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: monospace;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        p {
+            line-height: 1.5;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .panel {
+            margin: 16px 0;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--panel);
+        }
+
+        .builder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            align-items: start;
+        }
+
+        .panel-wide {
+            grid-column: 1 / -1;
+        }
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        label {
+            display: block;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            margin-top: 5px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #0b1020;
+            color: var(--text);
+            font: inherit;
+        }
+
+        textarea {
+            min-height: 520px;
+            resize: vertical;
+            white-space: pre;
+        }
+
+        button {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 14px;
+            background: var(--accent);
+            color: #0f172a;
+            font: inherit;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #93c5fd;
+        }
+
+        button.secondary {
+            background: #1e293b;
+            color: var(--text);
+        }
+
+        button.secondary:hover {
+            background: #334155;
+        }
+
+        button.success {
+            background: var(--success);
+            color: #022c22;
+        }
+
+        button.success:hover {
+            background: #34d399;
+        }
+
+        button.danger {
+            background: var(--danger);
+            color: #450a0a;
+        }
+
+        button.danger:hover {
+            background: #f87171;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #1e293b;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--muted);
+        }
+
+        .actions-cell {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip,
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 4px 10px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: #0f172a;
+            color: var(--muted);
+        }
+
+        .draft-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .draft-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            align-items: end;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: #0b1020;
+        }
+
+        .empty-state {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .subpanel {
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid #1e293b;
+            border-radius: 10px;
+            background: #0b1020;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Pedro Path Builder / Importer -> Java Generator</h1>
+<p class='muted'>Create a start pose, add named poses, connect them with paths, and optionally load an existing .pp, .turt, or .json file to regenerate Java immediately.</p>
+
+<details>
+    <summary><strong>Settings</strong></summary>
+    <div style='margin: 10px 0; padding: 10px; border: 1px solid #334155; background: #020617;'>
+        <label>Package Name:<br>
+        <input type='text' id='packageName' placeholder='org.firstinspires.ftc.teamcode.pedroPathing' style='width: 100%; margin: 5px 0; padding: 5px; background: #0b1020; color: #e5e7eb; border: 1px solid #334155;'></label><br>
+
+        <label>Class Name:<br>
+        <input type='text' id='className' placeholder='Autonomous' style='width: 100%; margin: 5px 0; padding: 5px; background: #0b1020; color: #e5e7eb; border: 1px solid #334155;'></label><br>
+
+        <label>OpMode Name:<br>
+        <input type='text' id='opModeName' placeholder='Auto' style='width: 100%; margin: 5px 0; padding: 5px; background: #0b1020; color: #e5e7eb; border: 1px solid #334155;'></label><br>
+
+        <label>OpMode Group:<br>
+        <input type='text' id='opModeGroup' placeholder='Pedro' style='width: 100%; margin: 5px 0; padding: 5px; background: #0b1020; color: #e5e7eb; border: 1px solid #334155;'></label><br>
+
+        <label>Constants File Package:<br>
+        <input type='text' id='constantsPackage' placeholder='org.firstinspires.ftc.teamcode.pedroPathing' style='width: 100%; margin: 5px 0; padding: 5px; background: #0b1020; color: #e5e7eb; border: 1px solid #334155;'></label><br>
+
+        <label style='display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 12px;'>
+        <input type='checkbox' id='useIvyCommandBase' checked>
+        Use Ivy command-base routine
+        </label><br>
+
+        <button type='button' id='saveSettingsButton' class='success' style='margin-right: 10px;'>Save Settings</button>
+        <button type='button' id='resetSettingsButton' class='danger'>Reset to Defaults</button>
+    </div>
+</details>
+
+<section class='panel'>
+    <h2>Import Existing Path File</h2>
+    <p class='muted'>Loading a file replaces the current builder state and regenerates Java immediately.</p>
+    <input type='file' id='fileInput' accept='.pp,.turt,.json'>
+</section>
+
+<div class='builder-grid'>
+    <section class='panel'>
+        <h2>Start Pose</h2>
+        <div class='field-grid'>
+            <label>X
+                <input type='number' id='startX' step='any' value='0'>
+            </label>
+            <label>Y
+                <input type='number' id='startY' step='any' value='0'>
+            </label>
+            <label>Heading (deg)
+                <input type='number' id='startHeading' step='any' value='0'>
+            </label>
+        </div>
+        <div class='action-row'>
+            <button type='button' id='applyStartPoseButton'>Apply Start Pose</button>
+        </div>
+    </section>
+
+    <section class='panel'>
+        <h2 id='poseEditorTitle'>Pose Editor</h2>
+        <div class='field-grid'>
+            <label>Name
+                <input type='text' id='poseName' placeholder='Backdrop'>
+            </label>
+            <label>X
+                <input type='number' id='poseX' step='any' value='0'>
+            </label>
+            <label>Y
+                <input type='number' id='poseY' step='any' value='0'>
+            </label>
+            <label>Heading (deg)
+                <input type='number' id='poseHeading' step='any' value='0'>
+            </label>
+        </div>
+        <div class='action-row'>
+            <button type='button' id='savePoseButton'>Add Pose</button>
+            <button type='button' id='cancelPoseEditButton' class='secondary'>Clear</button>
+        </div>
+        <div class='subpanel'>
+            <h3>Named Poses</h3>
+            <div id='poseList'></div>
+        </div>
+    </section>
+
+    <section class='panel panel-wide'>
+        <h2 id='pathEditorTitle'>Path Editor</h2>
+        <div class='field-grid'>
+            <label>Path Name
+                <input type='text' id='pathName' placeholder='Spike Route'>
+            </label>
+            <label>Start Pose
+                <select id='pathStartPose'></select>
+            </label>
+            <label>End Pose
+                <select id='pathEndPose'></select>
+            </label>
+        </div>
+
+        <div class='subpanel'>
+            <h3>Control Points</h3>
+            <p class='muted'>Control points always use heading 0 deg and cannot be changed.</p>
+            <div class='field-grid'>
+                <label>Control Point X
+                    <input type='number' id='controlPointX' step='any' value='0'>
+                </label>
+                <label>Control Point Y
+                    <input type='number' id='controlPointY' step='any' value='0'>
+                </label>
+            </div>
+            <div class='action-row'>
+                <button type='button' id='addControlPointButton'>Add Control Point</button>
+            </div>
+            <div id='draftControlPointList' class='draft-list'></div>
+        </div>
+
+        <div class='action-row'>
+            <button type='button' id='savePathButton'>Add Path</button>
+            <button type='button' id='cancelPathEditButton' class='secondary'>Clear</button>
+        </div>
+    </section>
+
+    <section class='panel panel-wide'>
+        <h2>Path Sequence</h2>
+        <p class='muted'>Execution order follows this list. Use Move Up and Move Down to reorder generated follow order.</p>
+        <div id='pathList'></div>
+    </section>
+</div>
+
+<div class='action-row'>
+    <button type='button' id='generateButton'>Generate Java</button>
+    <button type='button' id='resetBuilderButton' class='danger'>Reset Builder</button>
+</div>
+
+<h2>Generated Java</h2>
+<textarea id='output' spellcheck='false'></textarea>
+
+<script src='./Ftc-PP-toJavaAuto-Ivy.js'></script>
+<script>
+const generator = globalThis.PedroPathingJavaGenerator;
+const storageKey = 'pedroPathingSettings';
+let builderState = createEmptyBuilderState();
+let editingPoseId = null;
+let editingPathId = null;
+let draftControlPoints = [];
+
+function applySettings(settings) {
+    document.getElementById('packageName').value = settings.packageName;
+    document.getElementById('constantsPackage').value = settings.constantsPackage;
+    document.getElementById('className').value = settings.className;
+    document.getElementById('opModeName').value = settings.opModeName;
+    document.getElementById('opModeGroup').value = settings.opModeGroup;
+    document.getElementById('useIvyCommandBase').checked = settings.useIvyCommandBase;
+}
+
+function loadSettings() {
+    try {
+        const savedSettings = localStorage.getItem(storageKey);
+        const settings = savedSettings
+            ? generator.normalizeSettings(JSON.parse(savedSettings))
+            : generator.defaultSettings;
+
+        applySettings(settings);
+    } catch {
+        applySettings(generator.defaultSettings);
+    }
+}
+
+function getSettings() {
+    return generator.normalizeSettings({
+        packageName: document.getElementById('packageName').value,
+        constantsPackage: document.getElementById('constantsPackage').value,
+        className: document.getElementById('className').value,
+        opModeName: document.getElementById('opModeName').value,
+        opModeGroup: document.getElementById('opModeGroup').value,
+        useIvyCommandBase: document.getElementById('useIvyCommandBase').checked
+    });
+}
+
+function saveSettings() {
+    const settings = getSettings();
+    localStorage.setItem(storageKey, JSON.stringify(settings));
+    applySettings(settings);
+    refreshOutput();
+    alert('Settings saved!');
+}
+
+function resetSettings() {
+    if (confirm('Reset all settings to defaults?')) {
+        localStorage.removeItem(storageKey);
+        applySettings(generator.defaultSettings);
+        refreshOutput();
+        alert('Settings reset to defaults!');
+    }
+}
+
+function createEmptyBuilderState() {
+    return {
+        startPoint: {
+            x: 0,
+            y: 0,
+            startDeg: 0
+        },
+        poses: [],
+        paths: []
+    };
+}
+
+function createId(prefix) {
+    if (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function') {
+        return `${prefix}-${globalThis.crypto.randomUUID()}`;
+    }
+
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function toFiniteNumber(value, fallback = 0) {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : fallback;
+}
+
+function parseNumberInput(id, label) {
+    const value = Number(document.getElementById(id).value);
+    if (!Number.isFinite(value)) {
+        throw new Error(`${label} must be a valid number.`);
+    }
+
+    return value;
+}
+
+function formatNumber(value) {
+    const numericValue = Number(value);
+    if (!Number.isFinite(numericValue)) {
+        return '0';
+    }
+
+    return Number.isInteger(numericValue)
+        ? String(numericValue)
+        : numericValue.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function buildSignature(x, y, heading) {
+    return `${toFiniteNumber(x)}|${toFiniteNumber(y)}|${toFiniteNumber(heading)}`;
+}
+
+function buildUniqueName(baseName, collection, currentId = null) {
+    const trimmedBaseName = typeof baseName === 'string' && baseName.trim() ? baseName.trim() : 'Item';
+    let candidate = trimmedBaseName;
+    let counter = 1;
+
+    while (collection.some(item => item.id !== currentId && item.name.toLowerCase() === candidate.toLowerCase())) {
+        candidate = `${trimmedBaseName} ${counter}`;
+        counter += 1;
+    }
+
+    return candidate;
+}
+
+function getPoseById(poseId) {
+    if (poseId === 'start') {
+        return {
+            id: 'start',
+            name: 'Start Pose',
+            x: builderState.startPoint.x,
+            y: builderState.startPoint.y,
+            heading: builderState.startPoint.startDeg
+        };
+    }
+
+    return builderState.poses.find(pose => pose.id === poseId) || null;
+}
+
+function cloneControlPoints(controlPoints) {
+    return controlPoints.map(controlPoint => ({
+        id: controlPoint.id || createId('control'),
+        x: toFiniteNumber(controlPoint.x),
+        y: toFiniteNumber(controlPoint.y)
+    }));
+}
+
+function describePose(poseId) {
+    const pose = getPoseById(poseId);
+    if (!pose) {
+        return 'Missing Pose';
+    }
+
+    return `${pose.name} (${formatNumber(pose.x)}, ${formatNumber(pose.y)}, ${formatNumber(pose.heading)} deg)`;
+}
+
+function populateStartPoseInputs() {
+    document.getElementById('startX').value = builderState.startPoint.x;
+    document.getElementById('startY').value = builderState.startPoint.y;
+    document.getElementById('startHeading').value = builderState.startPoint.startDeg;
+}
+
+function updatePoseEditorState() {
+    document.getElementById('poseEditorTitle').textContent = editingPoseId ? 'Edit Pose' : 'Pose Editor';
+    document.getElementById('savePoseButton').textContent = editingPoseId ? 'Update Pose' : 'Add Pose';
+}
+
+function updatePathEditorState() {
+    document.getElementById('pathEditorTitle').textContent = editingPathId ? 'Edit Path' : 'Path Editor';
+    document.getElementById('savePathButton').textContent = editingPathId ? 'Update Path' : 'Add Path';
+}
+
+function renderPoseOptions() {
+    const poseOptions = [
+        {
+            id: 'start',
+            name: 'Start Pose',
+            x: builderState.startPoint.x,
+            y: builderState.startPoint.y,
+            heading: builderState.startPoint.startDeg
+        },
+        ...builderState.poses
+    ];
+
+    const optionMarkup = poseOptions
+        .map(pose => `<option value='${escapeHtml(pose.id)}'>${escapeHtml(`${pose.name} (${formatNumber(pose.x)}, ${formatNumber(pose.y)}, ${formatNumber(pose.heading)} deg)`)}</option>`)
+        .join('');
+
+    ['pathStartPose', 'pathEndPose'].forEach(selectId => {
+        const select = document.getElementById(selectId);
+        const currentValue = select.value;
+        select.innerHTML = optionMarkup;
+
+        if (poseOptions.some(pose => pose.id === currentValue)) {
+            select.value = currentValue;
+        }
+    });
+}
+
+function renderPoseList() {
+    const poseList = document.getElementById('poseList');
+
+    if (builderState.poses.length === 0) {
+        poseList.innerHTML = `<p class='empty-state'>No named poses yet.</p>`;
+        return;
+    }
+
+    poseList.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>Heading</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${builderState.poses.map(pose => `
+                    <tr>
+                        <td>${escapeHtml(pose.name)}</td>
+                        <td>${escapeHtml(formatNumber(pose.x))}</td>
+                        <td>${escapeHtml(formatNumber(pose.y))}</td>
+                        <td>${escapeHtml(formatNumber(pose.heading))} deg</td>
+                        <td class='actions-cell'>
+                            <button type='button' data-action='edit-pose' data-pose-id='${escapeHtml(pose.id)}'>Edit</button>
+                            <button type='button' class='danger' data-action='delete-pose' data-pose-id='${escapeHtml(pose.id)}'>Remove</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderDraftControlPointList() {
+    const controlPointList = document.getElementById('draftControlPointList');
+
+    if (draftControlPoints.length === 0) {
+        controlPointList.innerHTML = `<p class='empty-state'>No control points added. Their heading is always 0 deg.</p>`;
+        return;
+    }
+
+    controlPointList.innerHTML = draftControlPoints.map((controlPoint, index) => `
+        <div class='draft-row'>
+            <label>X
+                <input type='number' step='any' data-action='control-point-field' data-index='${index}' data-field='x' value='${escapeHtml(controlPoint.x)}'>
+            </label>
+            <label>Y
+                <input type='number' step='any' data-action='control-point-field' data-index='${index}' data-field='y' value='${escapeHtml(controlPoint.y)}'>
+            </label>
+            <span class='badge'>Heading: 0 deg</span>
+            <button type='button' class='danger' data-action='remove-control-point' data-index='${index}'>Remove</button>
+        </div>
+    `).join('');
+}
+
+function renderPathList() {
+    const pathList = document.getElementById('pathList');
+
+    if (builderState.paths.length === 0) {
+        pathList.innerHTML = `<p class='empty-state'>No paths yet.</p>`;
+        return;
+    }
+
+    pathList.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Start -> End</th>
+                    <th>Control Points</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${builderState.paths.map((path, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${escapeHtml(path.name)}</td>
+                        <td>${escapeHtml(describePose(path.startPoseId))} -> ${escapeHtml(describePose(path.endPoseId))}</td>
+                        <td>
+                            ${path.controlPoints.length === 0
+                                ? `<span class='muted'>None</span>`
+                                : `<div class='chip-list'>${path.controlPoints.map(controlPoint => `<span class='chip'>(${escapeHtml(formatNumber(controlPoint.x))}, ${escapeHtml(formatNumber(controlPoint.y))}, 0 deg)</span>`).join('')}</div>`}
+                        </td>
+                        <td class='actions-cell'>
+                            <button type='button' data-action='move-path-up' data-path-id='${escapeHtml(path.id)}' ${index === 0 ? 'disabled' : ''}>Move Up</button>
+                            <button type='button' data-action='move-path-down' data-path-id='${escapeHtml(path.id)}' ${index === builderState.paths.length - 1 ? 'disabled' : ''}>Move Down</button>
+                            <button type='button' data-action='edit-path' data-path-id='${escapeHtml(path.id)}'>Edit</button>
+                            <button type='button' class='danger' data-action='delete-path' data-path-id='${escapeHtml(path.id)}'>Remove</button>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+}
+
+function renderAll() {
+    populateStartPoseInputs();
+    renderPoseOptions();
+    renderPoseList();
+    renderDraftControlPointList();
+    renderPathList();
+    updatePoseEditorState();
+    updatePathEditorState();
+}
+
+function clearPoseForm() {
+    editingPoseId = null;
+    document.getElementById('poseName').value = '';
+    document.getElementById('poseX').value = 0;
+    document.getElementById('poseY').value = 0;
+    document.getElementById('poseHeading').value = 0;
+    updatePoseEditorState();
+}
+
+function clearPathForm() {
+    editingPathId = null;
+    draftControlPoints = [];
+    document.getElementById('pathName').value = '';
+    renderPoseOptions();
+    document.getElementById('pathStartPose').value = 'start';
+
+    if (builderState.poses.length > 0) {
+        document.getElementById('pathEndPose').value = builderState.poses[0].id;
+    } else {
+        document.getElementById('pathEndPose').value = 'start';
+    }
+
+    document.getElementById('controlPointX').value = 0;
+    document.getElementById('controlPointY').value = 0;
+    renderDraftControlPointList();
+    updatePathEditorState();
+}
+
+function applyStartPose() {
+    try {
+        builderState.startPoint = {
+            x: parseNumberInput('startX', 'Start Pose X'),
+            y: parseNumberInput('startY', 'Start Pose Y'),
+            startDeg: parseNumberInput('startHeading', 'Start Pose Heading')
+        };
+        renderAll();
+        refreshOutput();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function savePose() {
+    try {
+        const name = document.getElementById('poseName').value.trim();
+        const x = parseNumberInput('poseX', 'Pose X');
+        const y = parseNumberInput('poseY', 'Pose Y');
+        const heading = parseNumberInput('poseHeading', 'Pose Heading');
+
+        if (!name) {
+            throw new Error('Pose name is required.');
+        }
+
+        const duplicatePose = builderState.poses.find(pose =>
+            pose.id !== editingPoseId
+            && pose.name.toLowerCase() === name.toLowerCase()
+        );
+
+        if (duplicatePose) {
+            throw new Error(`Pose name "${name}" already exists.`);
+        }
+
+        if (editingPoseId) {
+            builderState.poses = builderState.poses.map(pose => pose.id === editingPoseId
+                ? { ...pose, name, x, y, heading }
+                : pose);
+        } else {
+            builderState.poses.push({
+                id: createId('pose'),
+                name,
+                x,
+                y,
+                heading
+            });
+        }
+
+        clearPoseForm();
+        renderAll();
+        refreshOutput();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function editPose(poseId) {
+    const pose = getPoseById(poseId);
+    if (!pose || pose.id === 'start') {
+        return;
+    }
+
+    editingPoseId = poseId;
+    document.getElementById('poseName').value = pose.name;
+    document.getElementById('poseX').value = pose.x;
+    document.getElementById('poseY').value = pose.y;
+    document.getElementById('poseHeading').value = pose.heading;
+    updatePoseEditorState();
+}
+
+function deletePose(poseId) {
+    const relatedPaths = builderState.paths.filter(path => path.startPoseId === poseId || path.endPoseId === poseId);
+
+    if (relatedPaths.length > 0) {
+        alert(`Remove or update these paths first: ${relatedPaths.map(path => path.name).join(', ')}`);
+        return;
+    }
+
+    builderState.poses = builderState.poses.filter(pose => pose.id !== poseId);
+
+    if (editingPoseId === poseId) {
+        clearPoseForm();
+    }
+
+    renderAll();
+    refreshOutput();
+}
+
+function addControlPoint() {
+    try {
+        draftControlPoints.push({
+            id: createId('control'),
+            x: parseNumberInput('controlPointX', 'Control Point X'),
+            y: parseNumberInput('controlPointY', 'Control Point Y')
+        });
+        document.getElementById('controlPointX').value = 0;
+        document.getElementById('controlPointY').value = 0;
+        renderDraftControlPointList();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function savePath() {
+    try {
+        const name = document.getElementById('pathName').value.trim();
+        const startPoseId = document.getElementById('pathStartPose').value;
+        const endPoseId = document.getElementById('pathEndPose').value;
+        const startPose = getPoseById(startPoseId);
+        const endPose = getPoseById(endPoseId);
+
+        if (!name) {
+            throw new Error('Path name is required.');
+        }
+
+        if (!startPose || !endPose) {
+            throw new Error('Choose valid start and end poses for the path.');
+        }
+
+        const duplicatePath = builderState.paths.find(path =>
+            path.id !== editingPathId
+            && path.name.toLowerCase() === name.toLowerCase()
+        );
+
+        if (duplicatePath) {
+            throw new Error(`Path name "${name}" already exists.`);
+        }
+
+        const normalizedControlPoints = cloneControlPoints(draftControlPoints);
+        const pathRecord = {
+            id: editingPathId || createId('path'),
+            name,
+            startPoseId,
+            endPoseId,
+            controlPoints: normalizedControlPoints
+        };
+
+        if (editingPathId) {
+            builderState.paths = builderState.paths.map(path => path.id === editingPathId ? pathRecord : path);
+        } else {
+            builderState.paths.push(pathRecord);
+        }
+
+        clearPathForm();
+        renderAll();
+        refreshOutput();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function editPath(pathId) {
+    const path = builderState.paths.find(existingPath => existingPath.id === pathId);
+    if (!path) {
+        return;
+    }
+
+    editingPathId = path.id;
+    draftControlPoints = cloneControlPoints(path.controlPoints);
+    document.getElementById('pathName').value = path.name;
+    renderPoseOptions();
+    document.getElementById('pathStartPose').value = path.startPoseId;
+    document.getElementById('pathEndPose').value = path.endPoseId;
+    renderDraftControlPointList();
+    updatePathEditorState();
+}
+
+function deletePath(pathId) {
+    builderState.paths = builderState.paths.filter(path => path.id !== pathId);
+
+    if (editingPathId === pathId) {
+        clearPathForm();
+    }
+
+    renderAll();
+    refreshOutput();
+}
+
+function movePath(pathId, direction) {
+    const currentIndex = builderState.paths.findIndex(path => path.id === pathId);
+    const nextIndex = currentIndex + direction;
+
+    if (currentIndex === -1 || nextIndex < 0 || nextIndex >= builderState.paths.length) {
+        return;
+    }
+
+    const reorderedPaths = [...builderState.paths];
+    const [movedPath] = reorderedPaths.splice(currentIndex, 1);
+    reorderedPaths.splice(nextIndex, 0, movedPath);
+    builderState.paths = reorderedPaths;
+    renderPathList();
+    refreshOutput();
+}
+
+function builderStateToPathData() {
+    return {
+        startPoint: {
+            x: builderState.startPoint.x,
+            y: builderState.startPoint.y,
+            startDeg: builderState.startPoint.startDeg
+        },
+        poses: builderState.poses.map(pose => ({
+            id: pose.id,
+            name: pose.name,
+            x: pose.x,
+            y: pose.y,
+            heading: pose.heading
+        })),
+        lines: builderState.paths.map(path => {
+            const startPose = getPoseById(path.startPoseId);
+            const endPose = getPoseById(path.endPoseId);
+
+            if (!startPose || !endPose) {
+                throw new Error(`Path "${path.name}" references a missing pose.`);
+            }
+
+            return {
+                id: path.id,
+                name: path.name,
+                startPoseId: path.startPoseId,
+                endPoseId: path.endPoseId,
+                endPoint: {
+                    x: endPose.x,
+                    y: endPose.y,
+                    startDeg: startPose.heading,
+                    endDeg: endPose.heading
+                },
+                controlPoints: path.controlPoints.map(controlPoint => ({
+                    x: controlPoint.x,
+                    y: controlPoint.y
+                }))
+            };
+        }),
+        sequence: builderState.paths.map(path => ({
+            kind: 'path',
+            lineId: path.id
+        }))
+    };
+}
+
+function pathDataToBuilderState(data) {
+    const nextState = createEmptyBuilderState();
+    const linesById = {};
+    const poseById = new Map();
+    const poseBySignature = new Map();
+    const poseIdAliases = new Map();
+
+    data.lines.forEach(line => {
+        if (line && line.id) {
+            linesById[line.id] = line;
+        }
+    });
+
+    const firstPathStep = data.sequence.find(step => step.kind === 'path');
+    const firstLine = firstPathStep ? linesById[firstPathStep.lineId] : null;
+
+    nextState.startPoint = {
+        x: toFiniteNumber(data.startPoint.x),
+        y: toFiniteNumber(data.startPoint.y),
+        startDeg: firstLine && firstLine.endPoint && firstLine.endPoint.startDeg !== undefined
+            ? toFiniteNumber(firstLine.endPoint.startDeg)
+            : toFiniteNumber(data.startPoint.startDeg)
+    };
+
+    data.poses.forEach((pose, index) => {
+        if (!pose || typeof pose !== 'object') {
+            return;
+        }
+
+        const sourceId = typeof pose.id === 'string' && pose.id ? pose.id : `imported-pose-${index + 1}`;
+        const internalId = sourceId === 'start' || poseById.has(sourceId)
+            ? createId('pose-import')
+            : sourceId;
+        const importedPose = {
+            id: internalId,
+            name: buildUniqueName(pose.name || `Pose ${nextState.poses.length + 1}`, nextState.poses),
+            x: toFiniteNumber(pose.x),
+            y: toFiniteNumber(pose.y),
+            heading: toFiniteNumber(pose.heading)
+        };
+
+        poseIdAliases.set(sourceId, importedPose.id);
+        poseById.set(importedPose.id, importedPose);
+        poseBySignature.set(buildSignature(importedPose.x, importedPose.y, importedPose.heading), importedPose);
+        nextState.poses.push(importedPose);
+    });
+
+    let fallbackStartPoseId = 'start';
+
+    data.sequence.forEach(step => {
+        if (step.kind !== 'path') {
+            return;
+        }
+
+        const line = linesById[step.lineId];
+        if (!line) {
+            return;
+        }
+
+        const pathName = buildUniqueName(line.name || `Path ${nextState.paths.length + 1}`, nextState.paths);
+        const candidateStartPoseId = line.startPoseId === 'start'
+            ? 'start'
+            : poseIdAliases.get(line.startPoseId) || line.startPoseId;
+        const startPoseId = candidateStartPoseId === 'start' || poseById.has(candidateStartPoseId)
+            ? candidateStartPoseId
+            : fallbackStartPoseId;
+
+        let endPoseId = line.endPoseId === 'start'
+            ? 'start'
+            : poseIdAliases.get(line.endPoseId) || line.endPoseId;
+
+        if (endPoseId !== 'start' && !poseById.has(endPoseId)) {
+            endPoseId = null;
+        }
+
+        if (!endPoseId) {
+            if (!line.endPoint) {
+                throw new Error(`Path "${pathName}" is missing an end point.`);
+            }
+
+            const poseSignature = buildSignature(line.endPoint.x, line.endPoint.y, line.endPoint.endDeg || 0);
+            const existingPose = poseBySignature.get(poseSignature);
+
+            if (existingPose) {
+                endPoseId = existingPose.id;
+            } else {
+                const importedPose = {
+                    id: createId('pose-import'),
+                    name: buildUniqueName(`${pathName} Pose`, nextState.poses),
+                    x: toFiniteNumber(line.endPoint.x),
+                    y: toFiniteNumber(line.endPoint.y),
+                    heading: toFiniteNumber(line.endPoint.endDeg)
+                };
+
+                poseById.set(importedPose.id, importedPose);
+                poseBySignature.set(buildSignature(importedPose.x, importedPose.y, importedPose.heading), importedPose);
+                nextState.poses.push(importedPose);
+                endPoseId = importedPose.id;
+            }
+        }
+
+        nextState.paths.push({
+            id: typeof line.id === 'string' && line.id ? line.id : createId('path-import'),
+            name: pathName,
+            startPoseId,
+            endPoseId,
+            controlPoints: Array.isArray(line.controlPoints)
+                ? line.controlPoints.map(controlPoint => ({
+                    id: createId('control'),
+                    x: toFiniteNumber(controlPoint.x),
+                    y: toFiniteNumber(controlPoint.y)
+                }))
+                : []
+        });
+
+        fallbackStartPoseId = endPoseId;
+    });
+
+    return nextState;
+}
+
+function refreshOutput(showAlert = false) {
+    const output = document.getElementById('output');
+
+    try {
+        output.value = generator.generate(builderStateToPathData(), getSettings());
+        return true;
+    } catch (error) {
+        output.value = `// ${error.message}`;
+        if (showAlert) {
+            alert(error.message);
+        }
+        return false;
+    }
+}
+
+function generateFromBuilder() {
+    refreshOutput(true);
+}
+
+function resetBuilder() {
+    if (!confirm('Reset the current builder state?')) {
+        return;
+    }
+
+    builderState = createEmptyBuilderState();
+    clearPoseForm();
+    clearPathForm();
+    renderAll();
+    refreshOutput();
+}
+
+async function handleFileChange(event) {
+    const [file] = event.target.files;
+    if (!file) {
+        return;
+    }
+
+    try {
+        const fileContent = await file.text();
+        const parsedData = generator.parsePathFile(fileContent);
+        builderState = pathDataToBuilderState(parsedData);
+        clearPoseForm();
+        clearPathForm();
+        renderAll();
+        refreshOutput(true);
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function handlePoseListClick(event) {
+    const actionButton = event.target.closest('button[data-action]');
+    if (!actionButton) {
+        return;
+    }
+
+    const poseId = actionButton.dataset.poseId;
+    if (!poseId) {
+        return;
+    }
+
+    if (actionButton.dataset.action === 'edit-pose') {
+        editPose(poseId);
+        return;
+    }
+
+    if (actionButton.dataset.action === 'delete-pose') {
+        deletePose(poseId);
+    }
+}
+
+function handlePathListClick(event) {
+    const actionButton = event.target.closest('button[data-action]');
+    if (!actionButton) {
+        return;
+    }
+
+    const pathId = actionButton.dataset.pathId;
+    if (!pathId) {
+        return;
+    }
+
+    if (actionButton.dataset.action === 'edit-path') {
+        editPath(pathId);
+        return;
+    }
+
+    if (actionButton.dataset.action === 'delete-path') {
+        deletePath(pathId);
+        return;
+    }
+
+    if (actionButton.dataset.action === 'move-path-up') {
+        movePath(pathId, -1);
+        return;
+    }
+
+    if (actionButton.dataset.action === 'move-path-down') {
+        movePath(pathId, 1);
+    }
+}
+
+function handleDraftControlPointInput(event) {
+    const field = event.target.dataset.field;
+    const index = Number(event.target.dataset.index);
+
+    if (!field || Number.isNaN(index) || !draftControlPoints[index]) {
+        return;
+    }
+
+    const value = Number(event.target.value);
+    draftControlPoints[index][field] = Number.isFinite(value) ? value : 0;
+}
+
+function handleDraftControlPointClick(event) {
+    const actionButton = event.target.closest('button[data-action]');
+    if (!actionButton) {
+        return;
+    }
+
+    if (actionButton.dataset.action !== 'remove-control-point') {
+        return;
+    }
+
+    const index = Number(actionButton.dataset.index);
+    if (Number.isNaN(index)) {
+        return;
+    }
+
+    draftControlPoints.splice(index, 1);
+    renderDraftControlPointList();
+}
+
+document.getElementById('saveSettingsButton').addEventListener('click', saveSettings);
+document.getElementById('resetSettingsButton').addEventListener('click', resetSettings);
+document.getElementById('fileInput').addEventListener('change', handleFileChange);
+document.getElementById('applyStartPoseButton').addEventListener('click', applyStartPose);
+document.getElementById('savePoseButton').addEventListener('click', savePose);
+document.getElementById('cancelPoseEditButton').addEventListener('click', clearPoseForm);
+document.getElementById('addControlPointButton').addEventListener('click', addControlPoint);
+document.getElementById('savePathButton').addEventListener('click', savePath);
+document.getElementById('cancelPathEditButton').addEventListener('click', clearPathForm);
+document.getElementById('generateButton').addEventListener('click', generateFromBuilder);
+document.getElementById('resetBuilderButton').addEventListener('click', resetBuilder);
+document.getElementById('poseList').addEventListener('click', handlePoseListClick);
+document.getElementById('pathList').addEventListener('click', handlePathListClick);
+document.getElementById('draftControlPointList').addEventListener('input', handleDraftControlPointInput);
+document.getElementById('draftControlPointList').addEventListener('click', handleDraftControlPointClick);
+
+loadSettings();
+clearPoseForm();
+clearPathForm();
+renderAll();
+refreshOutput();
+</script>
+
+</body>
+</html>

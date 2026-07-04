@@ -32,7 +32,13 @@
     }
 
     function sanitize(name) {
-        return name.toLowerCase().replace(/[^a-z0-9]/g, "_");
+        const normalized = String(name ?? "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "_")
+            .replace(/_+/g, "_")
+            .replace(/^_+|_+$/g, "");
+
+        return normalized || "item";
     }
 
     function buildConstantsImport(settings) {
@@ -53,6 +59,7 @@
 
         return {
             ...parsedData,
+            poses: Array.isArray(parsedData.poses) ? parsedData.poses : [],
             lines: parsedData.lines,
             sequence: Array.isArray(parsedData.sequence)
                 ? parsedData.sequence
@@ -264,6 +271,26 @@ ${buildIvyStartBody(pathSequence)}
                 )`;
     }
 
+    function buildPoseDeclaration(name, x, y, heading) {
+        return `    public static final Pose ${name} = new Pose(
+        ${x},
+        ${y},
+        ${deg(heading)}
+    );`;
+    }
+
+    function createUniqueName(baseName, existingNames) {
+        let suffix = "";
+        let counter = 1;
+
+        while (existingNames.has(baseName + suffix)) {
+            suffix = "_" + counter;
+            counter++;
+        }
+
+        return baseName + suffix;
+    }
+
     function generate(fileContent, settings = {}) {
         const data = typeof fileContent === "string" ? parsePathFile(fileContent) : normalizePathData(fileContent);
         const resolvedSettings = normalizeSettings(settings);
@@ -282,6 +309,7 @@ ${buildIvyStartBody(pathSequence)}
 
         const createdPoses = new Map();
         const createdPaths = new Map();
+        const poseRefsById = new Map();
 
         const firstPathStep = data.sequence.find(step => step.kind === "path");
         const firstLine = firstPathStep ? linesById[firstPathStep.lineId] : null;
@@ -289,15 +317,44 @@ ${buildIvyStartBody(pathSequence)}
             ? firstLine.endPoint.startDeg
             : data.startPoint.startDeg;
 
-        poses.push(
-`    public static final Pose startPose = new Pose(
-        ${data.startPoint.x},
-        ${data.startPoint.y},
-        ${deg(startDegree)}
-    );`
-        );
+        const robotStartPose = {
+            id: "start",
+            x: data.startPoint.x,
+            y: data.startPoint.y,
+            heading: startDegree,
+            varName: "startPose"
+        };
 
-        let lastPose = "startPose";
+        poses.push(buildPoseDeclaration(
+            robotStartPose.varName,
+            robotStartPose.x,
+            robotStartPose.y,
+            robotStartPose.heading
+        ));
+
+        poseRefsById.set(robotStartPose.id, robotStartPose);
+
+        data.poses.forEach((pose, poseIndex) => {
+            if (!pose || typeof pose !== "object") {
+                return;
+            }
+
+            const poseId = pose.id || `pose-${poseIndex + 1}`;
+            const poseName = createUniqueName(`${sanitize(pose.name || `pose_${poseIndex + 1}`)}Pose`, createdPoses);
+            const poseInfo = {
+                id: poseId,
+                x: pose.x,
+                y: pose.y,
+                heading: pose.heading || 0,
+                varName: poseName
+            };
+
+            createdPoses.set(poseInfo.varName, poseInfo);
+            poseRefsById.set(poseInfo.id, poseInfo);
+            poses.push(buildPoseDeclaration(poseInfo.varName, poseInfo.x, poseInfo.y, poseInfo.heading));
+        });
+
+        let lastPose = robotStartPose;
 
         data.sequence.forEach(step => {
             if (step.kind !== "path") {
@@ -305,42 +362,53 @@ ${buildIvyStartBody(pathSequence)}
             }
 
             const line = linesById[step.lineId];
+            if (!line) {
+                return;
+            }
+
+            const lineLabel = line.name || line.id || "Unnamed Path";
             const basePoseName = sanitize(line.name) + "Pose";
             const basePathName = sanitize(line.name) + "Path";
+            const explicitStartPose = line.startPoseId ? poseRefsById.get(line.startPoseId) : null;
+            const segmentStartPose = explicitStartPose || lastPose;
 
-            let poseName;
-            const existingPose = Array.from(createdPoses.values()).find(pose =>
-                pose.x === line.endPoint.x
-                && pose.y === line.endPoint.y
-                && pose.heading === (line.endPoint.endDeg || 0)
-            );
-
-            if (existingPose) {
-                poseName = existingPose.varName;
-            } else {
-                let suffix = "";
-                let counter = 1;
-                while (createdPoses.has(basePoseName + suffix)) {
-                    suffix = "_" + counter;
-                    counter++;
-                }
-                poseName = basePoseName + suffix;
-
-                createdPoses.set(poseName, {
-                    x: line.endPoint.x,
-                    y: line.endPoint.y,
-                    heading: line.endPoint.endDeg || 0,
-                    varName: poseName
-                });
-
-                poses.push(
-`    public static final Pose ${poseName} = new Pose(
-        ${line.endPoint.x},
-        ${line.endPoint.y},
-        ${deg(line.endPoint.endDeg)}
-    );`
-                );
+            if (line.startPoseId && !explicitStartPose) {
+                throw new Error(`Path "${lineLabel}" references an unknown start pose.`);
             }
+
+            let poseInfo;
+            if (line.endPoseId) {
+                poseInfo = poseRefsById.get(line.endPoseId);
+                if (!poseInfo) {
+                    throw new Error(`Path "${lineLabel}" references an unknown end pose.`);
+                }
+            } else {
+                if (!line.endPoint) {
+                    throw new Error(`Path "${lineLabel}" is missing an end point.`);
+                }
+
+                const existingPose = Array.from(createdPoses.values()).find(pose =>
+                    pose.x === line.endPoint.x
+                    && pose.y === line.endPoint.y
+                    && pose.heading === (line.endPoint.endDeg || 0)
+                );
+
+                if (existingPose) {
+                    poseInfo = existingPose;
+                } else {
+                    poseInfo = {
+                        x: line.endPoint.x,
+                        y: line.endPoint.y,
+                        heading: line.endPoint.endDeg || 0,
+                        varName: createUniqueName(basePoseName, createdPoses)
+                    };
+
+                    createdPoses.set(poseInfo.varName, poseInfo);
+                    poses.push(buildPoseDeclaration(poseInfo.varName, poseInfo.x, poseInfo.y, poseInfo.heading));
+                }
+            }
+
+            const poseName = poseInfo.varName;
 
             const controlPointPoses = [];
             if (line.controlPoints && line.controlPoints.length > 0) {
@@ -374,11 +442,7 @@ ${buildIvyStartBody(pathSequence)}
                     });
 
                     poses.push(
-`    public static final Pose ${finalControlPoseName} = new Pose(
-        ${controlPoint.x},
-        ${controlPoint.y},
-        0
-    );`
+                        buildPoseDeclaration(finalControlPoseName, controlPoint.x, controlPoint.y, 0)
                     );
                     controlPointPoses.push(finalControlPoseName);
                 });
@@ -386,13 +450,13 @@ ${buildIvyStartBody(pathSequence)}
 
             let pathName;
             const pathSignature = {
-                fromPose: lastPose,
+                fromPose: segmentStartPose.varName,
                 toPose: poseName,
                 controlPoints: controlPointPoses
             };
 
             const existingPath = Array.from(createdPaths.values()).find(path =>
-                path.fromPose === lastPose
+                path.fromPose === segmentStartPose.varName
                 && path.toPose === poseName
                 && JSON.stringify(path.controlPoints) === JSON.stringify(pathSignature.controlPoints)
             );
@@ -400,13 +464,7 @@ ${buildIvyStartBody(pathSequence)}
             if (existingPath) {
                 pathName = existingPath.varName;
             } else {
-                let suffix = "";
-                let counter = 1;
-                while (createdPaths.has(basePathName + suffix)) {
-                    suffix = "_" + counter;
-                    counter++;
-                }
-                pathName = basePathName + suffix;
+                pathName = createUniqueName(basePathName, createdPaths);
 
                 createdPaths.set(pathName, {
                     ...pathSignature,
@@ -418,10 +476,10 @@ ${buildIvyStartBody(pathSequence)}
                 build.push(
 `        ${pathName} = follower.pathBuilder()
             .addPath(
-                ${buildPathSegment(lastPose, poseName, controlPointPoses)}
+                ${buildPathSegment(segmentStartPose.varName, poseName, controlPointPoses)}
             )
             .setLinearHeadingInterpolation(
-                ${lastPose}.getHeading(),
+                ${segmentStartPose.varName}.getHeading(),
                 ${poseName}.getHeading()
             )
             .build();`
@@ -445,7 +503,7 @@ ${buildIvyStartBody(pathSequence)}
             );
 
             pathSequence.push(pathName);
-            lastPose = poseName;
+            lastPose = poseInfo;
         });
 
         for (let index = 0; index < follow.length; index++) {
