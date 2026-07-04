@@ -140,7 +140,7 @@ ${follow.join("\n\n")}
         telemetry.addData("Path State", pathState);
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
-        telemetry.addData("Heading", follower.getPose().getHeading());
+        telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.update();
     }
 }
@@ -215,7 +215,7 @@ ${buildIvyStartBody(pathSequence)}
 
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
-        telemetry.addData("Heading", follower.getPose().getHeading());
+        telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.update();
     }
 
