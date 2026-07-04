@@ -27,6 +27,7 @@ class KotlinTeleOpTest: LinearOpMode() {
             telemetry.addLine()
             telemetry.addData("Yaw", Math.toDegrees(follower.heading))
             telemetry.addLine("Press BACK to reset Yaw")
+            telemetry.update()
         }
     }
 }

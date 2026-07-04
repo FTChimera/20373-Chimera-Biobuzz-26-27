@@ -4,41 +4,45 @@ import com.pedropathing.geometry.CustomCurve;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.MathFunctions;
 import com.pedropathing.math.Vector;
+import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.PathPoint;
 
-import org.firstinspires.ftc.teamcode.library.math.Polynomial;
+import org.firstinspires.ftc.teamcode.library.math.Equation;
 
 /**
- * EquationCurve - A custom curve defined by a polynomial equation
+ * EquationCurve - A custom curve defined by a expression equation
  * <p>
- * This class represents a curve defined by a polynomial equation, where the start and end poses are specified.
- * The polynomial must pass through the start and end poses to ensure continuity.
+ * This class represents a curve defined by a expression equation, where the start and end poses are specified.
+ * The expression must pass through the start and end poses to ensure continuity.
  * <p>
  * Key Features:
  * - Start and end poses that define the endpoints of the curve
- * - A polynomial that defines the shape of the curve
- * - Validation to ensure the polynomial passes through the specified poses
+ * - A expression that defines the shape of the curve
+ * - Validation to ensure the expression passes through the specified poses
  *
  * @author Team
  */
 public class EquationCurve extends CustomCurve {
     public Pose startPose;
     public Pose endPose;
-    public Polynomial polynomial;
+    public Equation equation;
+    public HeadingInterpolator interpolator;
 
-    public EquationCurve(Pose startPose, Pose endPose, Polynomial polynomial) {
+    public EquationCurve(Pose startPose, Pose endPose, Equation equation, HeadingInterpolator interpolator) {
         super(() -> startPose, () -> endPose);
-        if (!polynomialPassesThroughStartEnd(polynomial, startPose, endPose)) {
-            throw new IllegalArgumentException("Polynomial does not pass through start and end poses");
+        if (!functionPassesThroughStartEnd(equation, startPose, endPose)) {
+            throw new IllegalArgumentException("The given expression does not pass through start and end poses, " + equation);
         }
         this.startPose = startPose;
         this.endPose = endPose;
-        this.polynomial = polynomial;
+        this.equation = equation;
+        this.interpolator = interpolator;
         initialize();
     }
 
-    private boolean polynomialPassesThroughStartEnd(Polynomial polynomial, Pose startPose, Pose endPose) {
-        boolean startMatches = MathFunctions.roughlyEquals(polynomial.getY(startPose.getX()), startPose.getY(), 1e-3);
-        boolean endMatches = MathFunctions.roughlyEquals(polynomial.getY(endPose.getX()), endPose.getY(), 1e-3);
+    private boolean functionPassesThroughStartEnd(Equation equation, Pose startPose, Pose endPose) {
+        boolean startMatches = MathFunctions.roughlyEquals(equation.getY(startPose.getX()), startPose.getY(), 1e-3);
+        boolean endMatches = MathFunctions.roughlyEquals(equation.getY(endPose.getX()), endPose.getY(), 1e-3);
         return startMatches&&endMatches;
     }
 
@@ -49,7 +53,7 @@ public class EquationCurve extends CustomCurve {
 
     @Override
     public EquationCurve getReversed() {
-        return new EquationCurve(endPose, startPose, polynomial);
+        return new EquationCurve(endPose, startPose, equation, interpolator.reverse());
     }
 
     /**
@@ -64,7 +68,7 @@ public class EquationCurve extends CustomCurve {
 
         double x = t * (endPose.getX() - startPose.getX()) + startPose.getX();
         double dxDt = endPose.getX() - startPose.getX();
-        double dyDt = polynomial.derivative().getY(x) * dxDt;
+        double dyDt = equation.derivative().getY(x) * dxDt;
 
         Vector derivative = new Vector();
         derivative.setOrthogonalComponents(dxDt, dyDt);
@@ -81,7 +85,9 @@ public class EquationCurve extends CustomCurve {
     public Pose getPose(double t) {
         t = MathFunctions.clamp(t, 0, 1);
         double x = t*(endPose.getX()-startPose.getX())+startPose.getX();
-        return new Pose(x, polynomial.getY(x));
+        Pose returned = new Pose(x, equation.getY(x));
+        PathPoint closestPoint = new PathPoint(t, returned, null);
+        return returned.setHeading(interpolator.interpolate(closestPoint));
     }
 
     /**
@@ -95,11 +101,9 @@ public class EquationCurve extends CustomCurve {
         t = MathFunctions.clamp(t, 0, 1);
 
         double dxDt = endPose.getX() - startPose.getX();
-        double d2yDt2 = 0;
-        if (polynomial.getDegree() >= 2) {
-            double x = t * dxDt + startPose.getX();
-            d2yDt2 = polynomial.derivative().derivative().getY(x) * dxDt * dxDt;
-        }
+        double x = t * dxDt + startPose.getX();
+        // Will return zero for any expression whose 2nd derivative is just 0, so no safety checks needed
+        double d2yDt2 = equation.derivative().derivative().getY(x) * dxDt * dxDt;
 
         Vector secondDerivative = new Vector();
         secondDerivative.setOrthogonalComponents(0, d2yDt2);

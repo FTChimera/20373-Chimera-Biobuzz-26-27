@@ -5,11 +5,11 @@ import androidx.annotation.NonNull;
 import java.util.Locale;
 
 /**
- Length 1 polynomial – 0th degree, length 2 polynomial - 1st degree, etc.
+ Length 1 expression – 0th degree, length 2 expression - 1st degree, etc.
  0th term – highest degree term
 
  */
-public class Polynomial {
+public class Polynomial implements Equation {
     public double[] coefs;
     public int getDegree() {
         return coefs.length - 1;
@@ -23,6 +23,13 @@ public class Polynomial {
             result += term;
         }
         return result;
+    }
+
+    @Override
+    public Term[] getTerms() {
+        return new Term[]{
+                new Term(Polynomial.class, coefs[0]) // todo be implemented
+        };
     }
 
     public Polynomial(double[] a) {
@@ -39,25 +46,36 @@ public class Polynomial {
 
     public Polynomial copy() {return new Polynomial(coefs.clone());}
 
-    public Polynomial multiply(Polynomial other) {
-        int degA = getDegree();
-        int degB = other.getDegree();
-        double[] result = new double[degA + degB + 1];
-        for (int i = 0; i <= degA; i ++) {
-            for (int j = 0; j <= degB; j ++) {
-                result[i + j] += coefs[i]*other.coefs[j];
+    public Polynomial multiply(Equation other) {
+        if (other instanceof Polynomial) {
+            int degA = getDegree();
+            int degB = ((Polynomial) other).getDegree();
+            double[] result = new double[degA + degB + 1];
+            for (int i = 0; i <= degA; i++) {
+                for (int j = 0; j <= degB; j++) {
+                    result[i + j] += coefs[i] *((Polynomial) other).coefs[j];
+                }
             }
+            return new Polynomial(result);
+        } else {
+            // i need to find some way to represent terms like x^3*sin(x)
+            return null;
         }
-        return new Polynomial(result);
     }
 
-    public Polynomial add(Polynomial other) {
-        int degree = getDegree();
-        double[] c = new double[degree+1];
-        for (int i = 0; i <= degree; i ++) {
-            c[i] = coefs[i] + other.coefs[i];
+    public Polynomial add(Equation other) {
+        if (other instanceof Polynomial) {
+            int degree = getDegree();
+            double[] c = new double[degree+1];
+            for (int i = 0; i <= degree; i ++) {
+                c[i] = coefs[i] + ((Polynomial) other).coefs[i];
+            }
+            return new Polynomial(c);
+        } else {
+            boolean singleTermPolynomial = false;
+            // todo
+            return null;
         }
-        return new Polynomial(c);
     }
     @NonNull
     @Override
@@ -96,8 +114,11 @@ public class Polynomial {
         return "f(x) = " + s;
     }
 
-    // IMPLEMENT METHODS FOR DERIVATIVE AND INTEGRAL
      public Polynomial derivative() {
+        if (coefs.length == 1) {
+            // Must be a constant, or 0
+            return new Polynomial(new double[]{0});
+        }
          double[] dCoefs = new double[coefs.length - 1];
          int degree = getDegree();
          for (int i = 0; i < degree; i++) {
