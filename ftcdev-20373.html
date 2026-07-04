@@ -2160,219 +2160,24 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;background-image:linea
             return `<table class="dtbl"><thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
         }
 
-        function panel(id, label, title, lead, body) {
-            return `<div class="dpanel" id="dp-${id}"><p class="dey">${label}</p><h1 class="dh1">${title}</h1><p class="dlead">${lead}</p>${body}</div>`;
+        function panel(id, label, title, lead, body, active = false) {
+            return `<div class="dpanel${active ? ' act' : ''}" id="dp-${id}"><p class="dey">${label}</p><h1 class="dh1">${title}</h1><p class="dlead">${lead}</p>${body}</div>`;
         }
 
-        function buildRepoDocsPage(activeId) {
-            const panels = {
-                'library-overview': panel(
-                    'library-overview',
-                    '// Library Overview',
-                    'Understanding the <span>library/</span> folder',
-                    'The BioBuzz repo keeps reusable, non-match-specific building blocks under <strong>library/</strong>. These files support op modes and mechanisms without turning every helper into a subsystem.',
-                    `
-                    <div class="dsgrid">
-                        <div class="dscard"><div class="dscard-t">Root utilities</div><p class="dp">Files like <code>DriveVector</code>, <code>Timer</code>, and <code>AllianceColor</code> give op modes and mechanisms small shared types.</p></div>
-                        <div class="dscard"><div class="dscard-t">control/</div><p class="dp">Generic PIDF helpers such as <code>PIDFController</code>, <code>DoublePIDFController</code>, and coefficient containers live here.</p></div>
-                        <div class="dscard"><div class="dscard-t">filters/</div><p class="dp">The current repo-level noise-filter abstraction is small: <code>NoiseFilter</code> plus <code>LowPassFilter</code>.</p></div>
-                        <div class="dscard"><div class="dscard-t">hardware/</div><p class="dp">This includes actuators, gamepad wrappers, direct <code>HardwareDevice</code> implementations, and profile-facing wrappers like Limelight or RGBIndicator.</p></div>
-                        <div class="dscard"><div class="dscard-t">interpolation/ and math/</div><p class="dp">Interpolation helpers, the new <code>Equation</code> interface, <code>Polynomial</code>, and related math primitives live here.</p></div>
-                        <div class="dscard"><div class="dscard-t">robot/</div><p class="dp">Drive names, directions, follower constants, and enabled mechanisms belong in <code>RobotConstants</code> and <code>RobotConfigurations</code>.</p></div>
-                    </div>
-                    <h2 class="dh2">Example: drive math stays reusable</h2>
-                    <p class="dp"><code>DriveVector</code> carries forward/strafe/rotate intent, optional heading, field-centric rotation, and stick-curve application without needing direct FTC SDK state.</p>
-                    ${codeBlock('TeamCode/library/DriveVector.java', CODE.driveVector)}
-                    <h2 class="dh2">Example: lifecycle helper stays lightweight</h2>
-                    <p class="dp"><code>OpModeHelper.kt</code> manages bulk-cache clearing and loop <code>dt</code> without becoming a subsystem or op mode base class.</p>
-                    ${codeBlock('TeamCode/library/OpModeHelper.kt', CODE.opModeHelper)}
-                    ${note('dnote', '<strong>Rule of thumb:</strong> if a class starts owning robot behavior, it probably belongs in <code>mechanisms/</code>, not in <code>library/</code>.')}
-                    `
-                ),
-                'constants-robot': panel(
-                    'constants-robot',
-                    '// Constants & Robot Profiles',
-                    'How <span>Constants</span> and <span>library.robot</span> split responsibilities',
-                    'In this repo, <strong>Constants.java</strong> is the convenience layer used by op modes. The heavy configuration lives below it in <strong>RobotConstants</strong> and <strong>RobotConfigurations</strong>.',
-                    `
-                    <h2 class="dh2">Mental model</h2>
-                    ${table(['File', 'Job'], [
-                        ['<code>Constants.java</code>', 'Top-level factory helpers like <code>createFollower()</code>, <code>createIntake()</code>, and default start poses.'],
-                        ['<code>RobotConfigurations.java</code>', 'Builds named robot presets by chaining names, directions, follower constants, and enabled mechanisms.'],
-                        ['<code>RobotConstants.java</code>', 'Holds the active profile data and knows how to build followers/mechanisms from that data.']
-                    ])}
-                    <h2 class="dh2">Factory layer used by op modes</h2>
-                    ${codeBlock('TeamCode/Constants.java', CODE.constantsFactory)}
-                    <h2 class="dh2">Profile preset builder</h2>
-                    ${codeBlock('TeamCode/library/robot/RobotConfigurations.java', CODE.robotConfig)}
-                    <h2 class="dh2">Follower creation stays in RobotConstants</h2>
-                    ${codeBlock('TeamCode/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
-                    ${note('dnote', '<strong>Important:</strong> driver code should usually call <code>Constants.create...()</code> instead of directly constructing mechanisms.')}
-                    `
-                ),
-                'blackboard-opmodes': panel(
-                    'blackboard-opmodes',
-                    '// Blackboard & OpModes',
-                    'Shared state, <span>pose handoff</span>, and wrapper structure',
-                    'The repo uses <strong>configs.Blackboard</strong> to preserve small pieces of global state between op modes, especially the last autonomous pose and the chosen driver preset.',
-                    `
-                    <h2 class="dh2">Shared store</h2>
-                    <p class="dp">Blackboard stores typed values by <code>Caption</code>. Right now the key concepts are pose handoff and driver selection.</p>
-                    ${codeBlock('TeamCode/configs/Blackboard.java', CODE.blackboardStore)}
-                    <h2 class="dh2">Base TeleOp class</h2>
-                    <p class="dp">Shared competition logic lives in <code>opModes/TeleOp.java</code>. Alliance-specific wrappers inherit it and only supply the starting pose.</p>
-                    ${codeBlock('TeamCode/opModes/TeleOp.java', CODE.teleOpBase)}
-                    <h2 class="dh2">Variant wrapper reading Blackboard</h2>
-                    ${codeBlock('TeamCode/opModes/variants/Blue_TeleOp.java', CODE.bluePose)}
-                    ${note('dnote', '<strong>Structure rule:</strong> reusable logic belongs in base classes under <code>opModes/</code>; driver-station-visible wrappers belong under <code>opModes/variants/</code>.')}
-                    `
-                ),
-                'kotlin-guide': panel(
-                    'kotlin-guide',
-                    '// Kotlin vs Java',
-                    'How Kotlin fits into the <span>same TeamCode patterns</span>',
-                    'The project already compiles Kotlin. The current Kotlin example is intentionally small and follows the same follower-first conventions used by the Java code.',
-                    `
-                    <h2 class="dh2">Current Kotlin example</h2>
-                    ${codeBlock('TeamCode/learning/kotlinTest/KotlinTeleOpTest.kt', CODE.kotlinTeleOp)}
-                    <h2 class="dh2">Compared with the Java competition base</h2>
-                    ${codeBlock('TeamCode/opModes/TeleOp.java', CODE.teleOpBase)}
-                    <h2 class="dh2">Syntax notes</h2>
-                    ${table(['Java pattern in this repo', 'Kotlin equivalent in this repo'], [
-                        ['<code>new Pose()</code>', '<code>Pose()</code>'],
-                        ['<code>while (opModeIsActive())</code>', '<code>while (opModeIsActive())</code>'],
-                        ['<code>drive = Constants.createTeleOpFollower(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
-                        ['Explicit types everywhere', 'Type inference plus <code>lateinit var</code> for FTC objects initialized in <code>runOpMode()</code>.']
-                    ])}
-                    ${note('dnote', '<strong>Current repo reality:</strong> Kotlin exists as a supported teaching/example path, but most shared match architecture still lives in Java.')}
-                    `
-                ),
-                'filters-guide': panel(
-                    'filters-guide',
-                    '// Filters & Kalman Notes',
-                    'What the repo has now, and where a <span>Kalman filter</span> would fit conceptually',
-                    'Today the codebase includes a lightweight noise-filter abstraction and a low-pass implementation. There is <strong>no checked-in Kalman filter class yet</strong>, so this page explains the concept and anchors it to the existing filter package.',
-                    `
-                    <h2 class="dh2">Current filter abstraction</h2>
-                    ${codeBlock('TeamCode/library/filters/NoiseFilter.java', CODE.noiseFilter)}
-                    ${codeBlock('TeamCode/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
-                    <h2 class="dh2">Without the math</h2>
-                    <p class="dp">A low-pass filter smooths noisy sensor readings by blending the previous filtered value with the new measurement. Small <code>alpha</code> means more smoothing; large <code>alpha</code> means more responsiveness.</p>
-                    <h2 class="dh2">With the math</h2>
-                    <p class="dp">The implemented update rule is <code>x_filtered = x_filtered * (1 - alpha) + measurement * alpha</code>.</p>
-                    <p class="dp">A Kalman filter would go further by maintaining a prediction, a measurement estimate, and a confidence model for both. That is useful when you want to fuse multiple noisy sources rather than just smooth one stream.</p>
-                    ${note('dwarn', '<strong>Repo-specific note:</strong> because there is no Kalman class in <code>TeamCode/library/filters</code> yet, any example code on this page must come from <code>NoiseFilter</code> and <code>LowPassFilter</code>.')}
-                    `
-                ),
-                'math-guide': panel(
-                    'math-guide',
-                    '// Math & EquationCurve',
-                    'Polynomial helpers and the <span>EquationCurve</span> adapter',
-                    'The current custom-curve stack is split in two layers: generic math primitives under <strong>library/math</strong> and Pedro-specific curve adaptation under <strong>pedroPathing/custom</strong>.',
-                    `
-                    <h2 class="dh2">Shared equation interface</h2>
-                    ${codeBlock('TeamCode/library/math/Equation.java', CODE.equation)}
-                    <h2 class="dh2">Polynomial implementation</h2>
-                    ${codeBlock('TeamCode/library/math/Polynomial.java', CODE.polynomial)}
-                    <h2 class="dh2">EquationCurve uses math inside Pedro</h2>
-                    ${codeBlock('TeamCode/pedroPathing/custom/EquationCurve.java', CODE.equationCurve)}
-                    ${note('dnote', '<strong>Current limitation:</strong> <code>Polynomial</code> is the practical implementation today. <code>Term</code> exists in the repo but is still scaffold-only, so symbolic equation support is not finished.')}
-                    `
-                ),
-                'tests-guide': panel(
-                    'tests-guide',
-                    '// Tests & Validation',
-                    'What belongs in <span>tests/</span> and what does not',
-                    'The BioBuzz codebase separates shared match architecture from validation code. Test op modes are driver-station-visible utilities for checking hardware, drive behavior, wrappers, and proof-of-concept ideas.',
-                    `
-                    <h2 class="dh2">Current high-value test example</h2>
-                    ${codeBlock('TeamCode/tests/MecanumTeleOp.java', CODE.mecanumTest)}
-                    <h2 class="dh2">How to think about the folders</h2>
-                    ${table(['Folder', 'Typical use'], [
-                        ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, or manual follower tests.'],
-                        ['<code>tests/ftcSdk/</code>', 'SDK-level wrapper/device validation like <code>MotorTest</code>, <code>RGBIndicatorTest</code>, and <code>SlidesMotorTest</code>.'],
-                        ['<code>learning/</code>', 'Teaching/scratch examples like the Kotlin TeleOp and ExampleIvyAuto.'],
-                        ['<code>opModes/</code>', 'Shared match logic, not ad hoc experiments.']
-                    ])}
-                    ${note('dnote', '<strong>Repo pattern:</strong> if a file is meant for validation rather than match play, keep it in <code>tests/</code> or <code>learning/</code> so the production architecture stays clean.')}
-                    `
-                ),
-                'autotune-guide': panel(
-                    'autotune-guide',
-                    '// AutoTune PIDF',
-                    'Relay-feedback tuning in <span>pid/autoTune</span>',
-                    'The repo includes a driver-station-visible FTC AutoTune package backed by the external <code>pidautotuner-ftc</code> dependency. These op modes are calibration tools, not normal subsystem factories.',
-                    `
-                    <h2 class="dh2">Shared tuning inputs</h2>
-                    ${codeBlock('TeamCode/pid/autoTune/TuningConstants.java', CODE.tuningConstants)}
-                    <h2 class="dh2">Velocity tuner wrapper</h2>
-                    ${codeBlock('TeamCode/pid/autoTune/VelocityPIDFTunerOpMode.java', CODE.velocityTuner)}
-                    <h2 class="dh2">Other tuner variants already in the repo</h2>
-                    ${codeBlock('TeamCode/pid/autoTune/PositionPIDTunerOpMode.java', CODE.positionTuner)}
-                    ${codeBlock('TeamCode/pid/autoTune/DualVelocityPIDFTunerOpMode.java', CODE.dualVelocityTuner)}
-                    <h2 class="dh2">Two-phase workflow</h2>
-                    <ol class="dol">
-                        <li>Set hardware names, directions, target values, and relay parameters in <code>TuningConstants</code>.</li>
-                        <li>Run the tuner and let the automatic relay-feedback phase collect oscillation data.</li>
-                        <li>Read the reported candidate gains from telemetry.</li>
-                        <li>Optionally hold <code>gamepad1.a</code> to live-test the generated gains.</li>
-                    </ol>
-                    ${note('dwarn', '<strong>Safety:</strong> these tuners intentionally move or spin mechanisms on their own. Make sure the target range and relay amplitude are safe before pressing Start.')}
-                    `
-                ),
-                'path-following-guide': panel(
-                    'path-following-guide',
-                    '// Path Following',
-                    'How this repo builds <span>Pedro paths</span> and custom curves',
-                    'Path following in BioBuzz starts with the active Pedro follower from <strong>Constants.createFollower()</strong>, then builds lines, chains, heading interpolation, and occasional custom curves from actual TeamCode helpers.',
-                    `
-                    <h2 class="dh2">Path builder example</h2>
-                    <p class="dp"><code>ExampleIvyAuto</code> shows the common repo pattern: use the follower’s builder, add a line, then pick heading interpolation before building the chain.</p>
-                    ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.pathBuilder)}
-                    <h2 class="dh2">Minimal variant path provider</h2>
-                    <p class="dp"><code>Test_IvyAuton</code> shows the simplest autonomous path file in this repo: a single <code>BezierLine</code> wrapped in a <code>PathChain</code>.</p>
-                    ${codeBlock('TeamCode/opModes/variants/Test_IvyAuton.java', CODE.testIvyAuton)}
-                    <h2 class="dh2">When a line is not enough</h2>
-                    <p class="dp">If a path is easier to express as an equation than as Pedro control points, the repo’s custom option is <code>EquationCurve</code>. It validates that the function actually passes through the requested endpoints before initializing the curve.</p>
-                    ${codeBlock('TeamCode/pedroPathing/custom/EquationCurve.java', CODE.equationCurve)}
-                    ${table(['Pattern', 'When to use it'], [
-                        ['<code>BezierLine</code> + <code>PathChain</code>', 'Straight or mostly straight segments with explicit start/end poses.'],
-                        ['<code>setLinearHeadingInterpolation(...)</code>', 'Heading should change steadily across the segment.'],
-                        ['<code>HeadingInterpolator.linear(...)</code>', 'You are constructing a <code>Path</code> directly instead of going through the builder shortcut.'],
-                        ['<code>EquationCurve</code>', 'The robot path is easier to describe as <code>y = f(x)</code> than with Bezier control points.']
-                    ])}
-                    `
-                ),
-                'pedro-ivy-guide': panel(
-                    'pedro-ivy-guide',
-                    '// Pedro Pathing & Ivy',
-                    'Follower creation, path builders, and <span>Ivy scheduling</span>',
-                    'Pedro Pathing in this repo is tied to the active robot profile through <strong>Constants.createFollower()</strong>. Ivy is used when the team wants command-based autonomous sequencing instead of a manual loop-only state machine.',
-                    `
-                    <h2 class="dh2">Shared autonomous base</h2>
-                    ${codeBlock('TeamCode/opModes/IvyAuton.java', CODE.ivyAuton)}
-                    <h2 class="dh2">Variant path provider</h2>
-                    ${codeBlock('TeamCode/opModes/variants/Test_IvyAuton.java', CODE.testIvyAuton)}
-                    <h2 class="dh2">Scratch iterative Ivy example</h2>
-                    ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.exampleIvyAuto)}
-                    <h2 class="dh2">How to use Ivy here</h2>
-                    <ul class="dul">
-                        <li>Create the follower through <code>Constants.createFollower(hardwareMap)</code> so the active profile drives configuration.</li>
-                        <li>Use <code>Scheduler.reset()</code> during init/startup.</li>
-                        <li>Schedule long-running work with <code>PedroCommands.follow(...)</code>, <code>Groups.sequential(...)</code>, and command helpers from mechanisms.</li>
-                        <li>Either let the shared <code>IvyAuton</code> base orchestrate the flow or use the lighter <code>ExampleIvyAuto</code> pattern for learning.</li>
-                    </ul>
-                    ${note('dnote', '<strong>Related math:</strong> if a path is easier to describe as <code>y = f(x)</code> than as control points, the repo’s custom option is <code>EquationCurve</code> backed by <code>Equation</code>/<code>Polynomial</code>.')}
-                    `
-                )
-            };
+        function buildGuidePage(config) {
+            const buttons = config.sections.map((section, index) =>
+                `<button class="dsb-btn${index === 0 ? ' act' : ''}" data-panel="${section.id}">${section.nav}</button>`
+            ).join('');
+            const panels = config.sections.map((section, index) =>
+                panel(section.id, section.eyebrow, section.title, section.lead, section.body, index === 0)
+            ).join('');
 
-            const page = `<!DOCTYPE html>
+            return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>20373 RMS Chimera Programming Guide</title>
+<title>20373 RMS Chimera Programming Guide · ${config.pageTitle}</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <style>${GCSS}</style>
@@ -2384,26 +2189,17 @@ body::before{content:'';position:fixed;inset:0;z-index:-1;background-image:linea
         <img src="./20373logo.png" alt="20373 RMS Chimera logo">
         <div>
             <div class="g-logo">20373 RMS Chimera</div>
-            <div class="g-label">// BioBuzz Programming Docs</div>
+            <div class="g-label">${config.pageLabel}</div>
         </div>
     </div>
 </nav>
 <div class="dshell">
     <nav class="dsb">
-        <span class="dsb-label">Repo Docs</span>
-        <button class="dsb-btn" data-panel="library-overview">Library Overview</button>
-        <button class="dsb-btn" data-panel="constants-robot">Constants & library/robot</button>
-        <button class="dsb-btn" data-panel="blackboard-opmodes">Blackboard & OpModes</button>
-        <button class="dsb-btn" data-panel="kotlin-guide">Kotlin vs Java</button>
-        <button class="dsb-btn" data-panel="filters-guide">Filters & Kalman Notes</button>
-        <button class="dsb-btn" data-panel="math-guide">Math & EquationCurve</button>
-        <button class="dsb-btn" data-panel="tests-guide">Tests & Validation</button>
-        <button class="dsb-btn" data-panel="autotune-guide">AutoTune PIDF</button>
-        <button class="dsb-btn" data-panel="path-following-guide">Path Following</button>
-        <button class="dsb-btn" data-panel="pedro-ivy-guide">Pedro Pathing & Ivy</button>
+        <span class="dsb-label">${config.sidebarLabel}</span>
+        ${buttons}
     </nav>
     <main class="dmain">
-        ${Object.values(panels).join('')}
+        ${panels}
         <div class="dfooter">
             <a href="https://github.com/FTChimera/" target="_blank" class="dbtn dbtn-p">View GitHub</a>
             <a href="http://youtube.com/@rmschimera3221" target="_blank" class="dbtn dbtn-o">View YouTube Channel</a>
@@ -2429,37 +2225,484 @@ function applyCodeHighlighting(root=document){
         }
     });
 }
-(function(){
-    const initial = ${JSON.stringify(activeId)};
-    const buttons = Array.from(document.querySelectorAll('.dsb-btn'));
-    const panels = Array.from(document.querySelectorAll('.dpanel'));
-    function activate(id){
-        buttons.forEach(btn => btn.classList.toggle('act', btn.dataset.panel === id));
-        panels.forEach(panel => panel.classList.toggle('act', panel.id === 'dp-' + id));
-    }
-    buttons.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.panel)));
-    activate(initial);
-    applyCodeHighlighting(document);
-})();
+document.querySelectorAll('.dsb-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.dsb-btn').forEach(b => b.classList.remove('act'));
+        document.querySelectorAll('.dpanel').forEach(p => p.classList.remove('act'));
+        btn.classList.add('act');
+        const panelEl = document.getElementById('dp-' + btn.dataset.panel);
+        if (panelEl) panelEl.classList.add('act');
+        applyCodeHighlighting(document);
+    });
+});
+applyCodeHighlighting(document);
 <\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" onload="window.applyCodeHighlighting&&window.applyCodeHighlighting(document)"><\/script>
 </body>
 </html>`;
-            return page;
         }
 
-        const GUIDES = {
-            'library-overview': buildRepoDocsPage('library-overview'),
-            'constants-robot': buildRepoDocsPage('constants-robot'),
-            'blackboard-opmodes': buildRepoDocsPage('blackboard-opmodes'),
-            'kotlin-guide': buildRepoDocsPage('kotlin-guide'),
-            'filters-guide': buildRepoDocsPage('filters-guide'),
-            'math-guide': buildRepoDocsPage('math-guide'),
-            'tests-guide': buildRepoDocsPage('tests-guide'),
-            'autotune-guide': buildRepoDocsPage('autotune-guide'),
-            'path-following-guide': buildRepoDocsPage('path-following-guide'),
-            'pedro-ivy-guide': buildRepoDocsPage('pedro-ivy-guide')
+        const GUIDE_CONFIGS = {
+            'library-overview': {
+                pageTitle: 'Library Overview',
+                pageLabel: '// Library Overview',
+                sidebarLabel: 'Library Docs',
+                sections: [
+                    {
+                        id: 'library-map',
+                        nav: 'Folder Map',
+                        eyebrow: '// Library Overview',
+                        title: 'Mapping the <span>library/</span> folder',
+                        lead: 'The BioBuzz repo keeps reusable, non-match-specific building blocks under <strong>library/</strong>. These files support op modes and mechanisms without turning every helper into a subsystem.',
+                        body: `
+                        <div class="dsgrid">
+                            <div class="dscard"><div class="dscard-t">Root utilities</div><p class="dp">Shared types like <code>DriveVector</code>, timers, enums, and convenience helpers live at the library root.</p></div>
+                            <div class="dscard"><div class="dscard-t">control/</div><p class="dp">Generic PIDF helpers and coefficient containers used by wrappers and mechanisms.</p></div>
+                            <div class="dscard"><div class="dscard-t">filters/</div><p class="dp">The current repo-level filter abstraction is lightweight: <code>NoiseFilter</code> and <code>LowPassFilter</code>.</p></div>
+                            <div class="dscard"><div class="dscard-t">hardware/</div><p class="dp">Actuators, gamepad wrappers, FTC devices, and team-specific wrappers like Limelight or RGBIndicator.</p></div>
+                            <div class="dscard"><div class="dscard-t">interpolation/ + math/</div><p class="dp">Heading interpolation, equations, polynomials, and other motion/math primitives.</p></div>
+                            <div class="dscard"><div class="dscard-t">robot/</div><p class="dp">Robot profile data, mechanism enabling, drivetrain names, directions, and follower factories.</p></div>
+                        </div>
+                        ${note('dnote', '<strong>Rule of thumb:</strong> if a class starts owning robot behavior, it probably belongs in <code>mechanisms/</code>, not in <code>library/</code>.')}
+                        `
+                    },
+                    {
+                        id: 'library-drive',
+                        nav: 'Drive Math',
+                        eyebrow: '// Library Overview',
+                        title: 'Reusable <span>drive math</span> and loop helpers',
+                        lead: 'Two good examples of the team’s library style are <code>DriveVector</code> and <code>OpModeHelper.kt</code>: both are useful everywhere, but neither owns match strategy.',
+                        body: `
+                        <h2 class="dh2">DriveVector</h2>
+                        <p class="dp"><code>DriveVector</code> carries forward/strafe/rotate intent, optional heading, field-centric rotation, and stick-curve application without requiring FTC SDK state.</p>
+                        ${codeBlock('TeamCode/library/DriveVector.java', CODE.driveVector)}
+                        <h2 class="dh2">OpModeHelper</h2>
+                        <p class="dp"><code>OpModeHelper.kt</code> manages hub bulk-cache clearing and loop <code>dt</code> tracking in a small reusable helper.</p>
+                        ${codeBlock('TeamCode/library/OpModeHelper.kt', CODE.opModeHelper)}
+                        `
+                    },
+                    {
+                        id: 'library-controls',
+                        nav: 'Control & Filters',
+                        eyebrow: '// Library Overview',
+                        title: 'Control loops, <span>PIDF</span>, and filters',
+                        lead: 'The library layer also holds generic math/control blocks that mechanisms can reuse instead of each subsystem re-implementing the same logic.',
+                        body: `
+                        <h2 class="dh2">PIDF Controller</h2>
+                        ${codeBlock('TeamCode/library/control/PIDFController.java', CODE.pidfController)}
+                        <h2 class="dh2">Noise Filter Contract</h2>
+                        ${codeBlock('TeamCode/library/filters/NoiseFilter.java', CODE.noiseFilter)}
+                        ${codeBlock('TeamCode/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
+                        `
+                    }
+                ]
+            },
+            'constants-robot': {
+                pageTitle: 'Constants & library/robot',
+                pageLabel: '// Constants & Robot Profiles',
+                sidebarLabel: 'Robot Config Docs',
+                sections: [
+                    {
+                        id: 'constants-overview',
+                        nav: 'Responsibilities',
+                        eyebrow: '// Constants & Robot Profiles',
+                        title: 'How <span>Constants</span> and <span>library.robot</span> split responsibility',
+                        lead: 'In this repo, <strong>Constants.java</strong> is the convenience layer used by op modes. The heavy configuration lives below it in <strong>RobotConstants</strong> and <strong>RobotConfigurations</strong>.',
+                        body: `
+                        ${table(['File', 'Job'], [
+                            ['<code>Constants.java</code>', 'Top-level factory helpers like <code>createFollower()</code>, <code>createIntake()</code>, and default start poses.'],
+                            ['<code>RobotConfigurations.java</code>', 'Builds named robot presets by chaining names, directions, follower constants, and enabled mechanisms.'],
+                            ['<code>RobotConstants.java</code>', 'Holds active profile data and knows how to build followers/mechanisms from it.']
+                        ])}
+                        ${note('dnote', '<strong>Important:</strong> driver code should usually call <code>Constants.create...()</code> instead of directly constructing mechanisms.')}
+                        `
+                    },
+                    {
+                        id: 'constants-factories',
+                        nav: 'Factory Layer',
+                        eyebrow: '// Constants & Robot Profiles',
+                        title: 'The op-mode-facing <span>factory layer</span>',
+                        lead: '<code>Constants.java</code> is intentionally small: it exposes the active robot profile and the factory methods used directly by TeleOp and autonomous code.',
+                        body: `
+                        ${codeBlock('TeamCode/Constants.java', CODE.constantsFactory)}
+                        `
+                    },
+                    {
+                        id: 'constants-profiles',
+                        nav: 'Profiles',
+                        eyebrow: '// Constants & Robot Profiles',
+                        title: 'Profile presets and <span>follower creation</span>',
+                        lead: '<code>RobotConfigurations</code> builds the preset, and <code>RobotConstants</code> handles follower construction and mechanism availability.',
+                        body: `
+                        ${codeBlock('TeamCode/library/robot/RobotConfigurations.java', CODE.robotConfig)}
+                        ${codeBlock('TeamCode/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
+                        `
+                    }
+                ]
+            },
+            'blackboard-opmodes': {
+                pageTitle: 'Blackboard & OpModes',
+                pageLabel: '// Blackboard & OpModes',
+                sidebarLabel: 'OpMode Docs',
+                sections: [
+                    {
+                        id: 'bb-overview',
+                        nav: 'Blackboard',
+                        eyebrow: '// Blackboard & OpModes',
+                        title: 'Shared state through <span>Blackboard</span>',
+                        lead: 'The repo uses <strong>configs.Blackboard</strong> to preserve small pieces of global state between op modes, especially the last autonomous pose and the chosen driver preset.',
+                        body: `
+                        <p class="dp">Blackboard stores typed values by <code>Caption</code>. Right now the key concepts are pose handoff and driver selection.</p>
+                        ${codeBlock('TeamCode/configs/Blackboard.java', CODE.blackboardStore)}
+                        `
+                    },
+                    {
+                        id: 'bb-teleop',
+                        nav: 'Base TeleOp',
+                        eyebrow: '// Blackboard & OpModes',
+                        title: 'Shared <span>TeleOp base</span> logic',
+                        lead: 'Shared competition logic lives in <code>opModes/TeleOp.java</code>. Alliance-specific wrappers inherit it and only supply the starting pose.',
+                        body: `
+                        ${codeBlock('TeamCode/opModes/TeleOp.java', CODE.teleOpBase)}
+                        ${note('dnote', '<strong>Structure rule:</strong> reusable logic belongs in base classes under <code>opModes/</code>; driver-station-visible wrappers belong under <code>opModes/variants/</code>.')}
+                        `
+                    },
+                    {
+                        id: 'bb-variants',
+                        nav: 'Variants',
+                        eyebrow: '// Blackboard & OpModes',
+                        title: 'Variant wrappers and <span>pose handoff</span>',
+                        lead: 'Variant op modes decide whether to reuse the Blackboard pose from the previous autonomous or fall back to their alliance default pose.',
+                        body: `
+                        ${codeBlock('TeamCode/opModes/variants/Blue_TeleOp.java', CODE.bluePose)}
+                        ${codeBlock('TeamCode/opModes/variants/Red_TeleOp.java', CODE.redTeleOpWrapper)}
+                        `
+                    }
+                ]
+            },
+            'kotlin-guide': {
+                pageTitle: 'Kotlin vs Java',
+                pageLabel: '// Kotlin vs Java',
+                sidebarLabel: 'Kotlin Docs',
+                sections: [
+                    {
+                        id: 'kt-overview',
+                        nav: 'Overview',
+                        eyebrow: '// Kotlin vs Java',
+                        title: 'How Kotlin fits into the <span>same TeamCode patterns</span>',
+                        lead: 'The project already compiles Kotlin. The current Kotlin example is intentionally small and follows the same follower-first conventions used by the Java code.',
+                        body: `
+                        ${note('dnote', '<strong>Current repo reality:</strong> Kotlin exists as a supported teaching/example path, but most shared match architecture still lives in Java.')}
+                        ${codeBlock('TeamCode/learning/kotlinTest/KotlinTeleOpTest.kt', CODE.kotlinTeleOp)}
+                        `
+                    },
+                    {
+                        id: 'kt-compare',
+                        nav: 'Compared to Java',
+                        eyebrow: '// Kotlin vs Java',
+                        title: 'Comparing Kotlin with the <span>Java base classes</span>',
+                        lead: 'The easiest way to understand Kotlin here is to compare it directly with the Java competition base that already powers the main repo flow.',
+                        body: `
+                        ${codeBlock('TeamCode/opModes/TeleOp.java', CODE.teleOpBase)}
+                        ${table(['Java pattern in this repo', 'Kotlin equivalent in this repo'], [
+                            ['<code>new Pose()</code>', '<code>Pose()</code>'],
+                            ['<code>while (opModeIsActive())</code>', '<code>while (opModeIsActive())</code>'],
+                            ['<code>drive = Constants.createTeleOpFollower(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
+                            ['Explicit types everywhere', 'Type inference plus <code>lateinit var</code> for FTC objects initialized in <code>runOpMode()</code>.']
+                        ])}
+                        `
+                    }
+                ]
+            },
+            'filters-guide': {
+                pageTitle: 'Filters & Kalman Notes',
+                pageLabel: '// Filters & Kalman Notes',
+                sidebarLabel: 'Filter Docs',
+                sections: [
+                    {
+                        id: 'filters-current',
+                        nav: 'Current Filters',
+                        eyebrow: '// Filters & Kalman Notes',
+                        title: 'What the repo has <span>today</span>',
+                        lead: 'Today the codebase includes a lightweight noise-filter abstraction and a low-pass implementation. There is <strong>no checked-in Kalman filter class yet</strong>.',
+                        body: `
+                        ${codeBlock('TeamCode/library/filters/NoiseFilter.java', CODE.noiseFilter)}
+                        ${codeBlock('TeamCode/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
+                        `
+                    },
+                    {
+                        id: 'filters-math',
+                        nav: 'Low-Pass Math',
+                        eyebrow: '// Filters & Kalman Notes',
+                        title: 'Low-pass filtering <span>with and without math</span>',
+                        lead: 'A low-pass filter smooths noisy sensor readings by blending the previous filtered value with the new measurement.',
+                        body: `
+                        <h2 class="dh2">Without the math</h2>
+                        <p class="dp">Small <code>alpha</code> means more smoothing. Large <code>alpha</code> means more responsiveness.</p>
+                        <h2 class="dh2">With the math</h2>
+                        <p class="dp">The implemented update rule is <code>x_filtered = x_filtered * (1 - alpha) + measurement * alpha</code>.</p>
+                        `
+                    },
+                    {
+                        id: 'filters-kalman',
+                        nav: 'Kalman Notes',
+                        eyebrow: '// Filters & Kalman Notes',
+                        title: 'Where a <span>Kalman filter</span> would fit',
+                        lead: 'A Kalman filter would go further by maintaining a prediction, a measurement estimate, and a confidence model for both, which is useful when fusing multiple noisy sources.',
+                        body: `
+                        ${note('dwarn', '<strong>Repo-specific note:</strong> because there is no Kalman class in <code>TeamCode/library/filters</code> yet, any example code on this page must come from <code>NoiseFilter</code> and <code>LowPassFilter</code>.')}
+                        `
+                    }
+                ]
+            },
+            'math-guide': {
+                pageTitle: 'Math & EquationCurve',
+                pageLabel: '// Math & EquationCurve',
+                sidebarLabel: 'Math Docs',
+                sections: [
+                    {
+                        id: 'math-equation',
+                        nav: 'Equation API',
+                        eyebrow: '// Math & EquationCurve',
+                        title: 'The shared <span>Equation</span> contract',
+                        lead: 'The current custom-curve stack is split in two layers: generic math primitives under <strong>library/math</strong> and Pedro-specific curve adaptation under <strong>pedroPathing/custom</strong>.',
+                        body: `
+                        ${codeBlock('TeamCode/library/math/Equation.java', CODE.equation)}
+                        `
+                    },
+                    {
+                        id: 'math-polynomial',
+                        nav: 'Polynomial',
+                        eyebrow: '// Math & EquationCurve',
+                        title: 'The current practical <span>Polynomial</span> implementation',
+                        lead: '<code>Polynomial</code> is the main concrete implementation used today for evaluating, differentiating, and integrating equations in the repo.',
+                        body: `
+                        ${codeBlock('TeamCode/library/math/Polynomial.java', CODE.polynomial)}
+                        ${note('dnote', '<strong>Current limitation:</strong> <code>Polynomial</code> is the practical implementation today. <code>Term</code> exists in the repo but is still scaffold-only, so symbolic equation support is not finished.')}
+                        `
+                    },
+                    {
+                        id: 'math-curve',
+                        nav: 'EquationCurve',
+                        eyebrow: '// Math & EquationCurve',
+                        title: 'Using math inside <span>EquationCurve</span>',
+                        lead: '<code>EquationCurve</code> is the Pedro-facing adapter. It validates that the function passes through the requested endpoints before the path is initialized.',
+                        body: `
+                        ${codeBlock('TeamCode/pedroPathing/custom/EquationCurve.java', CODE.equationCurve)}
+                        `
+                    }
+                ]
+            },
+            'tests-guide': {
+                pageTitle: 'Tests & Validation',
+                pageLabel: '// Tests & Validation',
+                sidebarLabel: 'Testing Docs',
+                sections: [
+                    {
+                        id: 'tests-folders',
+                        nav: 'Folder Roles',
+                        eyebrow: '// Tests & Validation',
+                        title: 'What belongs in <span>tests/</span> and what does not',
+                        lead: 'The BioBuzz codebase separates shared match architecture from validation code. Test op modes are driver-station-visible utilities for checking hardware, drive behavior, wrappers, and proof-of-concept ideas.',
+                        body: `
+                        ${table(['Folder', 'Typical use'], [
+                            ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, or manual follower tests.'],
+                            ['<code>tests/ftcSdk/</code>', 'SDK-level wrapper/device validation like <code>MotorTest</code>, <code>RGBIndicatorTest</code>, and <code>SlidesMotorTest</code>.'],
+                            ['<code>learning/</code>', 'Teaching/scratch examples like the Kotlin TeleOp and ExampleIvyAuto.'],
+                            ['<code>opModes/</code>', 'Shared match logic, not ad hoc experiments.']
+                        ])}
+                        `
+                    },
+                    {
+                        id: 'tests-example',
+                        nav: 'Example Test',
+                        eyebrow: '// Tests & Validation',
+                        title: 'A high-value <span>drivetrain test</span> example',
+                        lead: '<code>MecanumTeleOp</code> is a good example of a driver-station-visible validation op mode that checks hardware names, control modes, and drivetrain response.',
+                        body: `
+                        ${codeBlock('TeamCode/tests/MecanumTeleOp.java', CODE.mecanumTest)}
+                        `
+                    },
+                    {
+                        id: 'tests-pattern',
+                        nav: 'Repo Pattern',
+                        eyebrow: '// Tests & Validation',
+                        title: 'The repo pattern for <span>validation code</span>',
+                        lead: 'If a file is meant for validation rather than match play, keep it in <code>tests/</code> or <code>learning/</code> so the production architecture stays clean.',
+                        body: `
+                        ${note('dnote', '<strong>Repo pattern:</strong> use <code>tests/</code> for validation, <code>learning/</code> for teaching/scratch code, and keep <code>opModes/</code> focused on shared match logic.')}
+                        `
+                    }
+                ]
+            },
+            'autotune-guide': {
+                pageTitle: 'AutoTune PIDF',
+                pageLabel: '// AutoTune PIDF',
+                sidebarLabel: 'AutoTune Docs',
+                sections: [
+                    {
+                        id: 'autotune-constants',
+                        nav: 'TuningConstants',
+                        eyebrow: '// AutoTune PIDF',
+                        title: 'Shared <span>TuningConstants</span> inputs',
+                        lead: 'The driver-station-visible FTC AutoTune package is configured through <code>TuningConstants.java</code> before any tuning op mode is started.',
+                        body: `
+                        ${codeBlock('TeamCode/pid/autoTune/TuningConstants.java', CODE.tuningConstants)}
+                        `
+                    },
+                    {
+                        id: 'autotune-opmodes',
+                        nav: 'Tuner OpModes',
+                        eyebrow: '// AutoTune PIDF',
+                        title: 'Velocity, position, and <span>dual-motor</span> tuners',
+                        lead: 'The repo already includes multiple tuning wrappers over the external FTC AutoTune dependency.',
+                        body: `
+                        ${codeBlock('TeamCode/pid/autoTune/VelocityPIDFTunerOpMode.java', CODE.velocityTuner)}
+                        ${codeBlock('TeamCode/pid/autoTune/PositionPIDTunerOpMode.java', CODE.positionTuner)}
+                        ${codeBlock('TeamCode/pid/autoTune/DualVelocityPIDFTunerOpMode.java', CODE.dualVelocityTuner)}
+                        `
+                    },
+                    {
+                        id: 'autotune-workflow',
+                        nav: 'Workflow',
+                        eyebrow: '// AutoTune PIDF',
+                        title: 'The team’s <span>two-phase workflow</span>',
+                        lead: 'These op modes are calibration tools, not normal subsystem factories. Treat them as controlled tuning sessions.',
+                        body: `
+                        <ol class="dol">
+                            <li>Set hardware names, directions, target values, and relay parameters in <code>TuningConstants</code>.</li>
+                            <li>Run the tuner and let the automatic relay-feedback phase collect oscillation data.</li>
+                            <li>Read the reported candidate gains from telemetry.</li>
+                            <li>Optionally hold <code>gamepad1.a</code> to live-test the generated gains.</li>
+                        </ol>
+                        ${note('dwarn', '<strong>Safety:</strong> these tuners intentionally move or spin mechanisms on their own. Make sure the target range and relay amplitude are safe before pressing Start.')}
+                        `
+                    }
+                ]
+            },
+            'path-following-guide': {
+                pageTitle: 'Path Following',
+                pageLabel: '// Path Following',
+                sidebarLabel: 'Path Following Docs',
+                sections: [
+                    {
+                        id: 'path-intro',
+                        nav: 'Overview',
+                        eyebrow: '// Path Following',
+                        title: 'Path Following with <span>Pedro Pathing</span>',
+                        lead: 'In this repo, Pedro path following starts with the active follower from <strong>Constants.createFollower()</strong>, then layers in lines, heading interpolation, PathChains, and custom curves when needed.',
+                        body: `
+                        <div class="dsgrid">
+                            <div class="dscard"><div class="dscard-t">Follower Source</div><p class="dp">Always create the follower through <code>Constants.createFollower(hardwareMap)</code> so the active robot profile drives the configuration.</p></div>
+                            <div class="dscard"><div class="dscard-t">Main Path Types</div><p class="dp"><code>BezierLine</code> handles straight segments, while <code>EquationCurve</code> covers paths easier to express as equations.</p></div>
+                            <div class="dscard"><div class="dscard-t">Common Container</div><p class="dp"><code>PathBuilder</code> builds <code>PathChain</code> objects so multiple segments can run as one motion plan.</p></div>
+                            <div class="dscard"><div class="dscard-t">Heading Control</div><p class="dp">Each segment can choose its own heading interpolation instead of forcing one global turning behavior.</p></div>
+                        </div>
+                        `
+                    },
+                    {
+                        id: 'path-curves',
+                        nav: 'Curves',
+                        eyebrow: '// Path Following',
+                        title: 'Choosing between <span>lines</span> and custom curves',
+                        lead: '<code>Test_IvyAuton</code> shows the simplest path shape in the repo, while <code>EquationCurve</code> covers cases where a curve is easier to express mathematically.',
+                        body: `
+                        <h2 class="dh2">Minimal variant path provider</h2>
+                        ${codeBlock('TeamCode/opModes/variants/Test_IvyAuton.java', CODE.testIvyAuton)}
+                        <h2 class="dh2">When a line is not enough</h2>
+                        <p class="dp">If a path is easier to express as an equation than as Pedro control points, use <code>EquationCurve</code>. It validates that the function actually passes through the requested endpoints before initializing the curve.</p>
+                        ${codeBlock('TeamCode/pedroPathing/custom/EquationCurve.java', CODE.equationCurve)}
+                        ${table(['Pattern', 'When to use it'], [
+                            ['<code>BezierLine</code> + <code>PathChain</code>', 'Straight or mostly straight segments with explicit start/end poses.'],
+                            ['<code>EquationCurve</code>', 'The robot path is easier to describe as <code>y = f(x)</code> than with Bezier control points.']
+                        ])}
+                        `
+                    },
+                    {
+                        id: 'path-builder',
+                        nav: 'Path Builder',
+                        eyebrow: '// Path Following',
+                        title: 'Building a <span>PathChain</span>',
+                        lead: '<code>ExampleIvyAuto</code> shows the common repo pattern: use the follower’s builder, add a line, then pick heading interpolation before building the chain.',
+                        body: `
+                        ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.pathBuilder)}
+                        <h2 class="dh2">Builder pattern</h2>
+                        <p class="dp">The team’s usual sequence is: create follower, define poses, add path segments, set interpolation per segment, then call <code>build()</code> to get a reusable <code>PathChain</code>.</p>
+                        `
+                    },
+                    {
+                        id: 'path-heading',
+                        nav: 'Heading',
+                        eyebrow: '// Path Following',
+                        title: 'Heading <span>interpolation</span> in TeamCode',
+                        lead: 'Heading is configured per path segment. The repo uses both the path-builder shortcut and the explicit <code>HeadingInterpolator</code> form depending on where the path is built.',
+                        body: `
+                        ${table(['Style', 'Current repo example'], [
+                            ['<code>setLinearHeadingInterpolation(start, end)</code>', 'Used in <code>ExampleIvyAuto</code> path-builder flows.'],
+                            ['<code>HeadingInterpolator.linear(start, end)</code>', 'Used in <code>Test_IvyAuton</code> when constructing a <code>Path</code> directly.'],
+                            ['Global chain interpolation', 'Possible, but most current examples stay explicit per segment.']
+                        ])}
+                        ${codeBlock('TeamCode/opModes/variants/Test_IvyAuton.java', CODE.testIvyAuton)}
+                        `
+                    },
+                    {
+                        id: 'path-examples',
+                        nav: 'Ivy Example',
+                        eyebrow: '// Path Following',
+                        title: 'Running paths inside an <span>Ivy autonomous</span>',
+                        lead: 'Path following in BioBuzz is often paired with Ivy commands so the follower, intake actions, and stop conditions can all live in one scheduled sequence.',
+                        body: `
+                        ${codeBlock('TeamCode/opModes/IvyAuton.java', CODE.ivyAuton)}
+                        ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.exampleIvyAuto)}
+                        ${note('dnote', '<strong>Typical flow:</strong> create the follower in init, build the paths before start, then schedule <code>PedroCommands.follow(...)</code> or a custom follow chain during the autonomous command sequence.')}
+                        `
+                    }
+                ]
+            },
+            'pedro-ivy-guide': {
+                pageTitle: 'Pedro Pathing & Ivy',
+                pageLabel: '// Pedro Pathing & Ivy',
+                sidebarLabel: 'Pedro Ivy Docs',
+                sections: [
+                    {
+                        id: 'ivy-follower',
+                        nav: 'Follower Setup',
+                        eyebrow: '// Pedro Pathing & Ivy',
+                        title: 'Follower creation and <span>profile wiring</span>',
+                        lead: 'Pedro Pathing in this repo is tied to the active robot profile through <strong>Constants.createFollower()</strong> rather than ad hoc per-op-mode setup.',
+                        body: `
+                        ${codeBlock('TeamCode/Constants.java', CODE.constantsFactory)}
+                        ${codeBlock('TeamCode/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
+                        `
+                    },
+                    {
+                        id: 'ivy-base',
+                        nav: 'Shared Base',
+                        eyebrow: '// Pedro Pathing & Ivy',
+                        title: 'The shared <span>IvyAuton</span> base',
+                        lead: 'The team’s shared autonomous base resets the scheduler, creates the follower and intake, and schedules a representative sequence in <code>start()</code>.',
+                        body: `
+                        ${codeBlock('TeamCode/opModes/IvyAuton.java', CODE.ivyAuton)}
+                        `
+                    },
+                    {
+                        id: 'ivy-learning',
+                        nav: 'Learning Example',
+                        eyebrow: '// Pedro Pathing & Ivy',
+                        title: 'A lighter <span>learning example</span>',
+                        lead: '<code>ExampleIvyAuto</code> is the scratch iterative Ivy autonomous example. It is useful for understanding path building and scheduling without all of the shared match scaffolding.',
+                        body: `
+                        ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.exampleIvyAuto)}
+                        ${note('dnote', '<strong>Related math:</strong> if a path is easier to describe as <code>y = f(x)</code> than as control points, the repo’s custom option is <code>EquationCurve</code> backed by <code>Equation</code>/<code>Polynomial</code>.')}
+                        `
+                    }
+                ]
+            }
         };
+
+        const GUIDES = Object.fromEntries(
+            Object.entries(GUIDE_CONFIGS).map(([key, config]) => [key, buildGuidePage(config)])
+        );
 
         document.querySelectorAll('.tl-item-clickable').forEach(item => {
             item.addEventListener('click', () => {
@@ -2473,19 +2716,6 @@ function applyCodeHighlighting(root=document){
             });
         });
     })();
-
-    /* ═══════════════════════════════════════════
-       DOCS PANEL NAVIGATION
-    ═══════════════════════════════════════════ */
-    document.querySelectorAll('.doc-nav-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.doc-nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.doc-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            const panel = document.getElementById('doc-' + btn.dataset.doc);
-            if (panel) panel.classList.add('active');
-        });
-    });
 
     /* ═══════════════════════════════════════════
        HERO COUNTDOWN — ✏️ COUNTDOWN TARGET
