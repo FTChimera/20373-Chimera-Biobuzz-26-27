@@ -25,7 +25,9 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LinearInterp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LagrangeInterp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Term.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/...`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
@@ -43,11 +45,13 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
 - `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
-- `Polynomial` now lives under `library/math/` and is the reusable math primitive used by `EquationCurve`.
+- `Equation` is the new shared math interface for reusable symbolic/value-returning curve expressions.
+- `Polynomial` now lives under `library/math/`, implements `Equation`, and is still the only actually implemented reusable equation type in this package.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
 - `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it now enforces a simple state machine and promotes `STARTED -> LOOP` on the first `update()` call.
 - `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
+- `Term` exists as early scaffolding for the broader `Equation` abstraction, but its symbolic operations still return placeholders and should not be treated as a finished utility yet.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
@@ -85,9 +89,15 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 
 - `Polynomial` stores coefficients highest-degree first.
 - `getY(x)` evaluates the polynomial at `x`.
-- `derivative()` returns a new `Polynomial`, which is what `EquationCurve` uses for derivative and curvature calculations.
+- `derivative()` returns a new `Polynomial`, which still satisfies the current `EquationCurve` derivative/curvature contract.
 - `toString()` now formats decimal coefficients safely with locale-stable fixed-point formatting instead of fragile substring truncation.
 - Because it is in `library/math/`, keep it math-focused and free of FTC lifecycle assumptions.
+
+## Equation-interface guidance
+
+- Use `Equation` when code should accept a reusable math expression without caring whether the implementation is polynomial-backed.
+- Right now, keep production geometry changes biased toward `Polynomial`, because `Term` is not implemented beyond the interface shell.
+- If you extend the symbolic math layer, finish the real `Term` behavior instead of documenting or depending on placeholder `null` returns.
 
 ## Interpolation-specific guidance
 
@@ -107,6 +117,7 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 
 - `EquationCurve` lives in `pedroPathing/custom/`, not `library/`, because it adapts repo math helpers into Pedro’s `CustomCurve` API.
 - Use `Polynomial` here when the request is about the reusable math primitive.
+- Use `Equation` here when the request is about the shared expression interface or widening a helper to work with more than just polynomials.
 - Use the Pedro pathing skills when the request is about turning that math into followable path geometry.
 
 ## Direction-specific guidance
@@ -121,4 +132,3 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 - Hiding robot state machines in utility classes.
 - Adding large framework abstractions when a small helper class would do.
 - Using `library/` as a dumping ground for subsystem logic that should instead live behind `Mechanism` and `RobotConstants.createMechanism(...)`.
-

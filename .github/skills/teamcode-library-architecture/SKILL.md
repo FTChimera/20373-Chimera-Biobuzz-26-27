@@ -20,6 +20,7 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 - `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
 - `tests/`: driver-station validation and proof-of-concept op modes, including `PreseasonWebcamAuto` and `tests/ftcSdk` helpers.
 - `learning/`: teaching or scratch op modes, including the Kotlin teleop example.
+- `java-autogen/`: browser-side HTML/JS generators for producing starter Java autonomous classes from Pedro/Turtle Tracer path data or manual path-builder drafts.
 - `Constants.java`: the active robot profile, default poses, and op-mode-facing convenience factories.
 
 ## House style for mechanisms and wrappers
@@ -42,7 +43,7 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - Put drive motor names, `Direction`-based drive directions, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
 - Put default poses and top-level convenience factories in `Constants`, including generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
-- Keep lightweight math helpers such as `Polynomial`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
+- Keep lightweight math helpers such as `Equation`, `Polynomial`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only third-party tuner wrappers such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
 - Keep Pedro-specific curve integration such as `EquationCurve` in `pedroPathing/custom/`.
 - Do not turn `RobotConstants` into a catch-all for arbitrary per-mechanism tuning unless that data is truly robot-profile-wide.
@@ -62,7 +63,9 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - `library.control.DoublePIDFController`
 - `library.interpolation.LinearInterp`
 - `library.interpolation.LagrangeInterp`
+- `library.math.Equation`
 - `library.math.Polynomial`
+- `library.math.Term`
 - `mechanisms.Intake`
 - `mechanisms.Drivetrain`
 - `mechanisms.MecanumDrive`
@@ -100,8 +103,11 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - Generic FTC sample patterns from `FtcRobotController/external/samples/` are not the house style for TeamCode.
 - New mechanisms should not be instantiated directly from op modes when a `Constants.create...(...)` factory belongs there.
 - A mechanism no longer needs a centrally shared params singleton in `Constants` to fit repo style; the important uniformity point is the `Mechanism` + `RobotConstants.createMechanism(...)` construction flow.
-- `Polynomial` now lives under `library/math/`, while `EquationCurve` is the Pedro-specific adapter that turns polynomial geometry into a `CustomCurve`.
+- `Polynomial` now lives under `library/math/`, implements the newer `Equation` interface, and is still the only finished reusable equation implementation.
+- `Term` currently exists as a scaffold for the broader `Equation` abstraction; do not assume symbolic equation algebra is production-ready yet.
+- `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
+- `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because the real relay-test logic lives in the external FTC AutoTune library, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
 - The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.
 
@@ -110,4 +116,3 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - `TeamCode/build.gradle` wires Project Lombok annotation processing, Sloth load/runtime support, and the Kotlin Android plugin.
 - `build.dependencies.gradle` now also wires JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core` / `pidautotuner-ftc`, which back the `pid/autoTune/` calibration op modes.
 - The root `build.gradle` currently pins the Kotlin Gradle plugin with `kotlin_version = '2.1.20'`, so build or architecture work should preserve that wiring unless the repo is intentionally being migrated.
-

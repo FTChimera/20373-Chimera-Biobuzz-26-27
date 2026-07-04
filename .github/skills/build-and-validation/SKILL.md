@@ -17,6 +17,7 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - `TeamCode/build.gradle` includes `annotationProcessor` entries for both the FTC op-mode processor and Project Lombok
 - FTC SDK and Pedro dependencies are declared in `build.dependencies.gradle`
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
+- `java-autogen/` contains browser-side HTML/JS generators and is outside the Gradle-compiled Android source set
 - Custom SDK-registerable hardware now also lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and a device-level `RGBIndicator`
 - `build.dependencies.gradle` now also pulls JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core` and `pidautotuner-ftc`
 - TeamCode now includes `pid/autoTune/` relay-feedback tuner op modes plus `pid/autoTune/TuningConstants.java`
@@ -36,6 +37,7 @@ Use this skill when validating changes or diagnosing why the project does or doe
 4. If needed, build the whole project after TeamCode succeeds.
 5. `:TeamCode:testDebugUnitTest` currently exists but usually reports `NO-SOURCE`, so treat build + lint + robot/runtime validation as the primary checks.
 6. For robot behavior changes, follow the build with driver-station or on-robot validation because many issues are lifecycle or hardware-configuration dependent.
+7. If a change only touches `java-autogen/`, review the generated HTML/JS directly; Gradle will not validate that tooling until its output is copied into `TeamCode/`.
 
 ## When the user asks for a full `TeamCode` audit
 

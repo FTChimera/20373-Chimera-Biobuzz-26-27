@@ -12,10 +12,12 @@ This skill covers the repo’s Pedro Ivy usage.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/CommandConverter.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Ivy.java`
+- `java-autogen/Ftc-PP-toJavaAuto-Ivy.js`
 
 ## Current usage patterns
 
@@ -29,6 +31,7 @@ This skill covers the repo’s Pedro Ivy usage.
 
 - `IvyTeleOp` schedules Limelight updates, drive periodic updates, teleop drive, intake power, and heading reset behavior together.
 - `IvyAuton.start()` composes a sequential routine with intake commands, Pedro follow commands, waits, and an op-mode stop request.
+- `learning/ExampleIvyAuto` is a scratch iterative example that schedules `Commands.infinite(follower::update)` alongside a `Groups.sequential(...)` chain of `PedroCommands.follow(...)` calls.
 - `MecanumDrive.teleOp(...)` returns a command that starts teleop drive once and then runs continuous drive updates.
 - `Slides1` exists as a mechanism shell but does not yet expose Ivy command helpers or active-profile registration, so new command work around slides may need both subsystem and profile follow-up.
 
@@ -63,6 +66,11 @@ Do not hide subsystem construction or configuration policy inside a custom comma
 
 `pedroPathing/Ivy.java` is a synchronous helper that runs one command to completion in a blocking style. Use it carefully. It is not the main pattern for standard FTC loop-driven op modes.
 
+## Generated Ivy skeletons
+
+- `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` now emits the same basic Ivy helper shape that `ExampleIvyAuto` demonstrates: `reset()` in init/stop, `schedule(...)` in `start()`, and `Scheduler.execute()` in `loop()`.
+- Generated code is a starting point only. Before keeping it, align package names, annotations, `Constants` imports, and any shared-base-class decisions with the real destination op mode.
+
 ## Pitfalls
 
 - Do not forget `Scheduler.execute()` in iterative command-driven op modes.
@@ -70,4 +78,3 @@ Do not hide subsystem construction or configuration policy inside a custom comma
 - Avoid mixing busy loops with Ivy scheduling when Pedro already provides a command form.
 - Avoid creating or wiring profile-managed subsystems ad hoc inside commands; initialize them through the normal factory path first.
 - If a test or proof-of-concept command intentionally bypasses a wrapper, still keep hardware naming centralized through the active profile or the owning params class.
-

@@ -19,6 +19,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - FTC AutoTune calibration op modes live under `pid/autoTune/`.
 - One-shot configuration op modes live under `configs/`.
 - Learning or scratch op modes live under `learning/`.
+- Browser-side autonomous generators live under `java-autogen/`; they are tooling inputs to op-mode authoring, not selectable FTC classes by themselves.
 
 ## Use these patterns
 
@@ -57,6 +58,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Logitech webcam and RGB indicator wrappers are also profile-managed and have `Constants` helpers.
 - `mechanisms/Slides1.java` is the current slide mechanism shell, layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
+- `learning/ExampleIvyAuto.java` is the current scratch iterative Ivy autonomous example; it is intentionally unannotated teaching code under `learning/`, not a driver-station-visible match op mode.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
@@ -84,6 +86,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Annotated wrappers: `opModes/variants/Blue_TeleOp.java`, `opModes/variants/Red_TeleOp.java`, `opModes/variants/Test_IvyAuton.java`
 - Standalone validation op mode: `tests/MecanumTeleOp.java`
 - Proof-of-concept test op mode: `tests/PreseasonWebcamAuto.java`
+- Scratch iterative Ivy autonomous example: `learning/ExampleIvyAuto.java`
 - FTC AutoTune calibration op modes: `pid/autoTune/PositionPIDTunerOpMode.java`, `pid/autoTune/VelocityPIDFTunerOpMode.java`, `pid/autoTune/DualVelocityPIDFTunerOpMode.java`
 - One-shot config op mode family: `configs/ResetAllBlackboard.java`, `configs/ZeroPose.java`, `configs/Set*Driver.java`
 

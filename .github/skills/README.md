@@ -49,5 +49,7 @@ Current repo details worth remembering while using these skills:
 - `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` now set their stick curve once on `MecanumDrive` via `setStickCurve(...)` and then pass raw `DriveVector` values, so future drive edits should avoid double-applying stick shaping in the op mode layer
 - `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` now intentionally pull hardware names from `RobotConfigurations` or the owning `*_PARAMS` class instead of stale test-only string literals
 - `tests/ftcSdk/androidTest.java` is now a scripted SDK-test base that runs one validation flow, sleeps briefly, and then calls `requestOpModeStop()` instead of spinning in an empty active loop
-- `library/math/Polynomial.java` and `pedroPathing/custom/EquationCurve.java` are now part of the custom pathing toolbox when Bezier geometry is not the right fit
-
+- `library/math/Equation.java`, `Term.java`, and `Polynomial.java` now form a provisional equation-math layer; `Polynomial` is the implemented reusable piece today, while `Term` is still scaffold-only
+- `pedroPathing/custom/EquationCurve.java` now accepts a generic `Equation` plus a `HeadingInterpolator`, so custom path geometry is no longer limited to raw `Polynomial` inputs
+- `learning/ExampleIvyAuto.java` is a scratch iterative Ivy autonomous example that builds `PathChain`s, schedules `PedroCommands.follow(...)`, and runs `Scheduler.execute()` inside `loop()`
+- `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`, `java-autogen/Ftc-PedroPathing-PathBuilder-toJavaAuto.html`, and `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` are browser-side generators for turning Pedro/Turtle Tracer path data or builder-authored path drafts into Java autonomous skeletons, optionally using the Ivy command-base style

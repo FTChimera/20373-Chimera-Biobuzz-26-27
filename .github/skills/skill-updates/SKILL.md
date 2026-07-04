@@ -12,6 +12,7 @@ Typical prompts include requests like:
 - “Update all the `SKILL.md` files, and the `.github/skills/README.md` on all the latest changes.”
 - “Refresh the skills docs based on recent commits.”
 - “Make the skills match the current TeamCode architecture.”
+- “Refresh the repo-specific programming guide in `ftcdev-20373.html` so its docs cards, snippets, and branding still match TeamCode.”
 
 ## Default contract for skill-update requests
 
@@ -84,7 +85,8 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 5. Map which skill files are affected by those changes.
 6. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
 7. If the index file `.github/skills/README.md` should mention a new pattern, package, or skill, update it too.
-8. After editing docs, validate the changed markdown files for obvious consistency issues and summarize exactly which skill files changed.
+8. If `ftcdev-20373.html` is present and acts as repo documentation, review whether its branding, links, docs cards, and TeamCode-derived snippets also need to change alongside the skill docs.
+9. After editing docs, validate the changed markdown files for obvious consistency issues and summarize exactly which skill files changed.
 
 ## What kinds of code changes usually require skill updates
 
@@ -99,6 +101,7 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 - new third-party build wiring in `build.dependencies.gradle`, especially new repositories or driver-station-facing libraries
 - new build, lint, or validation expectations
 - new skill directories or renamed skills
+- repo documentation drift in `ftcdev-20373.html`, especially stale snippets, outdated BioBuzz architecture notes, or non-FTChimera links
 
 ## How to decide which skill files to touch
 
@@ -131,6 +134,7 @@ Examples:
 - Prefer concrete file names and actual current symbols.
 - Remove stale references when current architecture supersedes them.
 - Do not claim a pattern is active unless you verified it in the current code.
+- When updating `ftcdev-20373.html`, source examples from `TeamCode/` instead of inventing generic FTC snippets, and keep FTChimera / 20373 RMS Chimera branding current.
 - Distinguish between:
   - profile-managed `Mechanism`/factory flows
   - lower-level direct `hardwareMap.get(...)` custom devices
@@ -155,4 +159,3 @@ Useful clarifications include:
 - Should I update only the skill files affected since the last skills-update commit, or do you want a full sweep anyway?
 - If I find older stale skill content that predates the last skills update, do you want me to fix it now or just report it?
 - Do you want me to also update non-skill documentation such as `README.md` when the same architecture changes apply there?
-
