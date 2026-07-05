@@ -50,4 +50,34 @@ public class RobotConfigurations {
                 // COMPATIBILITY
                 .useFollowerDrive(true);
     }
+
+    public static RobotConstants PreseasonDrivetrain() {
+        return new RobotConstants()
+                // DRIVE CONSTANTS
+                .maxPower(0.7)
+                .frontLeftMotorName("frontLeft")
+                .frontRightMotorName("frontRight")
+                .backLeftMotorName("backLeft")
+                .backRightMotorName("backRight")
+                .frontLeftMotorDirection(Direction.FORWARD)
+                .frontRightMotorDirection(Direction.REVERSE)
+                .backLeftMotorDirection(Direction.FORWARD)
+                .backRightMotorDirection(Direction.REVERSE)
+                .xVelocity(0)
+                .yVelocity(0)
+                // PINPOINT CONSTANTS
+                .pinpointConstants(new PinpointConstants())
+                // FOLLOWER CONSTANTS AND PATH CONSTRAINTS
+                .tValueConstraint(0.99)
+                .timeoutConstraint(100)
+                .brakingStrength(1)
+                .brakingStart(1)
+                .driveConstants(new FollowerConstants())
+                .headingPIDFCoefficients(0,0,0,0)
+                .centripetalScaling(0)
+                // MECHANISM USAGE
+                .configureDriveMechanisms()
+                // COMPATIBILITY
+                .useFollowerDrive(false);
+    }
 }
