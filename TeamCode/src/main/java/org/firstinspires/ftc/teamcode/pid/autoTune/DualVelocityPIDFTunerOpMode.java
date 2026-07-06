@@ -74,14 +74,12 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
 
         while (opModeIsActive() && !pid.isTuningComplete()) {
             pid.tuningStep(getRuntime());
-            panelsTelemetry.update();
             for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
             panelsTelemetry.update();
         }
 
         if (pid.timedOut() || !pid.isTuningSuccessful()) {
             while (opModeIsActive()) {
-                panelsTelemetry.update();
                 for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
                 panelsTelemetry.update();
             }
@@ -90,7 +88,6 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
         }
 
         while (opModeIsActive()) {
-            panelsTelemetry.update();
             for (String line : pid.getResultTelemetryLines()) panelsTelemetry.addLine(line);
             if (gamepad1.a) {
                 panelsTelemetry.addLine("");

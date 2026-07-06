@@ -24,7 +24,7 @@ public class TuningConstants {
      * True if both motors have encoders connected. False if only motor 1 has
      * an encoder -- motor 2 is still driven but its velocity is not measured.
      */
-    public static boolean DUAL_ENCODERS = false;
+    public static boolean DUAL_ENCODERS = true;
 
     // ---- Relay test -----------------------------------------------------
 

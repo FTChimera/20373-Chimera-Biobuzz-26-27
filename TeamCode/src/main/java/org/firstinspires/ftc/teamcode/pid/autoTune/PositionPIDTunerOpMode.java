@@ -69,7 +69,6 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
 
         if (pid.timedOut() || !pid.isTuningSuccessful()) {
             while (opModeIsActive()) {
-                panelsTelemetry.update();
                 for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
                 panelsTelemetry.update();
             }
@@ -78,7 +77,6 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
 
         // Phase 2: show results, optionally live-test
         while (opModeIsActive()) {
-            panelsTelemetry.update();
             for (String line : pid.getResultTelemetryLines()) panelsTelemetry.addLine(line);
 
             if (gamepad1.a) {
