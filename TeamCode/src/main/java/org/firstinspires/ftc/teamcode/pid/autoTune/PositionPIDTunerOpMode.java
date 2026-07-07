@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
 
-import com.aaravdhawan25.pidautotuner.ftc.PIDMaster;
-
+import org.firstinspires.ftc.teamcode.pid.autoTune.master.PIDMaster;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -49,7 +48,7 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
                 hardwareMap, TuningConstants.MOTOR_NAME, TuningConstants.REVERSED, true,
                 TuningConstants.POSITION_TARGET_TICKS, TuningConstants.POSITION_HYSTERESIS_TICKS,
                 TuningConstants.RELAY_AMPLITUDE, TuningConstants.CYCLES_TO_COLLECT, TuningConstants.CYCLES_TO_IGNORE,
-                TuningConstants.RELAY_TEST_TIMEOUT_S, null, 0, TuningConstants.TUNE_INTEGRAL_TERM, 0);
+                TuningConstants.RELAY_TEST_TIMEOUT_S, null, 0, TuningConstants.TUNE_INTEGRAL_TERM, 0, TuningConstants.POSITION_LIVE_TEST_GAIN);
 
         panelsTelemetry.addLine("=== PID Auto Tuner (Position) ===");
         panelsTelemetry.addData("Motor", TuningConstants.MOTOR_NAME);

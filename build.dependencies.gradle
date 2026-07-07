@@ -17,7 +17,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     // FTC-AutoTune — relay-feedback PID/PIDF auto tuner
     implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7'
-    implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-ftc:v0.3.7'
+    // Deleted ftc - manual implementation
 
     implementation 'com.pedropathing:ftc:2.1.2'
     implementation 'com.pedropathing:telemetry:1.0.0'

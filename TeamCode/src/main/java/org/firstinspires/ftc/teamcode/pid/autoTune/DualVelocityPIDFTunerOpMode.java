@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
 
-import com.aaravdhawan25.pidautotuner.ftc.DualMotorPIDMaster;
+import org.firstinspires.ftc.teamcode.pid.autoTune.master.DualMotorPIDMaster;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -57,7 +57,8 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
                 TuningConstants.FEEDFORWARD_TEST_POWERS,
                 TuningConstants.FEEDFORWARD_SETTLE_TIME_S,
                 TuningConstants.TUNE_INTEGRAL_TERM,
-                TuningConstants.DUAL_ENCODERS);
+                TuningConstants.DUAL_ENCODERS,
+                TuningConstants.VELOCITY_LIVE_TEST_GAIN);
 
         panelsTelemetry.addLine("=== PIDF Auto Tuner (Dual Velocity) ===");
         panelsTelemetry.addData("Motor 1", TuningConstants.MOTOR_NAME + (TuningConstants.REVERSED ? " (reversed)" : ""));

@@ -51,6 +51,9 @@ public class TuningConstants {
 
     /** Relay deadband for the position tuner in encoder ticks. */
     public static double POSITION_HYSTERESIS_TICKS = 10;
+    /** Gain Index used for live testing in position mode */
+    // Position: index 2 ("no overshoot") — minimises risk of hitting physical limits.
+    public static int POSITION_LIVE_TEST_GAIN = 2;
 
     // ---- Velocity / PIDF tuner ------------------------------------------
 
@@ -94,6 +97,9 @@ public class TuningConstants {
      * True = full PID rule family including integral terms.
      */
     public static boolean TUNE_INTEGRAL_TERM = false;
+    /** Gain Index used for live testing in velocity mode */
+    // Velocity: index 4 ("classic ZN")   — provides adequate bandwidth for flywheels.
+    public static int VELOCITY_LIVE_TEST_GAIN = 4;
 
     // ---- Helpers --------------------------------------------------------
 

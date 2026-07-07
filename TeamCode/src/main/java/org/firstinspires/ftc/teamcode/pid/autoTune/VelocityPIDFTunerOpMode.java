@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
-import com.aaravdhawan25.pidautotuner.ftc.PIDMaster;
 
+import org.firstinspires.ftc.teamcode.pid.autoTune.master.PIDMaster;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -40,7 +40,7 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
                 TuningConstants.RELAY_AMPLITUDE, TuningConstants.CYCLES_TO_COLLECT, TuningConstants.CYCLES_TO_IGNORE,
                 TuningConstants.RELAY_TEST_TIMEOUT_S, TuningConstants.FEEDFORWARD_TEST_POWERS,
                 TuningConstants.FEEDFORWARD_SETTLE_TIME_S, TuningConstants.TUNE_INTEGRAL_TERM,
-                TuningConstants.TICKS_PER_REV);
+                TuningConstants.TICKS_PER_REV, TuningConstants.VELOCITY_LIVE_TEST_GAIN);
 
         panelsTelemetry.addLine("=== PIDF Auto Tuner (Velocity) ===");
         panelsTelemetry.addData("Motor", TuningConstants.MOTOR_NAME);
