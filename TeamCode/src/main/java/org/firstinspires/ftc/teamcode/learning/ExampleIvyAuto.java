@@ -9,10 +9,12 @@ import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.ivy.groups.Groups;
 import com.pedropathing.ivy.pedro.PedroCommands;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
 
+//@Autonomous(name = "Example Ivy Auto (Java)", group = "Examples")
 public class ExampleIvyAuto extends OpMode {
     private Follower follower;
 
@@ -83,6 +85,7 @@ public class ExampleIvyAuto extends OpMode {
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
         telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
+        telemetry.update();
     }
 
     @Override
