@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 
 /**
- * A utility class to hold all of the robot constants for each bot
+ * A utility class to hold all the robot constants for each bot
  * Not to be confused with RobotConstants, which is a base class for all constants
  */
 @Configurable
