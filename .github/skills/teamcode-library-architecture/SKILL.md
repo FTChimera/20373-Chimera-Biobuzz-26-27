@@ -40,8 +40,8 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 
 ## Where configuration belongs
 
-- Put drive motor names, `Direction`-based drive directions, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
-- Put default poses and top-level convenience factories in `Constants`, including generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
+- Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
+- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
 - Keep lightweight math helpers such as `Equation`, `Polynomial`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
@@ -82,6 +82,7 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - When adding a new profile-managed mechanism, extend `Mechanism`, use the `(HardwareMap, RobotConstants)` constructor shape, and register it in `RobotConfigurations`.
 - Add a `Constants.create...(...)` helper when that mechanism is expected to be used directly by op modes or other high-level code.
 - Keep op modes focused on orchestration, not low-level hardware construction.
+- Use `Constants.createIMU(hardwareMap)` for profile-configured IMUs. It initializes the active profile's `RevHubOrientationOnRobot` settings but never calls `resetYaw()`; callers own their heading-reset timing.
 - Keep pose and driver-preference transfer through `configs/Blackboard` when op modes need shared state.
 - Match the repo’s split between mechanism logic, wrapper logic, and op mode orchestration.
 

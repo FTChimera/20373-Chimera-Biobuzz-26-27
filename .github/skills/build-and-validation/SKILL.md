@@ -28,7 +28,7 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - That plugin requires Java 11 or newer.
 - A build launched under Java 8 fails during Gradle configuration before Java sources are compiled.
 - The checked-in `gradle.properties` currently caps Gradle at `org.gradle.jvmargs=-Xmx1024M`; after the FTC AutoTune dependency addition, a clean `:TeamCode:assembleDebug` can run out of heap during `:TeamCode:dexBuilderDebug` on some machines, so retrying once with a larger heap / fewer workers is a valid way to distinguish tooling memory pressure from a source error.
-- Current `main` has a source blocker in `learning/ExampleIvyWithSubsystems.java`: its call to `autoAlign()` has no implementation. Until that scratch sample is completed, TeamCode build, lint, and unit-test tasks stop during Java compilation.
+- `learning/ExampleIvyWithSubsystems.java` compiles with its unfinished `autoAlign()` step commented out. Treat it as a teaching scaffold, not as a profile-managed subsystem reference.
 
 ## Primary validation steps
 
@@ -115,6 +115,7 @@ git --no-pager grep -nE 'new (Intake|Drivetrain|MecanumDrive|Limelight|LogitechW
 #### 3. Hardware-name and profile drift
 
 - drivetrain motor names should come from `RobotConstants` / `RobotConfigurations`
+- IMU hardware name and REV Hub logo/USB orientation should come from `RobotConstants` / `RobotConfigurations` through `Constants.createIMU(...)`
 - mechanism-specific names should come from the owning nested `*_PARAMS` class when they are not yet profile-managed
 - tests should not reintroduce stale standalone hardware strings when centralized names already exist
 - drive directions should stay aligned between `RobotConfigurations`, `Drivetrain`, and follower construction

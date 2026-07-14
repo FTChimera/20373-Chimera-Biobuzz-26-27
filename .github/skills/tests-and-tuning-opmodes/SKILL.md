@@ -41,7 +41,8 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 
 ## Existing examples
 
-- `MecanumTeleOp` is a raw FTC iterative test op mode with robot-centric mode, field-centric mode, IMU yaw reset, and a built-in motor-direction test mode.
+- `MecanumTeleOp` is a raw FTC iterative test op mode with robot-centric mode, field-centric mode, explicit IMU yaw reset, and a built-in motor-direction test mode. It initializes its IMU through `Constants.createIMU(hardwareMap)`.
+- `FieldCentricMecanumTeleOp` also uses `Constants.createIMU(hardwareMap)`, so its IMU name and REV Hub orientation follow the active robot profile.
 - `MotorDirectionTest` is a looping low-speed sanity check for the constants-driven drivetrain profile and intake direction, and it now updates telemetry live while you flip directions.
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.

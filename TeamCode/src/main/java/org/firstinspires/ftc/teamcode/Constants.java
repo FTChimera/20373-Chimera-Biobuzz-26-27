@@ -3,7 +3,9 @@ package org.firstinspires.ftc.teamcode;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
@@ -25,6 +27,14 @@ public class Constants {
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);
+    }
+    public static IMU createIMU(HardwareMap hardwareMap) {
+        IMU imu = hardwareMap.get(IMU.class, currentBot.IMU_HARDWAREMAP_NAME);
+        imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
+                currentBot.IMU_LOGO_FACING_DIRECTION,
+                currentBot.IMU_USB_FACING_DIRECTION
+        )));
+        return imu;
     }
     public static MecanumDrive createTeleOpFollower(HardwareMap hardwareMap) {
         assertHasMechanism(MecanumDrive.class);

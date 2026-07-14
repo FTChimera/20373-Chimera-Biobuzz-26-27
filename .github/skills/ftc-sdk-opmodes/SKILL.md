@@ -39,6 +39,7 @@ When an op mode needs a subsystem:
 - call `Constants.createIntake(hardwareMap)` instead of `new Intake(...)`
 - call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
 - call `Constants.createDrivetrain(hardwareMap)` or higher-level drive helpers instead of rebuilding drive hardware inline
+- call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
 - call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
 
 When adding a brand-new mechanism, add all three pieces together:
@@ -59,10 +60,11 @@ The important repo contract is that profile-managed subsystems can be created un
 - `mechanisms/Slides1.java` is the current slide mechanism shell, layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
-- `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold, but it is currently incomplete: it references a missing `autoAlign()` method and never initializes its `intake` field. Do not use it as a runnable reference until it is completed.
+- `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
+- `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that intentionally uses direct Limelight SDK access for color-based artifact tracking.
 - `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
 - `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.

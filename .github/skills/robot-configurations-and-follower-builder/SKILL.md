@@ -16,18 +16,18 @@ Use this skill for robot-profile work centered around:
 
 1. `Constants.currentBot` selects the active robot profile.
 2. `RobotConfigurations` currently defines named robot presets such as `OldDECODERobotTesting()`.
-3. `RobotConstants` is a builder-style container for drive names, drive directions, Pinpoint constants, follower tuning, path constraints, and the set of enabled `Mechanism` classes.
+3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, and the set of enabled `Mechanism` classes.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
-8. `Constants` now also exposes helper methods such as `createRGB(...)`, `createWebcam(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
+8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createRGB(...)`, `createWebcam(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
 
 ## What belongs where
 
-- Put drive motor names, drive directions, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
+- Put drive motor names, drive directions, IMU hardware/orientation settings, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
 - Put concrete robot presets in `RobotConfigurations`.
-- Put top-level convenience helpers such as `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` in `Constants` when they make op-mode code cleaner.
+- Put top-level convenience helpers such as `createIMU(...)`, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` in `Constants` when they make op-mode code cleaner.
 - Keep mechanism-specific behavior and optional nested params types in the owning mechanism or wrapper class.
 - Prefer selecting a profile through `Constants.currentBot` instead of scattering conditionals throughout mechanisms or op modes.
 - Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles.
@@ -46,6 +46,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 `RobotConstants` already owns:
 
 - drive motor names and directions
+- `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION`
 - `PinpointConstants PINPOINT_LOCALIZER_CONSTANTS`
 - max drivetrain power
 - Pedro x/y velocity values
@@ -59,6 +60,8 @@ That separation keeps the robot profile focused on what varies per bot while reu
 
 - Reuse the existing fluent builder methods on `RobotConstants` instead of introducing parallel drivetrain configuration objects.
 - Keep all four drive motor names and directions together when changing a drivetrain profile.
+- Configure each profile's IMU name and REV Hub logo/USB directions with `imuHardwareMapName(...)`, `imuLogoFacingDirection(...)`, and `imuUsbFacingDirection(...)`.
+- Create IMUs through `Constants.createIMU(hardwareMap)`; it initializes orientation but deliberately does not reset yaw.
 - Keep Pinpoint-related updates bundled through `pinpointConstants(...)`.
 - Keep drive motor directions on the shared `Direction` enum so `Drivetrain` and `RobotConstants.createFollower(...)` stay aligned.
 - Use `configureDriveMechanisms()` when you want the normal drive stack (`MecanumDrive` + `Drivetrain`) enabled by default.
@@ -84,5 +87,5 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - `RobotConstants.createMechanism(...)` throws if the requested class is not present in the active profile’s `Mechanisms` list.
 - `Constants.assertHasMechanism(...)` now fails earlier for convenience factory calls, so profile registration issues can show up before reflection-based construction.
 - `tests/MecanumTeleOp.java` now reads drivetrain motor names and default directions from `Constants.currentBot`, so drivetrain-profile renames should keep that test aligned automatically.
-- Any doc or patch that still talks about `starterBot()` is stale; the current attached preset is `OldDECODERobotTesting()`.
-
+- `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` create their IMU through `Constants.createIMU(hardwareMap)`, so profile orientation changes apply to both tests.
+- Any doc or patch that still talks about `starterBot()` or says the active preset is `OldDECODERobotTesting()` is stale; `Constants.currentBot` currently selects `PreseasonDrivetrain()`.

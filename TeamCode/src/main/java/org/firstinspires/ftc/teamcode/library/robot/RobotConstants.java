@@ -7,6 +7,7 @@ import com.pedropathing.ftc.drivetrains.MecanumConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.pedropathing.paths.PathConstraints;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -37,6 +38,12 @@ public class RobotConstants {
     public double MAX_POWER = 0.9;
     public double X_VELOCITY = 0;
     public double Y_VELOCITY = 0;
+
+    public String IMU_HARDWAREMAP_NAME = "imu";
+    public RevHubOrientationOnRobot.LogoFacingDirection IMU_LOGO_FACING_DIRECTION =
+            RevHubOrientationOnRobot.LogoFacingDirection.UP;
+    public RevHubOrientationOnRobot.UsbFacingDirection IMU_USB_FACING_DIRECTION =
+            RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
     public PinpointConstants PINPOINT_LOCALIZER_CONSTANTS = new PinpointConstants();
 
@@ -86,6 +93,18 @@ public class RobotConstants {
     }
     public RobotConstants backRightMotorDirection(Direction direction) {
         this.BACK_RIGHT_MOTOR_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants imuHardwareMapName(String name) {
+        this.IMU_HARDWAREMAP_NAME = name;
+        return this;
+    }
+    public RobotConstants imuLogoFacingDirection(RevHubOrientationOnRobot.LogoFacingDirection direction) {
+        this.IMU_LOGO_FACING_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants imuUsbFacingDirection(RevHubOrientationOnRobot.UsbFacingDirection direction) {
+        this.IMU_USB_FACING_DIRECTION = direction;
         return this;
     }
     public RobotConstants pinpointConstants(PinpointConstants pinpointConstants) {

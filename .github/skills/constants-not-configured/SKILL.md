@@ -25,11 +25,12 @@ Use this skill when needing to change constants that were left blank because of 
 - `Constants.java` is the top-level op-mode-facing entry point. It holds:
   - `RED_DEFAULT_START_POSE`
   - `BLUE_DEFAULT_START_POSE`
-  - `currentBot`, which currently points to `RobotConfigurations.OldDECODERobotTesting()`
-  - factory helpers like `createFollower(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, and generic `createMechanism(...)`
+  - `currentBot`, which currently points to `RobotConfigurations.PreseasonDrivetrain()`
+  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, and generic `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
+  - IMU hardware name plus `RevHubOrientationOnRobot` logo/USB directions
   - `xVelocity(...)` and `yVelocity(...)`
   - `PinpointConstants`
   - Pedro follower constants and heading PIDF
@@ -104,13 +105,14 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Repo-specific warning signs
 
-- `Constants.currentBot` currently hardcodes `RobotConfigurations.OldDECODERobotTesting()`. If the user wants a different robot preset, changing nested constants alone is not enough.
+- `Constants.currentBot` currently hardcodes `RobotConfigurations.PreseasonDrivetrain()`. If the user wants a different robot preset, changing nested constants alone is not enough.
 - `RobotConstants.createMechanism(...)` throws if the mechanism class is not registered in `Mechanisms`. If a constant change introduces or enables a subsystem, also check `.addMechanism(...)`.
+- IMU settings are robot-profile-wide: update `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` through the existing fluent builders, then use `Constants.createIMU(hardwareMap)` from op modes. The factory initializes orientation but intentionally does not reset yaw.
 - `Constants.assertHasMechanism(...)` now also fails early on the convenience-factory path, so mechanism registration issues may surface before reflection-based construction.
 - `MecanumDrive` and `Drivetrain` are normally enabled together through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` toggle themselves off based on whether their class is present in `bot.Mechanisms`.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
-- `Slides1` exists as a mechanism shell, but it is not currently registered in `RobotConfigurations.OldDECODERobotTesting()`, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
+- `Slides1` exists as a mechanism shell, but it is not currently registered in `RobotConfigurations.PreseasonDrivetrain()`, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
 - `pid/autoTune/` is intentionally not on the normal `Constants.create...(...)` mechanism-factory path; if the task is about those tuner op modes, update `TuningConstants` instead of trying to thread the values through `RobotConfigurations`.
 - This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
 

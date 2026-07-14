@@ -75,8 +75,8 @@ Do not hide subsystem construction or configuration policy inside a custom comma
 
 ## Scratch-example status
 
-- `learning/ExampleIvyWithSubsystems.java` is an unfinished Java scaffold, not a working subsystem example: it references an undefined `autoAlign()` command and leaves `intake` uninitialized.
-- Keep it out of the compiled source set or complete both pieces before using it as a command-composition reference.
+- `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold, not a profile-managed subsystem example: its unfinished `autoAlign()` step is commented out, while intake uses a direct `DcMotor` resolved from `Intake.INTAKE_PARAMS`.
+- Keep new command work on the normal `Constants.create...(...)` mechanism path rather than copying its direct intake construction.
 
 ## Pitfalls
 

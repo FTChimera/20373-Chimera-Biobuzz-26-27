@@ -4,6 +4,7 @@ import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
@@ -32,6 +33,10 @@ public class RobotConfigurations {
                 .backRightMotorDirection(Direction.REVERSE)
                 .xVelocity(0)
                 .yVelocity(0)
+                // IMU CONSTANTS
+                .imuHardwareMapName("imu")
+                .imuLogoFacingDirection(RevHubOrientationOnRobot.LogoFacingDirection.UP)
+                .imuUsbFacingDirection(RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)
                 // PINPOINT CONSTANTS
                 .pinpointConstants(new PinpointConstants())
                 // FOLLOWER CONSTANTS AND PATH CONSTRAINTS
@@ -65,6 +70,10 @@ public class RobotConfigurations {
                 .backRightMotorDirection(Direction.REVERSE)
                 .xVelocity(0)
                 .yVelocity(0)
+                // IMU CONSTANTS
+                .imuHardwareMapName("imu")
+                .imuLogoFacingDirection(RevHubOrientationOnRobot.LogoFacingDirection.UP)
+                .imuUsbFacingDirection(RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)
                 // PINPOINT CONSTANTS
                 .pinpointConstants(new PinpointConstants())
                 // FOLLOWER CONSTANTS AND PATH CONSTRAINTS

@@ -18,6 +18,7 @@ This skill covers the team’s custom teleop-drive stack.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/FieldCentricMecanumTeleOp.java`
 
 ## Current architecture
 
@@ -34,6 +35,7 @@ This skill covers the team’s custom teleop-drive stack.
 - Driver preference for field-centric versus robot-centric mode is stored in `configs.Blackboard` through `Blackboard.Caption.DRIVER` and the `Driver` enum.
 - `TeleOp` and `IvyTeleOp` now set their stick curve once on `MecanumDrive` via `drive.setStickCurve(x -> Math.signum(x) * x * x)` and then pass raw stick values into `new DriveVector(...)`.
 - Heading reset is usually mapped to `gamepad1.back`.
+- IMU lookup and REV Hub orientation are profile-owned through `RobotConstants`; use `Constants.createIMU(hardwareMap)` to initialize the active-profile IMU, then reset yaw explicitly in the op mode.
 - `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
 - Drive motor directions in robot profiles now use `library.hardware.actuators.Direction`; `Drivetrain` applies them through `Motor.setDirection(...)`.
 - `tests/MecanumTeleOp.java` now pulls drivetrain motor names and initial directions from `Constants.currentBot` rather than keeping separate stale test-only drive strings.
@@ -65,6 +67,7 @@ If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(H
 - Change motor-power mapping or field-centric handling: `Drivetrain.java`
 - Change public teleop-facing drive behavior or pose resets: `MecanumDrive.java`
 - Change drive hardware names, directions, or follower tuning: `RobotConfigurations.java` / `RobotConstants.java`
+- Change IMU hardware name or hub orientation: `RobotConfigurations.java` / `RobotConstants.java`
 - Change centralized drivetrain validation wiring in the raw test op mode: `tests/MecanumTeleOp.java`
 
 ## Validation ideas
@@ -74,4 +77,3 @@ If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(H
 - Check both follower-drive and manual-drive behavior if `USE_FOLLOWER_DRIVE` changes.
 - Use `tests/MecanumTeleOp.java` when you need a direct SDK-based robot-centric / field-centric check or want to flip individual motor directions interactively while staying aligned with the active drivetrain profile names.
 - Use `MotorDirectionTest` when you want to validate the constants-driven drivetrain profile and intake direction at low speed.
-

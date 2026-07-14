@@ -136,7 +136,7 @@ public final class IntakeCommand extends CommandBuilder {
 - That proof-of-concept Limelight test now still sources its camera hardware name from `Limelight.LIMELIGHT_PARAMS`, even though it bypasses the wrapper for behavior.
 - `tests/PreseasonWebcamAuto.java` also relies on generic `PIDFCoefficients<Pose>` scalar broadcasting, so utility changes in `library/control/` can affect that test flow directly.
 - If a new Pedro-adjacent mechanism is created, it should still follow the `Mechanism` + `RobotConstants.createMechanism(...)` pattern.
-- `learning/ExampleIvyWithSubsystems.java` is a newly added unfinished scaffold, not a valid reference yet: its missing `autoAlign()` method currently blocks TeamCode compilation.
+- `learning/ExampleIvyWithSubsystems.java` is a newly added teaching scaffold. Its unfinished `autoAlign()` step is commented out, and its direct intake `DcMotor` construction is not the profile-managed pattern.
 
 ## Rules
 

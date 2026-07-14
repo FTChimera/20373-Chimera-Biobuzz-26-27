@@ -32,7 +32,6 @@
 
 package org.firstinspires.ftc.teamcode.tests;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -115,18 +114,7 @@ public class MecanumTeleOp extends OpMode {
         leftBack.setDirection(Constants.currentBot.BACK_LEFT_MOTOR_DIRECTION.toFtcSdk());
         rightBack.setDirection(Constants.currentBot.BACK_RIGHT_MOTOR_DIRECTION.toFtcSdk());
 
-        /*
-         * Initialize the IMU. To do that we have to tell it which direction it is facing.
-         * We call hardwareMap.get
-         * To initialize IMU parameters, we use the logo and usb facing directions to tell it
-         * what direction it is facing.
-         */
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters imuParameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-        ));
-        imu.initialize(imuParameters);
+        imu = Constants.createIMU(hardwareMap);
         imu.resetYaw();
         /*
          * Tell the driver that initialization is complete.

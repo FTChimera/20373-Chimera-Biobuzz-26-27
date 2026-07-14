@@ -40,6 +40,7 @@ Across the skill set, the current house style is:
 Current repo details worth remembering while using these skills:
 
 - drive motor directions are represented with `library/hardware/actuators/Direction.java`, then converted to FTC SDK directions at the wrapper/profile boundary
+- IMU hardware names and REV Hub logo/USB orientation belong in `RobotConstants` / `RobotConfigurations`; create and initialize the active-profile IMU through `Constants.createIMU(hardwareMap)`, then reset yaw only at the caller's chosen time
 - custom SDK-registerable hardware now lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`
 - `library/OpModeHelper.kt` is available as a lightweight manual-bulk-read and loop-`dt` helper for op modes that need one
 - `TeamCode/build.gradle` wires Project Lombok annotation processing and the Sloth load / hot-reload tooling, so build troubleshooting should account for both
@@ -52,5 +53,5 @@ Current repo details worth remembering while using these skills:
 - `library/math/Equation.java`, `Term.java`, and `Polynomial.java` now form a provisional equation-math layer; `Polynomial` is the implemented reusable piece today, while `Term` is still scaffold-only
 - `pedroPathing/custom/EquationCurve.java` now accepts a generic `Equation` plus a `HeadingInterpolator`, so custom path geometry is no longer limited to raw `Polynomial` inputs
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are Java and Kotlin scratch iterative Ivy autonomous examples that build `PathChain`s, schedule `PedroCommands.follow(...)`, and run `Scheduler.execute()` inside `loop()`
-- `learning/ExampleIvyWithSubsystems.java` is an unfinished Java scratch scaffold: it currently references a missing `autoAlign()` method and must be completed or excluded before TeamCode can compile
+- `learning/ExampleIvyWithSubsystems.java` is a Java scratch scaffold that compiles with its unfinished `autoAlign()` step commented out; it still uses a direct intake `DcMotor` for teaching and is not the profile-managed match architecture
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`, `java-autogen/Ftc-PedroPathing-PathBuilder-toJavaAuto.html`, and `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` are browser-side generators for turning Pedro/Turtle Tracer path data or builder-authored path drafts into Java autonomous skeletons, optionally using the Ivy command-base style

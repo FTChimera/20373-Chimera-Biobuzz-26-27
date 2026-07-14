@@ -75,4 +75,4 @@ That keeps autonomous and teleop using the same subsystem construction path.
 - `tests/PreseasonWebcamAuto` is a test/proof-of-concept op mode, not a shared match autonomous architecture example.
 - Follower-localization choice matters if the camera pipeline is needed for vision tasks.
 - Preserve pose handoff if the autonomous is expected to feed teleop state.
-- `learning/ExampleIvyWithSubsystems.java` is unfinished and currently prevents TeamCode from compiling because `autoAlign()` is undefined; do not use it as an autonomous template until it is completed.
+- `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold with its unfinished `autoAlign()` step commented out; do not use its direct intake `DcMotor` construction as an autonomous architecture template.
