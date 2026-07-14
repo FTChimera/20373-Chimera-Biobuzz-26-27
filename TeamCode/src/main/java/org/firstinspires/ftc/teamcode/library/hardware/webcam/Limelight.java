@@ -139,9 +139,11 @@ public class Limelight extends Mechanism {
             fiducials = result.getFiducialResults();
             colors = result.getColorResults();
             detectors = result.getDetectorResults();
-            for (LLResultTypes.FiducialResult fiduciary : fiducials ) {
-                tid = fiduciary.getFiducialId();
-                dist = calculateDistance(fiduciary);
+            if (fiducials != null) {
+                for (LLResultTypes.FiducialResult fiduciary : fiducials) {
+                    tid = fiduciary.getFiducialId();
+                    dist = calculateDistance(fiduciary);
+                }
             }
             botpose = result.getBotpose_MT2();
             isDisconnected = false;

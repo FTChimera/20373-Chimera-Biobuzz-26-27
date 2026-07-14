@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
 //@Autonomous(name = "Example Ivy With Subsystems (Java)", group = "Examples")
 public class ExampleIvyWithSubsystems extends OpMode {
@@ -67,6 +68,7 @@ public class ExampleIvyWithSubsystems extends OpMode {
     public void init() {
         reset();
         follower = Constants.createFollower(hardwareMap);
+        intake = hardwareMap.get(DcMotor.class, new Intake.INTAKE_PARAMS().HARDWAREMAP_NAME);
         buildPaths();
         follower.setStartingPose(startPose);
     }
@@ -100,7 +102,7 @@ public class ExampleIvyWithSubsystems extends OpMode {
     // Commands
     public Command launch() {
         return sequential(
-                autoAlign(),
+                //autoAlign(),
                 intake(IntakeState.REV),
                 waitMs(1000)
         );

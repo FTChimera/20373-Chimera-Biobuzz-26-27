@@ -43,7 +43,7 @@ Current repo details worth remembering while using these skills:
 - custom SDK-registerable hardware now lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`
 - `library/OpModeHelper.kt` is available as a lightweight manual-bulk-read and loop-`dt` helper for op modes that need one
 - `TeamCode/build.gradle` wires Project Lombok annotation processing and the Sloth load / hot-reload tooling, so build troubleshooting should account for both
-- `build.dependencies.gradle` now also brings in JitPack plus the `com.github.aaravdhawan25.FtcAutoTune` relay-feedback PID/PIDF auto-tuner artifacts, and `pid/autoTune/` contains the driver-station-facing wrappers around that library
+- `build.dependencies.gradle` keeps JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the repo-local `pid/autoTune/master/PIDMaster` and `DualMotorPIDMaster` classes now provide the FTC hardware adapters around that core
 - `mechanisms/Slides1.java` is the current profile-style slide mechanism shell layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`
 - `tests/MecanumTeleOp.java` is a first-class iterative test op mode for robot-centric drive, field-centric drive, IMU yaw reset, and manual motor-direction checks
 - `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` now set their stick curve once on `MecanumDrive` via `setStickCurve(...)` and then pass raw `DriveVector` values, so future drive edits should avoid double-applying stick shaping in the op mode layer
@@ -51,5 +51,6 @@ Current repo details worth remembering while using these skills:
 - `tests/ftcSdk/androidTest.java` is now a scripted SDK-test base that runs one validation flow, sleeps briefly, and then calls `requestOpModeStop()` instead of spinning in an empty active loop
 - `library/math/Equation.java`, `Term.java`, and `Polynomial.java` now form a provisional equation-math layer; `Polynomial` is the implemented reusable piece today, while `Term` is still scaffold-only
 - `pedroPathing/custom/EquationCurve.java` now accepts a generic `Equation` plus a `HeadingInterpolator`, so custom path geometry is no longer limited to raw `Polynomial` inputs
-- `learning/ExampleIvyAuto.java` is a scratch iterative Ivy autonomous example that builds `PathChain`s, schedules `PedroCommands.follow(...)`, and runs `Scheduler.execute()` inside `loop()`
+- `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are Java and Kotlin scratch iterative Ivy autonomous examples that build `PathChain`s, schedule `PedroCommands.follow(...)`, and run `Scheduler.execute()` inside `loop()`
+- `learning/ExampleIvyWithSubsystems.java` is an unfinished Java scratch scaffold: it currently references a missing `autoAlign()` method and must be completed or excluded before TeamCode can compile
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`, `java-autogen/Ftc-PedroPathing-PathBuilder-toJavaAuto.html`, and `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` are browser-side generators for turning Pedro/Turtle Tracer path data or builder-authored path drafts into Java autonomous skeletons, optionally using the Ivy command-base style

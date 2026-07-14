@@ -24,7 +24,7 @@ Use this skill for direct FTC SDK integration work.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted test, sleep briefly, and then request stop.
 - `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
 - `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
-- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers that delegate relay-test logic to the external FTC AutoTune library.
+- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
 
 ## HardwareMap rules in this repo
@@ -84,4 +84,3 @@ If the task is instead about a custom SDK device type, put that class under `lib
 - Confusing the device-level `library.hardware.hardwareDevice.RGBIndicator` with the profile-managed `library.hardware.leds.RGBIndicator` wrapper.
 - Forgetting that many runtime issues are hardware-config dependent even when the project builds.
 - Forgetting that `tests/` may intentionally contain proof-of-concept code that uses more direct SDK access than shared match op modes.
-

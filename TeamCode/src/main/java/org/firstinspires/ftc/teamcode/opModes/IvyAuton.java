@@ -66,6 +66,7 @@ public abstract class IvyAuton extends OpMode {
     @Override
     public void loop() {
         Scheduler.execute();
+        follower.update();
     }
 
     @Override

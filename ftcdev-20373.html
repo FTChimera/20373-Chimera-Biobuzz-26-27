@@ -955,8 +955,8 @@
                     <span class="card-icon">🟣</span>
                     <div class="card-title">Kotlin in TeamCode</div>
                     <p class="card-text">
-                        The repo already includes Kotlin support, plus a small Kotlin TeleOp example
-                        that shows the repo’s follower-first style from a Kotlin file.
+                        The repo already includes Kotlin support, with TeleOp and iterative Ivy autonomous
+                        examples that show the repo’s follower-first style from Kotlin files.
                     </p>
                 </div>
 
@@ -2060,8 +2060,8 @@ public class MecanumTeleOp extends OpMode {
             title: 'Kotlin support in the BioBuzz repo',
             body: `
                 <p class="modal-desc">
-                    Kotlin is wired into TeamCode already. The current example stays close to the repo’s
-                    follower-first style instead of introducing a separate architecture.
+                    Kotlin is wired into TeamCode already. The TeleOp and iterative Ivy autonomous examples
+                    stay close to the repo’s follower-first style instead of introducing a separate architecture.
                 </p>
                 ${tabbedCode('kotlin', [
                     { id: 'kt', title: 'KotlinTeleOpTest.kt', code: CODE.kotlinTeleOp },
@@ -2390,7 +2390,7 @@ applyCodeHighlighting(document);
                         nav: 'Overview',
                         eyebrow: '// Kotlin vs Java',
                         title: 'How Kotlin fits into the <span>same TeamCode patterns</span>',
-                        lead: 'The project already compiles Kotlin. The current Kotlin example is intentionally small and follows the same follower-first conventions used by the Java code.',
+                        lead: 'The project already compiles Kotlin. `KotlinTeleOpTest.kt` and `KtExampleIvyAuto.kt` follow the same follower-first conventions used by the Java code.',
                         body: `
                         ${note('dnote', '<strong>Current repo reality:</strong> Kotlin exists as a supported teaching/example path, but most shared match architecture still lives in Java.')}
                         ${codeBlock('TeamCode/learning/kotlinTest/KotlinTeleOpTest.kt', CODE.kotlinTeleOp)}
@@ -2508,7 +2508,7 @@ applyCodeHighlighting(document);
                         ${table(['Folder', 'Typical use'], [
                             ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, or manual follower tests.'],
                             ['<code>tests/ftcSdk/</code>', 'SDK-level wrapper/device validation like <code>MotorTest</code>, <code>RGBIndicatorTest</code>, and <code>SlidesMotorTest</code>.'],
-                            ['<code>learning/</code>', 'Teaching/scratch examples like the Kotlin TeleOp and ExampleIvyAuto.'],
+                            ['<code>learning/</code>', 'Teaching/scratch examples like the Kotlin TeleOp, Java/Kotlin ExampleIvyAuto, and other unfinished scaffolds.'],
                             ['<code>opModes/</code>', 'Shared match logic, not ad hoc experiments.']
                         ])}
                         `
@@ -2555,7 +2555,7 @@ applyCodeHighlighting(document);
                         nav: 'Tuner OpModes',
                         eyebrow: '// AutoTune PIDF',
                         title: 'Velocity, position, and <span>dual-motor</span> tuners',
-                        lead: 'The repo already includes multiple tuning wrappers over the external FTC AutoTune dependency.',
+                        lead: 'The repo includes repo-local FTC tuning adapters backed by the external `pidautotuner-core` dependency.',
                         body: `
                         ${codeBlock('TeamCode/pid/autoTune/VelocityPIDFTunerOpMode.java', CODE.velocityTuner)}
                         ${codeBlock('TeamCode/pid/autoTune/PositionPIDTunerOpMode.java', CODE.positionTuner)}
@@ -2690,7 +2690,7 @@ applyCodeHighlighting(document);
                         nav: 'Learning Example',
                         eyebrow: '// Pedro Pathing & Ivy',
                         title: 'A lighter <span>learning example</span>',
-                        lead: '<code>ExampleIvyAuto</code> is the scratch iterative Ivy autonomous example. It is useful for understanding path building and scheduling without all of the shared match scaffolding.',
+                        lead: '<code>ExampleIvyAuto</code> is the Java scratch iterative Ivy autonomous example, with <code>KtExampleIvyAuto.kt</code> as its Kotlin companion. They are useful for understanding path building and scheduling without all of the shared match scaffolding.',
                         body: `
                         ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.exampleIvyAuto)}
                         ${note('dnote', '<strong>Related math:</strong> if a path is easier to describe as <code>y = f(x)</code> than as control points, the repo’s custom option is <code>EquationCurve</code> backed by <code>Equation</code>/<code>Polynomial</code>.')}

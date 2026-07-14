@@ -16,7 +16,7 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 - `library/OpModeHelper.kt`: optional op-mode utility for manual Lynx bulk caching and loop `dt` tracking.
 - `opModes/`: shared base op mode logic.
 - `opModes/variants/`: thin FTC-annotated wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`.
-- `pid/autoTune/`: FTC AutoTune relay-feedback tuner op modes plus a shared `TuningConstants` config class for calibration-only workflows.
+- `pid/autoTune/`: FTC AutoTune relay-feedback tuner op modes, repo-local FTC master adapters, and a shared `TuningConstants` config class for calibration-only workflows.
 - `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
 - `tests/`: driver-station validation and proof-of-concept op modes, including `PreseasonWebcamAuto` and `tests/ftcSdk` helpers.
 - `learning/`: teaching or scratch op modes, including the Kotlin teleop example.
@@ -44,7 +44,7 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - Put default poses and top-level convenience factories in `Constants`, including generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
 - Keep lightweight math helpers such as `Equation`, `Polynomial`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
-- Keep calibration-only third-party tuner wrappers such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
+- Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
 - Keep Pedro-specific curve integration such as `EquationCurve` in `pedroPathing/custom/`.
 - Do not turn `RobotConstants` into a catch-all for arbitrary per-mechanism tuning unless that data is truly robot-profile-wide.
 
@@ -108,11 +108,11 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 - `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
-- `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because the real relay-test logic lives in the external FTC AutoTune library, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
+- `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
 - The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.
 
 ## Current build-tooling note
 
 - `TeamCode/build.gradle` wires Project Lombok annotation processing, Sloth load/runtime support, and the Kotlin Android plugin.
-- `build.dependencies.gradle` now also wires JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core` / `pidautotuner-ftc`, which back the `pid/autoTune/` calibration op modes.
+- `build.dependencies.gradle` now wires JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the repo-local `pid/autoTune/master/` classes supply the removed FTC-specific adapter layer.
 - The root `build.gradle` currently pins the Kotlin Gradle plugin with `kotlin_version = '2.1.20'`, so build or architecture work should preserve that wiring unless the repo is intentionally being migrated.

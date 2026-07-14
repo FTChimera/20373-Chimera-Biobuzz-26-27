@@ -18,6 +18,8 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Tuning.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
@@ -39,7 +41,7 @@ This repository uses Pedro Pathing for localization, teleop drive support, and a
 7. Custom path geometry can now use the `library/math/Equation` abstraction; `Polynomial` is the implemented default today, and `EquationCurve` is the Pedro adapter that consumes it.
 8. `RobotConstants.createFollower(...)` currently builds a Pinpoint-based follower by default; `LimelightPinpointLocalizer` exists separately and is not wired into the default factory.
 9. `OpModeHelper.kt` is a reusable utility if a Pedro-related op mode wants manual bulk-cache clearing or loop timing without re-implementing that plumbing.
-10. `learning/ExampleIvyAuto.java` is a scratch iterative example of an Ivy-driven Pedro autonomous built directly on `OpMode`, `Scheduler`, and `PedroCommands.follow(...)`.
+10. `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are Java and Kotlin scratch iterative examples of an Ivy-driven Pedro autonomous built directly on `OpMode`, `Scheduler`, and `PedroCommands.follow(...)`.
 11. `java-autogen/` now contains browser-side generators that can turn Pedro/Turtle Tracer exports or hand-built path drafts into starter Java autonomous classes, including an Ivy-style output path.
 
 ## Use these patterns
@@ -97,7 +99,7 @@ Use one of these three command patterns when adding new Ivy behavior:
 
 Prefer `new CommandBuilder()` for lightweight commands that are more complex than a simple `Runnable`, and prefer implementing `Command` or extending `CommandBuilder` for reusable command types.
 
-`learning/ExampleIvyAuto.java` is also a valid scratch pattern when you want a self-contained iterative Ivy/Pedro example without going through the shared `IvyAuton` base first. Treat it as teaching/scaffold code, not the primary match-autonomous architecture.
+`learning/ExampleIvyAuto.java` and its Kotlin companion are valid scratch patterns when you want a self-contained iterative Ivy/Pedro example without going through the shared `IvyAuton` base first. Treat them as teaching/scaffold code, not the primary match-autonomous architecture.
 
 ## `java-autogen/` workflow
 
@@ -134,6 +136,7 @@ public final class IntakeCommand extends CommandBuilder {
 - That proof-of-concept Limelight test now still sources its camera hardware name from `Limelight.LIMELIGHT_PARAMS`, even though it bypasses the wrapper for behavior.
 - `tests/PreseasonWebcamAuto.java` also relies on generic `PIDFCoefficients<Pose>` scalar broadcasting, so utility changes in `library/control/` can affect that test flow directly.
 - If a new Pedro-adjacent mechanism is created, it should still follow the `Mechanism` + `RobotConstants.createMechanism(...)` pattern.
+- `learning/ExampleIvyWithSubsystems.java` is a newly added unfinished scaffold, not a valid reference yet: its missing `autoAlign()` method currently blocks TeamCode compilation.
 
 ## Rules
 

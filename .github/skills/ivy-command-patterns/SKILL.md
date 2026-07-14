@@ -13,6 +13,8 @@ This skill covers the repo’s Pedro Ivy usage.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/CommandConverter.java`
@@ -31,7 +33,7 @@ This skill covers the repo’s Pedro Ivy usage.
 
 - `IvyTeleOp` schedules Limelight updates, drive periodic updates, teleop drive, intake power, and heading reset behavior together.
 - `IvyAuton.start()` composes a sequential routine with intake commands, Pedro follow commands, waits, and an op-mode stop request.
-- `learning/ExampleIvyAuto` is a scratch iterative example that schedules `Commands.infinite(follower::update)` alongside a `Groups.sequential(...)` chain of `PedroCommands.follow(...)` calls.
+- `learning/ExampleIvyAuto` is a scratch iterative example that schedules `Commands.infinite(follower::update)` alongside a `Groups.sequential(...)` chain of `PedroCommands.follow(...)` calls; `learning/kotlinTest/KtExampleIvyAuto.kt` mirrors that pattern in Kotlin.
 - `MecanumDrive.teleOp(...)` returns a command that starts teleop drive once and then runs continuous drive updates.
 - `Slides1` exists as a mechanism shell but does not yet expose Ivy command helpers or active-profile registration, so new command work around slides may need both subsystem and profile follow-up.
 
@@ -70,6 +72,11 @@ Do not hide subsystem construction or configuration policy inside a custom comma
 
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` now emits the same basic Ivy helper shape that `ExampleIvyAuto` demonstrates: `reset()` in init/stop, `schedule(...)` in `start()`, and `Scheduler.execute()` in `loop()`.
 - Generated code is a starting point only. Before keeping it, align package names, annotations, `Constants` imports, and any shared-base-class decisions with the real destination op mode.
+
+## Scratch-example status
+
+- `learning/ExampleIvyWithSubsystems.java` is an unfinished Java scaffold, not a working subsystem example: it references an undefined `autoAlign()` command and leaves `intake` uninitialized.
+- Keep it out of the compiled source set or complete both pieces before using it as a command-composition reference.
 
 ## Pitfalls
 

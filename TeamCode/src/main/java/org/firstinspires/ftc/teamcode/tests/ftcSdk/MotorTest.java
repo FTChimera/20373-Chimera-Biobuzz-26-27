@@ -17,7 +17,9 @@ public class MotorTest extends androidTest {
         Motor motor = new Motor(hardwareMap, Constants.currentBot.FRONT_LEFT_MOTOR_NAME);
         motor.setPower(0.6);
         sleep(2000);
+        motor.stopPower();
         motor.setDirection(Direction.REVERSE);
+        motor.setPower(0.6);
         telemetry.addData("Motor Target Power (should be 0.6)", motor.getTargetPower());
         telemetry.update();
         sleep(2000);

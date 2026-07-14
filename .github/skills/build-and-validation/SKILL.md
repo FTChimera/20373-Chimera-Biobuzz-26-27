@@ -19,8 +19,8 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
 - `java-autogen/` contains browser-side HTML/JS generators and is outside the Gradle-compiled Android source set
 - Custom SDK-registerable hardware now also lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and a device-level `RGBIndicator`
-- `build.dependencies.gradle` now also pulls JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core` and `pidautotuner-ftc`
-- TeamCode now includes `pid/autoTune/` relay-feedback tuner op modes plus `pid/autoTune/TuningConstants.java`
+- `build.dependencies.gradle` now pulls JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; repo-local `pid/autoTune/master/PIDMaster.java` and `DualMotorPIDMaster.java` provide the FTC-facing tuning layer
+- TeamCode now includes `pid/autoTune/` relay-feedback tuner op modes, the repo-local master adapters, and `pid/autoTune/TuningConstants.java`
 
 ## Known build requirement
 
@@ -28,6 +28,7 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - That plugin requires Java 11 or newer.
 - A build launched under Java 8 fails during Gradle configuration before Java sources are compiled.
 - The checked-in `gradle.properties` currently caps Gradle at `org.gradle.jvmargs=-Xmx1024M`; after the FTC AutoTune dependency addition, a clean `:TeamCode:assembleDebug` can run out of heap during `:TeamCode:dexBuilderDebug` on some machines, so retrying once with a larger heap / fewer workers is a valid way to distinguish tooling memory pressure from a source error.
+- Current `main` has a source blocker in `learning/ExampleIvyWithSubsystems.java`: its call to `autoAlign()` has no implementation. Until that scratch sample is completed, TeamCode build, lint, and unit-test tasks stop during Java compilation.
 
 ## Primary validation steps
 
@@ -156,7 +157,7 @@ git --no-pager grep -nE 'hardwareMap\.get\(.*".+"' -- TeamCode/src/main/java/org
 - each test should have one clear purpose
 - proof-of-concept code should be documented as such
 - test op modes should stay aligned with centralized hardware naming and current wrappers/factories where appropriate
-- `pid/autoTune/` op modes are calibration utilities, not match logic; direct motor-name configuration through `TuningConstants` is expected there because the relay-test implementation lives in the external library
+- `pid/autoTune/` op modes are calibration utilities, not match logic; direct motor-name configuration through `TuningConstants` is expected because repo-local master adapters own FTC hardware access while `pidautotuner-core` supplies the tuning primitives
 
 #### 9. Control/utilities robustness
 
@@ -190,7 +191,7 @@ git --no-pager grep -nE 'TODO|FIXME|printStackTrace|catch \(Exception|while \(op
 - If build errors mention missing generated code or annotation processing, confirm the Lombok processor line is still present in `TeamCode/build.gradle` even if the current source set only uses Lombok lightly.
 - If build errors mention Kotlin plugin setup, check the root `kotlin_version`, the root Kotlin classpath entry, and the `org.jetbrains.kotlin.android` plugin in `TeamCode/build.gradle`.
 - If build errors mention `dev.frozenmilk`, `Load`, or `Sloth`, check the extra Dairy Foundation repositories, the `buildscript` classpath entry, the applied plugin line, and the Sloth runtime dependency in `TeamCode/build.gradle`.
-- If build errors mention `com.aaravdhawan25`, `pidautotuner`, or missing tuner classes, check the JitPack repository entry and the `pidautotuner-core` / `pidautotuner-ftc` dependency lines in `build.dependencies.gradle`.
+- If build errors mention `com.aaravdhawan25`, `pidautotuner`, or missing tuner classes, check the JitPack repository entry, the `pidautotuner-core` dependency line, and the repo-local `pid/autoTune/master/` adapter classes.
 - Treat Sloth and Lombok as intentional build wiring, not dead code to remove casually during cleanup.
 
 ## What static review should focus on

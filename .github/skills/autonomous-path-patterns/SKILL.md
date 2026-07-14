@@ -13,6 +13,8 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
@@ -41,7 +43,7 @@ Use this skill when autonomous work is mainly about path definitions and sequenc
 - `tests/PreseasonWebcamAuto` is a color-tracking proof of concept that uses a follower plus a generic `PIDFController<Pose>` rather than a reusable autonomous base class.
 - Even though `PreseasonWebcamAuto` still uses raw `Limelight3A` access, it now pulls the camera hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a stale hardcoded test-only string.
 - `PedroPathingTeleOpTest` uses `follower.pathBuilder()` lazily to create a path from the current pose.
-- `learning/ExampleIvyAuto` is a compact iterative Ivy autonomous example that builds two `PathChain`s, then schedules them sequentially with `PedroCommands.follow(...)`.
+- `learning/ExampleIvyAuto` is a compact iterative Ivy autonomous example that builds two `PathChain`s, then schedules them sequentially with `PedroCommands.follow(...)`; `learning/kotlinTest/KtExampleIvyAuto.kt` is its Kotlin companion.
 - `java-autogen/` can generate starter autonomous classes from Pedro/Turtle Tracer exports or builder-authored drafts; use that output as a scaffold, not as a substitute for reviewing repo conventions.
 - `EquationCurve` plus the current `Equation`/`Polynomial` math layer are available for custom curve work even if no current autonomous routine uses them heavily yet.
 
@@ -73,3 +75,4 @@ That keeps autonomous and teleop using the same subsystem construction path.
 - `tests/PreseasonWebcamAuto` is a test/proof-of-concept op mode, not a shared match autonomous architecture example.
 - Follower-localization choice matters if the camera pipeline is needed for vision tasks.
 - Preserve pose handoff if the autonomous is expected to feed teleop state.
+- `learning/ExampleIvyWithSubsystems.java` is unfinished and currently prevents TeamCode from compiling because `autoAlign()` is undefined; do not use it as an autonomous template until it is completed.

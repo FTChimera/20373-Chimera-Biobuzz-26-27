@@ -33,7 +33,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Test op modes live under `tests/` and are annotated for the driver station.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted check, sleep briefly, and then request stop.
 - `tests/ftcSdk/` now also includes custom-hardware checks for the device-level `RGBIndicator` and `SlidesMotor` classes under `library/hardware/hardwareDevice/`.
-- `pid/autoTune/` now contains FTC AutoTune relay-feedback tuners built around `com.aaravdhawan25.pidautotuner.ftc.PIDMaster` / `DualMotorPIDMaster`, plus a repo-local `@Configurable` `TuningConstants` class.
+- `pid/autoTune/` now contains FTC AutoTune relay-feedback tuners built around repo-local `pid.autoTune.master.PIDMaster` / `DualMotorPIDMaster` FTC adapters, the external `pidautotuner-core` algorithms, and a repo-local `@Configurable` `TuningConstants` class.
 - Those FTC AutoTune op modes are driver-station-visible `@TeleOp` entries in group `FtcAutoTune`, and they are calibration tools rather than match-ready robot behavior.
 - Pedro tuning is centralized in `pedroPathing/Tuning.java`, which exposes many selectable tuner sub-modes.
 - Tuning flows rely on `Constants.createFollower(hardwareMap)` so they inherit the current robot profile and follower config.
@@ -59,7 +59,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Keep validation op modes safe by using low power or explicit warnings when motors may move unexpectedly.
 - Reuse the repo’s existing follower creation path so tuning matches real robot configuration.
 - Reuse centralized subsystem factories from `Constants` so tests do not drift from production wiring.
-- Treat `pid/autoTune/` as an intentional exception to the normal subsystem-factory rule: those op modes pass raw motor names and directions through `TuningConstants` because the actual relay-test logic lives inside the external FTC AutoTune library.
+- Treat `pid/autoTune/` as an intentional exception to the normal subsystem-factory rule: those op modes pass raw motor names and directions through `TuningConstants` because the repo-local master adapters own the FTC relay-test integration.
 - If a test intentionally bypasses the normal factory path, still source hardware names from `RobotConfigurations` or the owning nested `*_PARAMS` class instead of introducing standalone literals.
 - Put one clear purpose per test op mode.
 - When adding a tuner, explain what the driver should physically do and what value they should record.
@@ -71,7 +71,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 
 - Many tuning values in the robot profile are still placeholders.
 - Real robot measurements matter more than code-level plausibility here.
-- `build.dependencies.gradle` now resolves JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core` / `pidautotuner-ftc`, so tuning/build work should treat those dependencies as intentional repo wiring.
+- `build.dependencies.gradle` now resolves JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the removed FTC artifact is replaced by repo-local master adapters, so tuning/build work should keep both layers aligned.
 - Some tuner code comes from Pedro tooling and is intentionally verbose; keep repo-specific adjustments minimal and clear.
 - If a new mechanism is being validated, make sure it follows the same `Mechanism` + `RobotConstants.createMechanism(...)` pattern before adding the test.
 - `tests/PreseasonWebcamAuto.java` is intentionally not a shared match op mode; keep it documented as validation/proof-of-concept code.
@@ -86,4 +86,3 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Use `tests/ftcSdk/MotorTest.java` when the goal is specifically to validate the `Motor` wrapper.
 - Use `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` when the goal is to validate custom FTC `HardwareDevice` integration directly.
 - Use `pid/autoTune/PositionPIDTunerOpMode.java` for position mechanisms, `VelocityPIDFTunerOpMode.java` for single-motor velocity tuning, and `DualVelocityPIDFTunerOpMode.java` for matched dual-motor flywheels or similar paired velocity systems.
-

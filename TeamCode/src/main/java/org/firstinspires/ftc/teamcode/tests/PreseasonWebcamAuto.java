@@ -72,6 +72,7 @@ public class PreseasonWebcamAuto extends LinearOpMode {
                 } catch (Exception e) {
                     if (e instanceof IndexOutOfBoundsException) {
                         telemetry.addData("Artifact Detection", "No artifact detected");
+                        follower.setTeleOpDrive(0,0,0);
                     } else {
                         telemetry.addData("Artifact Detection", "Error: " + e.getMessage());
                     }

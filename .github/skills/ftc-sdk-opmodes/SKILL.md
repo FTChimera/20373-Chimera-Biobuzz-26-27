@@ -29,7 +29,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 4. Let `Constants.create...(...)` delegate to the active robot profile when the subsystem is profile-managed.
 5. If teleop needs the last autonomous pose or configured driver preference, read and write `configs.Blackboard` intentionally.
 6. Use `tests/` for proof-of-concept or validation flows that are not part of the shared match architecture.
-7. Use `pid/autoTune/` for driver-station-visible relay-feedback tuning utilities that wrap the external FTC AutoTune library.
+7. Use `pid/autoTune/` for driver-station-visible relay-feedback tuning utilities that use repo-local FTC master adapters backed by `pidautotuner-core`.
 8. If an op mode wants loop timing or manual bulk-cache clearing, reuse `library/OpModeHelper.kt` instead of inventing a second helper with the same role.
 
 ## Central mechanism-creation convention
@@ -58,14 +58,15 @@ The important repo contract is that profile-managed subsystems can be created un
 - Logitech webcam and RGB indicator wrappers are also profile-managed and have `Constants` helpers.
 - `mechanisms/Slides1.java` is the current slide mechanism shell, layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
-- `learning/ExampleIvyAuto.java` is the current scratch iterative Ivy autonomous example; it is intentionally unannotated teaching code under `learning/`, not a driver-station-visible match op mode.
+- `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
+- `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold, but it is currently incomplete: it references a missing `autoAlign()` method and never initializes its `intake` field. Do not use it as a runnable reference until it is completed.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that intentionally uses direct Limelight SDK access for color-based artifact tracking.
 - `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
 - `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.
-- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they are thin wrappers around `com.aaravdhawan25.pidautotuner.ftc` plus the repo-local `TuningConstants` class.
+- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they use repo-local `PIDMaster` / `DualMotorPIDMaster` adapters plus `TuningConstants`, with `pidautotuner-core` providing the tuning primitives.
 - `configs/ConfigOpMode.java` is the shared base for the blackboard-reset / driver-selection op modes.
 
 ## Rules
@@ -74,7 +75,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Prefer adding alliance-specific wrappers over duplicating whole op modes.
 - Do not bypass mechanism wrappers with raw `DcMotorEx` or `Limelight3A` access unless the wrapper is being improved.
 - If an SDK-level test intentionally bypasses a wrapper, keep the hardware naming aligned with `RobotConfigurations` or the owning params class.
-- The `pid/autoTune/` op modes are an intentional exception to the normal `Constants.create...(...)` factory rule: their direct motor-name configuration lives in `TuningConstants` because the relay-test logic is owned by the external library.
+- The `pid/autoTune/` op modes are an intentional exception to the normal `Constants.create...(...)` factory rule: their direct motor-name configuration lives in `TuningConstants`, while the repo-local master adapters own the FTC relay-test integration.
 - Keep subsystem creation on the `Constants` / `RobotConstants.createMechanism(...)` path; keep drive/follower profile data in `library/robot/RobotConstants`.
 - Preserve FTC lifecycle expectations: initialize hardware before using it, update telemetry in the loop, and stop or persist state in `stop()` when needed.
 
@@ -86,7 +87,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - Annotated wrappers: `opModes/variants/Blue_TeleOp.java`, `opModes/variants/Red_TeleOp.java`, `opModes/variants/Test_IvyAuton.java`
 - Standalone validation op mode: `tests/MecanumTeleOp.java`
 - Proof-of-concept test op mode: `tests/PreseasonWebcamAuto.java`
-- Scratch iterative Ivy autonomous example: `learning/ExampleIvyAuto.java`
+- Scratch iterative Ivy autonomous examples: `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt`
 - FTC AutoTune calibration op modes: `pid/autoTune/PositionPIDTunerOpMode.java`, `pid/autoTune/VelocityPIDFTunerOpMode.java`, `pid/autoTune/DualVelocityPIDFTunerOpMode.java`
 - One-shot config op mode family: `configs/ResetAllBlackboard.java`, `configs/ZeroPose.java`, `configs/Set*Driver.java`
 
