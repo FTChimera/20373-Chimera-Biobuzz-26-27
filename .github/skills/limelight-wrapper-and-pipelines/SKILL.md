@@ -10,14 +10,16 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 
 ## Existing abstraction
 
-- `Constants.createLimelight(hardwareMap)` is the normal factory entry point.
+- `Constants.createLimelight(hardwareMap)` is the normal factory entry point when the active robot profile registers `Limelight.class`.
 - `Limelight` extends `Mechanism`, so the normal factory path is `Constants.createLimelight(...)` → `currentBot.createMechanism(...)`.
 - `Limelight.Pipeline` currently exposes `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR`.
 - `start(...)` chooses a pipeline and starts the FTC `Limelight3A` device.
@@ -29,7 +31,8 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - Teleop starts the camera in `APRIL_TAG` mode.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
 - Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
-- Code usually reads from the wrapper’s cached fields instead of calling the raw SDK directly from multiple places.
+- Shared Limelight behavior should read from the wrapper’s cached fields; the current raw-SDK exceptions are `tests/PreseasonWebcamAuto.java` and the deprecated `pedroPathing/custom/LimelightPinpointLocalizer.java`.
+- `Constants.currentBot` currently points at `RobotConfigurations.PreseasonDrivetrain()`, which only calls `configureDriveMechanisms()`. Wrapper-based Limelight creation therefore needs a profile that adds `Limelight.class` before `Constants.createLimelight(...)` can succeed.
 
 ## Params and creation pattern
 
@@ -57,7 +60,7 @@ The important repo-level uniformity point is the shared `Mechanism` + `RobotCons
 
 - The distance helper uses placeholder mounting constants, so those values are not trustworthy until measured.
 - `isDisconnected` depends on repeated updates and the internal timer.
-- The wrapper supports operating in a no-device mode by setting `params.ISBEINGUSED` false before hardware lookup; guard logic accordingly.
+- The wrapper’s no-device mode is profile-driven: omitting `Limelight.class` from the active `RobotConstants.Mechanisms` set makes the constructor return before any hardware lookup.
 
 ## Good extension points
 
@@ -65,4 +68,3 @@ The important repo-level uniformity point is the shared `Mechanism` + `RobotCons
 - Add telemetry-friendly summary methods.
 - Add pipeline-specific convenience behavior while keeping pipeline numbers hidden behind the enum.
 - If adding a new camera wrapper class, mirror the same `Mechanism` + `(HardwareMap, RobotConstants)` + `Constants.create...(...)` pattern used here.
-

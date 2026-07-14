@@ -1,6 +1,6 @@
 ---
 name: skill-updates
-description: Use this skill when asked to update `.github/skills/README.md` and one or more `SKILL.md` files so they reflect the latest repository changes and commit history.
+description: Use this skill when asked to update `.github/skills/README.md` and one or more `SKILL.md` files so they reflect the latest repository changes/commit history or the current codebase state.
 ---
 
 # Skill Updates
@@ -19,14 +19,14 @@ Typical prompts include requests like:
 - Start by checking what the user actually wants updated.
 - Unless the user explicitly insists on updating **all** skill files, only update the files that are actually necessary.
 - If the user says “update all,” you should still determine whether some files truly need no changes; if so, tell the user that those files were reviewed and left unchanged.
-- Ask clarification questions when the update scope or commit boundary is ambiguous.
-- Prefer a commit-history-driven audit over guessing from memory.
+- If the update scope or history boundary is ambiguous, state the assumption you used and proceed.
+- Prefer direct verification against the current tree, and use commit history only when the user allows it and the request actually depends on recent-change boundaries.
 
 ## Important repo-specific rule about history range
 
 This repo already uses commits that explicitly mention skills updates.
 
-That means:
+When the user wants a history-bounded refresh and allows git-history inspection, that means:
 
 - you do **not** need to re-document every older repo change from the beginning of time
 - instead, find the most recent commit that already updated the skills docs
@@ -34,15 +34,17 @@ That means:
 
 If you discover an older documentation gap that is still materially wrong and should be corrected, tell the user and update it if appropriate.
 
-## Start with commit history
+If the user explicitly wants a codebase-only audit or bans history / diff inspection, skip the history-bounding step and audit the current tree directly.
 
-The user specifically wants this command included:
+## If history is allowed, start with commit history
+
+A good recent-history snapshot is:
 
 ```zsh
 git --no-pager log --stat --decorate -4
 ```
 
-Use that as an initial recent-history snapshot.
+Use that as an initial recent-history snapshot when the request is recent-history-driven.
 
 Also use commands like these to find the correct doc-update boundary and the latest relevant code changes:
 
@@ -79,8 +81,8 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 ## Workflow for a skill-doc update request
 
 1. Read `.github/copilot-instructions.md` and `.github/skills/README.md` first.
-2. Find the most recent skills-update commit.
-3. Inspect commits after that point.
+2. If history is allowed and relevant, find the most recent skills-update commit.
+3. If history is allowed and relevant, inspect commits after that point.
 4. Inspect the actual current code, not just commit messages.
 5. Map which skill files are affected by those changes.
 6. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
@@ -146,15 +148,15 @@ Examples:
 
 When done, report:
 
-1. which commits/history range you used
+1. which code/doc scope you used, and if allowed, which commits/history range you used
 2. which skill files were updated
 3. which skill files were reviewed but did not need changes
 4. any older gaps you noticed that predate the last skills-update commit
-5. any clarification questions that would help future skill maintenance
+5. any assumptions or open questions that would help future skill maintenance
 
-## Questions to ask the user when needed
+## Assumptions to surface when needed
 
-Useful clarifications include:
+If you would normally ask these, state the assumption you chose and proceed:
 
 - Should I update only the skill files affected since the last skills-update commit, or do you want a full sweep anyway?
 - If I find older stale skill content that predates the last skills update, do you want me to fix it now or just report it?

@@ -12,6 +12,7 @@ Use this skill for direct FTC SDK integration work.
 - The project depends on FTC SDK `11.1.0`.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
+- `Constants.currentBot` currently points at `RobotConfigurations.PreseasonDrivetrain()`, which only registers `MecanumDrive` and `Drivetrain`.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
@@ -27,17 +28,20 @@ Use this skill for direct FTC SDK integration work.
 - `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended `Constants.create...(...)` factory style, but their intake/limelight helpers are not satisfied by the current `PreseasonDrivetrain()` profile.
 
 ## HardwareMap rules in this repo
 
 - Resolve hardware once during initialization, not repeatedly inside the active loop.
 - Prefer team wrappers and mechanisms over raw device access in op modes.
 - Prefer `Constants.create...(...)` factories over direct `new Mechanism(...)` calls in op modes.
+- Every `Constants.create...(...)` helper enforces `Constants.assertHasMechanism(...)` first; if the active profile has not registered that class, the helper throws before any device lookup happens.
 - Keep drive/profile hardware names in `RobotConstants`, and let `Constants.create...(...)` delegate to the active profile for profile-managed subsystems.
 - Keep `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` in `RobotConstants`; use `Constants.createIMU(hardwareMap)` instead of duplicating IMU lookup and orientation code.
 - If a wrapper can be disabled by robot profile, make sure it decides that before calling `hardwareMap.get(...)`.
 - If a class is a custom FTC `HardwareDevice` like `SlidesMotor`, `RevPotentiometer`, or the device-level `RGBIndicator`, fetch it directly from `hardwareMap` and keep it distinct from the profile-managed `Mechanism` wrappers.
 - `pid/autoTune/` is an intentional direct-motor exception: those calibration op modes pass motor names, directions, and target values through `TuningConstants` into `PIDMaster` / `DualMotorPIDMaster` instead of going through `Constants.create...(...)`.
+- The active `PreseasonDrivetrain()` profile currently only calls `configureDriveMechanisms()`, so `Constants.createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` need additional `addMechanism(...)` registration before they are runtime-valid.
 
 ## New mechanism pattern tied to lifecycle
 
@@ -73,7 +77,7 @@ If the task is instead about a custom SDK device type, put that class under `lib
 - If you need reusable lifecycle behavior, put it in an abstract base class and keep the annotation on the concrete subclass.
 - Use `requestOpModeStop()` rather than custom termination flags when the op mode should end.
 - The current `tests/ftcSdk/androidTest.java` base is an example of the preferred scripted-test termination pattern: run the validation, pause briefly if needed, then `requestOpModeStop()`.
-- If a subsystem is already factory-created from `Constants`, keep using that path instead of mixing direct constructors into one op mode.
+- If a subsystem is already factory-created from `Constants`, keep using that path and update the active `RobotConstants` profile so the helper is actually registered instead of mixing direct constructors into one op mode.
 - Use `configs/ConfigOpMode` for one-shot configuration mutations rather than re-implementing that pattern in each config class.
 - If a proof-of-concept or SDK-level test bypasses the wrapper path, still source hardware names from `RobotConfigurations` or the owning `*_PARAMS` class when those names already exist.
 - Reset IMU yaw explicitly in the op mode only when its control flow needs a new field-centric reference; `Constants.createIMU(...)` never resets it.

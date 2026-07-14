@@ -12,9 +12,10 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - The app uses FTC SDK `11.1.0`.
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
 - Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
+- `Constants.currentBot` is currently `RobotConfigurations.PreseasonDrivetrain()`, which only registers `MecanumDrive` and `Drivetrain`.
 - Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
-- Shared match op modes live under `opModes/`, with `variants/` holding annotated wrappers such as `Blue_TeleOp` and `Red_TeleOp`.
+- Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` and `TestIvyAuto` are annotated classes in the `opModes/` root.
 - Validation and proof-of-concept op modes live under `tests/`.
 - FTC AutoTune calibration op modes live under `pid/autoTune/`.
 - One-shot configuration op modes live under `configs/`.
@@ -24,7 +25,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 ## Use these patterns
 
 1. Put reusable op mode logic in a shared base class under `opModes/`.
-2. Put driver-station-visible wrappers in `opModes/variants/` and annotate those with `@TeleOp` or `@Autonomous`.
+2. When you use the thin-wrapper pattern, put the driver-station-visible wrappers in `opModes/variants/` and annotate those with `@TeleOp` or `@Autonomous`.
 3. Resolve subsystem construction through `Constants.create...(...)` instead of direct constructors in op modes.
 4. Let `Constants.create...(...)` delegate to the active robot profile when the subsystem is profile-managed.
 5. If teleop needs the last autonomous pose or configured driver preference, read and write `configs.Blackboard` intentionally.
@@ -38,9 +39,11 @@ When an op mode needs a subsystem:
 
 - call `Constants.createIntake(hardwareMap)` instead of `new Intake(...)`
 - call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
-- call `Constants.createDrivetrain(hardwareMap)` or higher-level drive helpers instead of rebuilding drive hardware inline
+- call `Constants.createTeleOpFollower(hardwareMap)` for the public `MecanumDrive` entry point, or `Constants.createDrivetrain(hardwareMap)` only when you intentionally want the lower-level raw drive mechanism
 - call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
 - call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
+
+Every `Constants.create...(...)` helper first calls `Constants.assertHasMechanism(...)`. Under the current `PreseasonDrivetrain()` profile, only the drive helpers are actually registered, so `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` require a different or expanded active profile before they will run successfully.
 
 When adding a brand-new mechanism, add all three pieces together:
 
@@ -54,14 +57,15 @@ The important repo contract is that profile-managed subsystems can be created un
 ## Current repo conventions
 
 - Teleop drive is usually routed through `MecanumDrive`.
-- Intake is wrapped by `mechanisms/Intake.java` and created through `Constants`.
-- Limelight usage is wrapped by `library/hardware/webcam/Limelight.java` and created through `Constants`.
-- Logitech webcam and RGB indicator wrappers are also profile-managed and have `Constants` helpers.
+- Intake is wrapped by `mechanisms/Intake.java`, and `Constants.createIntake(...)` is the intended factory path when the active profile registers `Intake.class`.
+- Limelight usage is wrapped by `library/hardware/webcam/Limelight.java`, and `Constants.createLimelight(...)` is the intended factory path when the active profile registers `Limelight.class`.
+- Logitech webcam and RGB indicator wrappers also have `Constants` helpers, but `Constants.currentBot` does not currently register those mechanisms.
 - `mechanisms/Slides1.java` is the current slide mechanism shell, layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
 - `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory pattern, but their `createIntake(...)` and `createLimelight(...)` calls are not satisfied by the current `PreseasonDrivetrain()` profile.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.
@@ -85,8 +89,9 @@ The important repo contract is that profile-managed subsystems can be created un
 
 - Shared teleop base: `opModes/TeleOp.java`
 - Ivy teleop: `opModes/IvyTeleOp.java`
-- Ivy autonomous base: `opModes/IvyAuton.java`
-- Annotated wrappers: `opModes/variants/Blue_TeleOp.java`, `opModes/variants/Red_TeleOp.java`, `opModes/variants/Test_IvyAuton.java`
+- Iterative Ivy autonomous base and concrete example: `opModes/IvyAuton.java` and `opModes/variants/Test_IvyAuton.java`
+- Linear Ivy autonomous base and concrete example: `pedroPathing/IvyAuto.java` and `opModes/TestIvyAuto.java`
+- Annotated teleop wrappers: `opModes/variants/Blue_TeleOp.java` and `opModes/variants/Red_TeleOp.java`
 - Standalone validation op mode: `tests/MecanumTeleOp.java`
 - Proof-of-concept test op mode: `tests/PreseasonWebcamAuto.java`
 - Scratch iterative Ivy autonomous examples: `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt`
@@ -96,5 +101,4 @@ The important repo contract is that profile-managed subsystems can be created un
 ## Validation
 
 - Build with Gradle before concluding changes are done.
-- This project uses Android Gradle Plugin `8.7.0`, so builds require Java 11 or newer.
-- `TeamCode/build.gradle` now also includes Lombok annotation processing and Sloth load / runtime wiring, so build troubleshooting should include those pieces.
+- The root `build.gradle` uses Android Gradle Plugin `8.7.0`, and `TeamCode/build.gradle` also adds Lombok annotation processing plus Sloth load / runtime wiring, so build troubleshooting should include both files.

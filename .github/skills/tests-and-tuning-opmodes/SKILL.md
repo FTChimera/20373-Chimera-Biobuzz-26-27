@@ -10,8 +10,10 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/FieldCentricMecanumTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MotorDirectionTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
@@ -38,16 +40,17 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Pedro tuning is centralized in `pedroPathing/Tuning.java`, which exposes many selectable tuner sub-modes.
 - Tuning flows rely on `Constants.createFollower(hardwareMap)` so they inherit the current robot profile and follower config.
 - Other subsystems used in tests should also come from `Constants.create...(...)` so tests exercise the same construction paths as match code.
+- `Constants.currentBot` currently points at `RobotConfigurations.PreseasonDrivetrain()`, which only registers drive mechanisms. Any test that calls `Constants.createIntake(...)`, `Constants.createLimelight(...)`, or `Constants.createRGB(...)` therefore assumes a different active profile or a `RobotConfigurations` update first.
 
 ## Existing examples
 
 - `MecanumTeleOp` is a raw FTC iterative test op mode with robot-centric mode, field-centric mode, explicit IMU yaw reset, and a built-in motor-direction test mode. It initializes its IMU through `Constants.createIMU(hardwareMap)`.
 - `FieldCentricMecanumTeleOp` also uses `Constants.createIMU(hardwareMap)`, so its IMU name and REV Hub orientation follow the active robot profile.
-- `MotorDirectionTest` is a looping low-speed sanity check for the constants-driven drivetrain profile and intake direction, and it now updates telemetry live while you flip directions.
+- `MotorDirectionTest` is a looping low-speed sanity check for the constants-driven drivetrain profile, and it also checks intake direction when the active profile registers `Intake.class`. It updates telemetry live while you flip directions.
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.
 - `MotorTest` is a small SDK-level wrapper check built on the custom `androidTest` base.
-- `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper.
+- `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `Slides1.SLIDES1_PARAMS`.
 - `PositionPIDTunerOpMode`, `VelocityPIDFTunerOpMode`, and `DualVelocityPIDFTunerOpMode` are thin wrappers around the FTC AutoTune library that run relay-feedback calibration plus optional `gamepad1.a` live tests.
 - `TuningConstants` is the shared place for FTC AutoTune motor names, direction booleans, target RPM / ticks, relay amplitude, and feedforward sweep settings.
@@ -76,6 +79,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Some tuner code comes from Pedro tooling and is intentionally verbose; keep repo-specific adjustments minimal and clear.
 - If a new mechanism is being validated, make sure it follows the same `Mechanism` + `RobotConstants.createMechanism(...)` pattern before adding the test.
 - `tests/PreseasonWebcamAuto.java` is intentionally not a shared match op mode; keep it documented as validation/proof-of-concept code.
+- `tests/PreseasonWebcamAuto.java` and `tests/ftcSdk/RGBIndicatorTest.java` intentionally bypass the active `Constants.currentBot` profile for their camera or LED hardware access, because `PreseasonDrivetrain()` does not register `Limelight.class` or `library.hardware.leds.RGBIndicator.class`.
 - `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` were recently updated to centralize their hardware naming, so future test edits should preserve that alignment.
 
 ## Validation expectations
@@ -83,7 +87,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Build after changing tuning or test classes.
 - Prefer a robot-side sanity check before claiming tuning-related behavior is correct.
 - If a test touches drive direction, check it with the robot safely off the ground first when practical.
-- Use `MecanumTeleOp` when you need direct SDK-level drive and IMU behavior checks; use `MotorDirectionTest` when you want to validate the current `Constants` / `RobotConfigurations` drivetrain wiring at low speed.
+- Use `MecanumTeleOp` when you need direct SDK-level drive and IMU behavior checks; use `MotorDirectionTest` only when the active profile includes `Intake.class` and you want to validate the current `Constants` / `RobotConfigurations` drivetrain plus intake-direction wiring at low speed.
 - Use `tests/ftcSdk/MotorTest.java` when the goal is specifically to validate the `Motor` wrapper.
 - Use `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` when the goal is to validate custom FTC `HardwareDevice` integration directly.
 - Use `pid/autoTune/PositionPIDTunerOpMode.java` for position mechanisms, `VelocityPIDFTunerOpMode.java` for single-motor velocity tuning, and `DualVelocityPIDFTunerOpMode.java` for matched dual-motor flywheels or similar paired velocity systems.

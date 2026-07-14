@@ -38,6 +38,8 @@ Use this pattern:
 
 Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, but the uniform repo-level construction pattern is now based on `Mechanism` plus `RobotConstants.createMechanism(...)`.
 
+One current-repo catch: a helper existing in `Constants` does **not** mean the active profile enables that class. `Constants.currentBot` currently selects `RobotConfigurations.PreseasonDrivetrain()`, which only calls `configureDriveMechanisms()` and `.useFollowerDrive(false)`. So the active preset enables `MecanumDrive` + `Drivetrain`, and `MecanumDrive` teleop currently routes through its embedded `Drivetrain` path while still keeping a Pedro `Follower` alive for pose/pathing state.
+
 ## Where configuration belongs
 
 - Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
@@ -103,8 +105,9 @@ Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `L
 
 - Generic FTC sample patterns from `FtcRobotController/external/samples/` are not the house style for TeamCode.
 - New mechanisms should not be instantiated directly from op modes when a `Constants.create...(...)` factory belongs there.
+- A `Constants.create...(...)` helper is only a convenience surface; it still depends on the active profile’s `Mechanisms` set and `Constants.assertHasMechanism(...)`.
 - A mechanism no longer needs a centrally shared params singleton in `Constants` to fit repo style; the important uniformity point is the `Mechanism` + `RobotConstants.createMechanism(...)` construction flow.
-- `Polynomial` now lives under `library/math/`, implements the newer `Equation` interface, and is still the only finished reusable equation implementation.
+- `Polynomial` now lives under `library/math/`, implements the newer `Equation` interface, and is still the only currently usable reusable `Equation` implementation for evaluation/derivative work.
 - `Term` currently exists as a scaffold for the broader `Equation` abstraction; do not assume symbolic equation algebra is production-ready yet.
 - `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.

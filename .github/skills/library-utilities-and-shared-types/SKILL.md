@@ -42,6 +42,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `AllianceColor` carries alliance-level intent for shared op mode bases.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
+- `DriveVector.applyStickCurve(...)` mutates the instance and negates forward for stick-convention alignment; use `copy()` or `wStickCurve(...)` when a caller needs shaped input without mutating the original vector.
 - `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
 - `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
@@ -49,7 +50,7 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `Polynomial` now lives under `library/math/`, implements `Equation`, and is still the only actually implemented reusable equation type in this package.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
-- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it now enforces a simple state machine and promotes `STARTED -> LOOP` on the first `update()` call.
+- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it enforces a simple state machine and promotes `STARTED -> LOOP` on the first `update()` call. Its unmodified Kotlin visibility is `public`, so it is available to other packages in the TeamCode module.
 - `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
 - `Term` exists as early scaffolding for the broader `Equation` abstraction, but its symbolic operations still return placeholders and should not be treated as a finished utility yet.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
@@ -96,7 +97,7 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 ## Equation-interface guidance
 
 - Use `Equation` when code should accept a reusable math expression without caring whether the implementation is polynomial-backed.
-- Right now, keep production geometry changes biased toward `Polynomial`, because `Term` is not implemented beyond the interface shell.
+- Right now, keep production geometry changes biased toward `Polynomial` inputs. `Polynomial` is the usable path for evaluation, derivatives, integrals, and polynomial-only arithmetic, but `getTerms()` and mixed-type `Equation` algebra still bottom out in unfinished `Term` scaffolding.
 - If you extend the symbolic math layer, finish the real `Term` behavior instead of documenting or depending on placeholder `null` returns.
 
 ## Interpolation-specific guidance

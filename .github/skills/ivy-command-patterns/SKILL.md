@@ -5,83 +5,86 @@ description: Use this skill when asked to compose Pedro Ivy commands, schedule r
 
 # Ivy Command Patterns
 
-This skill covers the repo’s Pedro Ivy usage.
+This skill covers the repo’s current Pedro Ivy usage patterns, not generic Ivy examples from elsewhere.
 
 ## Relevant files
 
+- `build.dependencies.gradle`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/DualGamepad.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Slides1.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/CommandConverter.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Ivy.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/IvyAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.js`
 
-## Current usage patterns
+## Verified current patterns
 
-1. `Scheduler.reset()` is called at op mode startup or init.
-2. `Scheduler.schedule(...)` is used to install long-running teleop and autonomous behavior.
-3. `Scheduler.execute()` is called every loop in iterative Ivy flows.
-4. Mechanisms expose small Ivy-friendly helpers like `Intake.fullPower()` or `MecanumDrive.periodicCommand()`.
-5. `CommandConverter.toCommand(...)` wraps `Runnable` actions as instant commands.
+1. The repo builds against `com.pedropathing:ivy:1.0.0`.
+2. Iterative Ivy flows reset the scheduler first, schedule work, and call `Scheduler.execute()` every loop.
+3. TeamCode currently composes commands with `Commands.instant(...)`, `Commands.infinite(...)`, `Commands.waitMs(...)`, `Groups.sequential(...)`, `Groups.loop(...)`, and `PedroCommands.follow(...)`.
+4. Mechanisms expose small Ivy-friendly helpers such as `Intake.fullPower()`, `Intake.setPowerCommand(...)`, `MecanumDrive.periodicCommand()`, `MecanumDrive.teleOp(...)`, and `Limelight.updateCommand()`.
+5. `CommandConverter.toCommand(...)` wraps a `Runnable` as an instant command, while `CommandConverter.toRunnable(...)` runs a `Command` synchronously through `Ivy.run(...)`.
+6. There is no current TeamCode example that implements `Command` directly, extends `CommandBuilder`, or constructs `new CommandBuilder()`.
 
 ## Common repo examples
 
-- `IvyTeleOp` schedules Limelight updates, drive periodic updates, teleop drive, intake power, and heading reset behavior together.
-- `IvyAuton.start()` composes a sequential routine with intake commands, Pedro follow commands, waits, and an op-mode stop request.
-- `learning/ExampleIvyAuto` is a scratch iterative example that schedules `Commands.infinite(follower::update)` alongside a `Groups.sequential(...)` chain of `PedroCommands.follow(...)` calls; `learning/kotlinTest/KtExampleIvyAuto.kt` mirrors that pattern in Kotlin.
-- `MecanumDrive.teleOp(...)` returns a command that starts teleop drive once and then runs continuous drive updates.
-- `Slides1` exists as a mechanism shell but does not yet expose Ivy command helpers or active-profile registration, so new command work around slides may need both subsystem and profile follow-up.
+- `opModes/IvyTeleOp.java` schedules Limelight updates, drive periodic updates, teleop drive, intake power control, and heading-reset behavior together.
+- `opModes/IvyAuton.java` schedules a `Groups.sequential(...)` routine with intake commands, `PedroCommands.follow(...)`, `Commands.waitMs(...)`, and `requestOpModeStop`.
+- `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` schedule `Commands.infinite(follower::update)` alongside a sequential follow-path chain.
+- `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold that still resolves its intake motor directly from `hardwareMap`.
+- `DualGamepad.updateCommand()` exists as a wrapper-wide input-update command, but no current TeamCode op mode uses it yet.
+- `Slides1` currently only wraps construction and does not expose Ivy command helpers.
 
-## Input-wrapper Ivy convention
+## Profile / mechanism caveat
 
-If an input wrapper exposes Ivy support, prefer one command that updates the full wrapper state.
+Ivy commands should operate on mechanisms created through the repo’s factory path:
 
-- `DualGamepad.updateCommand()` should be preferred over building separate commands that update `gamepad1` and `gamepad2` independently.
-- Keep input-update ownership in one place so button edges, touchpad state, and stick deltas stay synchronized across both pads.
-- If a wrapper already has `update()` plus `updateCommand()`, reuse that pair instead of rebuilding the same `Commands.infinite(...)` inline everywhere.
+- create the mechanism through `Constants.create...(...)`
+- keep the mechanism constructor shape `(HardwareMap, RobotConstants)`
+- register it in the selected `RobotConstants` profile
 
-## How Ivy work should construct subsystems
+The active `Constants.currentBot` profile is `RobotConfigurations.PreseasonDrivetrain()`, which only registers `MecanumDrive` and `Drivetrain`. That means `IvyAuton` and `IvyTeleOp` currently assume the selected profile will be expanded or swapped before `Constants.createIntake(...)` or `Constants.createLimelight(...)` can succeed at runtime.
 
-Ivy commands should operate on mechanisms that were created through `Constants` factories.
+## Input-wrapper convention
 
-- create the mechanism once through `Constants.create...(...)`
-- schedule commands against that mechanism instance
-- if a new mechanism is needed, make it fit the `Mechanism` + `RobotConstants.createMechanism(...)` pattern first
+If an input wrapper already exposes a repo-local update command, prefer it over scattering duplicate update loops.
 
-Do not hide subsystem construction or configuration policy inside a custom command class if it really belongs in the mechanism or robot-profile layer.
+- `DualGamepad.update()` updates both wrapped pads.
+- `DualGamepad.updateCommand()` returns `Commands.infinite(this::update)`.
+- Keeping wrapper updates centralized is the repo’s only current DualGamepad/Ivy precedent.
+
+## `Ivy.run(...)`
+
+`pedroPathing/Ivy.java` is a blocking helper that calls `start()`, loops on `execute()` until `done()`, then ends with `EndCondition.NATURALLY`. In current TeamCode, it is only used indirectly by `CommandConverter.toRunnable(...)`; it is not the main pattern for FTC loop-driven op modes.
+
+## Generated Ivy skeletons
+
+- `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` emits the same general helper shape shown in `ExampleIvyAuto`: `reset()` in init/stop, `schedule(...)` in `start()`, and `Scheduler.execute()` in `loop()`.
+- Generated code is only a starting point. Align package names, annotations, `Constants` usage, and profile assumptions with the real destination op mode before keeping it.
 
 ## Rules
 
 - Reset the scheduler before scheduling new work in an op mode.
 - Keep one clear execution loop for scheduled commands.
-- Prefer mechanism-level command helpers for reusable actions instead of rebuilding the same command inline in every op mode.
-- Use `Commands.infinite(...)`, `Groups.sequential(...)`, and related Pedro Ivy primitives before inventing a custom loop.
-- Use `CommandConverter.toCommand(...)` for simple instant actions; use full command composition for ongoing behaviors.
+- Prefer mechanism-level command helpers for reusable actions instead of rebuilding the same command inline everywhere.
+- Use the repo’s existing `Commands` / `Groups` / `PedroCommands` composition style before adding a new command abstraction.
+- Use `CommandConverter.toCommand(...)` for simple instant actions.
 - If a task adds a new commandable mechanism, also add its profile registration and `Constants.create...(...)` helper when needed.
-
-## When to use `Ivy.run(...)`
-
-`pedroPathing/Ivy.java` is a synchronous helper that runs one command to completion in a blocking style. Use it carefully. It is not the main pattern for standard FTC loop-driven op modes.
-
-## Generated Ivy skeletons
-
-- `java-autogen/Ftc-PP-toJavaAuto-Ivy.js` now emits the same basic Ivy helper shape that `ExampleIvyAuto` demonstrates: `reset()` in init/stop, `schedule(...)` in `start()`, and `Scheduler.execute()` in `loop()`.
-- Generated code is a starting point only. Before keeping it, align package names, annotations, `Constants` imports, and any shared-base-class decisions with the real destination op mode.
-
-## Scratch-example status
-
-- `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold, not a profile-managed subsystem example: its unfinished `autoAlign()` step is commented out, while intake uses a direct `DcMotor` resolved from `Intake.INTAKE_PARAMS`.
-- Keep new command work on the normal `Constants.create...(...)` mechanism path rather than copying its direct intake construction.
+- If you introduce `CommandBuilder` or direct `Command` implementations, validate them against the pinned Ivy dependency because TeamCode itself does not currently demonstrate those patterns.
 
 ## Pitfalls
 
 - Do not forget `Scheduler.execute()` in iterative command-driven op modes.
-- Avoid scheduling duplicate periodic loops that both call into the same mechanism every frame.
+- Avoid scheduling duplicate periodic loops that call into the same mechanism every frame.
 - Avoid mixing busy loops with Ivy scheduling when Pedro already provides a command form.
-- Avoid creating or wiring profile-managed subsystems ad hoc inside commands; initialize them through the normal factory path first.
-- If a test or proof-of-concept command intentionally bypasses a wrapper, still keep hardware naming centralized through the active profile or the owning params class.
+- Avoid creating profile-managed subsystems ad hoc inside commands; initialize them through the normal factory path first.
+- If a proof-of-concept command intentionally bypasses a wrapper, still keep hardware naming centralized through the active profile or the owning params class.

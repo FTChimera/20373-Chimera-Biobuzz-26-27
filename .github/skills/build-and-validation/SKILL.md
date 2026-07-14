@@ -17,6 +17,7 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - `TeamCode/build.gradle` includes `annotationProcessor` entries for both the FTC op-mode processor and Project Lombok
 - FTC SDK and Pedro dependencies are declared in `build.dependencies.gradle`
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
+- `TeamCode/build.gradle` declares `testImplementation` and `androidTestImplementation`, but the current repo has no `TeamCode/src/test/` or `TeamCode/src/androidTest/` tree; validation op modes live under `src/main/java`
 - `java-autogen/` contains browser-side HTML/JS generators and is outside the Gradle-compiled Android source set
 - Custom SDK-registerable hardware now also lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and a device-level `RGBIndicator`
 - `build.dependencies.gradle` now pulls JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; repo-local `pid/autoTune/master/PIDMaster.java` and `DualMotorPIDMaster.java` provide the FTC-facing tuning layer
@@ -25,9 +26,8 @@ Use this skill when validating changes or diagnosing why the project does or doe
 ## Known build requirement
 
 - The root `build.gradle` uses Android Gradle Plugin `8.7.0`.
-- That plugin requires Java 11 or newer.
-- A build launched under Java 8 fails during Gradle configuration before Java sources are compiled.
-- The checked-in `gradle.properties` currently caps Gradle at `org.gradle.jvmargs=-Xmx1024M`; after the FTC AutoTune dependency addition, a clean `:TeamCode:assembleDebug` can run out of heap during `:TeamCode:dexBuilderDebug` on some machines, so retrying once with a larger heap / fewer workers is a valid way to distinguish tooling memory pressure from a source error.
+- Treat Java 11 or newer as the intended Gradle runtime for this project.
+- The checked-in `gradle.properties` currently caps Gradle at `org.gradle.jvmargs=-Xmx1024M`; if a local build fails for memory reasons, separate that from source errors before treating it as a code regression.
 - `learning/ExampleIvyWithSubsystems.java` compiles with its unfinished `autoAlign()` step commented out. Treat it as a teaching scaffold, not as a profile-managed subsystem reference.
 
 ## Primary validation steps
@@ -48,7 +48,7 @@ Treat that as a repo-wide audit request, not as permission to start fixing code 
 
 ### Default contract for this request
 
-- Start by clarifying only the audit-shaping items that are still ambiguous, such as:
+- If any audit-shaping items are still ambiguous, state the assumptions you used, such as:
   - which areas are highest priority
   - whether zero/default constants are intentional preseason placeholders or bugs to fix now
   - whether the user wants report-only output or also wants follow-up fixes
@@ -62,16 +62,7 @@ Treat that as a repo-wide audit request, not as permission to start fixing code 
 
 1. Read the repo instructions and the relevant skills first.
 2. Map the `TeamCode/` package structure so you know which areas are op modes, mechanisms, library code, configs, Pedro helpers, `pid/autoTune` tuners, tests, and learning/scratch code.
-3. Review recent history before drawing conclusions about “stale” code or architecture intent.
-
-Useful commands:
-
-```zsh
-git --no-pager log --stat --decorate -4
-git --no-pager log --decorate --oneline -- TeamCode .github/skills | cat
-git --no-pager diff --name-only HEAD~4..HEAD | cat
-```
-
+3. Inspect the current `Constants`, `RobotConstants`, `RobotConfigurations`, `opModes/`, `tests/`, `pid/autoTune/`, and `learning/` sources before drawing conclusions about “stale” code or architecture intent.
 4. Run the hard validation passes.
 
 ```zsh
@@ -183,7 +174,7 @@ git --no-pager grep -nE 'TODO|FIXME|printStackTrace|catch \(Exception|while \(op
 
 - Separate verified build/lint failures from reasoning-based risks.
 - Group findings by severity or priority area.
-- Call out intentional preseason placeholders separately from probable bugs when the user has clarified that distinction.
+- Call out intentional preseason placeholders separately from probable bugs when the task context clarifies that distinction.
 - If you changed anything under an exception, list every file changed and explain that the rest of the audit remained report-only.
 - End with recommended next-fix targets rather than silently applying broad cleanup.
 
@@ -229,9 +220,9 @@ When a change adds or modifies a mechanism, confirm all of these:
 ## Current repo-specific warning signs
 
 - Placeholder drivetrain and localization tuning values still exist in `RobotConfigurations` and related config objects.
+- `Constants.currentBot` currently points at `RobotConfigurations.PreseasonDrivetrain()`, which only registers the drive stack. Any `Constants.createIntake(...)`, `Constants.createLimelight(...)`, or `Constants.createRGB(...)` call is therefore a runtime assertion point unless the active profile is changed or expanded.
 - Several tests now intentionally centralize hardware names through `Constants.currentBot` or nested params classes; new test edits should preserve that instead of reintroducing ad hoc strings.
 - `pid/autoTune/` is intentionally driver-station-visible tuning code that uses raw motor names and direction booleans from `TuningConstants` rather than the profile-managed mechanism factory path.
-- After the FTC AutoTune integration, a clean dex build may need more than the checked-in 1 GB Gradle heap on some machines; if `:TeamCode:dexBuilderDebug` OOMs, confirm that it succeeds with a larger heap before blaming recent source edits.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.
 - This repo does not currently expose a dedicated JVM unit-test suite; most validation is build-time plus robot runtime checks.
 - Documentation or code that still assumes every subsystem is wired by a central params singleton in `Constants` is stale; uniform construction now centers on `Mechanism` plus `RobotConstants.createMechanism(...)`.

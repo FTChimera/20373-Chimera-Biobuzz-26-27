@@ -39,6 +39,8 @@ This includes both:
 4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
+Those helpers still depend on profile registration. `Constants.assertHasMechanism(...)` runs before construction, and the active `RobotConfigurations.PreseasonDrivetrain()` preset currently registers only `MecanumDrive` and `Drivetrain`.
+
 There is also a lower layer for custom FTC devices:
 
 6. If a class is meant to be selectable via the FTC robot configuration UI with `hardwareMap.get(CustomType.class, ...)`, it belongs under `library/hardware/hardwareDevice/` and should implement or extend FTC `HardwareDevice` infrastructure directly.
@@ -72,6 +74,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - `LogitechWebcam` extends `Mechanism`, owns `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
 - `Drivetrain` extends `Mechanism` and reads drive motor names/directions directly from the active `RobotConstants` profile.
 - `MecanumDrive` extends `Mechanism`, combines a Pedro `Follower` with the team `Drivetrain` wrapper, and uses the active `RobotConstants` profile for both.
+- `Intake`, `Limelight`, `RGBIndicator`, `LogitechWebcam`, and `Slides1` all exist as profile-style classes, but the current `PreseasonDrivetrain()` preset does not register any of them yet, so the normal mechanism-factory path for those classes is not automatically usable on the active preset.
 
 ## Rules
 
@@ -106,4 +109,3 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - Forgetting that `Constants.assertHasMechanism(...)` now enforces profile registration on the convenience-factory path too.
 - Confusing the device-level `library.hardware.hardwareDevice.RGBIndicator` with the profile-managed `library.hardware.leds.RGBIndicator` wrapper.
 - Putting a custom FTC device in the `Mechanism` factory flow when it is really meant to be used directly through `hardwareMap.get(...)`.
-
