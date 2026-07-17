@@ -39,7 +39,7 @@ public abstract class TeleOp extends LinearOpMode {
         intake = Constants.createIntake(hardwareMap);
         drive = Constants.createTeleOpFollower(hardwareMap);
         drive.setStartingPose(getStartingPose());
-        drive.setStickCurve((x -> Math.signum(x)*x));
+        drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
         limelight = Constants.createLimelight(hardwareMap);
 
