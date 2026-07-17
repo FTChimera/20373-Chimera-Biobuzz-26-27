@@ -9,7 +9,7 @@ public class TuningConstants {
     // ---- Hardware -------------------------------------------------------
 
     /** Hardware configuration name of the motor (e.g. "shooter", "arm"). */
-    public static String MOTOR_NAME = "motor";
+    public static String MOTOR_NAME = "OuttakeMotor";
 
     /** Hardware configuration name of the second motor for the dual-velocity tuner. */
     public static String MOTOR_NAME_2 = "motor2";
@@ -24,7 +24,7 @@ public class TuningConstants {
      * True if both motors have encoders connected. False if only motor 1 has
      * an encoder -- motor 2 is still driven but its velocity is not measured.
      */
-    public static boolean DUAL_ENCODERS = true;
+    public static boolean DUAL_ENCODERS = false;
 
     // ---- Relay test -----------------------------------------------------
 
@@ -33,7 +33,7 @@ public class TuningConstants {
      * to avoid hitting hard stops; 0.5–0.7 is typical for flywheels.
      * Increase if the mechanism fails to oscillate.
      */
-    public static double RELAY_AMPLITUDE = 0.5;
+    public static double RELAY_AMPLITUDE = 0.6;
 
     /** Number of full oscillation cycles to average for Ku and Tu. */
     public static int CYCLES_TO_COLLECT = 6;
@@ -69,7 +69,7 @@ public class TuningConstants {
      *
      * Used in the conversion: RPM = (velocity * 60.0) / TICKS_PER_REV
      */
-    public static double TICKS_PER_REV = 28.0;
+    public static double TICKS_PER_REV = 28;
 
     /**
      * Target speed for the velocity tuner in RPM.
@@ -77,7 +77,7 @@ public class TuningConstants {
      * Converted to ticks/sec internally using TICKS_PER_REV:
      *   ticks/sec = (TARGET_RPM * TICKS_PER_REV) / 60.0
      */
-    public static double TARGET_RPM = 2800;
+    public static double TARGET_RPM = 1000;
 
     /**
      * Relay deadband for the velocity tuner in RPM.

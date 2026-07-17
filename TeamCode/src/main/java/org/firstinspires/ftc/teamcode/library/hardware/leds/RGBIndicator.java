@@ -24,14 +24,43 @@ public class RGBIndicator extends Mechanism {
      * @return the device's manufacturer
      */
 
-    public static class RGBIndicator_PARAMS {
+    public static class RGBIndicator_PARAMS implements Mechanism.Params<RGBIndicator_PARAMS> {
         public enum Type {ONLY_HARDWARE, ONLY_VIRTUAL, BOTH, NAN; public boolean panels() {return this == ONLY_VIRTUAL || this == BOTH;} public boolean hardware() {return this == ONLY_HARDWARE || this == BOTH;}}
         public boolean ISBEINGUSED = true;
         public Type type = Type.ONLY_HARDWARE; // for now
         public String HARDWAREMAP_NAME = "rgb";
         public String PANELS_NAME = "RGB INDICATOR";
-        public void updateFromBot(RobotConstants bot) {
+        public RGBIndicator_PARAMS() {}
+        private RGBIndicator_PARAMS(RGBIndicator_PARAMS other) {
+            ISBEINGUSED = other.ISBEINGUSED;
+            type = other.type;
+            HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            PANELS_NAME = other.PANELS_NAME;
+        }
+        public RGBIndicator_PARAMS isBeingUsed(boolean isBeingUsed) {
+            this.ISBEINGUSED = isBeingUsed;
+            return this;
+        }
+        public RGBIndicator_PARAMS type(Type indicatorType) {
+            this.type = indicatorType;
+            return this;
+        }
+        public RGBIndicator_PARAMS hardwareMapName(String hardwareMapName) {
+            this.HARDWAREMAP_NAME = hardwareMapName;
+            return this;
+        }
+        public RGBIndicator_PARAMS panelsName(String panelsName) {
+            this.PANELS_NAME = panelsName;
+            return this;
+        }
+        @Override
+        public RGBIndicator_PARAMS updateFromBot(RobotConstants bot) {
             ISBEINGUSED = bot.Mechanisms.contains(RGBIndicator.class);
+            return this;
+        }
+        @Override
+        public RGBIndicator_PARAMS copy() {
+            return new RGBIndicator_PARAMS(this);
         }
     }
     public enum Color {
@@ -89,8 +118,7 @@ public class RGBIndicator extends Mechanism {
     com.bylazar.lights.RGBIndicator panelsRGB;
     public RGBIndicator(HardwareMap hardwareMap, RobotConstants bot) {
         super(hardwareMap, bot);
-        this.params = new RGBIndicator_PARAMS();
-        this.params.updateFromBot(bot);
+        this.params = resolveParams(RGBIndicator.class, new RGBIndicator_PARAMS());
         isBeingUsed = params.ISBEINGUSED;
         if (!isBeingUsed) return;
         this.rgb = hardwareMap.get(Servo.class, params.HARDWAREMAP_NAME);

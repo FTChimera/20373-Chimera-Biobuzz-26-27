@@ -18,7 +18,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -57,6 +59,7 @@ public class RobotConstants {
     public double CENTRIPETAL_SCALING = 0;
 
     public Set<Class<? extends Mechanism>> Mechanisms = new HashSet<>();
+    private final Map<Class<? extends Mechanism>, Mechanism.Params<?>> mechanismParams = new HashMap<>();
 
     public boolean USE_FOLLOWER_DRIVE = true; // Our team had issues with this last year, then finally got it to work.
 
@@ -155,15 +158,33 @@ public class RobotConstants {
         Mechanisms.add(mechanismClass);
         return this;
     }
+    public <M extends Mechanism, P extends Mechanism.Params<P>> RobotConstants addMechanism(Class<M> mechanismClass, P params) {
+        mechanismParams(mechanismClass, params);
+        Mechanisms.add(mechanismClass);
+        return this;
+    }
+    public <M extends Mechanism, P extends Mechanism.Params<P>> RobotConstants mechanismParams(Class<M> mechanismClass, P params) {
+        mechanismParams.put(mechanismClass, params.copy());
+        return this;
+    }
     public RobotConstants useFollowerDrive(boolean useFollowerDrive) {
         this.USE_FOLLOWER_DRIVE = useFollowerDrive;
         return this;
     }
 
     public RobotConstants configureDriveMechanisms() {
-        addMechanism(MecanumDrive.class);
-        addMechanism(Drivetrain.class);
+        addMechanism(MecanumDrive.class, new MecanumDrive.MECANUM_DRIVE_PARAMS());
+        addMechanism(Drivetrain.class, new Drivetrain.DRIVETRAIN_PARAMS());
         return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <P extends Mechanism.Params<P>> P getMechanismParams(Class<? extends Mechanism> mechanismClass, P defaultParams) {
+        Mechanism.Params<?> params = mechanismParams.get(mechanismClass);
+        if (params == null) {
+            return defaultParams.copy();
+        }
+        return ((P) params).copy();
     }
 
     public Follower createFollower(HardwareMap map) {

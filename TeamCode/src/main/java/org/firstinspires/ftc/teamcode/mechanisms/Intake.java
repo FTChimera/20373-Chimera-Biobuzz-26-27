@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 import java.util.function.Supplier;
 
 public class Intake extends Mechanism {
-    public static class INTAKE_PARAMS {
+    public static class INTAKE_PARAMS implements Mechanism.Params<INTAKE_PARAMS> {
         public double FULL_POWER = 1.0;
         public double HALF_POWER = 0.5;
         public double REVERSE_FULL_POWER = -1.0;
@@ -19,18 +19,61 @@ public class Intake extends Mechanism {
         public String HARDWAREMAP_NAME = "intake";
         public Direction INTAKE_MOTOR_DIRECTION = Direction.REVERSE;
         public boolean ISBEINGUSED = true;
-        public void updateFromBot(RobotConstants bot) {
-            if (!ISBEINGUSED) return;
+        public INTAKE_PARAMS() {}
+        private INTAKE_PARAMS(INTAKE_PARAMS other) {
+            FULL_POWER = other.FULL_POWER;
+            HALF_POWER = other.HALF_POWER;
+            REVERSE_FULL_POWER = other.REVERSE_FULL_POWER;
+            STOP_POWER = other.STOP_POWER;
+            HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            INTAKE_MOTOR_DIRECTION = other.INTAKE_MOTOR_DIRECTION;
+            ISBEINGUSED = other.ISBEINGUSED;
+        }
+        public INTAKE_PARAMS fullPower(double fullPower) {
+            this.FULL_POWER = fullPower;
+            return this;
+        }
+        public INTAKE_PARAMS halfPower(double halfPower) {
+            this.HALF_POWER = halfPower;
+            return this;
+        }
+        public INTAKE_PARAMS reverseFullPower(double reverseFullPower) {
+            this.REVERSE_FULL_POWER = reverseFullPower;
+            return this;
+        }
+        public INTAKE_PARAMS stopPower(double stopPower) {
+            this.STOP_POWER = stopPower;
+            return this;
+        }
+        public INTAKE_PARAMS hardwareMapName(String hardwareMapName) {
+            this.HARDWAREMAP_NAME = hardwareMapName;
+            return this;
+        }
+        public INTAKE_PARAMS intakeMotorDirection(Direction intakeMotorDirection) {
+            this.INTAKE_MOTOR_DIRECTION = intakeMotorDirection;
+            return this;
+        }
+        public INTAKE_PARAMS isBeingUsed(boolean isBeingUsed) {
+            this.ISBEINGUSED = isBeingUsed;
+            return this;
+        }
+        @Override
+        public INTAKE_PARAMS updateFromBot(RobotConstants bot) {
+            if (!ISBEINGUSED) return this;
             HARDWAREMAP_NAME = bot.Mechanisms.contains(Intake.class) ? HARDWAREMAP_NAME : "";
             ISBEINGUSED = bot.Mechanisms.contains(Intake.class);
+            return this;
+        }
+        @Override
+        public INTAKE_PARAMS copy() {
+            return new INTAKE_PARAMS(this);
         }
     }
     public Motor Intake_Motor;
     public INTAKE_PARAMS params;
     public Intake(HardwareMap map, RobotConstants bot) {
         super(map, bot);
-        this.params = new INTAKE_PARAMS();
-        this.params.updateFromBot(bot);
+        this.params = resolveParams(Intake.class, new INTAKE_PARAMS());
         if (!params.ISBEINGUSED) {
             return;
         }

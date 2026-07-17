@@ -49,7 +49,7 @@ public class DriveVector {
 
     public void setRobotHeading(double heading) {this.robotHeading = heading;}
     public void applyStickCurve(DoubleUnaryOperator curve) {
-        this.forward = -curve.applyAsDouble(this.forward); // Invert forward for intuitive stick control
+        this.forward = curve.applyAsDouble(this.forward);
         this.strafe = curve.applyAsDouble(this.strafe);
         this.rotate = curve.applyAsDouble(this.rotate);
     }

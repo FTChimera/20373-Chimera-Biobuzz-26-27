@@ -34,12 +34,44 @@ import java.util.function.Supplier;
  * @version 1.0 - Initial implementation based on DuneStrider
  */
 public class MecanumDrive extends Mechanism {
+    public static class MECANUM_DRIVE_PARAMS implements Mechanism.Params<MECANUM_DRIVE_PARAMS> {
+        public boolean RESET_STICK_CURVE_ON_INIT = true;
+        public boolean UPDATE_FOLLOWER_ON_INIT = true;
+        public double INITIAL_HEADING_OFFSET = 0;
+        public MECANUM_DRIVE_PARAMS() {}
+        private MECANUM_DRIVE_PARAMS(MECANUM_DRIVE_PARAMS other) {
+            RESET_STICK_CURVE_ON_INIT = other.RESET_STICK_CURVE_ON_INIT;
+            UPDATE_FOLLOWER_ON_INIT = other.UPDATE_FOLLOWER_ON_INIT;
+            INITIAL_HEADING_OFFSET = other.INITIAL_HEADING_OFFSET;
+        }
+        public MECANUM_DRIVE_PARAMS resetStickCurveOnInit(boolean resetStickCurveOnInit) {
+            this.RESET_STICK_CURVE_ON_INIT = resetStickCurveOnInit;
+            return this;
+        }
+        public MECANUM_DRIVE_PARAMS updateFollowerOnInit(boolean updateFollowerOnInit) {
+            this.UPDATE_FOLLOWER_ON_INIT = updateFollowerOnInit;
+            return this;
+        }
+        public MECANUM_DRIVE_PARAMS initialHeadingOffset(double initialHeadingOffset) {
+            this.INITIAL_HEADING_OFFSET = initialHeadingOffset;
+            return this;
+        }
+        @Override
+        public MECANUM_DRIVE_PARAMS updateFromBot(RobotConstants bot) {
+            return this;
+        }
+        @Override
+        public MECANUM_DRIVE_PARAMS copy() {
+            return new MECANUM_DRIVE_PARAMS(this);
+        }
+    }
 
     // PedroPathing Follower that handles all localization
     public Follower follower;
     // Drivetrain for teleop control (don't use follower directly)
     public Drivetrain drivetrain;
     public boolean useManualDrive; // Set to false to use follower for teleop drive
+    public MECANUM_DRIVE_PARAMS params;
 
     // Last known pose (updated in periodic)
     public static Pose lastPose = new Pose(0, 0, 0);
@@ -53,15 +85,19 @@ public class MecanumDrive extends Mechanism {
 
     public MecanumDrive(HardwareMap map, RobotConstants bot) {
         super(map, bot);
+        params = resolveParams(MecanumDrive.class, new MECANUM_DRIVE_PARAMS());
         // Create follower using Constants configuration
         this.follower = bot.createFollower(map);
         useManualDrive = !bot.USE_FOLLOWER_DRIVE;
         // Initialize drivetrain
         drivetrain = new Drivetrain(map, bot);
-        // Set initial curve
-        resetStickCurve();
-        // Initial update to sync pose
-        follower.update();
+        headingOffset = params.INITIAL_HEADING_OFFSET;
+        if (params.RESET_STICK_CURVE_ON_INIT) {
+            resetStickCurve();
+        }
+        if (params.UPDATE_FOLLOWER_ON_INIT) {
+            follower.update();
+        }
     }
 
     public void setStartingPose(Pose pose) {
@@ -92,7 +128,7 @@ public class MecanumDrive extends Mechanism {
         } else {
             driveVector.applyStickCurve(drivetrain.stickCurve);
             follower.setTeleOpDrive(
-                    driveVector.forward, driveVector.strafe, driveVector.rotate, fieldCentric, fieldCentric ? headingOffset : 0
+                    -driveVector.forward, -driveVector.strafe, -driveVector.rotate, fieldCentric, fieldCentric ? headingOffset : 0
             );
         }
     }

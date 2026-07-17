@@ -17,18 +17,52 @@ import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Limelight extends Mechanism {
-    public static class LIMELIGHT_PARAMS {
+    public static class LIMELIGHT_PARAMS implements Mechanism.Params<LIMELIGHT_PARAMS> {
         public double
                 LIMELIGHT_MOUNT_ANGLE_DEGREES = 0,
                 LIMELIGHT_LENS_HEIGHT_INCHES = 0,
                 TAG_HEIGHT_INCHES = 0;
         public String HARDWAREMAP_NAME = "limelight";
         public boolean ISBEINGUSED = true;
-         public void updateFromBot(RobotConstants bot) {
-             if (!ISBEINGUSED) return;
-             HARDWAREMAP_NAME = bot.Mechanisms.contains(Limelight.class) ? HARDWAREMAP_NAME : "";
-             ISBEINGUSED = bot.Mechanisms.contains(Limelight.class);
-         }
+        public LIMELIGHT_PARAMS() {}
+        private LIMELIGHT_PARAMS(LIMELIGHT_PARAMS other) {
+            LIMELIGHT_MOUNT_ANGLE_DEGREES = other.LIMELIGHT_MOUNT_ANGLE_DEGREES;
+            LIMELIGHT_LENS_HEIGHT_INCHES = other.LIMELIGHT_LENS_HEIGHT_INCHES;
+            TAG_HEIGHT_INCHES = other.TAG_HEIGHT_INCHES;
+            HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            ISBEINGUSED = other.ISBEINGUSED;
+        }
+        public LIMELIGHT_PARAMS limelightMountAngleDegrees(double limelightMountAngleDegrees) {
+            this.LIMELIGHT_MOUNT_ANGLE_DEGREES = limelightMountAngleDegrees;
+            return this;
+        }
+        public LIMELIGHT_PARAMS limelightLensHeightInches(double limelightLensHeightInches) {
+            this.LIMELIGHT_LENS_HEIGHT_INCHES = limelightLensHeightInches;
+            return this;
+        }
+        public LIMELIGHT_PARAMS tagHeightInches(double tagHeightInches) {
+            this.TAG_HEIGHT_INCHES = tagHeightInches;
+            return this;
+        }
+        public LIMELIGHT_PARAMS hardwareMapName(String hardwareMapName) {
+            this.HARDWAREMAP_NAME = hardwareMapName;
+            return this;
+        }
+        public LIMELIGHT_PARAMS isBeingUsed(boolean isBeingUsed) {
+            this.ISBEINGUSED = isBeingUsed;
+            return this;
+        }
+        @Override
+        public LIMELIGHT_PARAMS updateFromBot(RobotConstants bot) {
+            if (!ISBEINGUSED) return this;
+            HARDWAREMAP_NAME = bot.Mechanisms.contains(Limelight.class) ? HARDWAREMAP_NAME : "";
+            ISBEINGUSED = bot.Mechanisms.contains(Limelight.class);
+            return this;
+        }
+        @Override
+        public LIMELIGHT_PARAMS copy() {
+            return new LIMELIGHT_PARAMS(this);
+        }
     }
     public LIMELIGHT_PARAMS params;
     public Command updateCommand() {
@@ -47,8 +81,7 @@ public class Limelight extends Mechanism {
     private final boolean isBeingUsed;
     public Limelight(HardwareMap hwMap, RobotConstants bot) {
         super(hwMap, bot);
-        this.params = new LIMELIGHT_PARAMS();
-        this.params.updateFromBot(bot);
+        this.params = resolveParams(Limelight.class, new LIMELIGHT_PARAMS());
         if (!params.ISBEINGUSED) {
             isBeingUsed = false;
             return;
@@ -158,4 +191,3 @@ public class Limelight extends Mechanism {
     }
 
 }
-

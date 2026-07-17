@@ -30,7 +30,7 @@ import java.util.List;
 @SuppressWarnings("SpellCheckingInspection")
 public class LogitechWebcam extends Mechanism {
     /** Parameters for the Logitech webcam. */
-    public static class LOGITECH_WEBCAM_PARAMS {
+    public static class LOGITECH_WEBCAM_PARAMS implements Mechanism.Params<LOGITECH_WEBCAM_PARAMS> {
         public String HARDWAREMAP_NAME = "Webcam 1";
         public boolean SET_DRAW_AXES = true;
         public boolean SET_DRAW_CUBE_PROJECTION = true;
@@ -41,10 +41,69 @@ public class LogitechWebcam extends Mechanism {
         public int CAMERA_RESOLUTION_WIDTH = 640;
         public int CAMERA_RESOLUTION_HEIGHT = 480;
         public boolean ISBEINGUSED = true;
-        public void updateFromBot(RobotConstants bot) {
-            if (!ISBEINGUSED) return;
+        public LOGITECH_WEBCAM_PARAMS() {}
+        private LOGITECH_WEBCAM_PARAMS(LOGITECH_WEBCAM_PARAMS other) {
+            HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            SET_DRAW_AXES = other.SET_DRAW_AXES;
+            SET_DRAW_CUBE_PROJECTION = other.SET_DRAW_CUBE_PROJECTION;
+            SET_DRAW_TAG_ID = other.SET_DRAW_TAG_ID;
+            SET_DRAW_TAG_OUTLINE = other.SET_DRAW_TAG_OUTLINE;
+            OUTPUT_DISTANCE_UNIT = other.OUTPUT_DISTANCE_UNIT;
+            OUTPUT_ANGLE_UNIT = other.OUTPUT_ANGLE_UNIT;
+            CAMERA_RESOLUTION_WIDTH = other.CAMERA_RESOLUTION_WIDTH;
+            CAMERA_RESOLUTION_HEIGHT = other.CAMERA_RESOLUTION_HEIGHT;
+            ISBEINGUSED = other.ISBEINGUSED;
+        }
+        public LOGITECH_WEBCAM_PARAMS hardwareMapName(String hardwareMapName) {
+            this.HARDWAREMAP_NAME = hardwareMapName;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS setDrawAxes(boolean setDrawAxes) {
+            this.SET_DRAW_AXES = setDrawAxes;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS setDrawCubeProjection(boolean setDrawCubeProjection) {
+            this.SET_DRAW_CUBE_PROJECTION = setDrawCubeProjection;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS setDrawTagId(boolean setDrawTagId) {
+            this.SET_DRAW_TAG_ID = setDrawTagId;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS setDrawTagOutline(boolean setDrawTagOutline) {
+            this.SET_DRAW_TAG_OUTLINE = setDrawTagOutline;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS outputDistanceUnit(DistanceUnit outputDistanceUnit) {
+            this.OUTPUT_DISTANCE_UNIT = outputDistanceUnit;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS outputAngleUnit(AngleUnit outputAngleUnit) {
+            this.OUTPUT_ANGLE_UNIT = outputAngleUnit;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS cameraResolutionWidth(int cameraResolutionWidth) {
+            this.CAMERA_RESOLUTION_WIDTH = cameraResolutionWidth;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS cameraResolutionHeight(int cameraResolutionHeight) {
+            this.CAMERA_RESOLUTION_HEIGHT = cameraResolutionHeight;
+            return this;
+        }
+        public LOGITECH_WEBCAM_PARAMS isBeingUsed(boolean isBeingUsed) {
+            this.ISBEINGUSED = isBeingUsed;
+            return this;
+        }
+        @Override
+        public LOGITECH_WEBCAM_PARAMS updateFromBot(RobotConstants bot) {
+            if (!ISBEINGUSED) return this;
             HARDWAREMAP_NAME = bot.Mechanisms.contains(LogitechWebcam.class) ? HARDWAREMAP_NAME : "";
             ISBEINGUSED = bot.Mechanisms.contains(LogitechWebcam.class);
+            return this;
+        }
+        @Override
+        public LOGITECH_WEBCAM_PARAMS copy() {
+            return new LOGITECH_WEBCAM_PARAMS(this);
         }
 
     }
@@ -74,8 +133,7 @@ public class LogitechWebcam extends Mechanism {
     /** Constructs with a specific camera hardware name. */
     public LogitechWebcam(HardwareMap hwMap, RobotConstants bot) {
         super(hwMap, bot);
-        this.params = new LOGITECH_WEBCAM_PARAMS();
-        this.params.updateFromBot(bot);
+        this.params = resolveParams(LogitechWebcam.class, new LOGITECH_WEBCAM_PARAMS());
         isBeingUsed = params.ISBEINGUSED;
         if (!isBeingUsed) return;
         tagProcessor = new AprilTagProcessor.Builder()
