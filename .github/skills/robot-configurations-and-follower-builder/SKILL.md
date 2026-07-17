@@ -16,13 +16,13 @@ Use this skill for robot-profile work centered around:
 
 1. `Constants.currentBot` selects the active robot profile.
 2. `RobotConfigurations` currently defines named robot presets `OldDECODERobotTesting()` and `PreseasonDrivetrain()`.
-3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, and the set of enabled `Mechanism` classes.
+3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, the set of enabled `Mechanism` classes, and profile-owned mechanism params overrides.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
-8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createRGB(...)`, `createWebcam(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
-9. `Constants.currentBot` currently selects `PreseasonDrivetrain()`, which only registers `MecanumDrive` and `Drivetrain` through `configureDriveMechanisms()` and sets `.useFollowerDrive(false)`, so teleop `MecanumDrive` currently runs its manual-drive path unless you switch or edit the profile.
+8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createRGB(...)`, `createWebcam(...)`, `createSlides1(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
+9. `Constants.currentBot` currently selects `OldDECODERobotTesting()`, which registers `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`, and sets `.useFollowerDrive(true)`, so teleop `MecanumDrive` currently runs Pedro’s follower-drive teleop path instead of the manual drivetrain fallback.
 
 ## What belongs where
 
@@ -55,6 +55,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - heading PIDF coefficients
 - centripetal scaling
 - enabled mechanism classes via the `Mechanisms` `Set`, `configureDriveMechanisms()`, and `addMechanism(...)`
+- per-mechanism params templates via `mechanismParams(...)` and `getMechanismParams(...)`
 - follower-drive compatibility through `USE_FOLLOWER_DRIVE`
 
 ## Rules
@@ -66,7 +67,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - Keep Pinpoint-related updates bundled through `pinpointConstants(...)`.
 - Keep drive motor directions on the shared `Direction` enum so `Drivetrain` and `RobotConstants.createFollower(...)` stay aligned.
 - Use `configureDriveMechanisms()` when you want the normal drive stack (`MecanumDrive` + `Drivetrain`) enabled by default.
-- When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)` and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
+- When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)`, store profile-specific params with `.mechanismParams(...)` when needed, and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
 - Do not move mechanism-specific params into `RobotConstants` unless they truly vary by robot profile.
 - Treat the current values as placeholders unless they were explicitly measured on the robot.
@@ -77,7 +78,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 2. Point `Constants.currentBot` at that preset.
 3. Confirm `RobotConstants.createFollower(...)` still matches the chosen localizer and drivetrain style.
 4. If the preset should support the normal drive stack, include `.configureDriveMechanisms()`.
-5. If a new mechanism is involved, register it with `.addMechanism(...)`, confirm its constructor matches `(HardwareMap, RobotConstants)`, and optionally expose a `Constants.create...(...)` helper.
+5. If a new mechanism is involved, register it with `.addMechanism(...)`, configure any profile-specific nested params through `.mechanismParams(...)`, confirm its constructor matches `(HardwareMap, RobotConstants)`, and optionally expose a `Constants.create...(...)` helper.
 6. Validate any op mode or mechanism that depends on the follower.
 
 ## Common pitfalls in this repo
@@ -87,7 +88,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - `RobotConstants.createFollower(...)` currently assumes Pinpoint localization and the GoBILDA 4-bar pod resolution.
 - `RobotConstants.createMechanism(...)` throws if the requested class is not present in the active profile’s `Mechanisms` list.
 - `Constants.assertHasMechanism(...)` now fails earlier for convenience factory calls, so profile registration issues can show up before reflection-based construction.
-- The presence of `Constants.createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, or `createWebcam(...)` does not mean the active profile enables those classes. `PreseasonDrivetrain()` currently does not add `Intake`, `Limelight`, `RGBIndicator`, `LogitechWebcam`, or `Slides1`.
+- The presence of `Constants.create...(...)` helpers does not mean the active profile enables every class. `OldDECODERobotTesting()` enables `Intake`, `Limelight`, and wrapper `RGBIndicator`, but it still does not register `LogitechWebcam` or `Slides1`.
 - `tests/MecanumTeleOp.java` now reads drivetrain motor names and default directions from `Constants.currentBot`, so drivetrain-profile renames should keep that test aligned automatically.
 - `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` create their IMU through `Constants.createIMU(hardwareMap)`, so profile orientation changes apply to both tests.
-- Any doc or patch that still talks about `starterBot()` or says the active preset is `OldDECODERobotTesting()` is stale; `Constants.currentBot` currently selects `PreseasonDrivetrain()`.
+- Any doc or patch that still says the active preset is `PreseasonDrivetrain()` is stale; `Constants.currentBot` currently selects `OldDECODERobotTesting()`.

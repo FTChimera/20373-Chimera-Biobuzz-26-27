@@ -33,17 +33,18 @@ Use this pattern:
 2. Give them a constructor shaped like `(HardwareMap, RobotConstants)`.
 3. Use the `bot` profile passed into that constructor for shared robot-profile data and mechanism enablement checks.
 4. Register optional subsystems in each robot preset with `RobotConstants.configureDriveMechanisms()` and/or `RobotConstants.addMechanism(...)`.
-5. Instantiate from `RobotConstants.createMechanism(...)`, usually through a small convenience helper in `Constants` such as `createIntake(hardwareMap)`.
-6. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
+5. If the mechanism has local configuration, keep it in a nested builder-style params class that implements `Mechanism.Params<...>` and resolve it through `Mechanism.resolveParams(...)`.
+6. Instantiate from `RobotConstants.createMechanism(...)`, usually through a small convenience helper in `Constants` such as `createIntake(hardwareMap)`.
+7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
-Some mechanisms still own nested params types such as `Intake.INTAKE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, but the uniform repo-level construction pattern is now based on `Mechanism` plus `RobotConstants.createMechanism(...)`.
+Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
 
-One current-repo catch: a helper existing in `Constants` does **not** mean the active profile enables that class. `Constants.currentBot` currently selects `RobotConfigurations.PreseasonDrivetrain()`, which only calls `configureDriveMechanisms()` and `.useFollowerDrive(false)`. So the active preset enables `MecanumDrive` + `Drivetrain`, and `MecanumDrive` teleop currently routes through its embedded `Drivetrain` path while still keeping a Pedro `Follower` alive for pose/pathing state.
+One current-repo catch: a helper existing in `Constants` does **not** mean the active profile enables that class. `Constants.currentBot` currently selects `RobotConfigurations.OldDECODERobotTesting()`, which enables `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`, while leaving `LogitechWebcam` and `Slides1` unregistered. It also sets `.useFollowerDrive(true)`, so `MecanumDrive` teleop currently routes through Pedro’s follower-drive path.
 
 ## Where configuration belongs
 
 - Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
-- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
+- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)`, `createWebcam(...)`, and `createSlides1(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
 - Keep lightweight math helpers such as `Equation`, `Polynomial`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.

@@ -32,13 +32,13 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
 - Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
 - Shared Limelight behavior should read from the wrapper’s cached fields; the current raw-SDK exceptions are `tests/PreseasonWebcamAuto.java` and the deprecated `pedroPathing/custom/LimelightPinpointLocalizer.java`.
-- `Constants.currentBot` currently points at `RobotConfigurations.PreseasonDrivetrain()`, which only calls `configureDriveMechanisms()`. Wrapper-based Limelight creation therefore needs a profile that adds `Limelight.class` before `Constants.createLimelight(...)` can succeed.
+- `Constants.currentBot` currently points at `RobotConfigurations.OldDECODERobotTesting()`, which already registers `Limelight.class`. Wrapper-based Limelight creation therefore works through `Constants.createLimelight(...)` on the active profile.
 
 ## Params and creation pattern
 
 When working on `Limelight` or adding a similar wrapper:
 
-1. keep wrapper-specific helper params with the wrapper class when they belong there
+1. keep wrapper-specific helper params with the wrapper class when they belong there, and keep them builder-style when the wrapper already follows the repo’s params pattern
 2. make the wrapper extend `Mechanism` if it should participate in the standard robot-subsystem flow
 3. keep the constructor shape `(HardwareMap, RobotConstants)` so `RobotConstants.createMechanism(...)` can instantiate it
 4. register the wrapper in the active robot profile with `.addMechanism(...)`

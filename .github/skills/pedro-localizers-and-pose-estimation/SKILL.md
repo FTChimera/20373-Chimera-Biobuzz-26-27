@@ -22,7 +22,7 @@ Use this skill for localization work that is narrower than general autonomous/pa
 
 ## Current localization flow
 
-1. The default follower path is `Constants.createFollower(...)` → `Constants.currentBot.createFollower(...)`, and `Constants.currentBot` is currently `RobotConfigurations.PreseasonDrivetrain()`.
+1. The default follower path is `Constants.createFollower(...)` → `Constants.currentBot.createFollower(...)`, and `Constants.currentBot` is currently `RobotConfigurations.OldDECODERobotTesting()`.
 2. `RobotConstants.createFollower(...)` wires localization through `FollowerBuilder(...).pinpointLocalizer(PINPOINT_LOCALIZER_CONSTANTS)`.
 3. Both current robot profiles call `.pinpointConstants(new PinpointConstants())`; the code does not currently set custom Pinpoint offsets or encoder-direction fields on that object.
 4. `MecanumDrive` snapshots `follower.getPose()` into static `lastPose` and then calls `follower.update()` inside `periodic()`.
@@ -36,7 +36,7 @@ Use this skill for localization work that is narrower than general autonomous/pa
 - Keep non-drive subsystem behavior out of the robot-profile layer unless it truly varies by robot profile.
 - If localization work also touches a vision wrapper, keep that wrapper on the `Mechanism` + `RobotConstants.createMechanism(...)` path.
 
-The active `PreseasonDrivetrain()` profile currently registers only `MecanumDrive` and `Drivetrain`, so any localization change that also needs `Limelight`, `LogitechWebcam`, or another wrapper through `Constants` must update the selected profile too.
+The active `OldDECODERobotTesting()` profile already registers `Limelight`, so localization changes that also need that wrapper can use the normal factory path. `LogitechWebcam` still is not registered there, so webcam-wrapper work through `Constants` must update the selected profile too.
 
 ## Rules
 

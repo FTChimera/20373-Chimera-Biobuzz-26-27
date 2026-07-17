@@ -12,7 +12,7 @@ Use this skill when needing to change constants that were left blank because of 
 - The Field Setup and scoring elements will be released September 2026.
 - The Autonomouses under opModes and opModes/variants are all tests and they need to change once the BIOBUZZ game is released and the robot is fully built.
 - The only annotated autonomous variant currently under `opModes/variants/` is `Test_IvyAuton`; `IvyAuton` under `opModes/` is the reusable base class, and many of its path/pose defaults are still preseason placeholders.
-- `Constants.currentBot` currently selects `RobotConfigurations.PreseasonDrivetrain()`, which only enables the drive stack (`MecanumDrive` + `Drivetrain`). Intake, Limelight, RGB indicator, webcam, and slides wrappers exist in code but are not active until a profile adds them.
+- `Constants.currentBot` currently selects `RobotConfigurations.OldDECODERobotTesting()`, which enables the drive stack plus `Intake`, `Limelight`, and wrapper `RGBIndicator`. `LogitechWebcam` and `Slides1` still exist in code but are not active until a profile adds them.
 - These will mostly be updated manually.
 
 ## Pedro Pathing Follower Configuration and Robot Constants
@@ -26,8 +26,8 @@ Use this skill when needing to change constants that were left blank because of 
 - `Constants.java` is the top-level op-mode-facing entry point. It holds:
   - `RED_DEFAULT_START_POSE`
   - `BLUE_DEFAULT_START_POSE`
-  - `currentBot`, which currently points to `RobotConfigurations.PreseasonDrivetrain()`
-  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, and generic `createMechanism(...)`
+  - `currentBot`, which currently points to `RobotConfigurations.OldDECODERobotTesting()`
+  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, `createSlides1(...)`, and generic `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
@@ -37,10 +37,10 @@ Use this skill when needing to change constants that were left blank because of 
   - Pedro follower constants and heading PIDF
   - path constraints and centripetal scaling
   - enabled mechanism registration via `configureDriveMechanisms()` and `.addMechanism(...)`
-  - the active `PreseasonDrivetrain()` preset currently only calls `.configureDriveMechanisms()` and `.useFollowerDrive(false)`
+  - the active `OldDECODERobotTesting()` preset currently calls `.configureDriveMechanisms()`, adds `Intake`, `Limelight`, and wrapper `RGBIndicator`, and sets `.useFollowerDrive(true)`
 - `library/robot/RobotConstants.java` is the base profile object consumed by the factory helpers. If a constant affects follower construction or drivetrain hardware wiring, it usually belongs here or in `RobotConfigurations`.
 - `library/hardware/hardwareDevice/` now contains custom FTC `HardwareDevice` definitions such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`; these are lower-level SDK types, not profile-managed mechanisms.
-- Mechanism-specific placeholder values still live inside the owning classes:
+- Mechanism-specific placeholder values still live inside the owning classes as builder-style nested params:
   - `mechanisms/Intake.java` -> `INTAKE_PARAMS`
   - `mechanisms/Slides1.java` -> `SLIDES1_PARAMS`
   - `library/hardware/webcam/Limelight.java` -> `LIMELIGHT_PARAMS`
@@ -52,14 +52,14 @@ Use this skill when needing to change constants that were left blank because of 
 ## Placeholder values that are real calibration targets in this repo
 
 - `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE` are both still `new Pose(0, 0, 0)`.
-- `RobotConfigurations.PreseasonDrivetrain()` — the active profile — still uses placeholder drivetrain and follower values such as:
+- `RobotConfigurations.OldDECODERobotTesting()` — the active profile — still uses placeholder drivetrain and follower values such as:
   - `.xVelocity(0)`
   - `.yVelocity(0)`
   - `.pinpointConstants(new PinpointConstants())`
   - `.headingPIDFCoefficients(0,0,0,0)`
   - `.centripetalScaling(0)`
-- `RobotConfigurations.PreseasonDrivetrain()` also currently sets `.useFollowerDrive(false)`, so `MecanumDrive` teleop runs through its manual `Drivetrain` path instead of sending teleop power through Pedro’s follower motor-control path.
-- `RobotConfigurations.OldDECODERobotTesting()` keeps the same placeholder follower/localizer fields, but unlike the active preset it also registers `Intake`, `Limelight`, and `RGBIndicator`.
+- `RobotConfigurations.OldDECODERobotTesting()` also currently sets `.useFollowerDrive(true)`, so `MecanumDrive` teleop now uses Pedro’s follower-drive path.
+- `RobotConfigurations.PreseasonDrivetrain()` keeps the same placeholder follower/localizer fields but remains the more minimal fallback preset with only the drive stack enabled and `.useFollowerDrive(false)`.
 - `Limelight.LIMELIGHT_PARAMS` still has `LIMELIGHT_MOUNT_ANGLE_DEGREES`, `LIMELIGHT_LENS_HEIGHT_INCHES`, and `TAG_HEIGHT_INCHES` at `0`.
 - `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` contains the default hardware name, overlay toggles, output units, and resolution that may need real robot-specific values.
 - `RGBIndicator.RGBIndicator_PARAMS` contains the current LED hardware name and enablement gate.
@@ -97,10 +97,10 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Op modes and tests that are especially affected by constant changes
 
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. With the current `PreseasonDrivetrain()` profile only the drive helper is registered; intake and Limelight requests currently fail fast in `Constants.assertHasMechanism(...)`.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. Those helpers are currently satisfied by `OldDECODERobotTesting()`, but `createWebcam(...)` and `createSlides1(...)` still are not.
 - `opModes/IvyAuton.java` uses `Constants.createFollower(...)` and `Constants.createIntake(...)`, but its starting pose comes from the selected `IvyAuton_Paths.getStartingPose()` implementation, not from the default alliance poses in `Constants`.
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
-- `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring, but it will currently throw at `Constants.createIntake(...)` unless the active profile adds `Intake` or `currentBot` is switched.
+- `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring, and it is now compatible with the active `OldDECODERobotTesting()` profile because `Intake.class` is registered there.
 - `opModes/variants/Red_TeleOp.java` and `Blue_TeleOp.java` first reuse `Blackboard.Caption.POSE` when it is non-zero, then fall back to the default alliance start poses.
 - `tests/FieldCentricMecanumTeleOp.java` gets its IMU through `Constants.createIMU(hardwareMap)`, but its right-side motor directions are still hardcoded to `DcMotorSimple.Direction.REVERSE` rather than read from `Constants.currentBot`.
 - `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper for behavior, but now still sources the camera name from `Limelight.LIMELIGHT_PARAMS`; camera-name or vision-tuning updates may still need to touch it explicitly.
@@ -110,15 +110,15 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Repo-specific warning signs
 
-- `Constants.currentBot` currently hardcodes `RobotConfigurations.PreseasonDrivetrain()`. That preset only calls `configureDriveMechanisms()` and `.useFollowerDrive(false)`, so if the user wants a different robot preset or wants intake / vision / LED / slides helpers to work, changing nested constants alone is not enough.
+- `Constants.currentBot` currently hardcodes `RobotConfigurations.OldDECODERobotTesting()`. That preset enables intake / Limelight / wrapper RGB helpers, but if the user wants webcam or slides helpers to work, changing nested constants alone is not enough.
 - `RobotConstants.createMechanism(...)` throws if the mechanism class is not registered in `Mechanisms`. If a constant change introduces or enables a subsystem, also check `.addMechanism(...)`.
 - IMU settings are robot-profile-wide: update `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` through the existing fluent builders, then use `Constants.createIMU(hardwareMap)` from op modes. The factory initializes orientation but intentionally does not reset yaw.
 - `Constants.assertHasMechanism(...)` now also fails early on the convenience-factory path, so mechanism registration issues may surface before reflection-based construction.
 - `MecanumDrive` and `Drivetrain` are normally enabled together through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
-- A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. With the current active profile, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` all fail early because those classes are absent from `bot.Mechanisms`.
+- A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. With the current active profile, `createWebcam(...)` and `createSlides1(...)` still fail early because those classes are absent from `bot.Mechanisms`.
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` do still toggle themselves off when constructed with a profile that omits their class, but the normal convenience-factory path now usually hits `assertHasMechanism(...)` first.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
-- `Slides1` exists as a mechanism shell, but it is not currently registered in `RobotConfigurations.PreseasonDrivetrain()`, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
+- `Slides1` exists as a mechanism shell, but it is not currently registered in either shipped profile, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
 - `pid/autoTune/` is intentionally not on the normal `Constants.create...(...)` mechanism-factory path; if the task is about those tuner op modes, update `TuningConstants` instead of trying to thread the values through `RobotConfigurations`.
 - This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
 

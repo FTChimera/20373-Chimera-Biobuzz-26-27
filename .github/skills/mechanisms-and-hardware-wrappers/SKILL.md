@@ -36,10 +36,10 @@ This includes both:
 1. Low-level device access belongs in wrappers such as `Motor`, `Limelight`, or `LogitechWebcam`.
 2. Reusable subsystems and high-level wrappers share the `Mechanism` base class so they all receive `HardwareMap` and the active `RobotConstants` profile the same way.
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
-4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
+4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createSlides1`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
-Those helpers still depend on profile registration. `Constants.assertHasMechanism(...)` runs before construction, and the active `RobotConfigurations.PreseasonDrivetrain()` preset currently registers only `MecanumDrive` and `Drivetrain`.
+Those helpers still depend on profile registration. `Constants.assertHasMechanism(...)` runs before construction, and the active `RobotConfigurations.OldDECODERobotTesting()` preset currently registers `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`.
 
 There is also a lower layer for custom FTC devices:
 
@@ -54,27 +54,29 @@ When asked to create a new mechanism, follow this repo style:
 3. Give it a constructor shaped like `new NewMechanism(HardwareMap hardwareMap, RobotConstants bot)` and call `super(hardwareMap, bot)`.
 4. Use `bot` for robot-profile state such as hardware names, directions, feature enablement, or follower compatibility.
 5. Register the class in each relevant robot preset with `.addMechanism(NewMechanism.class)` or, for normal drive-stack behavior, through `configureDriveMechanisms()`.
-6. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
-7. If the mechanism can be disabled by profile selection, determine that before touching hardware.
-8. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
+6. Give it a builder-style nested params type that implements `Mechanism.Params<...>` when the mechanism has local configuration, and resolve that config through `Mechanism.resolveParams(...)`.
+7. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
+8. If the mechanism can be disabled by profile selection, determine that before touching hardware.
+9. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
 
 Why: the repo’s uniformity now comes from the shared `Mechanism` base class, profile registration with `addMechanism(...)`, and one reflection-based factory path in `RobotConstants.createMechanism(...)`.
 
 ## Existing patterns to reuse
 
-- `Intake` extends `Mechanism`, wraps one `Motor`, owns an `INTAKE_PARAMS` helper, and is created via `Constants.createIntake(hardwareMap)` → `currentBot.createMechanism(...)`.
+- `Intake` extends `Mechanism`, wraps one `Motor`, owns a builder-style `INTAKE_PARAMS` helper, and is created via `Constants.createIntake(hardwareMap)` → `currentBot.createMechanism(...)`.
 - `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
-- `Limelight` extends `Mechanism`, keeps a `LIMELIGHT_PARAMS` instance, and is created via `Constants.createLimelight(hardwareMap)`.
-- `Slides1` extends `Mechanism`, owns `SLIDES1_PARAMS`, and currently wraps a `SlidesMotor` retrieved by its params-defined hardware-map name.
+- `Limelight` extends `Mechanism`, keeps a builder-style `LIMELIGHT_PARAMS` instance resolved from the active profile, and is created via `Constants.createLimelight(hardwareMap)`.
+- `Slides1` extends `Mechanism`, owns builder-style `SLIDES1_PARAMS`, and currently wraps a `SlidesMotor` retrieved by its params-defined hardware-map name.
 - `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or thin mechanism shells, and it now exposes convenience helpers like `setUp()`, `setDown()`, and `setPositionPercentage(...)` on that raw-device layer.
 - `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
 - There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
-- `RGBIndicator` extends `Mechanism`, owns `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
-- `LogitechWebcam` extends `Mechanism`, owns `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
-- `Drivetrain` extends `Mechanism` and reads drive motor names/directions directly from the active `RobotConstants` profile.
-- `MecanumDrive` extends `Mechanism`, combines a Pedro `Follower` with the team `Drivetrain` wrapper, and uses the active `RobotConstants` profile for both.
-- `Intake`, `Limelight`, `RGBIndicator`, `LogitechWebcam`, and `Slides1` all exist as profile-style classes, but the current `PreseasonDrivetrain()` preset does not register any of them yet, so the normal mechanism-factory path for those classes is not automatically usable on the active preset.
+- `RGBIndicator` extends `Mechanism`, owns builder-style `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
+- `LogitechWebcam` extends `Mechanism`, owns builder-style `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
+- `Drivetrain` extends `Mechanism`, owns `DRIVETRAIN_PARAMS`, and reads drive motor names/directions directly from the active `RobotConstants` profile.
+- `MecanumDrive` extends `Mechanism`, owns `MECANUM_DRIVE_PARAMS`, combines a Pedro `Follower` with the team `Drivetrain` wrapper, and uses the active `RobotConstants` profile for both.
+- `RobotConstants` now stores per-mechanism params overrides through `mechanismParams(...)` / `getMechanismParams(...)`, so builder-style nested params can vary by robot profile without moving all subsystem data into the robot profile class.
+- `Intake`, `Limelight`, and wrapper `RGBIndicator` are enabled on the current `OldDECODERobotTesting()` preset. `LogitechWebcam` and `Slides1` have profile params defined there but are not yet registered in the active preset, so their normal convenience-factory path still is not automatically usable.
 
 ## Rules
 

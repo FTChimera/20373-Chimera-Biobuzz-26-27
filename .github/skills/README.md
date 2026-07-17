@@ -31,11 +31,16 @@ than one guide.
 ## Current architecture notes
 
 - `Constants.currentBot` currently selects
-  `RobotConfigurations.PreseasonDrivetrain()`. That profile registers
-  `MecanumDrive` and `Drivetrain` through `configureDriveMechanisms()`.
+  `RobotConfigurations.OldDECODERobotTesting()`. That profile registers
+  `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper
+  `RGBIndicator`; `LogitechWebcam` and `Slides1` have profile params defined
+  but are not enabled there yet.
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only mechanisms registered by the active profile; the helpers throw when the
   requested mechanism is absent.
+- Profile-managed mechanisms now resolve nested builder-style params through
+  `Mechanism.Params`, `Mechanism.resolveParams(...)`, and
+  `RobotConstants.getMechanismParams(...)`.
 - SDK-registerable devices are separate from profile-managed mechanisms:
   `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are
   under `library/hardware/hardwareDevice/`.

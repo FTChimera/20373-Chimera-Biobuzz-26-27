@@ -220,7 +220,7 @@ When a change adds or modifies a mechanism, confirm all of these:
 ## Current repo-specific warning signs
 
 - Placeholder drivetrain and localization tuning values still exist in `RobotConfigurations` and related config objects.
-- `Constants.currentBot` currently points at `RobotConfigurations.PreseasonDrivetrain()`, which only registers the drive stack. Any `Constants.createIntake(...)`, `Constants.createLimelight(...)`, or `Constants.createRGB(...)` call is therefore a runtime assertion point unless the active profile is changed or expanded.
+- `Constants.currentBot` currently points at `RobotConfigurations.OldDECODERobotTesting()`, which registers the drive stack plus `Intake`, `Limelight`, and wrapper `RGBIndicator`. `Constants.createWebcam(...)` and `Constants.createSlides1(...)` are still runtime assertion points unless the active profile is changed or expanded.
 - Several tests now intentionally centralize hardware names through `Constants.currentBot` or nested params classes; new test edits should preserve that instead of reintroducing ad hoc strings.
 - `pid/autoTune/` is intentionally driver-station-visible tuning code that uses raw motor names and direction booleans from `TuningConstants` rather than the profile-managed mechanism factory path.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.

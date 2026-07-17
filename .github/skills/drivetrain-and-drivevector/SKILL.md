@@ -26,17 +26,17 @@ This skill covers the team’s custom teleop-drive stack.
 ## Current architecture
 
 1. `DriveVector` stores forward, strafe, rotate, and robot heading values.
-2. `DriveVector.applyStickCurve(...)` mutates the vector in place, applies the selected joystick curve, and flips forward for driver-friendly stick behavior.
+2. `DriveVector.applyStickCurve(...)` mutates the vector in place and applies the selected joystick curve without flipping any axes.
 3. `DriveVector.rotateFieldCentric()` currently rotates by `-robotHeading`, which is the current repo convention after the field-centric fix.
-4. `Drivetrain.setTeleOpDrive(...)` copies the incoming vector, applies the configured stick curve, optionally rotates for field-centric drive, and writes power to the four `Motor` wrappers.
+4. `Drivetrain.setTeleOpDrive(...)` copies the incoming vector, applies the configured stick curve, explicitly negates forward, optionally rotates for field-centric drive, and writes power to the four `Motor` wrappers.
 5. `MecanumDrive` creates its follower from the active `RobotConstants` profile and pairs it with a `Drivetrain` built from the same `bot` instance.
 6. `MecanumDrive.periodic()` currently snapshots `lastPose = follower.getPose()` and then calls `follower.update()`, so `lastPose` is the pre-update pose for that loop.
-7. `Constants.currentBot` is currently `RobotConfigurations.PreseasonDrivetrain()`, so `USE_FOLLOWER_DRIVE` is `false` and teleop `MecanumDrive.setTeleOpDrive(new DriveVector(...))` currently routes manual power through `Drivetrain` while Pedro still handles localization updates.
+7. `Constants.currentBot` is currently `RobotConfigurations.OldDECODERobotTesting()`, so `USE_FOLLOWER_DRIVE` is `true` and teleop `MecanumDrive.setTeleOpDrive(new DriveVector(...))` currently routes through Pedro’s follower-drive teleop path.
 
 ## Repo-specific conventions
 
 - Driver preference for field-centric versus robot-centric mode is stored in `configs.Blackboard` through `Blackboard.Caption.DRIVER` and the `Driver` enum.
-- `TeleOp` and `IvyTeleOp` now set their stick curve once on `MecanumDrive` via `drive.setStickCurve(x -> Math.signum(x) * x * x)` and then pass raw stick values into `new DriveVector(...)`.
+- `TeleOp` and `IvyTeleOp` now set their stick curve once on `MecanumDrive` via `drive.setStickCurve(x -> Math.signum(x) * x * x)` and then pass raw stick values into `new DriveVector(...)`; the forward-axis inversion now happens inside `Drivetrain` or at the raw-`Follower` call site instead of inside `DriveVector`.
 - Heading reset is mapped to `gamepad1.back` in the shared teleop bases; `tests/FieldCentricMecanumTeleOp.java` uses `gamepad1.options`.
 - IMU lookup and REV Hub orientation are profile-owned through `RobotConstants`; use `Constants.createIMU(hardwareMap)` to initialize the active-profile IMU, then reset yaw explicitly in the op mode.
 - `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
@@ -78,7 +78,7 @@ If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(H
 
 - Check that forward stick still drives the robot in the intended direction.
 - Check field-centric orientation after a heading reset.
-- Check the current manual-drive path first, because the active `PreseasonDrivetrain()` profile sets `USE_FOLLOWER_DRIVE` to `false`.
+- Check the current follower-drive path first, because the active `OldDECODERobotTesting()` profile sets `USE_FOLLOWER_DRIVE` to `true`.
 - Check both follower-drive and manual-drive behavior if `USE_FOLLOWER_DRIVE` changes.
 - Use `tests/MecanumTeleOp.java` when you need a direct SDK-based robot-centric / field-centric check or want to flip individual motor directions interactively while staying aligned with the active drivetrain profile names.
 - Use `MotorDirectionTest` when you want to validate the constants-driven drivetrain profile and intake direction at low speed.

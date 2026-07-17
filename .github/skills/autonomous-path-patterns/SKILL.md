@@ -63,7 +63,7 @@ Instead:
 3. add or reuse a `Constants.create...(...)` helper when that improves readability
 4. instantiate it during op mode initialization, not mid-path
 
-The active `Constants.currentBot` profile is `PreseasonDrivetrain()`, which currently registers only `MecanumDrive` and `Drivetrain`. If an autonomous routine needs `Intake`, `Limelight`, or `LogitechWebcam` through `Constants`, the selected profile must change or be expanded first.
+The active `Constants.currentBot` profile is `OldDECODERobotTesting()`, which currently registers `MecanumDrive`, `Drivetrain`, `Intake`, and `Limelight`. If an autonomous routine needs `LogitechWebcam` or `Slides1` through `Constants`, the selected profile must change or be expanded first.
 
 ## Rules
 
