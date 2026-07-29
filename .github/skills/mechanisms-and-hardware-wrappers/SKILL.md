@@ -39,7 +39,7 @@ This includes both:
 4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createSlides1`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
-Those helpers still depend on profile registration. `Constants.assertHasMechanism(...)` runs before construction, and the active `RobotConfigurations.OldDECODERobotTesting()` preset currently registers `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`.
+The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. Those helpers still depend on profile registration: `Constants.assertHasMechanism(...)` runs before construction, so the profile selected by `Constants.currentBot` must register the requested class.
 
 There is also a lower layer for custom FTC devices:
 
@@ -76,7 +76,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - `Drivetrain` extends `Mechanism`, owns `DRIVETRAIN_PARAMS`, and reads drive motor names/directions directly from the active `RobotConstants` profile.
 - `MecanumDrive` extends `Mechanism`, owns `MECANUM_DRIVE_PARAMS`, combines a Pedro `Follower` with the team `Drivetrain` wrapper, and uses the active `RobotConstants` profile for both.
 - `RobotConstants` now stores per-mechanism params overrides through `mechanismParams(...)` / `getMechanismParams(...)`, so builder-style nested params can vary by robot profile without moving all subsystem data into the robot profile class.
-- `Intake`, `Limelight`, and wrapper `RGBIndicator` are enabled on the current `OldDECODERobotTesting()` preset. `LogitechWebcam` and `Slides1` have profile params defined there but are not yet registered in the active preset, so their normal convenience-factory path still is not automatically usable.
+- Profile params supplied through `mechanismParams(...)` do not make a class factory-eligible; the profile selected by `Constants.currentBot` must also register it with `addMechanism(...)`.
 
 ## Rules
 

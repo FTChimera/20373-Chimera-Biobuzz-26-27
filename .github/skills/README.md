@@ -30,11 +30,10 @@ than one guide.
 
 ## Current architecture notes
 
-- `Constants.currentBot` currently selects
-  `RobotConfigurations.OldDECODERobotTesting()`. That profile registers
-  `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper
-  `RGBIndicator`; `LogitechWebcam` and `Slides1` have profile params defined
-  but are not enabled there yet.
+- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist.
+  `Constants.currentBot` selects the profile used by op-mode factories. Check
+  the selected profile's registered mechanisms before relying on a
+  `Constants.create...(...)` helper.
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only mechanisms registered by the active profile; the helpers throw when the
   requested mechanism is absent.

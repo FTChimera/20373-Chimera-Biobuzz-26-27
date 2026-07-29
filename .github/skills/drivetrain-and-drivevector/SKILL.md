@@ -31,7 +31,7 @@ This skill covers the team’s custom teleop-drive stack.
 4. `Drivetrain.setTeleOpDrive(...)` copies the incoming vector, applies the configured stick curve, explicitly negates forward, optionally rotates for field-centric drive, and writes power to the four `Motor` wrappers.
 5. `MecanumDrive` creates its follower from the active `RobotConstants` profile and pairs it with a `Drivetrain` built from the same `bot` instance.
 6. `MecanumDrive.periodic()` currently snapshots `lastPose = follower.getPose()` and then calls `follower.update()`, so `lastPose` is the pre-update pose for that loop.
-7. `Constants.currentBot` is currently `RobotConfigurations.OldDECODERobotTesting()`, so `USE_FOLLOWER_DRIVE` is `true` and teleop `MecanumDrive.setTeleOpDrive(new DriveVector(...))` currently routes through Pedro’s follower-drive teleop path.
+7. `MecanumDrive.setTeleOpDrive(new DriveVector(...))` routes through `Drivetrain` or Pedro's follower-drive path according to the selected profile's `USE_FOLLOWER_DRIVE` setting.
 
 ## Repo-specific conventions
 
@@ -78,7 +78,7 @@ If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(H
 
 - Check that forward stick still drives the robot in the intended direction.
 - Check field-centric orientation after a heading reset.
-- Check the current follower-drive path first, because the active `OldDECODERobotTesting()` profile sets `USE_FOLLOWER_DRIVE` to `true`.
+- Verify the selected profile's `USE_FOLLOWER_DRIVE` value and test the resulting drive path.
 - Check both follower-drive and manual-drive behavior if `USE_FOLLOWER_DRIVE` changes.
 - Use `tests/MecanumTeleOp.java` when you need a direct SDK-based robot-centric / field-centric check or want to flip individual motor directions interactively while staying aligned with the active drivetrain profile names.
 - Use `MotorDirectionTest` when you want to validate the constants-driven drivetrain profile and intake direction at low speed.

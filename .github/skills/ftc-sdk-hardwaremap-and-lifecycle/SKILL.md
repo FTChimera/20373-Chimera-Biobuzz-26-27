@@ -12,7 +12,7 @@ Use this skill for direct FTC SDK integration work.
 - The project depends on FTC SDK `11.1.0`.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
-- `Constants.currentBot` currently points at `RobotConfigurations.OldDECODERobotTesting()`, which registers `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`.
+- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
@@ -28,20 +28,20 @@ Use this skill for direct FTC SDK integration work.
 - `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended `Constants.create...(...)` factory style, and their intake/limelight helpers are satisfied by the current `OldDECODERobotTesting()` profile.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended `Constants.create...(...)` factory style; their `createIntake(...)` and `createLimelight(...)` calls require a profile that registers those classes.
 
 ## HardwareMap rules in this repo
 
 - Resolve hardware once during initialization, not repeatedly inside the active loop.
 - Prefer team wrappers and mechanisms over raw device access in op modes.
 - Prefer `Constants.create...(...)` factories over direct `new Mechanism(...)` calls in op modes.
-- Every `Constants.create...(...)` helper enforces `Constants.assertHasMechanism(...)` first; if the active profile has not registered that class, the helper throws before any device lookup happens.
+- Every profile-managed `Constants.create...(...)` helper enforces `Constants.assertHasMechanism(...)` first; if the active profile has not registered that class, the helper throws before any device lookup happens. `createFollower(...)` and `createIMU(...)` are profile-configured helpers, not mechanism factories.
 - Keep drive/profile hardware names in `RobotConstants`, and let `Constants.create...(...)` delegate to the active profile for profile-managed subsystems.
 - Keep `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` in `RobotConstants`; use `Constants.createIMU(hardwareMap)` instead of duplicating IMU lookup and orientation code.
 - If a wrapper can be disabled by robot profile, make sure it decides that before calling `hardwareMap.get(...)`.
 - If a class is a custom FTC `HardwareDevice` like `SlidesMotor`, `RevPotentiometer`, or the device-level `RGBIndicator`, fetch it directly from `hardwareMap` and keep it distinct from the profile-managed `Mechanism` wrappers.
 - `pid/autoTune/` is an intentional direct-motor exception: those calibration op modes pass motor names, directions, and target values through `TuningConstants` into `PIDMaster` / `DualMotorPIDMaster` instead of going through `Constants.create...(...)`.
-- The active `OldDECODERobotTesting()` profile already registers `Intake`, `Limelight`, and wrapper `RGBIndicator`, but `Constants.createWebcam(...)` and `createSlides1(...)` still need additional `addMechanism(...)` registration before they are runtime-valid.
+- `Constants.create...(...)` is runtime-valid only when the profile selected by `Constants.currentBot` registers the requested mechanism class.
 
 ## New mechanism pattern tied to lifecycle
 

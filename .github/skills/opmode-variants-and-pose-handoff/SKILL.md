@@ -42,7 +42,7 @@ Use this skill when working on the repo’s shared-base-class plus thin-wrapper 
 
 Shared base op modes should initialize mechanisms through `Constants.create...(...)` so every variant uses the same profile-aware factories.
 
-Variant wrappers inherit whatever profile assertions their base class makes. For example, `TeleOp.java` currently calls `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`, and those are all satisfied by the current `OldDECODERobotTesting()` robot profile.
+Variant wrappers inherit whatever profile assertions their base class makes. For example, `TeleOp.java` currently calls `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`; the selected profile must register each requested class.
 
 If a new subsystem is introduced for a base op mode:
 

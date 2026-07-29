@@ -40,7 +40,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Pedro tuning is centralized in `pedroPathing/Tuning.java`, which exposes many selectable tuner sub-modes.
 - Tuning flows rely on `Constants.createFollower(hardwareMap)` so they inherit the current robot profile and follower config.
 - Other subsystems used in tests should also come from `Constants.create...(...)` so tests exercise the same construction paths as match code.
-- `Constants.currentBot` currently points at `RobotConfigurations.OldDECODERobotTesting()`, which registers the drive stack plus `Intake`, `Limelight`, and wrapper `RGBIndicator`. Tests that call `Constants.createWebcam(...)` or `Constants.createSlides1(...)` still need a different or expanded active profile first.
+- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. Tests that call a `Constants.create...(...)` helper need the profile selected by `Constants.currentBot` to register that class first.
 
 ## Existing examples
 
@@ -79,7 +79,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Some tuner code comes from Pedro tooling and is intentionally verbose; keep repo-specific adjustments minimal and clear.
 - If a new mechanism is being validated, make sure it follows the same `Mechanism` + `RobotConstants.createMechanism(...)` pattern before adding the test.
 - `tests/PreseasonWebcamAuto.java` is intentionally not a shared match op mode; keep it documented as validation/proof-of-concept code.
-- `tests/PreseasonWebcamAuto.java` and `tests/ftcSdk/RGBIndicatorTest.java` still intentionally bypass the normal factory path for parts of their behavior, but no longer because the active profile lacks `Limelight.class` or wrapper `RGBIndicator.class`; those two mechanisms are now enabled on `OldDECODERobotTesting()`.
+- `tests/PreseasonWebcamAuto.java` and `tests/ftcSdk/RGBIndicatorTest.java` still intentionally bypass the normal factory path for parts of their behavior. Check registration in the profile selected by `Constants.currentBot` before adding a factory-created wrapper to either test.
 - `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` were recently updated to centralize their hardware naming, so future test edits should preserve that alignment.
 
 ## Validation expectations

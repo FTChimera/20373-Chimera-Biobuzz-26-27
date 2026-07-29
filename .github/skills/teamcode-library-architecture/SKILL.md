@@ -39,7 +39,7 @@ Use this pattern:
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
 
-One current-repo catch: a helper existing in `Constants` does **not** mean the active profile enables that class. `Constants.currentBot` currently selects `RobotConfigurations.OldDECODERobotTesting()`, which enables `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`, while leaving `LogitechWebcam` and `Slides1` unregistered. It also sets `.useFollowerDrive(true)`, so `MecanumDrive` teleop currently routes through Pedro’s follower-drive path.
+The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. A helper existing in `Constants` does **not** mean the profile selected by `Constants.currentBot` registers that class; check its `Mechanisms` set before using a factory helper.
 
 ## Where configuration belongs
 
@@ -106,7 +106,7 @@ One current-repo catch: a helper existing in `Constants` does **not** mean the a
 
 - Generic FTC sample patterns from `FtcRobotController/external/samples/` are not the house style for TeamCode.
 - New mechanisms should not be instantiated directly from op modes when a `Constants.create...(...)` factory belongs there.
-- A `Constants.create...(...)` helper is only a convenience surface; it still depends on the active profile’s `Mechanisms` set and `Constants.assertHasMechanism(...)`.
+- A profile-managed `Constants.create...(...)` helper is only a convenience surface; it still depends on the active profile’s `Mechanisms` set and `Constants.assertHasMechanism(...)`. `createFollower(...)` and `createIMU(...)` use the active profile without requiring a registered mechanism.
 - A mechanism no longer needs a centrally shared params singleton in `Constants` to fit repo style; the important uniformity point is the `Mechanism` + `RobotConstants.createMechanism(...)` construction flow.
 - `Polynomial` now lives under `library/math/`, implements the newer `Equation` interface, and is still the only currently usable reusable `Equation` implementation for evaluation/derivative work.
 - `Term` currently exists as a scaffold for the broader `Equation` abstraction; do not assume symbolic equation algebra is production-ready yet.

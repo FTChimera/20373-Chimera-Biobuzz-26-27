@@ -35,15 +35,15 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 
 ## Verified repo wiring
 
-1. `Constants.createFollower(...)` delegates to `Constants.currentBot.createFollower(...)`, and `Constants.currentBot` is currently `RobotConfigurations.OldDECODERobotTesting()`.
+1. `Constants.createFollower(...)` delegates to `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that drives the follower.
 2. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder(...).pathConstraints(...).mecanumDrivetrain(...).pinpointLocalizer(...).build()`.
 3. `MecanumDrive` extends `Mechanism`, owns both a Pedro `Follower` and the team `Drivetrain`, and exposes `periodicCommand()` plus `teleOp(...)` Ivy helpers.
 4. The match-style iterative autonomous path pattern is `opModes/IvyAuton.java` plus a variant-local `IvyAuton_Paths` implementation such as `opModes/variants/Test_IvyAuton.java`.
 5. `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are standalone iterative `OpMode` examples that compose `Scheduler`, `Commands.infinite(...)`, `Groups.sequential(...)`, and `PedroCommands.follow(...)` directly.
 6. `EquationCurve` adapts `Equation` into a Pedro `CustomCurve`, but no current TeamCode op mode instantiates it.
 7. The standard robot-subsystem construction path is `Mechanism` + `(HardwareMap, RobotConstants)` + `RobotConstants.createMechanism(...)` + `Constants.create...(...)`.
-8. The active `OldDECODERobotTesting` profile registers `MecanumDrive`, `Drivetrain`, `Intake`, `Limelight`, and wrapper `RGBIndicator`; `Constants.createWebcam(...)` and `Constants.createSlides1(...)` still are not enabled by `Constants.currentBot` right now.
-9. Because of that active-profile choice, `opModes/IvyAuton.java`, `opModes/IvyTeleOp.java`, and `opModes/TeleOp.java` are currently aligned with the active profile for drive + intake + Limelight usage.
+8. Profile-managed factory helpers work only for classes registered through `.addMechanism(...)` in the profile selected by `Constants.currentBot`.
+9. When planning which factory calls (`Constants.createIntake(...)`, `Constants.createLimelight(...)`, etc.) succeed at runtime, verify which mechanisms the selected profile actually registers with `.addMechanism(...)`.
 
 ## Pathing conventions to follow
 
@@ -86,8 +86,7 @@ There is no current TeamCode example that implements `Command` directly, extends
 
 ## Repo-specific constraints
 
-- `RobotConfigurations.OldDECODERobotTesting()` is the active profile and still contains placeholder or zeroed follower/localizer values, so it should not be treated as competition-tuned.
-- `RobotConfigurations.PreseasonDrivetrain()` also remains largely placeholder-driven and is still the minimal manual-drive fallback profile.
+- Do not treat profile follower or localizer values as competition-tuned without verifying them on the configured robot.
 - `LimelightPinpointLocalizer` is `@Deprecated` and is not wired into `RobotConstants.createFollower(...)`.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that uses the standard follower plus raw Limelight color results.
 - `tests/PreseasonWebcamAuto.java` gets its Limelight hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
