@@ -73,10 +73,6 @@ public class RobotConfigurations {
                 .addMechanism(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS()
                         .hardwareMapName("rgb")
                         .panelsName("RGB INDICATOR"))
-                .mechanismParams(LogitechWebcam.class, new LogitechWebcam.LOGITECH_WEBCAM_PARAMS()
-                        .hardwareMapName("Webcam 1"))
-                .mechanismParams(Slides1.class, new Slides1.SLIDES1_PARAMS()
-                        .hardwareMapName("Slides"))
                 // COMPATIBILITY
                 .useFollowerDrive(true);
     }
@@ -116,18 +112,6 @@ public class RobotConfigurations {
                 .centripetalScaling(0)
                 // MECHANISM USAGE
                 .configureDriveMechanisms()
-                .mechanismParams(Intake.class, new Intake.INTAKE_PARAMS()
-                        .hardwareMapName("intake")
-                        .intakeMotorDirection(Direction.REVERSE))
-                .mechanismParams(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
-                        .hardwareMapName("limelight"))
-                .mechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS()
-                        .hardwareMapName("rgb")
-                        .panelsName("RGB INDICATOR"))
-                .mechanismParams(LogitechWebcam.class, new LogitechWebcam.LOGITECH_WEBCAM_PARAMS()
-                        .hardwareMapName("Webcam 1"))
-                .mechanismParams(Slides1.class, new Slides1.SLIDES1_PARAMS()
-                        .hardwareMapName("Slides"))
                 // COMPATIBILITY
                 .useFollowerDrive(false);
     }
