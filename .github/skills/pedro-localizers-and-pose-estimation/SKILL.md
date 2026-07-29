@@ -22,7 +22,7 @@ Use this skill for localization work that is narrower than general autonomous/pa
 
 ## Current localization flow
 
-1. The default follower path is `Constants.createFollower(...)` → `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that provides follower configuration.
+1. The default follower path is `Constants.createFollower(...)` → `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that provides follower configuration.
 2. `RobotConstants.createFollower(...)` wires localization through `FollowerBuilder(...).pinpointLocalizer(PINPOINT_LOCALIZER_CONSTANTS)`.
 3. Both current robot profiles call `.pinpointConstants(new PinpointConstants())`; the code does not currently set custom Pinpoint offsets or encoder-direction fields on that object.
 4. `MecanumDrive` snapshots `follower.getPose()` into static `lastPose` and then calls `follower.update()` inside `periodic()`.
@@ -36,7 +36,7 @@ Use this skill for localization work that is narrower than general autonomous/pa
 - Keep non-drive subsystem behavior out of the robot-profile layer unless it truly varies by robot profile.
 - If localization work also touches a vision wrapper, keep that wrapper on the `Mechanism` + `RobotConstants.createMechanism(...)` path.
 
-The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. Localization changes that use `Constants.createLimelight(...)` or `Constants.createWebcam(...)` must ensure the profile selected by `Constants.currentBot` registers the required wrapper.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Localization changes that use `Constants.createLimelight(...)` or `Constants.createWebcam(...)` must ensure the profile selected by `Constants.currentBot` registers the required wrapper.
 
 ## Rules
 

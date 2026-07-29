@@ -30,7 +30,7 @@ than one guide.
 
 ## Current architecture notes
 
-- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist.
   `Constants.currentBot` selects the profile used by op-mode factories. Check
   the selected profile's registered mechanisms before relying on a
   `Constants.create...(...)` helper.

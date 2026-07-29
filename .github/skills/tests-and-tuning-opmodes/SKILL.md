@@ -40,7 +40,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - Pedro tuning is centralized in `pedroPathing/Tuning.java`, which exposes many selectable tuner sub-modes.
 - Tuning flows rely on `Constants.createFollower(hardwareMap)` so they inherit the current robot profile and follower config.
 - Other subsystems used in tests should also come from `Constants.create...(...)` so tests exercise the same construction paths as match code.
-- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. Tests that call a `Constants.create...(...)` helper need the profile selected by `Constants.currentBot` to register that class first.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Tests that call a `Constants.create...(...)` helper need the profile selected by `Constants.currentBot` to register that class first.
 
 ## Existing examples
 

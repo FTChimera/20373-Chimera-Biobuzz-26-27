@@ -12,7 +12,7 @@ Use this skill for direct FTC SDK integration work.
 - The project depends on FTC SDK `11.1.0`.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
-- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow

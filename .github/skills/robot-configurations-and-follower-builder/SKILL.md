@@ -15,7 +15,7 @@ Use this skill for robot-profile work centered around:
 ## How this repo is wired
 
 1. `Constants.currentBot` selects the active robot profile.
-2. The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`.
+2. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`.
 3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, the set of enabled `Mechanism` classes, and profile-owned mechanism params overrides.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.

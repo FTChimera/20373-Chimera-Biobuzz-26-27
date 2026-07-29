@@ -35,7 +35,7 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 
 ## Verified repo wiring
 
-1. `Constants.createFollower(...)` delegates to `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that drives the follower.
+1. `Constants.createFollower(...)` delegates to `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that drives the follower.
 2. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder(...).pathConstraints(...).mecanumDrivetrain(...).pinpointLocalizer(...).build()`.
 3. `MecanumDrive` extends `Mechanism`, owns both a Pedro `Follower` and the team `Drivetrain`, and exposes `periodicCommand()` plus `teleOp(...)` Ivy helpers.
 4. The match-style iterative autonomous path pattern is `opModes/IvyAuton.java` plus a variant-local `IvyAuton_Paths` implementation such as `opModes/variants/Test_IvyAuton.java`.

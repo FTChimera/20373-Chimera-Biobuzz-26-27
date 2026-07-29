@@ -12,7 +12,7 @@ Use this skill when needing to change constants that were left blank because of 
 - The Field Setup and scoring elements will be released September 2026.
 - The Autonomouses under opModes and opModes/variants are all tests and they need to change once the BIOBUZZ game is released and the robot is fully built.
 - The only annotated autonomous variant currently under `opModes/variants/` is `Test_IvyAuton`; `IvyAuton` under `opModes/` is the reusable base class, and many of its path/pose defaults are still preseason placeholders.
-- The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. `Constants.currentBot` selects the active profile; a class must be explicitly registered with `.addMechanism(...)` before its factory helper will create it.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the active profile; a class must be explicitly registered with `.addMechanism(...)` before its factory helper will create it.
 - These will mostly be updated manually.
 
 ## Pedro Pathing Follower Configuration and Robot Constants

@@ -39,7 +39,7 @@ Use this pattern:
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
 
-The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist. A helper existing in `Constants` does **not** mean the profile selected by `Constants.currentBot` registers that class; check its `Mechanisms` set before using a factory helper.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist. A helper existing in `Constants` does **not** mean the profile selected by `Constants.currentBot` registers that class; check its `Mechanisms` set before using a factory helper.
 
 ## Where configuration belongs
 

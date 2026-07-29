@@ -52,7 +52,7 @@ Ivy commands should operate on mechanisms created through the repo’s factory p
 - keep the mechanism constructor shape `(HardwareMap, RobotConstants)`
 - register it in the selected `RobotConstants` profile
 
-The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`. Only mechanisms added with `.addMechanism(...)` in the profile selected by `Constants.currentBot` can be instantiated through factory helpers. Verify registration before writing Ivy commands that depend on a subsystem.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`. Only mechanisms added with `.addMechanism(...)` in the profile selected by `Constants.currentBot` can be instantiated through factory helpers. Verify registration before writing Ivy commands that depend on a subsystem.
 
 ## Input-wrapper convention
 

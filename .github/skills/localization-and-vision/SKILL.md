@@ -24,7 +24,7 @@ This repository currently mixes Pinpoint-based Pedro localization with two separ
 1. The build includes FTC Vision `11.1.0` plus Pedro Pathing / Ivy dependencies.
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and exposes `updateCommand()` as `Commands.infinite(Limelight.this::LLUpdate)`.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both create a Limelight through `Constants.createLimelight(...)`, start it in `APRIL_TAG` mode, and refresh it every loop.
-4. The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`. Verify the profile selected by `Constants.currentBot` registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
+4. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`. Verify the profile selected by `Constants.currentBot` registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
 5. `tests/PreseasonWebcamAuto.java` bypasses the wrapper, reads raw `Limelight3A` color results, switches pipeline `1`, and gets the hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
 6. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but no current robot profile registers `LogitechWebcam` and no TeamCode op mode instantiates it.
 7. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.

@@ -63,7 +63,7 @@ Instead:
 3. add or reuse a `Constants.create...(...)` helper when that improves readability
 4. instantiate it during op mode initialization, not mid-path
 
-The `OldDECODERobotTesting` and `PreseasonDrivetrain` profiles exist in `RobotConfigurations`. Only mechanisms registered with `.addMechanism(...)` in the profile selected by `Constants.currentBot` are available through factory helpers; verify registration before relying on `Constants.create...()` calls in autonomous code.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`. Only mechanisms registered with `.addMechanism(...)` in the profile selected by `Constants.currentBot` are available through factory helpers; verify registration before relying on `Constants.create...()` calls in autonomous code.
 
 ## Rules
 

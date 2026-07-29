@@ -81,7 +81,7 @@ public class RobotConfigurations {
                 .useFollowerDrive(true);
     }
 
-    public static RobotConstants PreseasonDrivetrain() {
+    public static RobotConstants FirstRobot() {
         return new RobotConstants()
                 // DRIVE CONSTANTS
                 .maxPower(0.4)

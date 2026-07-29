@@ -24,7 +24,7 @@ import java.util.Set;
 public class Constants {
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
-    public static final RobotConstants currentBot = RobotConfigurations.PreseasonDrivetrain();
+    public static final RobotConstants currentBot = RobotConfigurations.FirstRobot();
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);
