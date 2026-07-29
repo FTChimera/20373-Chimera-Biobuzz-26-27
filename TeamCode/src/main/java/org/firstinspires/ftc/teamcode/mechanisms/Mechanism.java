@@ -11,7 +11,7 @@ public abstract class Mechanism {
     }
 
     // inheritors
-    // drivetrain, intake, mecanumdrive, rgb indicator, limelight, logitechwebcam
+    // drivetrain, intake, mecanumdrive, rgb indicator, limelight, logitechwebcam, slides1
     protected HardwareMap hardwareMap;
     protected RobotConstants bot;
     public Mechanism(HardwareMap map, RobotConstants bot) {
