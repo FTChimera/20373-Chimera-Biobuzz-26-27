@@ -78,7 +78,7 @@ public class MecanumTeleOp extends OpMode {
     double[] motorPowers = new double[4];
 
     /* Constants */
-    private final double DRIVE_POWER_SCALAR = 0.9; // Scalar for drive power to prevent overpowering the motors, and easier driving.
+    private final double DRIVE_POWER_SCALAR = Constants.currentBot.MAX_POWER; // Scalar for drive power to prevent overpowering the motors, and easier driving.
     private final double MOTOR_DIRECTION_POWER = 0.3; // power for motor direction test mode to see clearly if the motors are going in the right direction or not.
     private final double STRAFE_POWER_COMPENSATION = 1.1; // Compensation for imperfect strafing on most mecanum drives. This is multiplied by the strafing power to make the robot strafe more effectively.
     private final double JOYSTICK_DEADZONE = 0.05; // Deadzone for joysticks to prevent drift. Inputs within the deadzone are set to 0.
