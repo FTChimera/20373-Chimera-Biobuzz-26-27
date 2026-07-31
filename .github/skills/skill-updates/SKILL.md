@@ -85,10 +85,11 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 3. If history is allowed and relevant, inspect commits after that point.
 4. Inspect the actual current code, not just commit messages.
 5. Map which skill files are affected by those changes.
-6. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
-7. If the index file `.github/skills/README.md` should mention a new pattern, package, or skill, update it too.
-8. If `ftcdev-20373.html` is present and acts as repo documentation, review whether its branding, links, docs cards, and TeamCode-derived snippets also need to change alongside the skill docs.
-9. After editing docs, validate the changed markdown files for obvious consistency issues and summarize exactly which skill files changed.
+6. `Constants.currentBot` can change quickly, do not update SKILL files/README.md to state the current profile as it might become outdated quickly.
+7. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
+8. If the index file `.github/skills/README.md` should mention a new pattern, package, or skill, update it too.
+9. If `ftcdev-20373.html` is present and acts as repo documentation, review whether its branding, links, docs cards, and TeamCode-derived snippets also need to change alongside the skill docs.
+10. After editing docs, validate the changed markdown files for obvious consistency issues and summarize exactly which skill files changed.
 
 ## What kinds of code changes usually require skill updates
 
