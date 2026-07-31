@@ -97,11 +97,11 @@ public class RobotConfigurations {
                 .imuUsbFacingDirection(RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)
                 // PINPOINT CONSTANTS
                 .pinpointConstants(new PinpointConstants()
-                        .distanceUnit(DistanceUnit.INCH)
                         .hardwareMapName("pinpoint")
-                        .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
-                        .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD)
-                        .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.FORWARD  ))
+                        .forwardPodY(-0.8704944520484759)
+                        .strafePodX(-7.450610543799215)
+                        .forwardEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED)
+                        .strafeEncoderDirection(GoBildaPinpointDriver.EncoderDirection.REVERSED))
                 // FOLLOWER CONSTANTS AND PATH CONSTRAINTS
                 .tValueConstraint(0.99)
                 .timeoutConstraint(100)
