@@ -39,7 +39,11 @@ This includes both:
 4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createSlides1`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Those helpers still depend on profile registration: `Constants.assertHasMechanism(...)` runs before construction, so the profile selected by `Constants.currentBot` must register the requested class.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
+registers only `MecanumDrive` and `Drivetrain`; its intake is planned but not
+yet registered. Those helpers still depend on profile registration:
+`Constants.assertHasMechanism(...)` runs before construction, so the selected
+profile must register the requested class.
 
 There is also a lower layer for custom FTC devices:
 

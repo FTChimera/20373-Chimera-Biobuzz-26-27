@@ -23,8 +23,11 @@ This repository currently mixes Pinpoint-based Pedro localization with two separ
 
 1. The build includes FTC Vision `11.1.0` plus Pedro Pathing / Ivy dependencies.
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and exposes `updateCommand()` as `Commands.infinite(Limelight.this::LLUpdate)`.
-3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both create a Limelight through `Constants.createLimelight(...)`, start it in `APRIL_TAG` mode, and refresh it every loop.
-4. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`. Verify the profile selected by `Constants.currentBot` registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
+3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
+   Limelight through `Constants.createLimelight(...)`, start it in `APRIL_TAG`
+   mode, and refresh it every loop. They require Limelight registration in the
+   selected profile; FirstRobot does not provide it yet.
+4. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`. FirstRobot's Pinpoint offsets and encoder directions are configured, but it registers no vision wrapper. Verify the selected profile registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
 5. `tests/PreseasonWebcamAuto.java` bypasses the wrapper, reads raw `Limelight3A` color results, switches pipeline `1`, and gets the hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
 6. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but no current robot profile registers `LogitechWebcam` and no TeamCode op mode instantiates it.
 7. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
@@ -39,7 +42,9 @@ Vision wrappers currently follow the same basic construction pattern as other me
 - register the wrapper in the chosen robot profile with `.addMechanism(...)`
 - expose construction through `Constants.create...(...)` when higher-level code should call it
 
-The active selected profile currently registers the Limelight wrapper but not the Logitech webcam wrapper, so webcam-based vision work through `Constants` is still a profile-selection task as well as a wrapper/op-mode task.
+FirstRobot registers neither the Limelight wrapper nor the Logitech webcam
+wrapper. Vision work through `Constants` is therefore a profile-registration
+task as well as a wrapper/op-mode task.
 
 ## Repo-specific constraints
 

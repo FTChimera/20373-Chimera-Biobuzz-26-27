@@ -17,8 +17,17 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Pedro Pathing Follower Configuration and Robot Constants
 
-- The Preseason Robot (everything coded under TeamCode) hasn't completely been assembled as of mid-June 2026.
-- Many mechanism params, follower values, and Pinpoint-related constants still have preseason placeholder values.
+- Based on the BIOBUZZ preseason presentation, FirstRobot's drivetrain and
+  Pinpoint hardware are finished; intake is planned to be added soon.
+- FirstRobot has Pinpoint hardware name, pod offsets, and encoder directions
+  configured. Do not overwrite those values as generic preseason placeholders.
+- FirstRobot's Pedro drive-tuning constants are **not** configured yet:
+  `X_VELOCITY` and `Y_VELOCITY` are `0`, `DRIVE_CONSTANTS` is a blank
+  `FollowerConstants`, and heading PIDF / centripetal scaling are zero. Its
+  motor names, directions, and max power are wiring defaults, not proof that
+  follower-drive tuning is complete.
+- Intake and other non-drive mechanism params still need real hardware
+  integration before they are registered in FirstRobot.
 - When asked to update constants, update every relevant `*_PARAMS` owner (including wrappers under `library/hardware/...`) plus `RobotConstants` / `RobotConfigurations`, and do not forget any relevant op modes under `tests/`.
 
 ## Where those constants actually live
@@ -51,7 +60,7 @@ Use this skill when needing to change constants that were left blank because of 
 ## Placeholder values that are real calibration targets in this repo
 
 - `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE` are both still `new Pose(0, 0, 0)`.
-- Robot profiles contain follower-drive, localizer, and mechanism-registration configuration. Inspect the selected profile before relying on values as calibrated or on a `Constants.create...(...)` helper as available.
+- Robot profiles contain follower-drive, localizer, and mechanism-registration configuration. FirstRobot's Pinpoint geometry is configured, but its follower-drive tuning remains a calibration target; inspect the selected profile before relying on a `Constants.create...(...)` helper as available.
 - `Limelight.LIMELIGHT_PARAMS` still has `LIMELIGHT_MOUNT_ANGLE_DEGREES`, `LIMELIGHT_LENS_HEIGHT_INCHES`, and `TAG_HEIGHT_INCHES` at `0`.
 - `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` contains the default hardware name, overlay toggles, output units, and resolution that may need real robot-specific values.
 - `RGBIndicator.RGBIndicator_PARAMS` contains the LED hardware name, panels name, indicator type (`ONLY_HARDWARE`/`ONLY_VIRTUAL`/`BOTH`/`NAN`), and enablement gate.
@@ -89,7 +98,7 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Op modes and tests that are especially affected by constant changes
 
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. Those helpers require that `Intake`, `MecanumDrive`, and `Limelight` are registered in the active profile; `createWebcam(...)` and `createSlides1(...)` additionally require `LogitechWebcam` and `Slides1` to be registered.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. FirstRobot registers only `MecanumDrive` and `Drivetrain`, so these shared teleops cannot run with that profile until intake and Limelight are registered; `createWebcam(...)` and `createSlides1(...)` additionally require `LogitechWebcam` and `Slides1` to be registered.
 - `opModes/IvyAuton.java` uses `Constants.createFollower(...)` and `Constants.createIntake(...)`, but its starting pose comes from the selected `IvyAuton_Paths.getStartingPose()` implementation, not from the default alliance poses in `Constants`.
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
 - `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring; it calls `Constants.createDrivetrain(...)` and `Constants.createIntake(...)`, so it requires a profile that registers both `Drivetrain.class` and `Intake.class`.
@@ -102,12 +111,12 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Repo-specific warning signs
 
-- The active profile is set via `Constants.currentBot`. Whichever profile registers `Intake`, `Limelight`, and `RGBIndicator` enables those factory helpers; webcam and slides helpers still require those classes to be explicitly registered with `.addMechanism(...)`.
+- The active profile is set via `Constants.currentBot`. FirstRobot registers only `MecanumDrive` and `Drivetrain`; when that profile is selected, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, `createWebcam(...)`, and `createSlides1(...)` all fail early until their classes are explicitly registered with `.addMechanism(...)`.
 - `RobotConstants.createMechanism(...)` throws if the mechanism class is not registered in `Mechanisms`. If a constant change introduces or enables a subsystem, also check `.addMechanism(...)`.
 - IMU settings are robot-profile-wide: update `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` through the existing fluent builders, then use `Constants.createIMU(hardwareMap)` from op modes. The factory initializes orientation but intentionally does not reset yaw.
 - `Constants.assertHasMechanism(...)` now also fails early on the convenience-factory path, so mechanism registration issues may surface before reflection-based construction.
 - `MecanumDrive` and `Drivetrain` are normally enabled together through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
-- A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. With the current active profile, `createWebcam(...)` and `createSlides1(...)` still fail early because those classes are absent from `bot.Mechanisms`.
+- A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. With FirstRobot selected, every non-drive factory helper fails early because its class is absent from `bot.Mechanisms`.
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` do still toggle themselves off when constructed with a profile that omits their class, but the normal convenience-factory path now usually hits `assertHasMechanism(...)` first.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
 - `Slides1` exists as a mechanism shell, but it is not currently registered in either shipped profile, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.

@@ -16,6 +16,9 @@ Use this skill for robot-profile work centered around:
 
 1. `Constants.currentBot` selects the active robot profile.
 2. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`.
+   FirstRobot registers only the normal drive stack. Its Pinpoint offsets and
+   encoder directions are configured, while its Pedro drive-tuning fields and
+   intake integration are not.
 3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, the set of enabled `Mechanism` classes, and profile-owned mechanism params overrides.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
@@ -70,7 +73,10 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)`, store profile-specific params with `.mechanismParams(...)` when needed, and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
 - Do not move mechanism-specific params into `RobotConstants` unless they truly vary by robot profile.
-- Treat the current values as placeholders unless they were explicitly measured on the robot.
+- Treat values as placeholders unless they were explicitly measured on the
+  robot. FirstRobot's configured Pinpoint offsets and encoder directions are
+  the exception; its zero velocity, blank follower constants, zero heading
+  PIDF, and zero centripetal scaling remain drive-tuning targets.
 
 ## Example workflow
 

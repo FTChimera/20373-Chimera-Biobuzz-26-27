@@ -73,7 +73,12 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 
 ## Important repo notes
 
-- Many tuning values in the robot profile are still placeholders.
+- FirstRobot's Pinpoint hardware name, offsets, and encoder directions are
+  configured. Its Pedro drive-tuning values remain placeholders, so drive
+  tuning must not be treated as complete.
+- FirstRobot registers only the drive stack. Tests that use intake, Limelight,
+  RGB, webcam, or slides factory helpers need an appropriate profile
+  registration first.
 - Real robot measurements matter more than code-level plausibility here.
 - `build.dependencies.gradle` now resolves JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the removed FTC artifact is replaced by repo-local master adapters, so tuning/build work should keep both layers aligned.
 - Some tuner code comes from Pedro tooling and is intentionally verbose; keep repo-specific adjustments minimal and clear.

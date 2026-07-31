@@ -34,6 +34,12 @@ than one guide.
   `Constants.currentBot` selects the profile used by op-mode factories. Check
   the selected profile's registered mechanisms before relying on a
   `Constants.create...(...)` helper.
+  FirstRobot registers only the normal drive stack (`MecanumDrive` and
+  `Drivetrain`); its Pinpoint geometry and encoder directions are configured,
+  but its Pedro drive-tuning fields remain unconfigured and intake integration
+  is the next planned addition. `Constants.currentBot` selects the profile used
+  by op-mode factories, so check the selected profile's registered mechanisms
+  before relying on a `Constants.create...(...)` helper.
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only mechanisms registered by the active profile; the helpers throw when the
   requested mechanism is absent.

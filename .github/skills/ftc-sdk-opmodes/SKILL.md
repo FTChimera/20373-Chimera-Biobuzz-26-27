@@ -13,6 +13,9 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
 - Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
+  FirstRobot registers only `MecanumDrive` and `Drivetrain`. Its Pinpoint setup
+  is configured, but its planned intake and all vision/other optional
+  mechanisms are not registered.
 - Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
 - Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` and `TestIvyAuto` are annotated classes in the `opModes/` root.

@@ -24,7 +24,11 @@ Use this skill for localization work that is narrower than general autonomous/pa
 
 1. The default follower path is `Constants.createFollower(...)` → `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that provides follower configuration.
 2. `RobotConstants.createFollower(...)` wires localization through `FollowerBuilder(...).pinpointLocalizer(PINPOINT_LOCALIZER_CONSTANTS)`.
-3. Both current robot profiles call `.pinpointConstants(new PinpointConstants())`; the code does not currently set custom Pinpoint offsets or encoder-direction fields on that object.
+3. FirstRobot explicitly configures Pinpoint's hardware name, forward-pod Y
+   offset, strafe-pod X offset, and both encoder directions. The follower
+   factory supplies the shared inch unit and GoBILDA 4-bar pod resolution.
+   These Pinpoint values are covered; FirstRobot's drive-tuning values remain
+   unconfigured.
 4. `MecanumDrive` snapshots `follower.getPose()` into static `lastPose` and then calls `follower.update()` inside `periodic()`.
 5. Shared autonomous-to-teleop pose handoff currently happens when `opModes/IvyAuton.java` writes `follower.getPose()` to `Blackboard.Caption.POSE` in `stop()`, and `variants/Red_TeleOp.java` / `Blue_TeleOp.java` read it back if it is not `(0,0,0)`.
 6. `LimelightPinpointLocalizer` exists as a custom fusion localizer, is marked `@Deprecated`, and is not used by the default follower factory.
@@ -36,7 +40,11 @@ Use this skill for localization work that is narrower than general autonomous/pa
 - Keep non-drive subsystem behavior out of the robot-profile layer unless it truly varies by robot profile.
 - If localization work also touches a vision wrapper, keep that wrapper on the `Mechanism` + `RobotConstants.createMechanism(...)` path.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Localization changes that use `Constants.createLimelight(...)` or `Constants.createWebcam(...)` must ensure the profile selected by `Constants.currentBot` registers the required wrapper.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot provides
+the drive stack and Pinpoint but does not register either vision wrapper.
+Localization changes that use
+`Constants.createLimelight(...)` or `Constants.createWebcam(...)` must first
+register the required wrapper in the selected profile.
 
 ## Rules
 

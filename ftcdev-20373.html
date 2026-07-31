@@ -1005,7 +1005,7 @@
 <pre>public class Constants {
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
-    public static final RobotConstants currentBot = RobotConfigurations.OldDECODERobotTesting();
+    public static final RobotConstants currentBot = /* selected RobotConfigurations profile */;
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);
@@ -1549,7 +1549,7 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
         constantsFactory: `public class Constants {
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
-    public static final RobotConstants currentBot = RobotConfigurations.OldDECODERobotTesting();
+    public static final RobotConstants currentBot = /* selected RobotConfigurations profile */;
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);

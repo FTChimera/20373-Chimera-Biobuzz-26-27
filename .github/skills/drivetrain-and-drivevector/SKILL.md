@@ -41,6 +41,11 @@ This skill covers the team’s custom teleop-drive stack.
 - IMU lookup and REV Hub orientation are profile-owned through `RobotConstants`; use `Constants.createIMU(hardwareMap)` to initialize the active-profile IMU, then reset yaw explicitly in the op mode.
 - `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
 - Drive motor directions in robot profiles now use `library.hardware.actuators.Direction`; `Drivetrain` applies them through `Motor.setDirection(...)`.
+- FirstRobot's drivetrain hardware wiring and Pinpoint setup are ready. Its
+  Pedro drive-tuning fields remain
+  unconfigured (`X_VELOCITY` / `Y_VELOCITY` are zero and the follower
+  coefficients are defaults), so do not treat follower-drive behavior as
+  calibrated.
 - `tests/MecanumTeleOp.java` now pulls drivetrain motor names and initial directions from `Constants.currentBot` rather than keeping separate stale test-only drive strings.
 - `tests/FieldCentricMecanumTeleOp.java` is still a direct SDK example that hardcodes right-side motor reversal, so treat it as a manual reference rather than the profile-owned drive stack.
 - `MotorDirectionTest` is now a live low-speed loop that keeps drivetrain/intake direction telemetry updating while you flip directions, so drive-sign edits should stay compatible with that constants-driven sanity check.

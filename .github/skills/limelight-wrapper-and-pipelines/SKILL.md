@@ -32,7 +32,11 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
 - Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
 - Shared Limelight behavior should read from the wrapper’s cached fields; the current raw-SDK exceptions are `tests/PreseasonWebcamAuto.java` and the deprecated `pedroPathing/custom/LimelightPinpointLocalizer.java`.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Whether wrapper-based Limelight creation works through `Constants.createLimelight(...)` depends on the profile selected by `Constants.currentBot`; confirm it registers `Limelight.class` before calling the factory.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot does
+  not register `Limelight.class`.
+  Wrapper-based Limelight creation through `Constants.createLimelight(...)`
+  therefore requires adding the wrapper to FirstRobot (or selecting a profile
+  that already registers it) before calling the factory.
 
 ## Params and creation pattern
 

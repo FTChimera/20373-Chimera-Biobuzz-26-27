@@ -219,8 +219,13 @@ When a change adds or modifies a mechanism, confirm all of these:
 
 ## Current repo-specific warning signs
 
-- Placeholder drivetrain and localization tuning values still exist in `RobotConfigurations` and related config objects.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Each profile-managed `Constants.create...(...)` helper is a runtime assertion point unless the profile selected by `Constants.currentBot` registers its mechanism class.
+- FirstRobot's Pinpoint hardware name, offsets, and encoder directions are
+  configured. Its Pedro drive-tuning values remain placeholders, including zero
+  x/y velocity and default follower coefficients.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist.
+  FirstRobot registers only the normal drive stack. Each other profile-managed
+  `Constants.create...(...)` helper is a runtime assertion point until the
+  selected profile registers its mechanism class.
 - Several tests now intentionally centralize hardware names through `Constants.currentBot` or nested params classes; new test edits should preserve that instead of reintroducing ad hoc strings.
 - `pid/autoTune/` is intentionally driver-station-visible tuning code that uses raw motor names and direction booleans from `TuningConstants` rather than the profile-managed mechanism factory path.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.

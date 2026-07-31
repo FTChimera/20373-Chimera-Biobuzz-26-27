@@ -20,6 +20,8 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 - `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
 - `tests/`: driver-station validation and proof-of-concept op modes, including `PreseasonWebcamAuto` and `tests/ftcSdk` helpers.
 - `learning/`: teaching or scratch op modes, including the Kotlin teleop example.
+- `learning/flyset/`: an unannotated PIDF teaching sketch with placeholder
+  `Sensor` methods; it is not hardware-ready robot code.
 - `java-autogen/`: browser-side HTML/JS generators for producing starter Java autonomous classes from Pedro/Turtle Tracer path data or manual path-builder drafts.
 - `Constants.java`: the active robot profile, default poses, and op-mode-facing convenience factories.
 
@@ -39,7 +41,12 @@ Use this pattern:
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. A helper existing in `Constants` does **not** mean the profile selected by `Constants.currentBot` registers that class; check its `Mechanisms` set before using a factory helper.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
+registers only `MecanumDrive` and `Drivetrain`; its Pinpoint
+geometry/directions are configured, but its Pedro drive-tuning fields are still
+defaults and its planned intake is not yet registered. A helper existing in
+`Constants` does **not** mean the profile selected by `Constants.currentBot`
+registers that class; check its `Mechanisms` set before using a factory helper.
 
 ## Where configuration belongs
 

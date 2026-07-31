@@ -13,6 +13,8 @@ Use this skill for direct FTC SDK integration work.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
+  FirstRobot registers only `MecanumDrive` and `Drivetrain`; do not call an
+  optional mechanism factory with that profile until its class has been added.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
