@@ -2,136 +2,154 @@ package org.firstinspires.ftc.teamcode.library.math;
 
 import androidx.annotation.NonNull;
 
-import java.util.Locale;
+import java.util.Arrays;
+import java.util.Objects;
 
 /**
- Length 1 expression – 0th degree, length 2 expression - 1st degree, etc.
- 0th term – highest degree term
-
+ * A polynomial whose coefficients are stored highest degree first.
  */
 public class Polynomial implements Equation {
-    public double[] coefs;
+    public final double[] coefs;
+
+    public Polynomial(@NonNull double[] coefficients) {
+        Objects.requireNonNull(coefficients, "coefficients");
+        if (coefficients.length == 0) {
+            throw new IllegalArgumentException("A polynomial requires at least one coefficient");
+        }
+        for (double coefficient : coefficients) {
+            if (!Double.isFinite(coefficient)) {
+                throw new IllegalArgumentException("Polynomial coefficients must be finite");
+            }
+        }
+        coefs = trimLeadingZeroes(coefficients);
+    }
+
     public int getDegree() {
         return coefs.length - 1;
     }
+
+    @Override
     public double getY(double x) {
-        int degree = coefs.length - 1;
         double result = 0;
-        for (int i = 0; i <= degree; i ++) {
-            double xPow = Math.pow(x, degree - i);
-            double term = xPow * coefs[i];
-            result += term;
+        for (double coefficient : coefs) {
+            result = result * x + coefficient;
         }
         return result;
     }
 
+    @NonNull
     @Override
     public Term[] getTerms() {
-        return new Term[]{
-                new Term(Polynomial.class, coefs[0]) // todo be implemented
-        };
+        Term[] terms = new Term[coefs.length];
+        int degree = getDegree();
+        for (int i = 0; i < coefs.length; i++) {
+            terms[i] = Term.power(coefs[i], degree - i);
+        }
+        return terms;
     }
 
-    public Polynomial(double[] a) {
-        coefs = a.clone();
-    }
-
+    @NonNull
+    @Override
     public Polynomial scale(double k) {
-        double [] b = new double[coefs.length];
-        for (int i = 0; i <= getDegree(); i ++) {
-            b[i] = coefs[i]*k;
+        if (!Double.isFinite(k)) {
+            throw new IllegalArgumentException("Scale must be finite");
         }
-        return new Polynomial(b);
+        double[] scaled = new double[coefs.length];
+        for (int i = 0; i < coefs.length; i++) {
+            scaled[i] = coefs[i] * k;
+        }
+        return new Polynomial(scaled);
     }
 
-    public Polynomial copy() {return new Polynomial(coefs.clone());}
+    @NonNull
+    public Polynomial copy() {
+        return new Polynomial(coefs);
+    }
 
-    public Polynomial multiply(Equation other) {
-        if (other instanceof Polynomial) {
-            int degA = getDegree();
-            int degB = ((Polynomial) other).getDegree();
-            double[] result = new double[degA + degB + 1];
-            for (int i = 0; i <= degA; i++) {
-                for (int j = 0; j <= degB; j++) {
-                    result[i + j] += coefs[i] *((Polynomial) other).coefs[j];
-                }
+    @NonNull
+    public Polynomial multiply(@NonNull Polynomial other) {
+        Objects.requireNonNull(other, "other");
+        double[] result = new double[getDegree() + other.getDegree() + 1];
+        for (int i = 0; i < coefs.length; i++) {
+            for (int j = 0; j < other.coefs.length; j++) {
+                result[i + j] += coefs[i] * other.coefs[j];
             }
-            return new Polynomial(result);
-        } else {
-            // i need to find some way to represent terms like x^3*sin(x)
-            return null;
         }
+        return new Polynomial(result);
     }
 
-    public Polynomial add(Equation other) {
-        if (other instanceof Polynomial) {
-            int degree = getDegree();
-            double[] c = new double[degree+1];
-            for (int i = 0; i <= degree; i ++) {
-                c[i] = coefs[i] + ((Polynomial) other).coefs[i];
-            }
-            return new Polynomial(c);
-        } else {
-            boolean singleTermPolynomial = false;
-            // todo
-            return null;
-        }
+    @NonNull
+    @Override
+    public Equation multiply(@NonNull Equation other) {
+        Objects.requireNonNull(other, "other");
+        return other instanceof Polynomial
+                ? multiply((Polynomial) other)
+                : Equation.of(getTerms()).multiply(other);
     }
+
+    @NonNull
+    public Polynomial add(@NonNull Polynomial other) {
+        Objects.requireNonNull(other, "other");
+        int resultLength = Math.max(coefs.length, other.coefs.length);
+        double[] result = new double[resultLength];
+        addAligned(result, coefs);
+        addAligned(result, other.coefs);
+        return new Polynomial(result);
+    }
+
+    @NonNull
+    @Override
+    public Equation add(@NonNull Equation other) {
+        Objects.requireNonNull(other, "other");
+        return other instanceof Polynomial
+                ? add((Polynomial) other)
+                : Equation.of(getTerms()).add(other);
+    }
+
+    @NonNull
+    @Override
+    public Polynomial derivative() {
+        if (coefs.length == 1) {
+            return new Polynomial(new double[]{0});
+        }
+        double[] derivative = new double[coefs.length - 1];
+        int degree = getDegree();
+        for (int i = 0; i < derivative.length; i++) {
+            derivative[i] = coefs[i] * (degree - i);
+        }
+        return new Polynomial(derivative);
+    }
+
+    @NonNull
+    @Override
+    public Polynomial indefiniteIntegral() {
+        double[] integral = new double[coefs.length + 1];
+        int degree = getDegree();
+        for (int i = 0; i < coefs.length; i++) {
+            integral[i] = coefs[i] / (degree - i + 1);
+        }
+        return new Polynomial(integral);
+    }
+
     @NonNull
     @Override
     public String toString() {
-        StringBuilder s = new StringBuilder();
-        double[] coefficients = coefs.clone();
-        int degree = coefficients.length;
-        for (int i = 0; i < degree; i ++) {
-            if (coefficients[i] > 0 && !s.toString().isEmpty()) {
-                s.append("  +  ");
-            }
-            if (coefficients[i] < 0) {
-                coefficients[i]*= -1;
-                s.append("  -  ");
-            }
-            if (coefficients[i] != 0) {
-                if (coefficients[i] == (int) coefficients[i]) {
-                    if (coefficients[i] != 1 || (coefficients[i] == 1 && degree-i-1 == 0)) {
-                        s.append((int) coefficients[i]);
-                    }
-                }
-                else {
-                    s.append(String.format(Locale.US, "%.2f", coefficients[i]));
-                }
-            }
-            if (coefficients[i] != 0) {
-                if (degree-i-1 == 1) {
-                    s.append("x");
-                }
-                else if (degree-i-1 > 1) {
-                    s.append("x^").append(degree - i - 1);
-                }
-            }
-
-        }
-        return "f(x) = " + s;
+        String expression = Equation.of(getTerms()).toString();
+        return expression.startsWith("f(x) = ") ? expression : "f(x) = " + expression;
     }
 
-     public Polynomial derivative() {
-        if (coefs.length == 1) {
-            // Must be a constant, or 0
-            return new Polynomial(new double[]{0});
+    private static void addAligned(double[] result, double[] source) {
+        int offset = result.length - source.length;
+        for (int i = 0; i < source.length; i++) {
+            result[offset + i] += source[i];
         }
-         double[] dCoefs = new double[coefs.length - 1];
-         int degree = getDegree();
-         for (int i = 0; i < degree; i++) {
-             dCoefs[i] = coefs[i] * (degree - i);
-         }
-         return new Polynomial(dCoefs);
-     }
-    public Polynomial indefiniteIntegral() {
-        double[] iCoefs = new double[coefs.length + 1];
-        int degree = getDegree();
-        for (int i = 0; i <= degree; i++) {
-            iCoefs[i] = coefs[i] / (degree - i + 1);
+    }
+
+    private static double[] trimLeadingZeroes(double[] coefficients) {
+        int firstNonZero = 0;
+        while (firstNonZero < coefficients.length - 1 && coefficients[firstNonZero] == 0) {
+            firstNonZero++;
         }
-        return new Polynomial(iCoefs);
+        return Arrays.copyOfRange(coefficients, firstNonZero, coefficients.length);
     }
 }

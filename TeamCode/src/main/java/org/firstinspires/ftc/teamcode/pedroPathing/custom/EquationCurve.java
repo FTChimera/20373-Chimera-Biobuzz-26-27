@@ -9,6 +9,8 @@ import com.pedropathing.paths.PathPoint;
 
 import org.firstinspires.ftc.teamcode.library.math.Equation;
 
+import java.util.Objects;
+
 /**
  * EquationCurve - A custom curve defined by a expression equation
  * <p>
@@ -23,27 +25,44 @@ import org.firstinspires.ftc.teamcode.library.math.Equation;
  * @author Team
  */
 public class EquationCurve extends CustomCurve {
-    public Pose startPose;
-    public Pose endPose;
-    public Equation equation;
-    public HeadingInterpolator interpolator;
+    private static final double ENDPOINT_TOLERANCE = 1e-3;
+
+    public final Pose startPose;
+    public final Pose endPose;
+    public final Equation equation;
+    public final HeadingInterpolator interpolator;
 
     public EquationCurve(Pose startPose, Pose endPose, Equation equation, HeadingInterpolator interpolator) {
         super(() -> startPose, () -> endPose);
-        if (!functionPassesThroughStartEnd(equation, startPose, endPose)) {
-            throw new IllegalArgumentException("The given expression does not pass through start and end poses, " + equation);
+        this.startPose = Objects.requireNonNull(startPose, "startPose");
+        this.endPose = Objects.requireNonNull(endPose, "endPose");
+        this.equation = Objects.requireNonNull(equation, "equation");
+        this.interpolator = Objects.requireNonNull(interpolator, "interpolator");
+        validatePoses();
+        if (!functionPassesThroughStartEnd()) {
+            throw new IllegalArgumentException(
+                    "The given equation does not pass through the start and end poses: " + equation);
         }
-        this.startPose = startPose;
-        this.endPose = endPose;
-        this.equation = equation;
-        this.interpolator = interpolator;
         initialize();
     }
 
-    private boolean functionPassesThroughStartEnd(Equation equation, Pose startPose, Pose endPose) {
-        boolean startMatches = MathFunctions.roughlyEquals(equation.getY(startPose.getX()), startPose.getY(), 1e-3);
-        boolean endMatches = MathFunctions.roughlyEquals(equation.getY(endPose.getX()), endPose.getY(), 1e-3);
-        return startMatches&&endMatches;
+    private boolean functionPassesThroughStartEnd() {
+        boolean startMatches = MathFunctions.roughlyEquals(
+                equation.getY(startPose.getX()), startPose.getY(), ENDPOINT_TOLERANCE);
+        boolean endMatches = MathFunctions.roughlyEquals(
+                equation.getY(endPose.getX()), endPose.getY(), ENDPOINT_TOLERANCE);
+        return startMatches && endMatches;
+    }
+
+    private void validatePoses() {
+        if (!Double.isFinite(startPose.getX()) || !Double.isFinite(startPose.getY())
+                || !Double.isFinite(endPose.getX()) || !Double.isFinite(endPose.getY())) {
+            throw new IllegalArgumentException("Equation curve poses must have finite x and y coordinates");
+        }
+        if (Double.compare(startPose.getX(), endPose.getX()) == 0) {
+            throw new IllegalArgumentException(
+                    "Equation curves require distinct start and end x coordinates");
+        }
     }
 
     @Override
@@ -102,7 +121,6 @@ public class EquationCurve extends CustomCurve {
 
         double dxDt = endPose.getX() - startPose.getX();
         double x = t * dxDt + startPose.getX();
-        // Will return zero for any expression whose 2nd derivative is just 0, so no safety checks needed
         double d2yDt2 = equation.derivative().derivative().getY(x) * dxDt * dxDt;
 
         Vector secondDerivative = new Vector();
