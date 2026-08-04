@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.webcam;
 
+import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.CommandBuilder;
 import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.util.Timer;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -10,6 +10,8 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
@@ -21,7 +23,9 @@ public class Limelight extends Mechanism {
         public double
                 LIMELIGHT_MOUNT_ANGLE_DEGREES = 0,
                 LIMELIGHT_LENS_HEIGHT_INCHES = 0,
-                TAG_HEIGHT_INCHES = 0;
+                TAG_HEIGHT_INCHES = 0,
+                LIMELIGHT_OFFSET_X_INCHES = 0,
+                LIMELIGHT_OFFSET_Y_INCHES = 0;
         public String HARDWAREMAP_NAME = "limelight";
         public boolean ISBEINGUSED = true;
         public LIMELIGHT_PARAMS() {}
@@ -29,6 +33,8 @@ public class Limelight extends Mechanism {
             LIMELIGHT_MOUNT_ANGLE_DEGREES = other.LIMELIGHT_MOUNT_ANGLE_DEGREES;
             LIMELIGHT_LENS_HEIGHT_INCHES = other.LIMELIGHT_LENS_HEIGHT_INCHES;
             TAG_HEIGHT_INCHES = other.TAG_HEIGHT_INCHES;
+            LIMELIGHT_OFFSET_X_INCHES = other.LIMELIGHT_OFFSET_X_INCHES;
+            LIMELIGHT_OFFSET_Y_INCHES = other.LIMELIGHT_OFFSET_Y_INCHES;
             HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
             ISBEINGUSED = other.ISBEINGUSED;
         }
@@ -42,6 +48,14 @@ public class Limelight extends Mechanism {
         }
         public LIMELIGHT_PARAMS tagHeightInches(double tagHeightInches) {
             this.TAG_HEIGHT_INCHES = tagHeightInches;
+            return this;
+        }
+        public LIMELIGHT_PARAMS limelightOffsetXInches(double limelightOffsetXInches) {
+            this.LIMELIGHT_OFFSET_X_INCHES = limelightOffsetXInches;
+            return this;
+        }
+        public LIMELIGHT_PARAMS limelightOffsetYInches(double limelightOffsetYInches) {
+            this.LIMELIGHT_OFFSET_Y_INCHES = limelightOffsetYInches;
             return this;
         }
         public LIMELIGHT_PARAMS hardwareMapName(String hardwareMapName) {
@@ -157,9 +171,26 @@ public class Limelight extends Mechanism {
         if (!isBeingUsed) return null;
         return detectors;
     }
-    public void updateRobotOrientation(double orientationDegrees) {
+    /**
+     * Enter follower.getHeading(); Must be called before LLUpdate();
+     */
+    public void updateRobotOrientation(double orientationRad) {
         if (!isBeingUsed) return;
-        limelight1.updateRobotOrientation(orientationDegrees);
+
+        limelight1.updateRobotOrientation(
+                Constants.FTC_COORDINATE_SYSTEM.convertFromPedro(
+                new Pose(
+                        0,
+                        0,
+                        orientationRad
+                )
+        ).getHeading() / MathUtils.DEG_TO_RAD);
+    }
+
+    public Pose getBotposeMT2() {
+        if (!isBeingUsed) return null;
+        if (result == null || botpose == null) return null;
+        return MathUtils.units.toPedroPathing(botpose);
     }
     public void LLUpdate() {
         // Must be called every loop for disconnected timer
@@ -185,9 +216,4 @@ public class Limelight extends Mechanism {
             if (disconnectedTimer.getElapsedTimeSeconds() > 0.6) {isDisconnected= true;}
         }
     }
-    public double getRGBScore() {
-        if (!isBeingUsed) return Double.NaN;
-        return Math.abs(tx);
-    }
-
 }

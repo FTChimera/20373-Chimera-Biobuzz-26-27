@@ -2,6 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.ftc.FTCCoordinates;
+import com.pedropathing.ftc.InvertedFTCCoordinates;
+import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -22,6 +25,9 @@ import java.util.Set;
 
 @Configurable
 public class Constants {
+    /** https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html#coordinate-system
+     * Look when game is released and change the constant */
+    public static final CoordinateSystem FTC_COORDINATE_SYSTEM = InvertedFTCCoordinates.INSTANCE;
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final RobotConstants currentBot = RobotConfigurations.FirstRobot();

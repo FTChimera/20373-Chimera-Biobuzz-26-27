@@ -39,7 +39,7 @@ public class SkillBuilder5 extends LinearOpMode {
 
             if (gamepad1.left_trigger_pressed) {
                 Outtake.setPower(1.0);
-                if (Intake.getPower() == 1.0) {
+                if (Outtake.getPower() == 1.0) {
                     Transfer.setPower(1.0);
                 }
             } else {
