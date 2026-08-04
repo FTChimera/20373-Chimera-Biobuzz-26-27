@@ -19,7 +19,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
-import org.firstinspires.ftc.teamcode.mechanisms.Slides1;
 
 import java.util.Set;
 
@@ -71,11 +70,6 @@ public class Constants {
     public static LogitechWebcam createWebcam(HardwareMap hardwareMap) {
         assertHasMechanism(LogitechWebcam.class);
         return currentBot.createMechanism(hardwareMap, LogitechWebcam.class);
-    }
-
-    public static Slides1 createSlides1(HardwareMap hardwareMap) {
-        assertHasMechanism(Slides1.class);
-        return currentBot.createMechanism(hardwareMap, Slides1.class);
     }
 
     public static <T> T createMechanism(HardwareMap hardwareMap, Class<T> mechClass) {

@@ -80,7 +80,7 @@ public class Limelight extends Mechanism {
     }
     public LIMELIGHT_PARAMS params;
     public Command updateCommand() {
-        return Commands.infinite(Limelight.this::LLUpdate);
+        return periodicCommand();
     }
 
     public enum Pipeline {
@@ -203,6 +203,17 @@ public class Limelight extends Mechanism {
         if (result == null || botpose == null) return null;
         return MathUtils.units.toPedroPathing(botpose);
     }
+
+    @Override
+    public void periodic() {
+        LLUpdate();
+    }
+
+    @Override
+    public Command periodicCommand() {
+        return Commands.infinite(this::periodic);
+    }
+
     public void LLUpdate() {
         // Must be called every loop for disconnected timer
         if (!isBeingUsed) return;

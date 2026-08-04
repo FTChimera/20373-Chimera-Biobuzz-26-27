@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.robot;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
@@ -80,6 +82,14 @@ public class RobotConfigurationTest {
         public FakeMechanism(HardwareMap map, RobotConstants bot) {
             super(map, bot);
             this.params = resolveParams(FakeMechanism.class, new FakeParams());
+        }
+
+        @Override
+        public void periodic() {}
+
+        @Override
+        public Command periodicCommand() {
+            return Commands.infinite(this::periodic);
         }
     }
 

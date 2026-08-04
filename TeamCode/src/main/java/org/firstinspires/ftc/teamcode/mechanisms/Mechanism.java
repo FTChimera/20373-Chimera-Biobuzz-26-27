@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
@@ -10,8 +11,6 @@ public abstract class Mechanism {
         T updateFromBot(RobotConstants bot);
     }
 
-    // inheritors
-    // drivetrain, intake, mecanumdrive, rgb indicator, limelight, logitechwebcam, slides1
     protected HardwareMap hardwareMap;
     protected RobotConstants bot;
     public Mechanism(HardwareMap map, RobotConstants bot) {
@@ -22,4 +21,8 @@ public abstract class Mechanism {
     protected <P extends Params<P>> P resolveParams(Class<? extends Mechanism> mechanismClass, P defaultParams) {
         return bot.getMechanismParams(mechanismClass, defaultParams).updateFromBot(bot);
     }
+
+    public abstract void periodic();
+
+    public abstract Command periodicCommand();
 }

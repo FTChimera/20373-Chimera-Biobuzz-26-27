@@ -36,7 +36,7 @@ Use this skill when needing to change constants that were left blank because of 
   - `RED_DEFAULT_START_POSE`
   - `BLUE_DEFAULT_START_POSE`
   - `currentBot`, which selects the active robot profile (assigned in `Constants.java`)
-  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, `createSlides1(...)`, and generic `createMechanism(...)`
+  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, and generic `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
@@ -50,7 +50,6 @@ Use this skill when needing to change constants that were left blank because of 
 - `library/hardware/hardwareDevice/` now contains custom FTC `HardwareDevice` definitions such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`; these are lower-level SDK types, not profile-managed mechanisms.
 - Mechanism-specific placeholder values still live inside the owning classes as builder-style nested params:
   - `mechanisms/Intake.java` -> `INTAKE_PARAMS`
-  - `mechanisms/Slides1.java` -> `SLIDES1_PARAMS`
   - `library/hardware/webcam/Limelight.java` -> `LIMELIGHT_PARAMS`
   - `library/hardware/webcam/LogitechWebcam.java` -> `LOGITECH_WEBCAM_PARAMS`
   - `library/hardware/leds/RGBIndicator.java` -> `RGBIndicator_PARAMS`
@@ -64,8 +63,8 @@ Use this skill when needing to change constants that were left blank because of 
 - `Limelight.LIMELIGHT_PARAMS` still has `LIMELIGHT_MOUNT_ANGLE_DEGREES`, `LIMELIGHT_LENS_HEIGHT_INCHES`, and `TAG_HEIGHT_INCHES` at `0`.
 - `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` contains the default hardware name, overlay toggles, output units, and resolution that may need real robot-specific values.
 - `RGBIndicator.RGBIndicator_PARAMS` contains the LED hardware name, panels name, indicator type (`ONLY_HARDWARE`/`ONLY_VIRTUAL`/`BOTH`/`NAN`), and enablement gate.
-- `Slides1.SLIDES1_PARAMS` contains the current slides hardware-map name and enablement gate.
-- `Intake.INTAKE_PARAMS` contains intake power presets, motor direction, and hardware name defaults.
+- `SlidesMotor.DEFAULT_HARDWAREMAP_NAME` contains the default hardware-map name used by the current direct SDK-level slides test.
+- `Intake.INTAKE_PARAMS` contains intake power presets, motor direction, the intake motor hardware name, and the raw slides setup defaults (`HARDWAREMAP_NAME_SLIDES`, `SLIDES_MIN`, `SLIDES_MAX`).
 - `tests/PreseasonWebcamAuto` contains local PIDF constants that are not sourced from `Constants` or `RobotConfigurations`.
 - `pid/autoTune/TuningConstants.java` contains additional tune-target placeholders such as `MOTOR_NAME`, `MOTOR_NAME_2`, `TARGET_RPM`, `TICKS_PER_REV`, `RELAY_AMPLITUDE`, and relay/feedforward test settings.
 
@@ -98,7 +97,7 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Op modes and tests that are especially affected by constant changes
 
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. FirstRobot registers only `MecanumDrive` and `Drivetrain`, so these shared teleops cannot run with that profile until intake and Limelight are registered; `createWebcam(...)` and `createSlides1(...)` additionally require `LogitechWebcam` and `Slides1` to be registered.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. FirstRobot registers only `MecanumDrive` and `Drivetrain`, so these shared teleops cannot run with that profile until intake and Limelight are registered; `createWebcam(...)` additionally requires `LogitechWebcam` to be registered.
 - `opModes/IvyAuton.java` uses `Constants.createFollower(...)` and `Constants.createIntake(...)`, but its starting pose comes from the selected `IvyAuton_Paths.getStartingPose()` implementation, not from the default alliance poses in `Constants`.
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
 - `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring; it calls `Constants.createDrivetrain(...)` and `Constants.createIntake(...)`, so it requires a profile that registers both `Drivetrain.class` and `Intake.class`.
@@ -106,12 +105,12 @@ Use this skill when needing to change constants that were left blank because of 
 - `tests/FieldCentricMecanumTeleOp.java` gets its IMU through `Constants.createIMU(hardwareMap)`, but its right-side motor directions are still hardcoded to `DcMotorSimple.Direction.REVERSE` rather than read from `Constants.currentBot`.
 - `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper for behavior, but now still sources the camera name from `Limelight.LIMELIGHT_PARAMS`; camera-name or vision-tuning updates may still need to touch it explicitly.
 - `tests/MecanumTeleOp.java` now pulls drivetrain motor names and default directions from `Constants.currentBot`, so drive-profile renames should stay aligned automatically.
-- `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` now source hardware names from the owning params classes instead of stale standalone literals.
+- `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` now source hardware names from the owning wrapper/device definitions instead of stale standalone literals.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` depend directly on `pid/autoTune/TuningConstants.java` for motor names, reversal booleans, target speed/position, and relay-test settings.
 
 ## Repo-specific warning signs
 
-- The active profile is set via `Constants.currentBot`. FirstRobot registers only `MecanumDrive` and `Drivetrain`; when that profile is selected, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, `createWebcam(...)`, and `createSlides1(...)` all fail early until their classes are explicitly registered with `.addMechanism(...)`.
+- The active profile is set via `Constants.currentBot`. FirstRobot registers only `MecanumDrive` and `Drivetrain`; when that profile is selected, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` all fail early until their classes are explicitly registered with `.addMechanism(...)`.
 - `RobotConstants.createMechanism(...)` throws if the mechanism class is not registered in `Mechanisms`. If a constant change introduces or enables a subsystem, also check `.addMechanism(...)`.
 - IMU settings are robot-profile-wide: update `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` through the existing fluent builders, then use `Constants.createIMU(hardwareMap)` from op modes. The factory initializes orientation but intentionally does not reset yaw.
 - `Constants.assertHasMechanism(...)` now also fails early on the convenience-factory path, so mechanism registration issues may surface before reflection-based construction.
@@ -119,7 +118,6 @@ Use this skill when needing to change constants that were left blank because of 
 - A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. With FirstRobot selected, every non-drive factory helper fails early because its class is absent from `bot.Mechanisms`.
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` do still toggle themselves off when constructed with a profile that omits their class, but the normal convenience-factory path now usually hits `assertHasMechanism(...)` first.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
-- `Slides1` exists as a mechanism shell, but it is not currently registered in either shipped profile, so changing its params does not automatically make it available through the normal `Constants.create...(...)` path.
 - `pid/autoTune/` is intentionally not on the normal `Constants.create...(...)` mechanism-factory path; if the task is about those tuner op modes, update `TuningConstants` instead of trying to thread the values through `RobotConfigurations`.
 - This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
 

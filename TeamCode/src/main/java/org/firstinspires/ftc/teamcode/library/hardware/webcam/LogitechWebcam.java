@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.webcam;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -245,5 +247,15 @@ public class LogitechWebcam extends Mechanism {
                 pose3D.getPosition().toUnit(DistanceUnit.INCH).z,
                 pose3D.getOrientation().getYaw(AngleUnit.RADIANS)
         );
+    }
+
+    @Override
+    public void periodic() {
+        update();
+    }
+
+    @Override
+    public Command periodicCommand() {
+        return Commands.infinite(this::periodic);
     }
 }

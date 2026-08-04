@@ -110,7 +110,7 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 
 Examples:
 
-- If the change adds `Slides1` and `SlidesMotor`, update:
+- If the change adds a new slides mechanism layer around `SlidesMotor`, update:
   - `mechanisms-and-hardware-wrappers`
   - `teamcode-library-architecture`
   - `tests-and-tuning-opmodes`

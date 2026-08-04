@@ -40,7 +40,7 @@ public class IvyTeleOp extends LinearOpMode {
         limelight = Constants.createLimelight(hardwareMap);
 
         Scheduler.schedule(
-                limelight.updateCommand(),
+                limelight.periodicCommand(),
                 drive.periodicCommand(),
                 drive.teleOp(() -> new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x)),
                 Groups.loop(intake.setPowerCommand(() -> (double) (gamepad1.right_trigger - gamepad1.left_trigger))),

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
@@ -105,5 +107,13 @@ public class Drivetrain extends Mechanism {
      */
     public Motor[] getDriveMotors() {
         return motors;
+    }
+
+    @Override
+    public void periodic() {}
+
+    @Override
+    public Command periodicCommand() {
+        return Commands.infinite(this::periodic);
     }
 }

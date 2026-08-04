@@ -15,7 +15,6 @@ This skill covers the repo’s current Pedro Ivy usage patterns, not generic Ivy
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Slides1.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/CommandConverter.java`
@@ -31,7 +30,7 @@ This skill covers the repo’s current Pedro Ivy usage patterns, not generic Ivy
 1. The repo builds against `com.pedropathing:ivy:1.0.0`.
 2. Iterative Ivy flows reset the scheduler first, schedule work, and call `Scheduler.execute()` every loop.
 3. TeamCode currently composes commands with `Commands.instant(...)`, `Commands.infinite(...)`, `Commands.waitMs(...)`, `Groups.sequential(...)`, `Groups.loop(...)`, and `PedroCommands.follow(...)`.
-4. Mechanisms expose small Ivy-friendly helpers such as `Intake.fullPower()`, `Intake.setPowerCommand(...)`, `MecanumDrive.periodicCommand()`, `MecanumDrive.teleOp(...)`, and `Limelight.updateCommand()`.
+4. Mechanisms expose small Ivy-friendly helpers such as `Intake.fullPower()`, `Intake.setPowerCommand(...)`, `MecanumDrive.periodicCommand()`, `MecanumDrive.teleOp(...)`, and `Limelight.periodicCommand()`.
 5. `CommandConverter.toCommand(...)` wraps a `Runnable` as an instant command, while `CommandConverter.toRunnable(...)` runs a `Command` synchronously through `Ivy.run(...)`.
 6. There is no current TeamCode example that implements `Command` directly, extends `CommandBuilder`, or constructs `new CommandBuilder()`.
 
@@ -42,7 +41,7 @@ This skill covers the repo’s current Pedro Ivy usage patterns, not generic Ivy
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` schedule `Commands.infinite(follower::update)` alongside a sequential follow-path chain.
 - `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold that still resolves its intake motor directly from `hardwareMap`.
 - `DualGamepad.updateCommand()` exists as a wrapper-wide input-update command, but no current TeamCode op mode uses it yet.
-- `Slides1` currently only wraps construction and does not expose Ivy command helpers.
+- `Mechanism` now requires a `periodicCommand()` implementation for every concrete profile-managed mechanism, even when the periodic body is intentionally empty.
 
 ## Profile / mechanism caveat
 

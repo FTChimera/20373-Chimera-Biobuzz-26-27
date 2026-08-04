@@ -7,14 +7,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.SlidesMotor;
-import org.firstinspires.ftc.teamcode.mechanisms.Slides1;
 //@Disabled
 @TeleOp
 public class SlidesMotorTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, Gamepad gamepad1, Gamepad gamepad2, Telemetry telemetry) {
-        Slides1.SLIDES1_PARAMS params = new Slides1.SLIDES1_PARAMS();
-        SlidesMotor slides = hardwareMap.get(SlidesMotor.class, params.HARDWAREMAP_NAME);
+        SlidesMotor slides = hardwareMap.get(SlidesMotor.class, SlidesMotor.DEFAULT_HARDWAREMAP_NAME);
         slides.initialize(12, 1355);
         sleep(200);
         slides.setUp();

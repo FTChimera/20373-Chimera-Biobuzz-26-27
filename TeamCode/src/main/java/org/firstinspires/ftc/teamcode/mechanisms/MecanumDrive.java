@@ -107,6 +107,7 @@ public class MecanumDrive extends Mechanism {
      * Periodic update - should be called every loop iteration
      * Updates pose tracking and follower state
      */
+    @Override
     public void periodic() {
         // Update last known pose
         lastPose = follower.getPose();
@@ -246,6 +247,7 @@ public class MecanumDrive extends Mechanism {
     }
 
     /** Command to update the follower every iteration */
+    @Override
     public Command periodicCommand() {
         return Commands.infinite(this::periodic);
     }

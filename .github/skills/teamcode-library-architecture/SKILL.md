@@ -40,7 +40,7 @@ Use this pattern:
 6. Instantiate from `RobotConstants.createMechanism(...)`, usually through a small convenience helper in `Constants` such as `createIntake(hardwareMap)`.
 7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
-Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
+Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, or `RGBIndicator.RGBIndicator_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
 
 A helper existing in `Constants` does **not** mean the profile selected by
 `Constants.currentBot` registers that class; check the selected profile's
@@ -50,7 +50,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 ## Where configuration belongs
 
 - Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
-- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)`, `createWebcam(...)`, and `createSlides1(...)`.
+- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
 - Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
@@ -79,7 +79,6 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `mechanisms.Intake`
 - `mechanisms.Drivetrain`
 - `mechanisms.MecanumDrive`
-- `mechanisms.Slides1`
 - `mechanisms.Mechanism`
 - `library.robot.RobotConstants`
 - `library.robot.RobotConfigurations`
@@ -120,6 +119,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
 - `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
+- Every concrete `Mechanism` subclass now implements both `periodic()` and `periodicCommand()`, so direct loop-driven and Ivy-scheduled updates share the same surface.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
 - The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.

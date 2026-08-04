@@ -29,14 +29,13 @@ This includes both:
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/leds/RGBIndicator.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Slides1.java`
 
 ## Design intent in this repo
 
 1. Low-level device access belongs in wrappers such as `Motor`, `Limelight`, or `LogitechWebcam`.
 2. Reusable subsystems and high-level wrappers share the `Mechanism` base class so they all receive `HardwareMap` and the active `RobotConstants` profile the same way.
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
-4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createSlides1`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
+4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
 The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
@@ -59,20 +58,21 @@ When asked to create a new mechanism, follow this repo style:
 4. Use `bot` for robot-profile state such as hardware names, directions, feature enablement, or follower compatibility.
 5. Register the class in each relevant robot preset with `.addMechanism(NewMechanism.class)` or, for normal drive-stack behavior, through `configureDriveMechanisms()`.
 6. Give it a builder-style nested params type that implements `Mechanism.Params<...>` when the mechanism has local configuration, and resolve that config through `Mechanism.resolveParams(...)`.
-7. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
-8. If the mechanism can be disabled by profile selection, determine that before touching hardware.
-9. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
+7. Implement the mechanism-wide `periodic()` and `periodicCommand()` API required by `Mechanism`; use a real per-loop update when the mechanism has one, otherwise keep the no-op implementation explicit.
+8. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
+9. If the mechanism can be disabled by profile selection, determine that before touching hardware.
+10. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
 
 Why: the repo’s uniformity now comes from the shared `Mechanism` base class, profile registration with `addMechanism(...)`, and one reflection-based factory path in `RobotConstants.createMechanism(...)`.
 
 ## Existing patterns to reuse
 
-- `Intake` extends `Mechanism`, wraps one `Motor`, owns a builder-style `INTAKE_PARAMS` helper, and is created via `Constants.createIntake(hardwareMap)` → `currentBot.createMechanism(...)`.
+- `Intake` extends `Mechanism`, owns a builder-style `INTAKE_PARAMS` helper, wraps the intake `Motor`, and now also performs raw `SlidesMotor` setup from its nested slides params without turning the slides into a separate profile-managed mechanism.
+- `Mechanism` now requires every subclass to expose both `periodic()` and `periodicCommand()`, so op modes and Ivy schedulers can use the same abstraction for per-loop work.
 - `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
 - `Limelight` extends `Mechanism`, keeps a builder-style `LIMELIGHT_PARAMS` instance resolved from the active profile, and is created via `Constants.createLimelight(hardwareMap)`.
-- `Slides1` extends `Mechanism`, owns builder-style `SLIDES1_PARAMS`, and currently wraps a `SlidesMotor` retrieved by its params-defined hardware-map name.
-- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or thin mechanism shells, and it now exposes convenience helpers like `setUp()`, `setDown()`, and `setPositionPercentage(...)` on that raw-device layer.
+- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or other raw-device flows, and it now exposes convenience helpers like `setUp()`, `setDown()`, `setPositionPercentage(...)`, and `DEFAULT_HARDWAREMAP_NAME` on that raw-device layer.
 - `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
 - There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
 - `RGBIndicator` extends `Mechanism`, owns builder-style `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
@@ -102,7 +102,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - New top-level subsystem convenience helper: `Constants.java`
 - New LED indicator behavior or params: `RGBIndicator.java`
 - New custom FTC device registration or controller/port behavior: `library/hardware/hardwareDevice/...`
-- New slides mechanism behavior: `Slides1.java` or `SlidesMotor.java`, depending on whether the change is subsystem-level or raw-device-level
+- New slides raw-device behavior: `SlidesMotor.java`
 - New drive behavior or teleop helper: `Drivetrain.java` or `MecanumDrive.java`
 - New camera wrapper behavior: `Limelight.java` or `LogitechWebcam.java`
 

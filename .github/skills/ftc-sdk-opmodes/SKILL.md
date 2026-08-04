@@ -44,7 +44,7 @@ When an op mode needs a subsystem:
 - call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
 - call `Constants.createTeleOpFollower(hardwareMap)` for the public `MecanumDrive` entry point, or `Constants.createDrivetrain(hardwareMap)` only when you intentionally want the lower-level raw drive mechanism
 - call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
-- call `Constants.createRGB(hardwareMap)`, `Constants.createWebcam(hardwareMap)`, or `Constants.createSlides1(hardwareMap)` when those profile-managed wrappers are needed
+- call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
 
 Every profile-managed `Constants.create...(...)` helper first calls `Constants.assertHasMechanism(...)`, so the profile selected by `Constants.currentBot` must register the requested mechanism class before the helper will run successfully. `createFollower(...)` and `createIMU(...)` are profile-configured helpers, not mechanism factories.
 
@@ -62,8 +62,8 @@ The important repo contract is that profile-managed subsystems can be created un
 - Teleop drive is usually routed through `MecanumDrive`.
 - Intake is wrapped by `mechanisms/Intake.java`, and `Constants.createIntake(...)` is the intended factory path when the active profile registers `Intake.class`.
 - Limelight usage is wrapped by `library/hardware/webcam/Limelight.java`, and `Constants.createLimelight(...)` is the intended factory path when the active profile registers `Limelight.class`.
-- Logitech webcam and slides wrappers also have `Constants` helpers, but `Constants.currentBot` does not currently register those mechanisms.
-- `mechanisms/Slides1.java` is the current slide mechanism shell, layered on top of `library/hardware/hardwareDevice/SlidesMotor.java`.
+- Logitech webcam has a `Constants` helper, but `Constants.currentBot` does not currently register that mechanism.
+- `library/hardware/hardwareDevice/SlidesMotor.java` is the current direct SDK-level slides device surface.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
 - `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.

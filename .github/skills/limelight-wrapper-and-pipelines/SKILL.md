@@ -28,7 +28,7 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `LLUpdate()` pulls the latest result, tracks disconnect state, and caches fiducials, colors, and detectors.
 - `updateRobotOrientation(double orientationRad)` now expects a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM.convertFromPedro(...)`.
 - `getBotposeMT2()` now returns a Pedro `Pose`, converting Limelight MT2 `Pose3D` data through `MathUtils.units.toPedroPathing(...)`.
-- `updateCommand()` exposes a Pedro Ivy command for regular updates.
+- `periodicCommand()` exposes the mechanism-wide Ivy-friendly periodic update hook, and `updateCommand()` remains a compatibility alias.
 
 ## Repo conventions
 

@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.library.hardware.leds;
 
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
+
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
@@ -162,6 +165,14 @@ public class RGBIndicator extends Mechanism {
             panelsRGB.update(pwm);
             PanelsLights.INSTANCE.getLights().update();
         }
+    }
+
+    @Override
+    public void periodic() {}
+
+    @Override
+    public Command periodicCommand() {
+        return Commands.infinite(this::periodic);
     }
 
 }

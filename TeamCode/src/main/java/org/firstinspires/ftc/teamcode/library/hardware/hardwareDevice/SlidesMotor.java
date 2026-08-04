@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
         xmlTag = "SlidesMotor",
         compatibleControlSystems = {com.qualcomm.robotcore.hardware.ControlSystem.REV_HUB})
 public class SlidesMotor extends DcMotorImplEx {
+    public static final String DEFAULT_HARDWAREMAP_NAME = "Slides";
     public int MAX_EXTENSION = 3500;
     public int MIN_RETRACTION = 0;
 
