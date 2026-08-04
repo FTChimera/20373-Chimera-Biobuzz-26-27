@@ -12,10 +12,12 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
 
 ## Existing abstraction
 
@@ -24,19 +26,21 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `Limelight.Pipeline` currently exposes `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR`.
 - `start(...)` chooses a pipeline and starts the FTC `Limelight3A` device.
 - `LLUpdate()` pulls the latest result, tracks disconnect state, and caches fiducials, colors, and detectors.
+- `updateRobotOrientation(double orientationRad)` now expects a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM.convertFromPedro(...)`.
+- `getBotposeMT2()` now returns a Pedro `Pose`, converting Limelight MT2 `Pose3D` data through `MathUtils.units.toPedroPathing(...)`.
 - `updateCommand()` exposes a Pedro Ivy command for regular updates.
 
 ## Repo conventions
 
 - Teleop starts the camera in `APRIL_TAG` mode.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
+- `tests/ftcSdk/LimelightFactoryTest` is the current runtime smoke test for wrapper creation plus repeated `LLUpdate()` calls on the AprilTag pipeline.
 - Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
 - Shared Limelight behavior should read from the wrapper’s cached fields; the current raw-SDK exceptions are `tests/PreseasonWebcamAuto.java` and the deprecated `pedroPathing/custom/LimelightPinpointLocalizer.java`.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot does
-  not register `Limelight.class`.
-  Wrapper-based Limelight creation through `Constants.createLimelight(...)`
-  therefore requires adding the wrapper to FirstRobot (or selecting a profile
-  that already registers it) before calling the factory.
+- Wrapper-based Limelight creation through `Constants.createLimelight(...)`
+  requires the selected robot profile to register `Limelight.class`; runtime
+  tests should guard optional availability with `Constants.hasMechanism(...)` or
+  `skipIfMechanismMissing(...)` instead of assuming every helper is active.
 
 ## Params and creation pattern
 
@@ -57,6 +61,7 @@ The important repo-level uniformity point is the shared `Mechanism` + `RobotCons
 - Keep pipeline selection explicit in the op mode or mechanism that owns the behavior.
 - Extend the wrapper when new camera behavior is needed rather than scattering `Limelight3A` calls across op modes.
 - Tolerate missing or invalid results; `LLUpdate()` already handles absent data as a normal runtime condition.
+- Keep coordinate-system conversion explicit when wiring pose/orientation data to Pedro consumers; the current repo path is `Constants.FTC_COORDINATE_SYSTEM` plus `MathUtils.units`.
 - If new vision tuning fields are added, keep them on `LIMELIGHT_PARAMS` or the wrapper itself rather than scattering them through op modes.
 - If the wrapper can be disabled by profile selection, make sure it decides that before touching hardware.
 

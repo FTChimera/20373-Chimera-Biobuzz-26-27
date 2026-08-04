@@ -26,7 +26,9 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LinearInterp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LagrangeInterp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/SumEquation.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Term.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/...`
@@ -46,13 +48,15 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 - `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
 - `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
-- `Equation` is the new shared math interface for reusable symbolic/value-returning curve expressions.
-- `Polynomial` now lives under `library/math/`, implements `Equation`, and is still the only actually implemented reusable equation type in this package.
+- `MathUtils.kt` is the shared home for unit conversion, heading normalization, and FTC/Pedro pose-conversion helpers.
+- `Equation` is the shared math interface for reusable symbolic/value-returning curve expressions.
+- `Polynomial` now lives under `library/math/`, implements `Equation`, and still stores coefficients highest-degree first.
+- `SumEquation` is the internal normalized representation returned by `Equation.of(...)`; it combines like terms and drops zero terms instead of leaving callers with ad hoc lists.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
 - `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it enforces a simple state machine and promotes `STARTED -> LOOP` on the first `update()` call. Its unmodified Kotlin visibility is `public`, so it is available to other packages in the TeamCode module.
 - `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
-- `Term` exists as early scaffolding for the broader `Equation` abstraction, but its symbolic operations still return placeholders and should not be treated as a finished utility yet.
+- `Term` is now a real immutable `Equation` implementation for constants, powers, and several elementary functions (`sin`, `cos`, `tan`, `exp`, and related integral-only helper forms), with derivative/product-rule behavior and explicit `UnsupportedOperationException` for unsupported antiderivatives.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
@@ -91,14 +95,15 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 - `Polynomial` stores coefficients highest-degree first.
 - `getY(x)` evaluates the polynomial at `x`.
 - `derivative()` returns a new `Polynomial`, which still satisfies the current `EquationCurve` derivative/curvature contract.
-- `toString()` now formats decimal coefficients safely with locale-stable fixed-point formatting instead of fragile substring truncation.
+- `add(Polynomial)` and `multiply(Polynomial)` preserve polynomial results, while mixed `Equation` arithmetic widens through `Equation.of(getTerms())`.
 - Because it is in `library/math/`, keep it math-focused and free of FTC lifecycle assumptions.
 
 ## Equation-interface guidance
 
 - Use `Equation` when code should accept a reusable math expression without caring whether the implementation is polynomial-backed.
-- Right now, keep production geometry changes biased toward `Polynomial` inputs. `Polynomial` is the usable path for evaluation, derivatives, integrals, and polynomial-only arithmetic, but `getTerms()` and mixed-type `Equation` algebra still bottom out in unfinished `Term` scaffolding.
-- If you extend the symbolic math layer, finish the real `Term` behavior instead of documenting or depending on placeholder `null` returns.
+- `Equation.of(...)` is the repo’s normalization entry point when you need a sum of symbolic terms instead of a polynomial-only type.
+- Mixed polynomial/trigonometric algebra is now supported through `Equation`, `Term`, and `SumEquation`, but unsupported antiderivatives should still fail explicitly with `UnsupportedOperationException` rather than being papered over.
+- If you extend the symbolic math layer, keep `getTerms()`, derivative behavior, and integral failures internally consistent with the existing `EquationMathTest` coverage.
 
 ## Interpolation-specific guidance
 
@@ -119,6 +124,7 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 - `EquationCurve` lives in `pedroPathing/custom/`, not `library/`, because it adapts repo math helpers into Pedro’s `CustomCurve` API.
 - Use `Polynomial` here when the request is about the reusable math primitive.
 - Use `Equation` here when the request is about the shared expression interface or widening a helper to work with more than just polynomials.
+- Use `MathUtils` here when the change is fundamentally about generic conversion or heading math rather than path construction.
 - Use the Pedro pathing skills when the request is about turning that math into followable path geometry.
 
 ## Direction-specific guidance

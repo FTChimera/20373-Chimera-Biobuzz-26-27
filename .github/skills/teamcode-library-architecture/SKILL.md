@@ -19,6 +19,7 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 - `pid/autoTune/`: FTC AutoTune relay-feedback tuner op modes, repo-local FTC master adapters, and a shared `TuningConstants` config class for calibration-only workflows.
 - `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
 - `tests/`: driver-station validation and proof-of-concept op modes, including `PreseasonWebcamAuto` and `tests/ftcSdk` helpers.
+- `src/test/java/`: JVM unit tests for non-hardware TeamCode logic, with `UnitTestAll.java` as a single suite entry point.
 - `learning/`: teaching or scratch op modes, including the Kotlin teleop example.
 - `learning/flyset/`: an unannotated PIDF teaching sketch with placeholder
   `Sensor` methods; it is not hardware-ready robot code.
@@ -41,19 +42,17 @@ Use this pattern:
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `Drivetrain.DRIVETRAIN_PARAMS`, `MecanumDrive.MECANUM_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, `RGBIndicator.RGBIndicator_PARAMS`, or `Slides1.SLIDES1_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
-registers only `MecanumDrive` and `Drivetrain`; its Pinpoint
-geometry/directions are configured, but its Pedro drive-tuning fields are still
-defaults and its planned intake is not yet registered. A helper existing in
-`Constants` does **not** mean the profile selected by `Constants.currentBot`
-registers that class; check its `Mechanisms` set before using a factory helper.
+A helper existing in `Constants` does **not** mean the profile selected by
+`Constants.currentBot` registers that class; check the selected profile's
+`Mechanisms` set or `Constants.hasMechanism(...)` before using a factory
+helper, and prefer runtime-test guards for optional subsystems.
 
 ## Where configuration belongs
 
 - Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
 - Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)`, `createWebcam(...)`, and `createSlides1(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
-- Keep lightweight math helpers such as `Equation`, `Polynomial`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
+- Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
 - Keep Pedro-specific curve integration such as `EquationCurve` in `pedroPathing/custom/`.
 - Do not turn `RobotConstants` into a catch-all for arbitrary per-mechanism tuning unless that data is truly robot-profile-wide.
@@ -74,6 +73,7 @@ registers that class; check its `Mechanisms` set before using a factory helper.
 - `library.interpolation.LinearInterp`
 - `library.interpolation.LagrangeInterp`
 - `library.math.Equation`
+- `library.math.MathUtils`
 - `library.math.Polynomial`
 - `library.math.Term`
 - `mechanisms.Intake`
@@ -115,10 +115,11 @@ registers that class; check its `Mechanisms` set before using a factory helper.
 - New mechanisms should not be instantiated directly from op modes when a `Constants.create...(...)` factory belongs there.
 - A profile-managed `Constants.create...(...)` helper is only a convenience surface; it still depends on the active profile’s `Mechanisms` set and `Constants.assertHasMechanism(...)`. `createFollower(...)` and `createIMU(...)` use the active profile without requiring a registered mechanism.
 - A mechanism no longer needs a centrally shared params singleton in `Constants` to fit repo style; the important uniformity point is the `Mechanism` + `RobotConstants.createMechanism(...)` construction flow.
-- `Polynomial` now lives under `library/math/`, implements the newer `Equation` interface, and is still the only currently usable reusable `Equation` implementation for evaluation/derivative work.
-- `Term` currently exists as a scaffold for the broader `Equation` abstraction; do not assume symbolic equation algebra is production-ready yet.
+- `Polynomial`, `Term`, and the internal `SumEquation` now provide real `Equation` algebra for evaluation, derivatives, and supported elementary antiderivatives; unsupported integral cases should still fail explicitly instead of returning placeholder values.
+- `MathUtils.kt` is the shared conversion/normalization utility for generic angle, distance, and FTC/Pedro pose math; use it instead of re-implementing frame or unit conversions in wrappers.
 - `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
+- `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
 - The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.

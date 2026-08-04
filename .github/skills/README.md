@@ -30,16 +30,11 @@ than one guide.
 
 ## Current architecture notes
 
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist.
-  `Constants.currentBot` selects the profile used by op-mode factories. Check
-  the selected profile's registered mechanisms before relying on a
-  `Constants.create...(...)` helper.
-  FirstRobot registers only the normal drive stack (`MecanumDrive` and
-  `Drivetrain`); its Pinpoint geometry and encoder directions are configured,
-  but its Pedro drive-tuning fields remain unconfigured and intake integration
-  is the next planned addition. `Constants.currentBot` selects the profile used
-  by op-mode factories, so check the selected profile's registered mechanisms
-  before relying on a `Constants.create...(...)` helper.
+- `Constants.currentBot` selects the profile used by op-mode factories. A
+  helper existing in `Constants` does **not** mean the selected profile
+  registers that mechanism, so check `Constants.hasMechanism(...)` or use
+  runtime-test guards such as `tests/ftcSdk/androidTest.java`'s
+  `skipIfMechanismMissing(...)` before assuming a factory helper is available.
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only mechanisms registered by the active profile; the helpers throw when the
   requested mechanism is absent.
@@ -49,3 +44,9 @@ than one guide.
 - SDK-registerable devices are separate from profile-managed mechanisms:
   `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are
   under `library/hardware/hardwareDevice/`.
+- Validation is now split between driver-station test op modes under `tests/`
+  / `tests/ftcSdk/` and JVM unit tests under `TeamCode/src/test/java`, with
+  `UnitTestAll.java` acting as the single suite entry point.
+- `library/math/MathUtils.kt` now centralizes unit conversion, heading
+  normalization, and FTC/Pedro pose conversion helpers used by math and
+  vision code such as `library/hardware/webcam/Limelight.java`.

@@ -17,7 +17,8 @@ Use this skill when validating changes or diagnosing why the project does or doe
 - `TeamCode/build.gradle` includes `annotationProcessor` entries for both the FTC op-mode processor and Project Lombok
 - FTC SDK and Pedro dependencies are declared in `build.dependencies.gradle`
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
-- `TeamCode/build.gradle` declares `testImplementation` and `androidTestImplementation`, but the current repo has no `TeamCode/src/test/` or `TeamCode/src/androidTest/` tree; validation op modes live under `src/main/java`
+- `TeamCode/src/test/java/` now contains real JVM JUnit coverage, including the suite entry point `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/UnitTestAll.java`
+- Driver-station/runtime validation still lives under `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/` and `tests/ftcSdk/`; `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base, not the Gradle `src/androidTest/` source set
 - `java-autogen/` contains browser-side HTML/JS generators and is outside the Gradle-compiled Android source set
 - Custom SDK-registerable hardware now also lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and a device-level `RGBIndicator`
 - `build.dependencies.gradle` now pulls JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; repo-local `pid/autoTune/master/PIDMaster.java` and `DualMotorPIDMaster.java` provide the FTC-facing tuning layer
@@ -36,9 +37,10 @@ Use this skill when validating changes or diagnosing why the project does or doe
 2. Build `:TeamCode:assembleDebug` to catch source, dependency, annotation-processing, and plugin-wiring issues in the team module.
 3. Run `:TeamCode:lint` when you want Android/lifecycle/static warnings as well.
 4. If needed, build the whole project after TeamCode succeeds.
-5. `:TeamCode:testDebugUnitTest` currently exists but usually reports `NO-SOURCE`, so treat build + lint + robot/runtime validation as the primary checks.
-6. For robot behavior changes, follow the build with driver-station or on-robot validation because many issues are lifecycle or hardware-configuration dependent.
-7. If a change only touches `java-autogen/`, review the generated HTML/JS directly; Gradle will not validate that tooling until its output is copied into `TeamCode/`.
+5. Run `:TeamCode:testDebugUnitTest` for non-hardware regression coverage; `UnitTestAll.java` is the single entry point if you want one suite that explicitly enumerates the current TeamCode JVM tests.
+6. Use the driver-station validation op modes under `tests/ftcSdk/` when a change needs actual FTC runtime or hardware-construction checks; those are complementary to the JVM suite, not a replacement for it.
+7. For robot behavior changes, follow the build with driver-station or on-robot validation because many issues are lifecycle or hardware-configuration dependent.
+8. If a change only touches `java-autogen/`, review the generated HTML/JS directly; Gradle will not validate that tooling until its output is copied into `TeamCode/`.
 
 ## When the user asks for a full `TeamCode` audit
 
@@ -219,17 +221,16 @@ When a change adds or modifies a mechanism, confirm all of these:
 
 ## Current repo-specific warning signs
 
-- FirstRobot's Pinpoint hardware name, offsets, and encoder directions are
-  configured. Its Pedro drive-tuning values remain placeholders, including zero
-  x/y velocity and default follower coefficients.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist.
-  FirstRobot registers only the normal drive stack. Each other profile-managed
-  `Constants.create...(...)` helper is a runtime assertion point until the
-  selected profile registers its mechanism class.
+- Some robot-profile Pinpoint or follower-tuning values may still be preseason
+  placeholders; distinguish measured configuration from defaults before calling
+  a drive stack "tuned."
+- Not every `Constants.create...(...)` helper is active for every profile.
+  Optional mechanism helpers remain runtime assertion points until the selected
+  profile registers the corresponding mechanism class.
 - Several tests now intentionally centralize hardware names through `Constants.currentBot` or nested params classes; new test edits should preserve that instead of reintroducing ad hoc strings.
 - `pid/autoTune/` is intentionally driver-station-visible tuning code that uses raw motor names and direction booleans from `TuningConstants` rather than the profile-managed mechanism factory path.
 - Some behavior will only be trustworthy after real hardware or emulator-equivalent validation.
-- This repo does not currently expose a dedicated JVM unit-test suite; most validation is build-time plus robot runtime checks.
+- This repo now has a real JVM unit-test suite under `TeamCode/src/test/java/`, but many FTC issues still need runtime checks through `tests/`, `tests/ftcSdk/`, or on-robot validation.
 - Documentation or code that still assumes every subsystem is wired by a central params singleton in `Constants` is stale; uniform construction now centers on `Mechanism` plus `RobotConstants.createMechanism(...)`.
 - Build guidance that ignores Lombok, Sloth, or Kotlin plugin wiring is stale.
 - `tests/`, `tests/ftcSdk`, and `learning/` intentionally contain validation or teaching code; build review should distinguish those from shared production architecture.

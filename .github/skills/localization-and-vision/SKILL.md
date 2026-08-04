@@ -13,9 +13,11 @@ This repository currently mixes Pinpoint-based Pedro localization with two separ
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 
@@ -25,12 +27,14 @@ This repository currently mixes Pinpoint-based Pedro localization with two separ
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and exposes `updateCommand()` as `Commands.infinite(Limelight.this::LLUpdate)`.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
    Limelight through `Constants.createLimelight(...)`, start it in `APRIL_TAG`
-   mode, and refresh it every loop. They require Limelight registration in the
-   selected profile; FirstRobot does not provide it yet.
-4. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`. FirstRobot's Pinpoint offsets and encoder directions are configured, but it registers no vision wrapper. Verify the selected profile registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
+   mode, and refresh it every loop. They require the selected profile to
+   register `Limelight.class` before the factory call is valid.
+4. Vision wrapper availability is profile-driven. Verify the selected profile registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
 5. `tests/PreseasonWebcamAuto.java` bypasses the wrapper, reads raw `Limelight3A` color results, switches pipeline `1`, and gets the hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
-6. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but no current robot profile registers `LogitechWebcam` and no TeamCode op mode instantiates it.
-7. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
+6. `Limelight.updateRobotOrientation(...)` now takes a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM`, while `getBotposeMT2()` converts Limelight MT2 `Pose3D` results back into Pedro `Pose` through `MathUtils.units.toPedroPathing(...)`.
+7. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but vision-wrapper use still depends on profile registration.
+8. `tests/ftcSdk/LimelightFactoryTest.java` is the current driver-station smoke test for Limelight wrapper creation and AprilTag polling.
+9. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
 
 ## Wrapper configuration pattern that exists in code
 
@@ -42,9 +46,9 @@ Vision wrappers currently follow the same basic construction pattern as other me
 - register the wrapper in the chosen robot profile with `.addMechanism(...)`
 - expose construction through `Constants.create...(...)` when higher-level code should call it
 
-FirstRobot registers neither the Limelight wrapper nor the Logitech webcam
-wrapper. Vision work through `Constants` is therefore a profile-registration
-task as well as a wrapper/op-mode task.
+Vision work through `Constants` is therefore a profile-registration task as
+well as a wrapper/op-mode task: some profiles may expose neither camera wrapper
+even though the helper methods exist.
 
 ## Repo-specific constraints
 
