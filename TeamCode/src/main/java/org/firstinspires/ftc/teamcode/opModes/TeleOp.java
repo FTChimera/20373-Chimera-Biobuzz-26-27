@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
@@ -36,6 +38,7 @@ public abstract class TeleOp extends LinearOpMode {
     protected abstract Pose getStartingPose();
     @Override
     public void runOpMode() {
+        GamepadEx driver = new GamepadEx(gamepad1);
         intake = Constants.createIntake(hardwareMap);
         drive = Constants.createTeleOpFollower(hardwareMap);
         drive.setStartingPose(getStartingPose());
@@ -48,23 +51,24 @@ public abstract class TeleOp extends LinearOpMode {
         waitForStart();
         limelight.start(Limelight.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
+            driver.update();
             // Update Mechanisms
             drive.periodic();
             limelight.LLUpdate();
 
             // Imu reset yaw
-            if (gamepad1.back) {
+            if (driver.isPressed(Button.BACK)) {
                 drive.zeroHeadingOffset();
             }
 
             // Drive
-            double forward = gamepad1.left_stick_y; // Don't need to negate
-            double strafe = gamepad1.left_stick_x;
-            double turn = gamepad1.right_stick_x;
+            double forward = -driver.leftStickY(); // Drive stack already handles the sign convention downstream.
+            double strafe = driver.leftStickX();
+            double turn = driver.rightStickX();
             drive.setTeleOpDrive(new DriveVector(forward, strafe, turn));
 
             // Intake
-            intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+            intake.setPower(driver.rightTrigger.getValue() - driver.leftTrigger.getValue());
 
             // Telemetry
             telemetry.addData("Pose", drive.getPose());

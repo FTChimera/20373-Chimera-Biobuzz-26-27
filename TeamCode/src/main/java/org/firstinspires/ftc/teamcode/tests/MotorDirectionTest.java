@@ -7,12 +7,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 
 import java.util.Arrays;
-import java.util.Locale;
 
 @TeleOp(name = "Motor Direction Test", group = "1: Tests")
 public class MotorDirectionTest extends LinearOpMode {
@@ -37,21 +37,23 @@ public class MotorDirectionTest extends LinearOpMode {
         drive = Constants.createDrivetrain(hardwareMap);
         drive.startTeleOpDrive();
         intake = Constants.createIntake(hardwareMap);
+        GamepadEx driver = new GamepadEx(gamepad1);
         waitForStart();
         while (opModeIsActive()) {
-            if (gamepad1.dpadDownWasPressed()) {
+            driver.update();
+            if (driver.wasJustPressed(Button.DPAD_DOWN)) {
                 reverseDriveMotor(0);
             }
-            if (gamepad1.dpadUpWasPressed()) {
+            if (driver.wasJustPressed(Button.DPAD_UP)) {
                 reverseDriveMotor(1);
             }
-            if (gamepad1.dpadLeftWasPressed()) {
+            if (driver.wasJustPressed(Button.DPAD_LEFT)) {
                 reverseDriveMotor(2);
             }
-            if (gamepad1.dpadRightWasPressed()) {
+            if (driver.wasJustPressed(Button.DPAD_RIGHT)) {
                 reverseDriveMotor(3);
             }
-            if (gamepad1.aWasPressed()) {
+            if (driver.wasJustPressed(Button.A)) {
                 reverseIntake();
             }
             drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), 0);

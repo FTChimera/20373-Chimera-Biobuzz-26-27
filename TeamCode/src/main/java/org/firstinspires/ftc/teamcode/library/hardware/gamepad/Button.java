@@ -28,6 +28,7 @@ public enum Button {
     RIGHT_STICK_BUTTON(g -> g.right_stick_button),
     BACK        (g -> g.back),
     START       (g -> g.start),
+    OPTIONS     (g -> g.options),
     GUIDE       (g -> g.guide),
     /** PS4/PS5 touchpad click (pressing the touchpad down as a button). */
     TOUCHPAD    (g -> g.touchpad);

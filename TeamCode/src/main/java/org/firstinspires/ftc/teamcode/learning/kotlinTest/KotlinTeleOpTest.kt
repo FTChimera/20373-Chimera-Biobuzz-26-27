@@ -5,19 +5,23 @@ import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.Constants
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx
 
 @TeleOp(name = "Kotlin TeleOp", group = "Kotlin")
 class KotlinTeleOpTest: LinearOpMode() {
     lateinit var follower: Follower
     override fun runOpMode() {
         follower = Constants.createFollower(hardwareMap)
+        val driver = GamepadEx(gamepad1)
         follower.setStartingPose(Pose())
         waitForStart()
         follower.startTeleOpDrive()
         while (opModeIsActive()) {
-            follower.setTeleOpDrive(-gamepad1.left_stick_y.toDouble(), -gamepad1.left_stick_x.toDouble(), -gamepad1.right_stick_x.toDouble(), false)
+            driver.update()
+            follower.setTeleOpDrive(driver.leftStickY(), -driver.leftStickX(), -driver.rightStickX(), false)
             follower.update()
-            if (gamepad1.back) {
+            if (driver.isPressed(Button.BACK)) {
                 follower.heading = 0.0;
             }
 

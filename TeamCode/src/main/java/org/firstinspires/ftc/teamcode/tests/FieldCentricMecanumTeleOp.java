@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 @TeleOp(name = "FIELD CENTRIC MECANUM TELEOP", group = "0: TeleOp")
 public class FieldCentricMecanumTeleOp extends LinearOpMode {
@@ -29,20 +31,22 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
 
         IMU imu = Constants.createIMU(hardwareMap);
         imu.resetYaw();
+        GamepadEx driver = new GamepadEx(gamepad1);
 
         waitForStart();
 
         if (isStopRequested()) return;
 
         while (opModeIsActive()) {
-            double y = -gamepad1.left_stick_y * Constants.currentBot.MAX_POWER; // Remember, Y stick value is reversed
-            double x = gamepad1.left_stick_x * Constants.currentBot.MAX_POWER;
-            double rx = gamepad1.right_stick_x * Constants.currentBot.MAX_POWER * 0.8;
+            driver.update();
+            double y = driver.leftStickY() * Constants.currentBot.MAX_POWER;
+            double x = driver.leftStickX() * Constants.currentBot.MAX_POWER;
+            double rx = driver.rightStickX() * Constants.currentBot.MAX_POWER * 0.8;
 
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             // The equivalent button is start on Xbox-style controllers.
-            if (gamepad1.options) { // Back
+            if (driver.isPressed(Button.OPTIONS)) {
                 imu.resetYaw();
             }
 

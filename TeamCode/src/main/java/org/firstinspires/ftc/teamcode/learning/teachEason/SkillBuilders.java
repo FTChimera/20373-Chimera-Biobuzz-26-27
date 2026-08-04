@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 
 /**
@@ -26,16 +28,18 @@ public class SkillBuilders extends LinearOpMode {
         intakeMotor.setDirection(Direction.FORWARD);
 
         waitForStart();
+        GamepadEx driver = new GamepadEx(gamepad1);
         while (opModeIsActive()) {
-            double forward = -gamepad1.left_stick_y;
-            double rotate = gamepad1.right_stick_x;
+            driver.update();
+            double forward = driver.leftStickY();
+            double rotate = driver.rightStickX();
 
             double leftPower = forward + rotate;
             double rightPower = forward - rotate;
             double intakePower = 0;
-            if (gamepad1.y) {
+            if (driver.isPressed(Button.Y)) {
                 intakePower = 1;
-            } else if (gamepad1.a) {
+            } else if (driver.isPressed(Button.A)) {
                 intakePower = -0.5;
             }
 

@@ -3,16 +3,16 @@ package org.firstinspires.ftc.teamcode.tests.ftcSdk;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 @TeleOp(name = "FTC SDK Follower Test", group = "1: Tests")
 public class FollowerFactoryTest extends androidTest {
     @Override
-    protected void test(HardwareMap hardwareMap, Gamepad gamepad1, Gamepad gamepad2, Telemetry telemetry) {
+    protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
         Follower follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(Constants.RED_DEFAULT_START_POSE);
         follower.update();

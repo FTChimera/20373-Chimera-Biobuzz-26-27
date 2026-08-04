@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.tests.ftcSdk;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
 @TeleOp(name = "FTC SDK Intake Test", group = "1: Tests")
@@ -13,7 +13,7 @@ public class IntakeFactoryTest extends androidTest {
     private static final double SAFE_POWER = 0.25;
 
     @Override
-    protected void test(HardwareMap hardwareMap, Gamepad gamepad1, Gamepad gamepad2, Telemetry telemetry) {
+    protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
         if (skipIfMechanismMissing(Intake.class, telemetry)) {
             return;
         }

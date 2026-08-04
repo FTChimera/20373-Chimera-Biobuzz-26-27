@@ -1,18 +1,18 @@
 package org.firstinspires.ftc.teamcode.tests.ftcSdk;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 @TeleOp(name = "FTC SDK IMU Test", group = "1: Tests")
 public class IMUTest extends androidTest {
     @Override
-    protected void test(HardwareMap hardwareMap, Gamepad gamepad1, Gamepad gamepad2, Telemetry telemetry) {
+    protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
         IMU imu = Constants.createIMU(hardwareMap);
         double yawBeforeReset = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
         showStep(telemetry, "Resetting IMU yaw");

@@ -5,7 +5,7 @@ description: Use this skill when asked to work on driver controls, raw FTC gamep
 
 # Gamepad and Driver Input
 
-This skill covers both the raw FTC gamepad APIs already used in TeamCode and the custom wrapper utilities in `library/hardware/gamepad`.
+This skill covers the TeamCode gamepad wrapper utilities in `library/hardware/gamepad` and how they replace direct FTC gamepad reads in repo code.
 
 ## Relevant files
 
@@ -28,14 +28,14 @@ This skill covers both the raw FTC gamepad APIs already used in TeamCode and the
 
 ## Current repo usage
 
-- Most active op modes use raw SDK gamepads and mix plain booleans like `gamepad1.back`, `gamepad1.a`, or `gamepad1.options` with SDK edge helpers such as `aWasPressed()`.
-- `TeleOp` and `IvyTeleOp` are the main plain-boolean examples.
-- `MecanumTeleOp`, `MotorDirectionTest`, `PedroPathingTeleOpTest`, and `PreseasonWebcamAuto` are current edge-helper examples.
-- `MecanumTeleOp` is a current raw-input example that uses `dpadLeftWasPressed()`, `dpadRightWasPressed()`, `backWasPressed()`, and the face-button edge helpers to change drive modes and flip motor directions.
+- TeamCode op modes and tests now prefer `GamepadEx` or `DualGamepad` instead of direct `gamepad1` / `gamepad2` field reads.
+- `TeleOp`, `LLTester`, `PreseasonWebcamAuto`, `MotorDirectionTest`, `PedroPathingTeleOpTest`, `FieldCentricMecanumTeleOp`, and the FTC SDK test wrappers now all use the wrapper surface.
+- `IvyTeleOp` is the main `DualGamepad.updateCommand()` example.
+- `MecanumTeleOp` still applies its own deadzone and response curve inline, but it now reads buttons, triggers, and raw stick values through a wrapper configured with neutral stick shaping.
 - `MecanumTeleOp` now also stays aligned with the active drivetrain profile by sourcing motor names and default directions from `Constants.currentBot`.
 - `GamepadEx` exists as a richer wrapper with buttons, sticks, triggers, touchpad, LED, and rumble support.
 - `DualGamepad` wraps two `GamepadEx` objects and is the repo’s dual-controller utility surface when one abstraction needs to manage both `gamepad1` and `gamepad2` together.
-- No current TeamCode op mode instantiates `GamepadEx` or `DualGamepad`; they are available library utilities, but the current op mode paths still use raw FTC gamepad reads.
+- `Button.OPTIONS` now exists because TeamCode uses the wrapper to cover the FTC `options` button path as well as the face buttons, dpad, and back/start controls.
 - `OpModeHelper.kt` is available for loop timing and manual bulk-caching work, but it is separate from the input wrappers and should not become a second button/joystick abstraction.
 
 ## `DualGamepad` conventions
@@ -83,7 +83,7 @@ Do not collapse finger-specific or touchpad-specific queries into a single ambig
 
 ## Rules
 
-- If staying consistent with existing op modes, raw FTC gamepad access is acceptable.
+- Prefer the wrapper surface over raw FTC gamepad reads in TeamCode op modes and tests.
 - If you need reusable input behavior like toggles, edge detection, touchpad tracking, or controller LED support, extend the wrapper utilities instead of recreating them ad hoc.
 - Call wrapper `update()` methods once per loop before reading values.
 - Keep stick-curve logic consistent with drive expectations; the repo often applies shaping in `MecanumDrive` / `DriveVector`, not directly in every button handler.

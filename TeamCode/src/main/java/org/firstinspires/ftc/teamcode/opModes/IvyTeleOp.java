@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
@@ -31,6 +33,7 @@ public class IvyTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         Scheduler.reset();
+        DualGamepad gamepads = new DualGamepad(gamepad1, gamepad2);
         intake = Constants.createIntake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
         drive = Constants.createTeleOpFollower(hardwareMap);
@@ -40,11 +43,12 @@ public class IvyTeleOp extends LinearOpMode {
         limelight = Constants.createLimelight(hardwareMap);
 
         Scheduler.schedule(
+                gamepads.updateCommand(),
                 limelight.periodicCommand(),
                 drive.periodicCommand(),
-                drive.teleOp(() -> new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x)),
-                Groups.loop(intake.setPowerCommand(() -> (double) (gamepad1.right_trigger - gamepad1.left_trigger))),
-                Commands.infinite(() -> {if (gamepad1.back) {drive.zeroHeadingOffset();}}).requiring(gamepad1, drive)
+                drive.teleOp(() -> new DriveVector(-gamepads.gamepad1.leftStickY(), gamepads.gamepad1.leftStickX(), gamepads.gamepad1.rightStickX())),
+                Groups.loop(intake.setPowerCommand(() -> gamepads.rightTrigger1().getValue() - gamepads.leftTrigger1().getValue())),
+                Commands.infinite(() -> {if (gamepads.isPressed1(Button.BACK)) {drive.zeroHeadingOffset();}}).requiring(gamepads, drive)
         );
 
         telemetry.addData("Status", "Initialized");

@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 
 @TeleOp(name = "LL Tester", group = "1: Tests")
@@ -42,11 +44,13 @@ public class LLTester extends LinearOpMode {
         IMU imu = Constants.createIMU(hardwareMap);
         imu.resetYaw();
         Limelight limelight = Constants.createLimelight(hardwareMap);
+        GamepadEx driver = new GamepadEx(gamepad1);
         try {
             while (opModeInInit()) {
-                if (gamepad1.x) {
+                driver.update();
+                if (driver.isPressed(Button.X)) {
                     mode = Mode.APRIL_TAG;
-                } else if (gamepad1.y) {
+                } else if (driver.isPressed(Button.Y)) {
                     mode = Mode.NEURAL_DETECTOR;
                 }
 
@@ -55,7 +59,7 @@ public class LLTester extends LinearOpMode {
                     initializedMode = mode;
                 }
 
-                if (gamepad1.back) {
+                if (driver.isPressed(Button.BACK)) {
                     imu.resetYaw();
                 }
                 if (mode == Mode.APRIL_TAG) {

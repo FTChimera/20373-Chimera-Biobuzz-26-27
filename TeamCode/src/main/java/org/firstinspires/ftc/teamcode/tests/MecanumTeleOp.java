@@ -40,6 +40,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 /*
  * This file includes a teleop (driver-controlled) file for a
@@ -74,6 +76,7 @@ public class MecanumTeleOp extends OpMode {
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
     private IMU imu = null;
+    private GamepadEx driver;
     Mode teleopMode = Mode.ROBOT_CENTRIC_TELEOP;
     double[] motorPowers = new double[4];
 
@@ -116,6 +119,7 @@ public class MecanumTeleOp extends OpMode {
 
         imu = Constants.createIMU(hardwareMap);
         imu.resetYaw();
+        driver = new GamepadEx(gamepad1, 0.0, x -> x, TRIGGER_THRESHOLD);
         /*
          * Tell the driver that initialization is complete.
          */
@@ -129,14 +133,15 @@ public class MecanumTeleOp extends OpMode {
      */
     @Override
     public void init_loop() {
+        driver.update();
         /*
          * Here we use the dpad Left/Right to switch between teleop modes.
          * The selection is shown on the driver station via telemetry.
          */
-        if (gamepad1.dpadLeftWasPressed()) {
+        if (driver.wasJustPressed(Button.DPAD_LEFT)) {
             teleopMode = teleopMode.next(1);
         }
-        if (gamepad1.dpadRightWasPressed()) {
+        if (driver.wasJustPressed(Button.DPAD_RIGHT)) {
             teleopMode = teleopMode.next(-1);
         }
 
@@ -161,6 +166,7 @@ public class MecanumTeleOp extends OpMode {
      */
     @Override
     public void loop() {
+        driver.update();
 
         /*
          * Here, lets add an IMU reset option
@@ -168,7 +174,7 @@ public class MecanumTeleOp extends OpMode {
          * It is a good idea to keep it as a global method in loop() and not just for field centric
          * Here we use Back to reset yaw. This is also the same as share in PS4/PS5 controllers.
          */
-        if (gamepad1.backWasPressed()) {
+        if (driver.wasJustPressed(Button.BACK)) {
             imu.resetYaw();
         }
 
@@ -188,9 +194,9 @@ public class MecanumTeleOp extends OpMode {
         switch (teleopMode) {
             case ROBOT_CENTRIC_TELEOP:
                 // Implement Joystick deadzone and curve
-                leftStickX = Math.abs(gamepad1.left_stick_x) > JOYSTICK_DEADZONE ? gamepad1.left_stick_x : 0;
-                leftStickY = Math.abs(gamepad1.left_stick_y) > JOYSTICK_DEADZONE ? gamepad1.left_stick_y : 0;
-                rightStickX = Math.abs(gamepad1.right_stick_x) > JOYSTICK_DEADZONE ? gamepad1.right_stick_x : 0;
+                leftStickX = Math.abs(driver.leftStick.getRawX()) > JOYSTICK_DEADZONE ? driver.leftStick.getRawX() : 0;
+                leftStickY = Math.abs(-driver.leftStick.getRawY()) > JOYSTICK_DEADZONE ? -driver.leftStick.getRawY() : 0;
+                rightStickX = Math.abs(driver.rightStick.getRawX()) > JOYSTICK_DEADZONE ? driver.rightStick.getRawX() : 0;
                 leftStickX = Math.copySign(Math.pow(Math.abs(leftStickX), JOYSTICK_CURVE_EXPONENT), leftStickX);
                 leftStickY = Math.copySign(Math.pow(Math.abs(leftStickY), JOYSTICK_CURVE_EXPONENT), leftStickY);
                 rightStickX = Math.copySign(Math.pow(Math.abs(rightStickX), JOYSTICK_CURVE_EXPONENT), rightStickX);
@@ -200,9 +206,9 @@ public class MecanumTeleOp extends OpMode {
                 break;
             case FIELD_CENTRIC_TELEOP:
                 // Implement Joystick deadzone and curve
-                leftStickX = Math.abs(gamepad1.left_stick_x) > JOYSTICK_DEADZONE ? gamepad1.left_stick_x : 0;
-                leftStickY = Math.abs(gamepad1.left_stick_y) > JOYSTICK_DEADZONE ? gamepad1.left_stick_y : 0;
-                rightStickX = Math.abs(gamepad1.right_stick_x) > JOYSTICK_DEADZONE ? gamepad1.right_stick_x : 0;
+                leftStickX = Math.abs(driver.leftStick.getRawX()) > JOYSTICK_DEADZONE ? driver.leftStick.getRawX() : 0;
+                leftStickY = Math.abs(-driver.leftStick.getRawY()) > JOYSTICK_DEADZONE ? -driver.leftStick.getRawY() : 0;
+                rightStickX = Math.abs(driver.rightStick.getRawX()) > JOYSTICK_DEADZONE ? driver.rightStick.getRawX() : 0;
                 leftStickX = Math.copySign(Math.pow(Math.abs(leftStickX), JOYSTICK_CURVE_EXPONENT), leftStickX);
                 leftStickY = Math.copySign(Math.pow(Math.abs(leftStickY), JOYSTICK_CURVE_EXPONENT), leftStickY);
                 rightStickX = Math.copySign(Math.pow(Math.abs(rightStickX), JOYSTICK_CURVE_EXPONENT), rightStickX);
@@ -220,19 +226,19 @@ public class MecanumTeleOp extends OpMode {
                 break;
             case MOTOR_DIRECTION_TEST:
                 // In this mode, the motors move forward based on gamepad right trigger. This allows you to easily see if any motors are reversed or not, and adjust the motor directions accordingly.
-                forward = (gamepad1.right_trigger >= TRIGGER_THRESHOLD ? 1 : 0) * MOTOR_DIRECTION_POWER;
+                forward = (driver.rightTrigger.isPressed() ? 1 : 0) * MOTOR_DIRECTION_POWER;
                 strafe = 0;
                 rotate = 0;
-                if (gamepad1.aWasPressed()) {
+                if (driver.wasJustPressed(Button.A)) {
                     leftFront.setDirection(leftFront.getDirection().inverted());
                 }
-                if (gamepad1.bWasPressed()) {
+                if (driver.wasJustPressed(Button.B)) {
                     rightFront.setDirection(rightFront.getDirection().inverted());
                 }
-                if (gamepad1.xWasPressed()) {
+                if (driver.wasJustPressed(Button.X)) {
                     leftBack.setDirection(leftBack.getDirection().inverted());
                 }
-                if (gamepad1.yWasPressed()) {
+                if (driver.wasJustPressed(Button.Y)) {
                     rightBack.setDirection(rightBack.getDirection().inverted());
                 }
 
@@ -274,10 +280,10 @@ public class MecanumTeleOp extends OpMode {
          * Here we use the dpad Left/Right to switch between teleop modes.
          * The selection is shown on the driver station via telemetry.
          */
-        if (gamepad1.dpadLeftWasPressed()) {
+        if (driver.wasJustPressed(Button.DPAD_LEFT)) {
             teleopMode = teleopMode.next(1);
         }
-        if (gamepad1.dpadRightWasPressed()) {
+        if (driver.wasJustPressed(Button.DPAD_RIGHT)) {
             teleopMode = teleopMode.next(-1);
         }
         /*

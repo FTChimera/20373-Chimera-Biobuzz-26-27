@@ -12,6 +12,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 import java.util.function.Supplier;
 
@@ -26,9 +28,11 @@ public class PedroPathingTeleOpTest extends OpMode {
     private Supplier<PathChain> pathChain;
     private TelemetryManager telemetryM;
     public static double DegreesOffset = 90;
+    private GamepadEx driver;
 
     @Override
     public void init() {
+        driver = new GamepadEx(gamepad1);
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? Constants.RED_DEFAULT_START_POSE: startingPose);
         follower.update();
@@ -50,31 +54,32 @@ public class PedroPathingTeleOpTest extends OpMode {
 
     @Override
     public void loop() {
+        driver.update();
         if (!automatedDrive) {
             //Make the last parameter false for field-centric
 
             //This is the normal version to use in the TeleOp
             follower.setTeleOpDrive(
-                    -gamepad1.left_stick_y,
-                    -gamepad1.left_stick_x,
-                    -gamepad1.right_stick_x,
+                    driver.leftStickY(),
+                    -driver.leftStickX(),
+                    -driver.rightStickX(),
                     isRobotCentric,
                     isRobotCentric ? 0 : Math.toRadians(DegreesOffset)
             );
 
         }
-        if (gamepad1.backWasPressed()) {
+        if (driver.wasJustPressed(Button.BACK)) {
             DegreesOffset = Math.toDegrees(follower.getPose().getHeading());
         }
 
         //Automated PathFollowing
-        if (gamepad1.aWasPressed()) {
+        if (driver.wasJustPressed(Button.A)) {
             follower.followPath(pathChain.get());
             automatedDrive = true;
         }
 
         //Stop automated following if the follower is done
-        if (gamepad1.bWasPressed()) {
+        if (driver.wasJustPressed(Button.B)) {
             follower.startTeleopDrive();
             automatedDrive = false;
         }

@@ -5,6 +5,8 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 /**
  * Auto-tunes PIDF gains for a velocity-controlled mechanism (flywheel,
@@ -31,6 +33,7 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
     @Override
     public void runOpMode() {
         TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
+        GamepadEx driver = new GamepadEx(gamepad1);
         // Convert RPM target to ticks/sec using: ticks/sec = (RPM * TICKS_PER_REV) / 60.0
         double targetTicksPerSec = TuningConstants.targetTicksPerSec();
 
@@ -68,8 +71,9 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
         }
 
         while (opModeIsActive()) {
+            driver.update();
             for (String line : pid.getResultTelemetryLines()) panelsTelemetry.addLine(line);
-            if (gamepad1.a) {
+            if (driver.isPressed(Button.A)) {
                 panelsTelemetry.addLine("");
                 for (String line : pid.liveTestStep(getRuntime())) panelsTelemetry.addLine(line);
             } else {

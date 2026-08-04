@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 
 
@@ -47,9 +49,11 @@ public class PreseasonWebcamAuto extends LinearOpMode {
         limelight.pipelineSwitch(1); // Color detection pipeline
         PIDFController<Pose> controller = getController();
         waitForStart();
+        GamepadEx driver = new GamepadEx(gamepad1);
         limelight.start();
         follower.startTeleopDrive();
         while (opModeIsActive()) {
+            driver.update();
             LLResult result = limelight.getLatestResult();
             if (result != null && result.isValid()) {
                 // Detect Artifact
@@ -81,11 +85,11 @@ public class PreseasonWebcamAuto extends LinearOpMode {
             }
 
             // MANUAL CONTROL
-            if (gamepad1.backWasPressed()) {
+            if (driver.wasJustPressed(Button.BACK)) {
                 controller.reset();
             }
 
-            if (gamepad1.a) {
+            if (driver.isPressed(Button.A)) {
                 follower.setTeleOpDrive(0,0,0, true);
             }
 
