@@ -171,6 +171,17 @@ public class Limelight extends Mechanism {
         if (!isBeingUsed) return null;
         return detectors;
     }
+    public LLResultTypes.DetectorResult getDetectorHighestConfidence() {
+        if (!isBeingUsed) return null;
+        if (detectors == null || detectors.isEmpty()) return null;
+        LLResultTypes.DetectorResult highest = detectors.get(0);
+        for (LLResultTypes.DetectorResult detector : detectors) {
+            if (detector.getConfidence() > highest.getConfidence()) {
+                highest = detector;
+            }
+        }
+        return highest;
+    }
     /**
      * Enter follower.getHeading(); Must be called before LLUpdate();
      */

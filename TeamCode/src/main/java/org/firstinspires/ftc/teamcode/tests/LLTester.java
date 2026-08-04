@@ -69,6 +69,7 @@ public class LLTester extends LinearOpMode {
                         break;
                     case NEURAL_DETECTOR:
                         telemetry.addData("Detector Count", limelight.getDetectors() == null ? 0 : limelight.getDetectors().size());
+                        telemetry.addData("Highest Confidence", limelight.getDetectorHighestConfidence());
                         break;
                 }
                 telemetry.addData("Status", "Initializing Limelight");
