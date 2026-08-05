@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.library.hardware.webcam;
 
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -9,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -250,12 +249,7 @@ public class LogitechWebcam extends Mechanism {
     }
 
     @Override
-    public void periodic() {
+    public void periodic(Bindings bindings) {
         update();
-    }
-
-    @Override
-    public Command periodicCommand() {
-        return Commands.infinite(this::periodic);
     }
 }

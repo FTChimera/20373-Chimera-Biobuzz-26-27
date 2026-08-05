@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.leds;
 
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
-
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
 import com.bylazar.lights.PanelsLights;
@@ -168,11 +166,6 @@ public class RGBIndicator extends Mechanism {
     }
 
     @Override
-    public void periodic() {}
-
-    @Override
-    public Command periodicCommand() {
-        return Commands.infinite(this::periodic);
-    }
+    public void periodic(Bindings bindings) {}
 
 }

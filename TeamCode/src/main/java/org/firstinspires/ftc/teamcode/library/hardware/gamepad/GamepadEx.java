@@ -134,6 +134,9 @@ public class GamepadEx {
     /** @see Buttons#setToggle(Button, boolean) */
     public void setToggle(Button button, boolean state) { buttons.setToggle(button, state); }
 
+    /** Creates a bindings view over selected button readers from this wrapper. */
+    public Bindings bindings(Button... buttons) { return Bindings.of(this, buttons); }
+
     // ==================== CONVENIENCE: STICKS ====================
 
     /** @return Left stick X with deadzone and curve applied. Positive = right. */

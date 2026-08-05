@@ -1,12 +1,11 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
@@ -110,10 +109,5 @@ public class Drivetrain extends Mechanism {
     }
 
     @Override
-    public void periodic() {}
-
-    @Override
-    public Command periodicCommand() {
-        return Commands.infinite(this::periodic);
-    }
+    public void periodic(Bindings bindings) {}
 }

@@ -144,4 +144,19 @@ public class GamepadInputTest {
         assertEquals(GamepadType.XBOX_360, dual.getType2());
         assertTrue(dual.rightTrigger2().isPressed());
     }
+
+    @Test
+    public void bindingsReuseUpdatedReadersFromWrapper() {
+        Gamepad gamepad = GamepadTestUtils.newGamepad(Gamepad.Type.SONY_PS4);
+        GamepadEx extended = new GamepadEx(gamepad);
+        Bindings bindings = extended.bindings(Button.A, Button.BACK);
+
+        gamepad.a = true;
+        extended.update();
+
+        assertTrue(bindings.contains(Button.A));
+        assertTrue(bindings.isPressed(Button.A));
+        assertTrue(bindings.wasJustPressed(Button.A));
+        assertFalse(bindings.contains(Button.Y));
+    }
 }

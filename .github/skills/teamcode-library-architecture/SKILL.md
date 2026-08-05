@@ -119,7 +119,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
 - `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
-- Every concrete `Mechanism` subclass now implements both `periodic()` and `periodicCommand()`, so direct loop-driven and Ivy-scheduled updates share the same surface.
+- Every concrete `Mechanism` subclass now implements `periodic(Bindings bindings)`, so direct loop-driven and Ivy-scheduled updates share the same surface through explicit bindings-aware calls rather than subclass-owned periodic commands.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
 - The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.

@@ -58,7 +58,7 @@ When asked to create a new mechanism, follow this repo style:
 4. Use `bot` for robot-profile state such as hardware names, directions, feature enablement, or follower compatibility.
 5. Register the class in each relevant robot preset with `.addMechanism(NewMechanism.class)` or, for normal drive-stack behavior, through `configureDriveMechanisms()`.
 6. Give it a builder-style nested params type that implements `Mechanism.Params<...>` when the mechanism has local configuration, and resolve that config through `Mechanism.resolveParams(...)`.
-7. Implement the mechanism-wide `periodic()` and `periodicCommand()` API required by `Mechanism`; use a real per-loop update when the mechanism has one, otherwise keep the no-op implementation explicit.
+7. Implement the mechanism-wide `periodic(Bindings bindings)` API required by `Mechanism`; use a real per-loop update when the mechanism has one, otherwise keep the no-op implementation explicit.
 8. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
 9. If the mechanism can be disabled by profile selection, determine that before touching hardware.
 10. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
@@ -68,7 +68,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 ## Existing patterns to reuse
 
 - `Intake` extends `Mechanism`, owns a builder-style `INTAKE_PARAMS` helper, wraps the intake `Motor`, and now also performs raw `SlidesMotor` setup from its nested slides params without turning the slides into a separate profile-managed mechanism.
-- `Mechanism` now requires every subclass to expose both `periodic()` and `periodicCommand()`, so op modes and Ivy schedulers can use the same abstraction for per-loop work.
+- `Mechanism` now requires every subclass to expose `periodic(Bindings bindings)`, where `Bindings` is a lightweight list of selected button readers from the gamepad wrapper layer.
 - `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
 - `Limelight` extends `Mechanism`, keeps a builder-style `LIMELIGHT_PARAMS` instance resolved from the active profile, and is created via `Constants.createLimelight(hardwareMap)`.

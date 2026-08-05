@@ -58,6 +58,10 @@ public class Buttons {
         return Collections.unmodifiableMap(readers);
     }
 
+    public Bindings bindings(Button... buttons) {
+        return Bindings.of(this, buttons);
+    }
+
     // ==================== DELEGATED QUERIES ====================
 
     /** @return true if the button is currently held down */

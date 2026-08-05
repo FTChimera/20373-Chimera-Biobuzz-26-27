@@ -6,11 +6,14 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 
 @TeleOp(name = "FTC SDK MecanumDrive Test", group = "1: Tests")
 public class MecanumDriveFactoryTest extends androidTest {
+    private static final Bindings EMPTY_BINDINGS = Bindings.empty();
+
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
         MecanumDrive drive = Constants.createTeleOpFollower(hardwareMap);
@@ -18,11 +21,11 @@ public class MecanumDriveFactoryTest extends androidTest {
         drive.startTeleOpDrive();
         drive.setTeleOpDrive(new DriveVector(0.15, 0, 0), false);
         for (int i = 0; i < 6; i++) {
-            drive.periodic();
+            drive.periodic(EMPTY_BINDINGS);
             sleep(100);
         }
         drive.startTeleOpDrive();
-        drive.periodic();
+        drive.periodic(EMPTY_BINDINGS);
 
         telemetry.addData("Manual Drive Mode", drive.useManualDrive);
         telemetry.addData("Pose", drive.getPose());

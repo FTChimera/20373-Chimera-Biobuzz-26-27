@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
@@ -108,7 +109,7 @@ public class MecanumDrive extends Mechanism {
      * Updates pose tracking and follower state
      */
     @Override
-    public void periodic() {
+    public void periodic(Bindings bindings) {
         // Update last known pose
         lastPose = follower.getPose();
 
@@ -244,12 +245,6 @@ public class MecanumDrive extends Mechanism {
     public Command teleOp(Supplier<DriveVector> vector) {
         Driver currentDriver = Blackboard.get(Blackboard.Caption.DRIVER) != null ? Blackboard.get(Blackboard.Caption.DRIVER).getValue() : Driver.DEFAULT;
         return teleOp(vector, currentDriver.USE_FIELD_CENTRIC);
-    }
-
-    /** Command to update the follower every iteration */
-    @Override
-    public Command periodicCommand() {
-        return Commands.infinite(this::periodic);
     }
 
     public void setStickCurve(DoubleUnaryOperator curve) {

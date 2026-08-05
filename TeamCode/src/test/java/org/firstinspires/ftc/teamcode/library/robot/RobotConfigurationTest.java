@@ -1,10 +1,9 @@
 package org.firstinspires.ftc.teamcode.library.robot;
 
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
@@ -85,12 +84,7 @@ public class RobotConfigurationTest {
         }
 
         @Override
-        public void periodic() {}
-
-        @Override
-        public Command periodicCommand() {
-            return Commands.infinite(this::periodic);
-        }
+        public void periodic(Bindings bindings) {}
     }
 
     public static class FakeParams implements Mechanism.Params<FakeParams> {

@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.SlidesMotor;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
@@ -157,11 +157,6 @@ public class Intake extends Mechanism {
      }
 
     @Override
-    public void periodic() {}
-
-    @Override
-    public Command periodicCommand() {
-       return Commands.infinite(this::periodic);
-    }
+    public void periodic(Bindings bindings) {}
 
 }

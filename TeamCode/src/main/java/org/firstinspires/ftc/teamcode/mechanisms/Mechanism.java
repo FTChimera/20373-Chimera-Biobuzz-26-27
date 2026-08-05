@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 public abstract class Mechanism {
@@ -22,7 +22,5 @@ public abstract class Mechanism {
         return bot.getMechanismParams(mechanismClass, defaultParams).updateFromBot(bot);
     }
 
-    public abstract void periodic();
-
-    public abstract Command periodicCommand();
+    public abstract void periodic(Bindings bindings);
 }

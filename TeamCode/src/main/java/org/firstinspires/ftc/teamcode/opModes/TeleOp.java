@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -39,6 +40,7 @@ public abstract class TeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
+        Bindings driverBindings = driver.bindings(Button.BACK);
         intake = Constants.createIntake(hardwareMap);
         drive = Constants.createTeleOpFollower(hardwareMap);
         drive.setStartingPose(getStartingPose());
@@ -53,8 +55,8 @@ public abstract class TeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             driver.update();
             // Update Mechanisms
-            drive.periodic();
-            limelight.LLUpdate();
+            drive.periodic(driverBindings);
+            limelight.periodic(driverBindings);
 
             // Imu reset yaw
             if (driver.isPressed(Button.BACK)) {
