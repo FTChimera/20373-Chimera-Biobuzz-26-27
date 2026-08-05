@@ -3,13 +3,13 @@ package org.firstinspires.ftc.teamcode.library.robot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
-import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -24,8 +24,7 @@ public class RobotConfigurationTest {
     @Test
     public void configureDriveMechanismsAndCreateMechanismUseRegisteredCopies() {
         RobotConstants bot = new RobotConstants().configureDriveMechanisms();
-        assertTrue(bot.Mechanisms.contains(MecanumDrive.class));
-        assertTrue(bot.Mechanisms.contains(Drivetrain.class));
+        assertTrue(bot.Mechanisms.contains(RobotDrive.class));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> new RobotConstants().createMechanism(null, FakeMechanism.class));
@@ -56,15 +55,13 @@ public class RobotConfigurationTest {
         RobotConstants first = RobotConfigurations.FirstRobot();
         assertEquals("frontLeft", first.FRONT_LEFT_MOTOR_NAME);
         assertEquals(0.4, first.MAX_POWER, EPSILON);
-        assertTrue(first.Mechanisms.contains(MecanumDrive.class));
-        assertTrue(first.Mechanisms.contains(Drivetrain.class));
+        assertTrue(first.Mechanisms.contains(RobotDrive.class));
         assertFalse(first.Mechanisms.contains(Intake.class));
         assertFalse(first.USE_FOLLOWER_DRIVE);
 
         RobotConstants oldDecoder = RobotConfigurations.OldDECODERobotTesting();
         assertEquals("frontLeftMotor", oldDecoder.FRONT_LEFT_MOTOR_NAME);
-        assertTrue(oldDecoder.Mechanisms.contains(MecanumDrive.class));
-        assertTrue(oldDecoder.Mechanisms.contains(Drivetrain.class));
+        assertTrue(oldDecoder.Mechanisms.contains(RobotDrive.class));
         assertTrue(oldDecoder.Mechanisms.contains(Intake.class));
         assertTrue(oldDecoder.Mechanisms.contains(Limelight.class));
         assertTrue(oldDecoder.Mechanisms.contains(RGBIndicator.class));
@@ -73,6 +70,9 @@ public class RobotConfigurationTest {
         Intake.INTAKE_PARAMS intakeParams = oldDecoder.getMechanismParams(Intake.class, new Intake.INTAKE_PARAMS());
         assertEquals("intake", intakeParams.HARDWAREMAP_NAME);
         assertEquals(Direction.REVERSE, intakeParams.INTAKE_MOTOR_DIRECTION);
+
+        RobotDrive.ROBOT_DRIVE_PARAMS robotDriveParams = oldDecoder.getMechanismParams(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
+        assertEquals(Button.BACK, robotDriveParams.ZERO_HEADING_BUTTON);
     }
 
     public static class FakeMechanism extends Mechanism {
@@ -84,7 +84,7 @@ public class RobotConfigurationTest {
         }
 
         @Override
-        public void periodic(Bindings bindings) {}
+        public void periodic(GpBindings GpBindings) {}
     }
 
     public static class FakeParams implements Mechanism.Params<FakeParams> {

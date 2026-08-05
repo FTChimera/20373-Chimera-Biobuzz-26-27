@@ -24,7 +24,7 @@ Use this skill for robot-profile work centered around:
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
-8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createRGB(...)`, `createWebcam(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
+8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createRGB(...)`, `createWebcam(...)`, `createDrivetrain(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
 9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.
 
 ## What belongs where
@@ -69,7 +69,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - Create IMUs through `Constants.createIMU(hardwareMap)`; it initializes orientation but deliberately does not reset yaw.
 - Keep Pinpoint-related updates bundled through `pinpointConstants(...)`.
 - Keep drive motor directions on the shared `Direction` enum so `Drivetrain` and `RobotConstants.createFollower(...)` stay aligned.
-- Use `configureDriveMechanisms()` when you want the normal drive stack (`MecanumDrive` + `Drivetrain`) enabled by default.
+- Use `configureDriveMechanisms()` when you want the normal drive mechanism (`RobotDrive`) enabled by default.
 - When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)`, store profile-specific params with `.mechanismParams(...)` when needed, and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
 - Do not move mechanism-specific params into `RobotConstants` unless they truly vary by robot profile.
@@ -83,14 +83,14 @@ That separation keeps the robot profile focused on what varies per bot while reu
 1. Add or update a preset in `RobotConfigurations`.
 2. Point `Constants.currentBot` at that preset.
 3. Confirm `RobotConstants.createFollower(...)` still matches the chosen localizer and drivetrain style.
-4. If the preset should support the normal drive stack, include `.configureDriveMechanisms()`.
+4. If the preset should support the normal drive mechanism, include `.configureDriveMechanisms()`.
 5. If a new mechanism is involved, register it with `.addMechanism(...)`, configure any profile-specific nested params through `.mechanismParams(...)`, confirm its constructor matches `(HardwareMap, RobotConstants)`, and optionally expose a `Constants.create...(...)` helper.
 6. Validate any op mode or mechanism that depends on the follower.
 
 ## Common pitfalls in this repo
 
 - `Constants` is a convenience surface, but the actual uniform mechanism factory logic now lives in `RobotConstants.createMechanism(...)`.
-- `MecanumDrive` depends on the same active robot profile, so follower changes affect teleop and autonomous.
+- `RobotDrive` depends on the same active robot profile, so follower changes affect teleop and autonomous.
 - `RobotConstants.createFollower(...)` currently assumes Pinpoint localization and the GoBILDA 4-bar pod resolution.
 - `RobotConstants.createMechanism(...)` throws if the requested class is not present in the active profile’s `Mechanisms` list.
 - `Constants.assertHasMechanism(...)` now fails earlier for convenience factory calls, so profile registration issues can show up before reflection-based construction.

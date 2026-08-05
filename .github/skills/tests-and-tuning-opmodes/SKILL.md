@@ -37,7 +37,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 
 - Test op modes live under `tests/` and are annotated for the driver station.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted check, sleep briefly, and then request stop. It now also provides `skipIfMechanismMissing(...)` and `showStep(...)` helpers so factory tests can stay profile-aware and telemetry-friendly.
-- `tests/ftcSdk/` now includes factory-style runtime checks for `Follower`, `IMU`, `Drivetrain`, `Intake`, `Limelight`, `MecanumDrive`, `RGBIndicator`, and `LogitechWebcam`.
+- `tests/ftcSdk/` now includes factory-style runtime checks for `Follower`, `Drivetrain`, `IMU`, `Intake`, `Limelight`, `RobotDrive`, `RGBIndicator`, and `LogitechWebcam`.
 - `tests/ftcSdk/` now also includes custom-hardware checks for the device-level `RGBIndicator` and `SlidesMotor` classes under `library/hardware/hardwareDevice/`.
 - TeamCode now also has a JVM test layer under `TeamCode/src/test/java/`; use that for math, utility, blackboard, gamepad, robot-configuration, and `EquationCurve` behavior that does not need FTC runtime hardware.
 - `pid/autoTune/` now contains FTC AutoTune relay-feedback tuners built around repo-local `pid.autoTune.master.PIDMaster` / `DualMotorPIDMaster` FTC adapters, the external `pidautotuner-core` algorithms, and a repo-local `@Configurable` `TuningConstants` class.
@@ -55,7 +55,7 @@ Use this skill when work is focused on validation op modes, tuners, or measureme
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.
 - `MotorTest` is a small SDK-level wrapper check built on the custom `androidTest` base.
-- `FollowerFactoryTest`, `DrivetrainFactoryTest`, `MecanumDriveFactoryTest`, `IntakeFactoryTest`, `LimelightFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short factory/construction smoke tests built on the shared `androidTest` base. They are meant to validate the selected profile’s factory path, not provide full mechanism exercise.
+- `FollowerFactoryTest`, `DrivetrainFactoryTest`, `MecanumDriveFactoryTest`, `IntakeFactoryTest`, `LimelightFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short factory/construction smoke tests built on the shared `androidTest` base. `MecanumDriveFactoryTest` now validates the public `RobotDrive` factory path while `DrivetrainFactoryTest` validates the lower-level plain drivetrain helper.
 - `IMUTest` is the runtime check for `Constants.createIMU(...)`; it resets yaw once, reports before/after values, and leaves live heading movement confirmation to the driver.
 - `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `SlidesMotor.DEFAULT_HARDWAREMAP_NAME`.

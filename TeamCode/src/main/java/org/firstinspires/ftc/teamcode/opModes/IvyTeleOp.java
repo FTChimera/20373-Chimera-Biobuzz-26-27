@@ -8,19 +8,18 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 @TeleOp(name = "Red Ivy TeleOp", group = "0: TeleOp")
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public class IvyTeleOp extends LinearOpMode {
     Intake intake;
-    MecanumDrive drive;
+    RobotDrive drive;
     Limelight limelight;
 
     /**
@@ -35,10 +34,10 @@ public class IvyTeleOp extends LinearOpMode {
     public void runOpMode() {
         Scheduler.reset();
         DualGamepad gamepads = new DualGamepad(gamepad1, gamepad2);
-        Bindings driverBindings = gamepads.gamepad1.bindings(Button.BACK);
+        GpBindings driverResult = gamepads.gamepad1.result(Button.BACK);
         intake = Constants.createIntake(hardwareMap);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
-        drive = Constants.createTeleOpFollower(hardwareMap);
+        drive = Constants.createDrive(hardwareMap);
         drive.setStartingPose(startPose);
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
@@ -46,11 +45,9 @@ public class IvyTeleOp extends LinearOpMode {
 
         Scheduler.schedule(
                 gamepads.updateCommand(),
-                Commands.infinite(() -> limelight.periodic(driverBindings)),
-                Commands.infinite(() -> drive.periodic(driverBindings)),
-                drive.teleOp(() -> new DriveVector(-gamepads.gamepad1.leftStickY(), gamepads.gamepad1.leftStickX(), gamepads.gamepad1.rightStickX())),
-                Groups.loop(intake.setPowerCommand(() -> gamepads.rightTrigger1().getValue() - gamepads.leftTrigger1().getValue())),
-                Commands.infinite(() -> {if (gamepads.isPressed1(Button.BACK)) {drive.zeroHeadingOffset();}}).requiring(gamepads, drive)
+                Commands.infinite(() -> limelight.periodic(driverResult)),
+                drive.teleOp(() -> gamepads.gamepad1.result(Button.BACK)),
+                Groups.loop(intake.setPowerCommand(() -> gamepads.rightTrigger1().getValue() - gamepads.leftTrigger1().getValue()))
         );
 
         telemetry.addData("Status", "Initialized");

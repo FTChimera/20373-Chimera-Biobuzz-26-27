@@ -146,17 +146,17 @@ public class GamepadInputTest {
     }
 
     @Test
-    public void bindingsReuseUpdatedReadersFromWrapper() {
+    public void GpBindingsReusesUpdatedReadersFromWrapper() {
         Gamepad gamepad = GamepadTestUtils.newGamepad(Gamepad.Type.SONY_PS4);
         GamepadEx extended = new GamepadEx(gamepad);
-        Bindings bindings = extended.bindings(Button.A, Button.BACK);
+        GpBindings GpBindings = extended.result(Button.A, Button.BACK);
 
         gamepad.a = true;
         extended.update();
 
-        assertTrue(bindings.contains(Button.A));
-        assertTrue(bindings.isPressed(Button.A));
-        assertTrue(bindings.wasJustPressed(Button.A));
-        assertFalse(bindings.contains(Button.Y));
+        assertTrue(GpBindings.contains(Button.A));
+        assertTrue(GpBindings.isPressed(Button.A));
+        assertTrue(GpBindings.wasJustPressed(Button.A));
+        assertFalse(GpBindings.contains(Button.Y));
     }
 }

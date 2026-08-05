@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.leds;
 
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
 import com.bylazar.lights.PanelsLights;
@@ -166,6 +166,6 @@ public class RGBIndicator extends Mechanism {
     }
 
     @Override
-    public void periodic(Bindings bindings) {}
+    public void periodic(GpBindings GpBindings) {}
 
 }

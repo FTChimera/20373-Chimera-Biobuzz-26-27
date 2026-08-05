@@ -16,7 +16,8 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
@@ -37,7 +38,7 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 
 1. `Constants.createFollower(...)` delegates to `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that drives the follower.
 2. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder(...).pathConstraints(...).mecanumDrivetrain(...).pinpointLocalizer(...).build()`.
-3. `MecanumDrive` extends `Mechanism`, owns both a Pedro `Follower` and the team `Drivetrain`, and exposes `teleOp(...)` Ivy helpers while its per-loop update now runs through `periodic(Bindings bindings)`.
+3. `library/robot/drivetrain/MecanumDrive` is now the plain follower-backed drive helper, while `mechanisms/RobotDrive` is the profile-managed mechanism that uses `GpBindings` to drive it from TeamCode op modes.
 4. The match-style iterative autonomous path pattern is `opModes/IvyAuton.java` plus a variant-local `IvyAuton_Paths` implementation such as `opModes/variants/Test_IvyAuton.java`.
 5. `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are standalone iterative `OpMode` examples that compose `Scheduler`, `Commands.infinite(...)`, `Groups.sequential(...)`, and `PedroCommands.follow(...)` directly.
 6. `EquationCurve` adapts `Equation` into a Pedro `CustomCurve`, but no current TeamCode op mode instantiates it.

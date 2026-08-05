@@ -134,8 +134,11 @@ public class GamepadEx {
     /** @see Buttons#setToggle(Button, boolean) */
     public void setToggle(Button button, boolean state) { buttons.setToggle(button, state); }
 
-    /** Creates a bindings view over selected button readers from this wrapper. */
-    public Bindings bindings(Button... buttons) { return Bindings.of(this, buttons); }
+    /** Creates a gamepad-result view over this wrapper's current readers and analog surfaces. */
+    public GpBindings result() { return new GpBindings(this); }
+
+    /** Creates a gamepad-result view with a narrowed bindings subset. */
+    public GpBindings result(Button... buttons) { return new GpBindings(this, buttons); }
 
     // ==================== CONVENIENCE: STICKS ====================
 

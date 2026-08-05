@@ -5,29 +5,28 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.DriveVector;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 @TeleOp(name = "FTC SDK MecanumDrive Test", group = "1: Tests")
 public class MecanumDriveFactoryTest extends androidTest {
-    private static final Bindings EMPTY_BINDINGS = Bindings.empty();
-
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
-        MecanumDrive drive = Constants.createTeleOpFollower(hardwareMap);
+        GpBindings GpBindings = gamepad1.result(Button.BACK);
+        RobotDrive drive = Constants.createDrive(hardwareMap);
         drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
         drive.startTeleOpDrive();
-        drive.setTeleOpDrive(new DriveVector(0.15, 0, 0), false);
+        drive.periodic(GpBindings);
         for (int i = 0; i < 6; i++) {
-            drive.periodic(EMPTY_BINDINGS);
+            drive.periodic(GpBindings);
             sleep(100);
         }
         drive.startTeleOpDrive();
-        drive.periodic(EMPTY_BINDINGS);
+        drive.periodic(GpBindings);
 
-        telemetry.addData("Manual Drive Mode", drive.useManualDrive);
+        telemetry.addData("Manual Drive Mode", drive.isUsingManualDrive());
         telemetry.addData("Pose", drive.getPose());
         telemetry.addData("Velocity", drive.getVelocity());
         telemetry.addLine("This validates the public teleop drive factory path.");

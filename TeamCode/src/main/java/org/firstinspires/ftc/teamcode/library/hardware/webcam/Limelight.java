@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
@@ -80,8 +80,8 @@ public class Limelight extends Mechanism {
         }
     }
     public LIMELIGHT_PARAMS params;
-    public Command updateCommand(Bindings bindings) {
-        return Commands.infinite(() -> periodic(bindings));
+    public Command updateCommand(GpBindings GpBindings) {
+        return Commands.infinite(() -> periodic(GpBindings));
     }
 
     public enum Pipeline {
@@ -206,7 +206,7 @@ public class Limelight extends Mechanism {
     }
 
     @Override
-    public void periodic(Bindings bindings) {
+    public void periodic(GpBindings GpBindings) {
         LLUpdate();
     }
 

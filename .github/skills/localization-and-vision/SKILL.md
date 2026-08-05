@@ -24,7 +24,7 @@ This repository currently mixes Pinpoint-based Pedro localization with two separ
 ## Verified current state
 
 1. The build includes FTC Vision `11.1.0` plus Pedro Pathing / Ivy dependencies.
-2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(Bindings bindings)` hook.
+2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(GpBindings GpBindings)` hook.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
    Limelight through `Constants.createLimelight(...)`, start it in `APRIL_TAG`
    mode, and refresh it every loop. They require the selected profile to

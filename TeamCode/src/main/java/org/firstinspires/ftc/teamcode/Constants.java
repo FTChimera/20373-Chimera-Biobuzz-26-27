@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.ftc.FTCCoordinates;
 import com.pedropathing.ftc.InvertedFTCCoordinates;
 import com.pedropathing.geometry.CoordinateSystem;
 import com.pedropathing.geometry.Pose;
@@ -15,10 +14,10 @@ import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurations;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
-import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 import java.util.Set;
 
@@ -42,9 +41,9 @@ public class Constants {
         )));
         return imu;
     }
-    public static MecanumDrive createTeleOpFollower(HardwareMap hardwareMap) {
-        assertHasMechanism(MecanumDrive.class);
-        return currentBot.createMechanism(hardwareMap, MecanumDrive.class);
+    public static RobotDrive createDrive(HardwareMap hardwareMap) {
+        assertHasMechanism(RobotDrive.class);
+        return currentBot.createMechanism(hardwareMap, RobotDrive.class);
     }
 
     public static Intake createIntake(HardwareMap hardwareMap) {
@@ -57,10 +56,6 @@ public class Constants {
         return currentBot.createMechanism(hardwareMap, Limelight.class);
     }
 
-    public static Drivetrain createDrivetrain(HardwareMap hardwareMap) {
-        assertHasMechanism(Drivetrain.class);
-        return currentBot.createMechanism(hardwareMap, Drivetrain.class);
-    }
 
     public static RGBIndicator createRGB(HardwareMap hardwareMap) {
         assertHasMechanism(RGBIndicator.class);
@@ -70,6 +65,10 @@ public class Constants {
     public static LogitechWebcam createWebcam(HardwareMap hardwareMap) {
         assertHasMechanism(LogitechWebcam.class);
         return currentBot.createMechanism(hardwareMap, LogitechWebcam.class);
+    }
+
+    public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
+        return new Mechanisms(hardwareMap, currentBot);
     }
 
     public static <T> T createMechanism(HardwareMap hardwareMap, Class<T> mechClass) {

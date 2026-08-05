@@ -13,11 +13,12 @@ This skill covers the team’s custom teleop-drive stack.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/Drivetrain.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/Driver.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Drivetrain.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
@@ -29,18 +30,18 @@ This skill covers the team’s custom teleop-drive stack.
 2. `DriveVector.applyStickCurve(...)` mutates the vector in place and applies the selected joystick curve without flipping any axes.
 3. `DriveVector.rotateFieldCentric()` currently rotates by `-robotHeading`, which is the current repo convention after the field-centric fix.
 4. `Drivetrain.setTeleOpDrive(...)` copies the incoming vector, applies the configured stick curve, explicitly negates forward, optionally rotates for field-centric drive, and writes power to the four `Motor` wrappers.
-5. `MecanumDrive` creates its follower from the active `RobotConstants` profile and pairs it with a `Drivetrain` built from the same `bot` instance.
+5. `library/robot/drivetrain/MecanumDrive` creates its follower from the active `RobotConstants` profile and pairs it with a `library/robot/drivetrain/Drivetrain` built from the same `bot` instance.
 6. `MecanumDrive.periodic()` currently snapshots `lastPose = follower.getPose()` and then calls `follower.update()`, so `lastPose` is the pre-update pose for that loop.
-7. `MecanumDrive.setTeleOpDrive(new DriveVector(...))` routes through `Drivetrain` or Pedro's follower-drive path according to the selected profile's `USE_FOLLOWER_DRIVE` setting.
+7. `RobotDrive` is the profile-managed mechanism wrapper around those two plain drivetrain classes. Its `periodic(GpBindings)` path converts wrapper stick input into a `DriveVector`, applies the back-button heading reset binding, and delegates movement to `MecanumDrive`.
 
 ## Repo-specific conventions
 
 - Driver preference for field-centric versus robot-centric mode is stored in `configs.Blackboard` through `Blackboard.Caption.DRIVER` and the `Driver` enum.
-- `TeleOp` and `IvyTeleOp` now set their stick curve once on `MecanumDrive` via `drive.setStickCurve(x -> Math.signum(x) * x * x)` and then pass raw stick values into `new DriveVector(...)`; the forward-axis inversion now happens inside `Drivetrain` or at the raw-`Follower` call site instead of inside `DriveVector`.
+- `TeleOp` and `IvyTeleOp` now set their stick curve once on `RobotDrive`, which forwards it to the underlying `MecanumDrive` / `Drivetrain` pair.
 - Heading reset is mapped to `gamepad1.back` in the shared teleop bases; `tests/FieldCentricMecanumTeleOp.java` uses `gamepad1.options`.
 - IMU lookup and REV Hub orientation are profile-owned through `RobotConstants`; use `Constants.createIMU(hardwareMap)` to initialize the active-profile IMU, then reset yaw explicitly in the op mode.
-- `MecanumDrive` is the public drive-facing mechanism; the raw `Follower` is not the normal teleop entry point in team code.
-- Drive motor directions in robot profiles now use `library.hardware.actuators.Direction`; `Drivetrain` applies them through `Motor.setDirection(...)`.
+- `RobotDrive` is the public drive-facing mechanism; the raw `Follower` and the plain drivetrain classes are not the normal teleop entry points in team code.
+- Drive motor directions in robot profiles now use `library.hardware.actuators.Direction`; `library/robot/drivetrain/Drivetrain` applies them through `Motor.setDirection(...)`.
 - FirstRobot's drivetrain hardware wiring and Pinpoint setup are ready. Its
   Pedro drive-tuning fields remain
   unconfigured (`X_VELOCITY` / `Y_VELOCITY` are zero and the follower
@@ -54,10 +55,11 @@ This skill covers the team’s custom teleop-drive stack.
 ## How drive fits the new creation pattern
 
 - Drive profile and follower configuration live in `RobotConstants` / `RobotConfigurations`.
-- `Drivetrain` and `MecanumDrive` both participate in the shared `Mechanism` creation flow.
-- `Constants.createTeleOpFollower(hardwareMap)` is the top-level convenience wrapper around `currentBot.createMechanism(hardwareMap, MecanumDrive.class)`, and `Constants.createDrivetrain(hardwareMap)` is the lower-level wrapper around `Drivetrain.class`.
-- `RobotConstants.configureDriveMechanisms()` is the profile helper that enables the normal drive stack (`MecanumDrive` plus `Drivetrain`).
-- Higher-level drive code should keep delegating to those normal factories instead of rebuilding hardware inline.
+- `library/robot/drivetrain/Drivetrain` and `library/robot/drivetrain/MecanumDrive` are now plain reusable drive classes, not `Mechanism` subclasses.
+- `mechanisms/RobotDrive.java` is the profile-managed wrapper that participates in the shared `Mechanism` creation flow.
+- `Constants.createTeleOpFollower(hardwareMap)` is now the top-level convenience wrapper around `currentBot.createMechanism(hardwareMap, RobotDrive.class)`, and `Constants.createDrivetrain(hardwareMap)` is the lower-level helper that directly instantiates the plain `Drivetrain` class using the active profile plus `RobotDrive`'s nested drivetrain params.
+- `RobotConstants.configureDriveMechanisms()` is the profile helper that enables the normal drive mechanism as `RobotDrive`.
+- Higher-level drive code should keep delegating to `RobotDrive` or the `Constants` helpers instead of rebuilding hardware inline.
 
 If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(HardwareMap, RobotConstants)` constructor pattern and register it in the robot profile unless the change is purely a reusable math helper.
 
@@ -66,15 +68,16 @@ If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(H
 - Keep drive-input shaping in one place: `DriveVector` or the selected stick curve, not scattered sign flips across op modes.
 - If field-centric math changes, verify both `DriveVector.rotateFieldCentric()` and the heading passed in from `MecanumDrive`.
 - Preserve `periodic()` calling `follower.update()` exactly once per loop path.
-- Prefer extending `MecanumDrive` APIs over having op modes reach inside `drivetrain` and `follower` directly.
-- Keep drivetrain profile data in `RobotConstants`; keep subsystem construction on the existing `Constants` / `RobotConstants.createMechanism(...)` path.
+- Prefer extending `RobotDrive` or the plain drivetrain helper APIs over having op modes reach inside the follower directly.
+- Keep drivetrain profile data in `RobotConstants`; keep the public drive mechanism construction on the existing `Constants` / `RobotConstants.createMechanism(...)` path.
 - If a change touches driver defaults, update the `Driver` enum and any `Blackboard`-based preference flow rather than inventing a second field-centric toggle source.
 
 ## Common edit targets
 
 - Change response curve or deadband behavior: `DriveVector.java`
-- Change motor-power mapping or field-centric handling: `Drivetrain.java`
-- Change public teleop-facing drive behavior or pose resets: `MecanumDrive.java`
+- Change motor-power mapping or field-centric handling: `library/robot/drivetrain/Drivetrain.java`
+- Change follower-backed drive behavior: `library/robot/drivetrain/MecanumDrive.java`
+- Change public teleop-facing drive behavior or binding-driven movement: `mechanisms/RobotDrive.java`
 - Change drive hardware names, directions, or follower tuning: `RobotConfigurations.java` / `RobotConstants.java`
 - Change IMU hardware name or hub orientation: `RobotConfigurations.java` / `RobotConstants.java`
 - Change centralized drivetrain validation wiring in the raw test op mode: `tests/MecanumTeleOp.java`

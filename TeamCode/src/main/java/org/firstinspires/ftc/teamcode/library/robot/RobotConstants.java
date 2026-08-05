@@ -13,11 +13,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.control.DoublePIDFCoeffs;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
-import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -173,8 +171,7 @@ public class RobotConstants {
     }
 
     public RobotConstants configureDriveMechanisms() {
-        addMechanism(MecanumDrive.class, new MecanumDrive.MECANUM_DRIVE_PARAMS());
-        addMechanism(Drivetrain.class, new Drivetrain.DRIVETRAIN_PARAMS());
+        addMechanism(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
         return this;
     }
 

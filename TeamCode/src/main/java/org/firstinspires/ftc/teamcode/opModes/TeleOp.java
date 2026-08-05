@@ -7,19 +7,18 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
-import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Bindings;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.MecanumDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
     Intake intake;
-    MecanumDrive drive;
+    RobotDrive drive;
     Limelight limelight;
 
     // Constructor for TeleOp, takes in the alliance color.
@@ -40,9 +39,9 @@ public abstract class TeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
-        Bindings driverBindings = driver.bindings(Button.BACK);
+        GpBindings driverResult = driver.result(Button.BACK);
         intake = Constants.createIntake(hardwareMap);
-        drive = Constants.createTeleOpFollower(hardwareMap);
+        drive = Constants.createDrive(hardwareMap);
         drive.setStartingPose(getStartingPose());
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
@@ -55,19 +54,8 @@ public abstract class TeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             driver.update();
             // Update Mechanisms
-            drive.periodic(driverBindings);
-            limelight.periodic(driverBindings);
-
-            // Imu reset yaw
-            if (driver.isPressed(Button.BACK)) {
-                drive.zeroHeadingOffset();
-            }
-
-            // Drive
-            double forward = -driver.leftStickY(); // Drive stack already handles the sign convention downstream.
-            double strafe = driver.leftStickX();
-            double turn = driver.rightStickX();
-            drive.setTeleOpDrive(new DriveVector(forward, strafe, turn));
+            drive.periodic(driverResult);
+            limelight.periodic(driverResult);
 
             // Intake
             intake.setPower(driver.rightTrigger.getValue() - driver.leftTrigger.getValue());
