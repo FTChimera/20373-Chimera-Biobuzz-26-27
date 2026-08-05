@@ -10,8 +10,8 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
-@TeleOp(name = "FTC SDK MecanumDrive Test", group = "1: Tests")
-public class MecanumDriveFactoryTest extends androidTest {
+@TeleOp(name = "FTC SDK RobotDrive Test", group = "1: Tests")
+public class RobotDriveFactoryTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
         GpBindings GpBindings = gamepad1.result(Button.BACK);
@@ -35,6 +35,6 @@ public class MecanumDriveFactoryTest extends androidTest {
 
     @Override
     protected String getTestName() {
-        return "FTC SDK MecanumDrive Factory Test";
+        return "FTC SDK RobotDrive Factory Test";
     }
 }

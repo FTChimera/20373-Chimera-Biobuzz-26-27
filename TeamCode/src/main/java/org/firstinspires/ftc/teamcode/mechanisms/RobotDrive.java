@@ -7,8 +7,8 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
-import org.firstinspires.ftc.teamcode.library.robot.drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.library.robot.drivetrain.MecanumDrive;
+import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
@@ -18,25 +18,46 @@ import java.util.function.Supplier;
 
 public class RobotDrive extends Mechanism {
     public static class ROBOT_DRIVE_PARAMS implements Mechanism.Params<ROBOT_DRIVE_PARAMS> {
-        public Drivetrain.DRIVETRAIN_PARAMS DRIVETRAIN_PARAMS = new Drivetrain.DRIVETRAIN_PARAMS();
-        public MecanumDrive.MECANUM_DRIVE_PARAMS MECANUM_DRIVE_PARAMS = new MecanumDrive.MECANUM_DRIVE_PARAMS();
+        public DoubleUnaryOperator DEFAULT_STICK_CURVE = DoubleUnaryOperator.identity();
+        public boolean START_TELEOP_DRIVE_ON_INIT = true;
+        public boolean RESET_STICK_CURVE_ON_INIT = true;
+        public boolean UPDATE_FOLLOWER_ON_INIT = true;
+        public double INITIAL_HEADING_OFFSET = 0;
         public Button ZERO_HEADING_BUTTON = Button.BACK;
 
         public ROBOT_DRIVE_PARAMS() {}
 
         private ROBOT_DRIVE_PARAMS(ROBOT_DRIVE_PARAMS other) {
-            DRIVETRAIN_PARAMS = other.DRIVETRAIN_PARAMS.copy();
-            MECANUM_DRIVE_PARAMS = other.MECANUM_DRIVE_PARAMS.copy();
+            DEFAULT_STICK_CURVE = other.DEFAULT_STICK_CURVE;
+            START_TELEOP_DRIVE_ON_INIT = other.START_TELEOP_DRIVE_ON_INIT;
+            RESET_STICK_CURVE_ON_INIT = other.RESET_STICK_CURVE_ON_INIT;
+            UPDATE_FOLLOWER_ON_INIT = other.UPDATE_FOLLOWER_ON_INIT;
+            INITIAL_HEADING_OFFSET = other.INITIAL_HEADING_OFFSET;
             ZERO_HEADING_BUTTON = other.ZERO_HEADING_BUTTON;
         }
 
-        public ROBOT_DRIVE_PARAMS drivetrainParams(Drivetrain.DRIVETRAIN_PARAMS drivetrainParams) {
-            this.DRIVETRAIN_PARAMS = drivetrainParams.copy();
+        public ROBOT_DRIVE_PARAMS defaultStickCurve(DoubleUnaryOperator defaultStickCurve) {
+            this.DEFAULT_STICK_CURVE = defaultStickCurve == null ? DoubleUnaryOperator.identity() : defaultStickCurve;
             return this;
         }
 
-        public ROBOT_DRIVE_PARAMS mecanumDriveParams(MecanumDrive.MECANUM_DRIVE_PARAMS mecanumDriveParams) {
-            this.MECANUM_DRIVE_PARAMS = mecanumDriveParams.copy();
+        public ROBOT_DRIVE_PARAMS startTeleOpDriveOnInit(boolean startTeleOpDriveOnInit) {
+            this.START_TELEOP_DRIVE_ON_INIT = startTeleOpDriveOnInit;
+            return this;
+        }
+
+        public ROBOT_DRIVE_PARAMS resetStickCurveOnInit(boolean resetStickCurveOnInit) {
+            this.RESET_STICK_CURVE_ON_INIT = resetStickCurveOnInit;
+            return this;
+        }
+
+        public ROBOT_DRIVE_PARAMS updateFollowerOnInit(boolean updateFollowerOnInit) {
+            this.UPDATE_FOLLOWER_ON_INIT = updateFollowerOnInit;
+            return this;
+        }
+
+        public ROBOT_DRIVE_PARAMS initialHeadingOffset(double initialHeadingOffset) {
+            this.INITIAL_HEADING_OFFSET = initialHeadingOffset;
             return this;
         }
 
@@ -57,14 +78,12 @@ public class RobotDrive extends Mechanism {
     }
 
     public final ROBOT_DRIVE_PARAMS params;
-    public final Drivetrain drivetrain;
     public final MecanumDrive mecanumDrive;
 
     public RobotDrive(HardwareMap map, RobotConstants bot) {
         super(map, bot);
         params = resolveParams(RobotDrive.class, new ROBOT_DRIVE_PARAMS());
-        drivetrain = new Drivetrain(map, bot, params.DRIVETRAIN_PARAMS);
-        mecanumDrive = new MecanumDrive(map, bot, params.MECANUM_DRIVE_PARAMS, drivetrain);
+        mecanumDrive = new MecanumDrive(map, bot, params);
     }
 
     public void setStartingPose(Pose pose) {
@@ -105,6 +124,10 @@ public class RobotDrive extends Mechanism {
 
     public void setStickCurve(DoubleUnaryOperator curve) {
         mecanumDrive.setStickCurve(curve);
+    }
+
+    public Motor[] getDriveMotors() {
+        return mecanumDrive.getDriveMotors();
     }
 
     public boolean isUsingManualDrive() {

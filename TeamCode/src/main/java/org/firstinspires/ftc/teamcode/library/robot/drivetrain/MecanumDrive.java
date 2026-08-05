@@ -10,70 +10,89 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
 
 public class MecanumDrive {
-    public static class MECANUM_DRIVE_PARAMS {
-        public boolean RESET_STICK_CURVE_ON_INIT = true;
-        public boolean UPDATE_FOLLOWER_ON_INIT = true;
-        public double INITIAL_HEADING_OFFSET = 0;
-
-        public MECANUM_DRIVE_PARAMS() {}
-
-        private MECANUM_DRIVE_PARAMS(MECANUM_DRIVE_PARAMS other) {
-            RESET_STICK_CURVE_ON_INIT = other.RESET_STICK_CURVE_ON_INIT;
-            UPDATE_FOLLOWER_ON_INIT = other.UPDATE_FOLLOWER_ON_INIT;
-            INITIAL_HEADING_OFFSET = other.INITIAL_HEADING_OFFSET;
-        }
-
-        public MECANUM_DRIVE_PARAMS resetStickCurveOnInit(boolean resetStickCurveOnInit) {
-            this.RESET_STICK_CURVE_ON_INIT = resetStickCurveOnInit;
-            return this;
-        }
-
-        public MECANUM_DRIVE_PARAMS updateFollowerOnInit(boolean updateFollowerOnInit) {
-            this.UPDATE_FOLLOWER_ON_INIT = updateFollowerOnInit;
-            return this;
-        }
-
-        public MECANUM_DRIVE_PARAMS initialHeadingOffset(double initialHeadingOffset) {
-            this.INITIAL_HEADING_OFFSET = initialHeadingOffset;
-            return this;
-        }
-
-        public MECANUM_DRIVE_PARAMS copy() {
-            return new MECANUM_DRIVE_PARAMS(this);
-        }
-    }
-
     public final Follower follower;
-    public final Drivetrain drivetrain;
+    private final Motor[] driveMotors;
     public final boolean useManualDrive;
-    public final MECANUM_DRIVE_PARAMS params;
+    public final RobotDrive.ROBOT_DRIVE_PARAMS params;
+    private DoubleUnaryOperator stickCurve;
 
     public static Pose lastPose = new Pose(0, 0, 0);
     public double headingOffset = 0;
 
     public MecanumDrive(HardwareMap map, RobotConstants bot) {
-        this(map, bot, new MECANUM_DRIVE_PARAMS(), new Drivetrain(map, bot));
+        this(map, bot, new RobotDrive.ROBOT_DRIVE_PARAMS().updateFromBot(bot));
     }
 
-    public MecanumDrive(HardwareMap map, RobotConstants bot, MECANUM_DRIVE_PARAMS params, Drivetrain drivetrain) {
+    public MecanumDrive(HardwareMap map, RobotConstants bot, RobotDrive.ROBOT_DRIVE_PARAMS params) {
         this.params = params.copy();
         this.follower = bot.createFollower(map);
         this.useManualDrive = !bot.USE_FOLLOWER_DRIVE;
-        this.drivetrain = drivetrain;
         this.headingOffset = this.params.INITIAL_HEADING_OFFSET;
+        this.driveMotors = useManualDrive ? createDriveMotors(map, bot) : new Motor[0];
+        setStickCurve(this.params.DEFAULT_STICK_CURVE);
         if (this.params.RESET_STICK_CURVE_ON_INIT) {
             resetStickCurve();
         }
+        if (this.params.START_TELEOP_DRIVE_ON_INIT) {
+            startTeleOpDrive();
+        }
         if (this.params.UPDATE_FOLLOWER_ON_INIT) {
             follower.update();
+        }
+    }
+
+    private Motor[] createDriveMotors(HardwareMap map, RobotConstants bot) {
+        try {
+            return new Motor[] {
+                    createDriveMotor(map, bot.FRONT_LEFT_MOTOR_NAME, bot.FRONT_LEFT_MOTOR_DIRECTION),
+                    createDriveMotor(map, bot.FRONT_RIGHT_MOTOR_NAME, bot.FRONT_RIGHT_MOTOR_DIRECTION),
+                    createDriveMotor(map, bot.BACK_LEFT_MOTOR_NAME, bot.BACK_LEFT_MOTOR_DIRECTION),
+                    createDriveMotor(map, bot.BACK_RIGHT_MOTOR_NAME, bot.BACK_RIGHT_MOTOR_DIRECTION)
+            };
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Unable to initialize mecanum drive motors.", e);
+        }
+    }
+
+    private Motor createDriveMotor(HardwareMap map, String hardwareMapName, org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction direction) {
+        try {
+            return new Motor(map, hardwareMapName).setDirection(direction);
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Unable to initialize drive motor: " + hardwareMapName, e);
+        }
+    }
+
+    private DriveVector shapeManualDriveVector(DriveVector driveVector, boolean fieldCentric, double robotHeading) {
+        DriveVector vector = driveVector.copy();
+        vector.applyStickCurve(getStickCurve());
+        vector.forward = -vector.forward;
+        if (fieldCentric) {
+            vector.setRobotHeading(robotHeading);
+            return vector.rotateFieldCentric();
+        } else {
+            return vector;
+        }
+    }
+
+    private DriveVector shapeFollowerDriveVector(DriveVector driveVector) {
+        DriveVector vector = driveVector.copy();
+        vector.applyStickCurve(getStickCurve());
+        return vector;
+    }
+
+    private void setMotorPowers(double[] motorPowers) {
+        for (int i = 0; i < driveMotors.length; i++) {
+            driveMotors[i].setPower(motorPowers[i]);
         }
     }
 
@@ -88,11 +107,12 @@ public class MecanumDrive {
 
     public void setTeleOpDrive(DriveVector driveVector, boolean fieldCentric) {
         if (useManualDrive) {
-            drivetrain.setTeleOpDrive(driveVector, fieldCentric, lastPose.getHeading() - headingOffset);
+            DriveVector vector = shapeManualDriveVector(driveVector, fieldCentric, lastPose.getHeading() - headingOffset);
+            setMotorPowers(vector.calculateDrivePowers());
         } else {
-            driveVector.applyStickCurve(getStickCurve());
+            DriveVector vector = shapeFollowerDriveVector(driveVector);
             follower.setTeleOpDrive(
-                    -driveVector.forward, -driveVector.strafe, -driveVector.rotate, fieldCentric, fieldCentric ? headingOffset : 0
+                    -vector.forward, -vector.strafe, -vector.rotate, fieldCentric, fieldCentric ? headingOffset : 0
             );
         }
     }
@@ -104,7 +124,7 @@ public class MecanumDrive {
 
     public void startTeleOpDrive() {
         if (useManualDrive) {
-            drivetrain.startTeleOpDrive();
+            setMotorPowers(DriveVector.IDLE.calculateDrivePowers());
         } else {
             follower.startTeleopDrive();
             follower.setTeleOpDrive(0, 0, 0, false);
@@ -160,19 +180,31 @@ public class MecanumDrive {
         return Commands.instant(this::startTeleOpDrive);
     }
 
+    public Command setTeleOpDriveCommand(Supplier<DriveVector> vector, Supplier<Boolean> fieldCentric) {
+        return Commands.infinite(() -> setTeleOpDrive(vector.get(), fieldCentric.get()));
+    }
+
+    public Command setTeleOpDriveCommand(Supplier<DriveVector> vector) {
+        return Commands.infinite(() -> setTeleOpDrive(vector.get()));
+    }
+
     public Command zeroHeadingOffsetCommand() {
         return Commands.instant(this::zeroHeadingOffset);
     }
 
     public void setStickCurve(DoubleUnaryOperator curve) {
-        drivetrain.setStickCurve(curve);
+        stickCurve = curve == null ? DoubleUnaryOperator.identity() : curve;
     }
 
     public void resetStickCurve() {
-        drivetrain.setStickCurve(DoubleUnaryOperator.identity());
+        setStickCurve(DoubleUnaryOperator.identity());
     }
 
     public DoubleUnaryOperator getStickCurve() {
-        return drivetrain.params.DEFAULT_STICK_CURVE == null ? DoubleUnaryOperator.identity() : drivetrain.params.DEFAULT_STICK_CURVE;
+        return stickCurve == null ? DoubleUnaryOperator.identity() : stickCurve;
+    }
+
+    public Motor[] getDriveMotors() {
+        return driveMotors;
     }
 }

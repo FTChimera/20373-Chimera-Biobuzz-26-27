@@ -6,10 +6,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
-import org.firstinspires.ftc.teamcode.library.robot.drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 import java.util.Arrays;
 
@@ -18,7 +18,7 @@ public class MotorDirectionTest extends LinearOpMode {
     /**
      * Use the panels configurable on constants to set directions.
      */
-    Drivetrain drive;
+    RobotDrive drive;
     Intake intake;
     /**
      * Override this method and place your code here.
@@ -33,7 +33,7 @@ public class MotorDirectionTest extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
-        drive = Constants.createDrivetrain(hardwareMap);
+        drive = Constants.createDrive(hardwareMap);
         drive.startTeleOpDrive();
         intake = Constants.createIntake(hardwareMap);
         GamepadEx driver = new GamepadEx(gamepad1);
@@ -55,7 +55,7 @@ public class MotorDirectionTest extends LinearOpMode {
             if (driver.wasJustPressed(Button.A)) {
                 reverseIntake();
             }
-            drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), 0);
+            drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), false);
             intake.setPower(0.3);
             telemetry.addLine("-".repeat(30));
             telemetry.addLine("INSTRUCTIONS");
