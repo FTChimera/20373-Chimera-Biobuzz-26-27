@@ -24,7 +24,8 @@ import java.util.Locale;
  * if (tp.wasButtonJustPressed()) { ... }
  * </pre>
  */
-public class Touchpad {
+public class Touchpad extends GpCommand {
+    public static final Touchpad MAIN = new Touchpad();
 
     // ==================== TOUCHPOINT ====================
 
@@ -84,6 +85,10 @@ public class Touchpad {
      * Must be called once per loop iteration.
      * @param gamepad The raw FTC Gamepad
      */
+    public Touchpad() {
+        super(TYPE.HYBRID, "TOUCHPAD");
+    }
+
     public void update(Gamepad gamepad) {
         // Shift current → previous
         prevFinger1 = curFinger1;
@@ -156,6 +161,11 @@ public class Touchpad {
 
     /** @return The number of fingers currently on the touchpad (0, 1, or 2) */
     public int getFingerCount() { return (curFinger1 ? 1 : 0) + (curFinger2 ? 1 : 0); }
+
+    @Override
+    public double getValue() {
+        return getFingerCount();
+    }
 
     // ==================== FINGER EDGE DETECTION ====================
 

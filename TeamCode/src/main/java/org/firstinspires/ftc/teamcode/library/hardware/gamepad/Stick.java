@@ -19,10 +19,13 @@ import java.util.function.DoubleUnaryOperator;
  * double angle  = left.getAngle();      // angle in radians (atan2)
  * </pre>
  */
-public class Stick {
+public class Stick extends GpCommand {
 
     /** Which physical stick this represents. */
     public enum Side { LEFT, RIGHT }
+
+    public static final Stick LEFT = new Stick(Side.LEFT, 0.05, (double x) -> x);
+    public static final Stick RIGHT = new Stick(Side.RIGHT, 0.05, (double x) -> x);
 
     private final Side side;
     private double deadzone;
@@ -48,6 +51,7 @@ public class Stick {
      * @param curve    Response-curve exponent (1.0 = linear, 2.0 = squared). ≥ 1.0.
      */
     public Stick(Side side, double deadzone, DoubleUnaryOperator curve) {
+        super(TYPE.ANALOG, side == Side.LEFT ? "LEFT_STICK" : "RIGHT_STICK");
         this.side = side;
         this.deadzone = Math.max(0, Math.min(deadzone, 0.99));
         this.curve = curve;
@@ -109,6 +113,11 @@ public class Stick {
      */
     public double getMagnitude() {
         return Math.min(1.0, Math.hypot(x, y));
+    }
+
+    @Override
+    public double getValue() {
+        return getMagnitude();
     }
 
     /**

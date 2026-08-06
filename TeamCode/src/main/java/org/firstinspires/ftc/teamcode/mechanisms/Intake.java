@@ -5,8 +5,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
 import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.SlidesMotor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Trigger;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
@@ -24,6 +26,8 @@ public class Intake extends Mechanism {
         public String HARDWAREMAP_NAME = "intake";
         public Direction SLIDES_MOTOR_DIRECTION = Direction.REVERSE;
         public Direction INTAKE_MOTOR_DIRECTION = Direction.REVERSE;
+        public GpCommand FORWARD_COMMAND = Trigger.RIGHT;
+        public GpCommand REVERSE_COMMAND = Trigger.LEFT;
         public boolean ISBEINGUSED = true;
         public INTAKE_PARAMS() {}
         private INTAKE_PARAMS(INTAKE_PARAMS other) {
@@ -37,6 +41,8 @@ public class Intake extends Mechanism {
             HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
             SLIDES_MOTOR_DIRECTION = other.SLIDES_MOTOR_DIRECTION;
             INTAKE_MOTOR_DIRECTION = other.INTAKE_MOTOR_DIRECTION;
+            FORWARD_COMMAND = other.FORWARD_COMMAND;
+            REVERSE_COMMAND = other.REVERSE_COMMAND;
             ISBEINGUSED = other.ISBEINGUSED;
         }
         public INTAKE_PARAMS fullPower(double fullPower) {
@@ -77,6 +83,14 @@ public class Intake extends Mechanism {
         }
         public INTAKE_PARAMS slidesMotorDirection(Direction slidesMotorDirection) {
             this.SLIDES_MOTOR_DIRECTION = slidesMotorDirection;
+            return this;
+        }
+        public INTAKE_PARAMS forwardCommand(GpCommand forwardCommand) {
+            this.FORWARD_COMMAND = forwardCommand == null ? Trigger.RIGHT : forwardCommand;
+            return this;
+        }
+        public INTAKE_PARAMS reverseCommand(GpCommand reverseCommand) {
+            this.REVERSE_COMMAND = reverseCommand == null ? Trigger.LEFT : reverseCommand;
             return this;
         }
         public INTAKE_PARAMS isBeingUsed(boolean isBeingUsed) {
@@ -157,6 +171,24 @@ public class Intake extends Mechanism {
      }
 
     @Override
-    public void periodic(GpBindings GpBindings) {}
+    public void periodic(GpBindings GpBindings) {
+        if (!params.ISBEINGUSED) {
+            return;
+        }
+        if (GpBindings == null) {
+            Stop();
+            return;
+        }
+        GpCommand forwardCommand = GpBindings.getCommand(params.FORWARD_COMMAND);
+        GpCommand reverseCommand = GpBindings.getCommand(params.REVERSE_COMMAND);
+        double power = params.STOP_POWER;
+        if (forwardCommand != null) {
+            power += forwardCommand.getValue() * params.FULL_POWER;
+        }
+        if (reverseCommand != null) {
+            power += reverseCommand.getValue() * params.REVERSE_FULL_POWER;
+        }
+        setPower(power);
+    }
 
 }

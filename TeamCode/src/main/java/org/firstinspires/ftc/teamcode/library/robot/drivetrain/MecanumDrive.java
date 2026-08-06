@@ -27,7 +27,7 @@ public class MecanumDrive {
     private DoubleUnaryOperator stickCurve;
 
     public static Pose lastPose = new Pose(0, 0, 0);
-    public double headingOffset = 0;
+    public double headingOffset;
 
     public MecanumDrive(HardwareMap map, RobotConstants bot) {
         this(map, bot, new RobotDrive.ROBOT_DRIVE_PARAMS().updateFromBot(bot));
@@ -39,7 +39,7 @@ public class MecanumDrive {
         this.useManualDrive = !bot.USE_FOLLOWER_DRIVE;
         this.headingOffset = this.params.INITIAL_HEADING_OFFSET;
         this.driveMotors = useManualDrive ? createDriveMotors(map, bot) : new Motor[0];
-        setStickCurve(this.params.DEFAULT_STICK_CURVE);
+        setStickCurve(DoubleUnaryOperator.identity());
         if (this.params.RESET_STICK_CURVE_ON_INIT) {
             resetStickCurve();
         }
@@ -193,11 +193,11 @@ public class MecanumDrive {
     }
 
     public void setStickCurve(DoubleUnaryOperator curve) {
-        stickCurve = curve == null ? DoubleUnaryOperator.identity() : curve;
+        stickCurve = curve == null ? params.DEFAULT_STICK_CURVE : curve;
     }
 
     public void resetStickCurve() {
-        setStickCurve(DoubleUnaryOperator.identity());
+        setStickCurve(params.DEFAULT_STICK_CURVE);
     }
 
     public DoubleUnaryOperator getStickCurve() {

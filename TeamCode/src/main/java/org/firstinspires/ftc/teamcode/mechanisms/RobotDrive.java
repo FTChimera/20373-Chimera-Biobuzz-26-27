@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.library.robot.drivetrain.MecanumDrive;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Stick;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
@@ -23,6 +24,8 @@ public class RobotDrive extends Mechanism {
         public boolean RESET_STICK_CURVE_ON_INIT = true;
         public boolean UPDATE_FOLLOWER_ON_INIT = true;
         public double INITIAL_HEADING_OFFSET = 0;
+        public Stick TRANSLATION_STICK = Stick.LEFT;
+        public Stick ROTATION_STICK = Stick.RIGHT;
         public Button ZERO_HEADING_BUTTON = Button.BACK;
 
         public ROBOT_DRIVE_PARAMS() {}
@@ -33,6 +36,8 @@ public class RobotDrive extends Mechanism {
             RESET_STICK_CURVE_ON_INIT = other.RESET_STICK_CURVE_ON_INIT;
             UPDATE_FOLLOWER_ON_INIT = other.UPDATE_FOLLOWER_ON_INIT;
             INITIAL_HEADING_OFFSET = other.INITIAL_HEADING_OFFSET;
+            TRANSLATION_STICK = other.TRANSLATION_STICK;
+            ROTATION_STICK = other.ROTATION_STICK;
             ZERO_HEADING_BUTTON = other.ZERO_HEADING_BUTTON;
         }
 
@@ -58,6 +63,16 @@ public class RobotDrive extends Mechanism {
 
         public ROBOT_DRIVE_PARAMS initialHeadingOffset(double initialHeadingOffset) {
             this.INITIAL_HEADING_OFFSET = initialHeadingOffset;
+            return this;
+        }
+
+        public ROBOT_DRIVE_PARAMS translationStick(Stick translationStick) {
+            this.TRANSLATION_STICK = translationStick == null ? Stick.LEFT : translationStick;
+            return this;
+        }
+
+        public ROBOT_DRIVE_PARAMS rotationStick(Stick rotationStick) {
+            this.ROTATION_STICK = rotationStick == null ? Stick.RIGHT : rotationStick;
             return this;
         }
 
@@ -134,15 +149,27 @@ public class RobotDrive extends Mechanism {
         return mecanumDrive.useManualDrive;
     }
 
+    private DriveVector getDriveVector(GpBindings gpBindings) {
+        Stick translationStick = gpBindings.getCommand(params.TRANSLATION_STICK);
+        Stick rotationStick = gpBindings.getCommand(params.ROTATION_STICK);
+        double forward = translationStick == null ? 0 : translationStick.getY();
+        double strafe = translationStick == null ? 0 : translationStick.getX();
+        double rotate = rotationStick == null ? 0 : rotationStick.getX();
+        return new DriveVector(forward, strafe, rotate);
+    }
+
     @Override
     public void periodic(GpBindings GpBindings) {
         mecanumDrive.periodic();
-        if (GpBindings != null && GpBindings.isPressed(params.ZERO_HEADING_BUTTON)) {
-            zeroHeadingOffset();
-            setTeleOpDrive(new DriveVector(-GpBindings.leftStick.getY(), GpBindings.leftStick.getX(), GpBindings.rightStick.getX()));
-        } else if (GpBindings != null) {
-            setTeleOpDrive(new DriveVector(-GpBindings.leftStick.getY(), GpBindings.leftStick.getX(), GpBindings.rightStick.getX()));
+        if (GpBindings == null) {
+            return;
         }
+        Button zeroHeadingButton = GpBindings.getCommand(params.ZERO_HEADING_BUTTON);
+        DriveVector driveVector = getDriveVector(GpBindings);
+        if (zeroHeadingButton != null && zeroHeadingButton.isPressed()) {
+            zeroHeadingOffset();
+        }
+        setTeleOpDrive(driveVector);
     }
 
     public Command teleOp(Supplier<GpBindings> GpBindingsSupplier) {

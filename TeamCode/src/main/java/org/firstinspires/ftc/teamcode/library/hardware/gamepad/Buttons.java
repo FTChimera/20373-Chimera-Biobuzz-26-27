@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.library.hardware.gamepad;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -21,13 +21,13 @@ import java.util.Objects;
  */
 public class Buttons {
 
-    private final Map<Button, Reader> readers;
+    private final Map<Button, Button> readers;
 
-    /** Creates a Buttons tracker with a {@link Reader} for every {@link Button}. */
+    /** Creates a Buttons tracker with a live copy for every {@link Button}. */
     public Buttons() {
-        readers = new EnumMap<>(Button.class);
+        readers = new LinkedHashMap<>();
         for (Button b : Button.values()) {
-            readers.put(b, new Reader(b));
+            readers.put(b, b.copy());
         }
     }
 
@@ -37,24 +37,24 @@ public class Buttons {
      * @param gamepad The raw FTC Gamepad
      */
     public void update(Gamepad gamepad) {
-        for (Reader r : readers.values()) {
+        for (Button r : readers.values()) {
             r.update(gamepad);
         }
     }
 
     /**
-     * Gets the {@link Reader} for a specific button for direct access.
+     * Gets the live button state for a specific button descriptor.
      * @param button The button
-     * @return The Reader for that button
+     * @return The tracked button state for that button
      */
-    public Reader getReader(Button button) {
+    public Button getReader(Button button) {
         return readers.get(button);
     }
 
     /**
-     * @return Unmodifiable map of all readers (Button → Reader)
+     * @return Unmodifiable map of all tracked button states (Button → Button)
      */
-    public Map<Button, Reader> getReaders() {
+    public Map<Button, Button> getReaders() {
         return Collections.unmodifiableMap(readers);
     }
 
@@ -96,7 +96,7 @@ public class Buttons {
      * @return true if <b>any</b> button is currently held down
      */
     public boolean anyPressed() {
-        for (Reader r : readers.values()) {
+        for (Button r : readers.values()) {
             if (r.isPressed()) return true;
         }
         return false;
@@ -106,7 +106,7 @@ public class Buttons {
      * @return true if <b>any</b> button was just pressed this frame
      */
     public boolean anyJustPressed() {
-        for (Reader r : readers.values()) {
+        for (Button r : readers.values()) {
             if (r.wasJustPressed()) return true;
         }
         return false;

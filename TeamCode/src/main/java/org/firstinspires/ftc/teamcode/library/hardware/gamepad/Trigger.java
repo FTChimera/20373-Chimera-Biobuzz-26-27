@@ -14,10 +14,13 @@ import com.qualcomm.robotcore.hardware.Gamepad;
  * if (lt.wasJustPressed()) { ... }
  * </pre>
  */
-public class Trigger {
+public class Trigger extends GpCommand {
 
     /** Which physical trigger this represents. */
     public enum Side { LEFT, RIGHT }
+
+    public static final Trigger LEFT = new Trigger(Side.LEFT, 0.5);
+    public static final Trigger RIGHT = new Trigger(Side.RIGHT, 0.5);
 
     private final Side side;
     private double threshold;
@@ -33,6 +36,7 @@ public class Trigger {
      * @param threshold Digital threshold in (0, 1]. Values ≥ threshold → "pressed".
      */
     public Trigger(Side side, double threshold) {
+        super(TYPE.HYBRID, side == Side.LEFT ? "LEFT_TRIGGER" : "RIGHT_TRIGGER");
         this.side = side;
         this.threshold = Math.max(0.01, Math.min(threshold, 1.0));
     }

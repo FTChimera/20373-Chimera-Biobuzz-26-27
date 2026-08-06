@@ -32,8 +32,6 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +43,7 @@ import java.util.List;
  * @version 1.0, 6/26/2025
  */
 @Configurable
-@TeleOp(name = "Tuning", group = "2: Pedro Pathing")
+@TeleOp(name = "Tuning", group = "Pedro Pathing")
 public class Tuning extends SelectableOpMode {
     public static Follower follower;
 
@@ -145,22 +143,16 @@ public class Tuning extends SelectableOpMode {
  */
 class LocalizationTest extends OpMode {
     boolean debugStringEnabled = false;
-    private GamepadEx driver1;
-    private GamepadEx driver2;
 
     @Override
     public void init() {
-        driver1 = new GamepadEx(gamepad1);
-        driver2 = new GamepadEx(gamepad2);
         follower.setStartingPose(new Pose(72,72));
     }
 
     /** This initializes the PoseUpdater, the drive motors, and the Panels telemetry. */
     @Override
     public void init_loop() {
-        driver1.update();
-        driver2.update();
-        if (driver1.wasJustPressed(Button.A) || driver2.wasJustPressed(Button.A)) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             debugStringEnabled = !debugStringEnabled;
         }
 
@@ -186,13 +178,11 @@ class LocalizationTest extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        driver2.update();
-        if (driver1.wasJustPressed(Button.A) || driver2.wasJustPressed(Button.A)) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             debugStringEnabled = !debugStringEnabled;
         }
 
-        follower.setTeleOpDrive(driver1.leftStickY(), -driver1.leftStickX(), -driver1.rightStickX(), true);
+        follower.setTeleOpDrive(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x, true);
         follower.update();
 
         telemetryM.debug("x:" + follower.getPose().getX());
@@ -373,13 +363,11 @@ class ForwardVelocityTuner extends OpMode {
     private final ArrayList<Double> velocities = new ArrayList<>();
     public static double DISTANCE = 48;
     public static double RECORD_NUMBER = 10;
-    private GamepadEx driver1;
 
     private boolean end;
 
     @Override
     public void init() {
-        driver1 = new GamepadEx(gamepad1);
         follower.setStartingPose(new Pose(72, 72));
     }
 
@@ -416,8 +404,7 @@ class ForwardVelocityTuner extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        if (driver1.wasJustPressed(Button.B)) {
+        if (gamepad1.bWasPressed()) {
             stopRobot();
             requestOpModeStop();
         }
@@ -455,7 +442,7 @@ class ForwardVelocityTuner extends OpMode {
             telemetryM.update(telemetry);
             telemetry.update();
 
-            if (driver1.wasJustPressed(Button.A)) {
+            if (gamepad1.aWasPressed()) {
                 follower.setXVelocity(average);
                 String message = "XMovement: " + average;
                 changes.add(message);
@@ -484,13 +471,11 @@ class LateralVelocityTuner extends OpMode {
 
     public static double DISTANCE = 48;
     public static double RECORD_NUMBER = 10;
-    private GamepadEx driver1;
 
     private boolean end;
 
     @Override
     public void init() {
-        driver1 = new GamepadEx(gamepad1);
         follower.setStartingPose(new Pose(72, 72));
     }
 
@@ -500,7 +485,7 @@ class LateralVelocityTuner extends OpMode {
      */
     @Override
     public void init_loop() {
-        telemetryM.debug("The robot will run at 1 power until it reaches " + DISTANCE + " inches to the right.");
+        telemetryM.debug("The robot will run at 1 power until it reaches " + DISTANCE + " inches to the left.");
         telemetryM.debug("Make sure you have enough room, since the robot has inertia after cutting power.");
         telemetryM.debug("After running the distance, the robot will cut power from the drivetrain and display the strafe velocity.");
         telemetryM.debug("Press B on Gamepad 1 to stop.");
@@ -510,7 +495,7 @@ class LateralVelocityTuner extends OpMode {
         drawCurrent();
     }
 
-    /** This starts the OpMode by setting the drive motors to run right at full power. */
+    /** This starts the OpMode by setting the drive motors to run left at full power. */
     @Override
     public void start() {
         for (int i = 0; i < RECORD_NUMBER; i++) {
@@ -528,8 +513,7 @@ class LateralVelocityTuner extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        if (driver1.wasJustPressed(Button.B)) {
+        if (gamepad1.bWasPressed()) {
             stopRobot();
             requestOpModeStop();
         }
@@ -560,7 +544,7 @@ class LateralVelocityTuner extends OpMode {
             telemetryM.debug("Press A to set the Lateral Velocity temporarily (while robot remains on).");
             telemetryM.update(telemetry);
 
-            if (driver1.wasJustPressed(Button.A)) {
+            if (gamepad1.aWasPressed()) {
                 follower.setYVelocity(average);
                 String message = "YMovement: " + average;
                 changes.add(message);
@@ -587,7 +571,6 @@ class LateralVelocityTuner extends OpMode {
 class ForwardZeroPowerAccelerationTuner extends OpMode {
     private final ArrayList<Double> accelerations = new ArrayList<>();
     public static double VELOCITY = 30;
-    private GamepadEx driver1;
 
     private double previousVelocity;
     private long previousTimeNano;
@@ -597,7 +580,6 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
 
     @Override
     public void init() {
-        driver1 = new GamepadEx(gamepad1);
         follower.setStartingPose(new Pose(72, 72));
     }
 
@@ -630,8 +612,7 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        if (driver1.wasJustPressed(Button.B)) {
+        if (gamepad1.bWasPressed()) {
             stopRobot();
             requestOpModeStop();
         }
@@ -669,7 +650,7 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
             telemetryM.debug("Press A to set the Forward Zero Power Acceleration temporarily (while robot remains on).");
             telemetryM.update(telemetry);
 
-            if (driver1.wasJustPressed(Button.A)) {
+            if (gamepad1.aWasPressed()) {
                 follower.getConstants().setForwardZeroPowerAcceleration(average);
                 String message = "Forward Zero Power Acceleration: " + average;
                 changes.add(message);
@@ -680,7 +661,7 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
 
 /**
  * This is the LateralZeroPowerAccelerationTuner autonomous follower OpMode. This runs the robot
- * to the right until a specified velocity is achieved. Then, the robot cuts power to the motors, setting
+ * to the left until a specified velocity is achieved. Then, the robot cuts power to the motors, setting
  * them to zero power. The deceleration, or negative acceleration, is then measured until the robot
  * stops. The accelerations across the entire time the robot is slowing down is then averaged and
  * that number is then printed. This is used to determine how the robot will decelerate in the
@@ -696,7 +677,6 @@ class ForwardZeroPowerAccelerationTuner extends OpMode {
 class LateralZeroPowerAccelerationTuner extends OpMode {
     private final ArrayList<Double> accelerations = new ArrayList<>();
     public static double VELOCITY = 30;
-    private GamepadEx driver1;
     private double previousVelocity;
     private long previousTimeNano;
     private boolean stopping;
@@ -704,14 +684,13 @@ class LateralZeroPowerAccelerationTuner extends OpMode {
 
     @Override
     public void init() {
-        driver1 = new GamepadEx(gamepad1);
         follower.setStartingPose(new Pose(72, 72));
     }
 
     /** This initializes the drive motors as well as the Panels telemetry. */
     @Override
     public void init_loop() {
-        telemetryM.debug("The robot will run to the right until it reaches " + VELOCITY + " inches per second.");
+        telemetryM.debug("The robot will run to the left until it reaches " + VELOCITY + " inches per second.");
         telemetryM.debug("Then, it will cut power from the drivetrain and roll to a stop.");
         telemetryM.debug("Make sure you have enough room.");
         telemetryM.debug("After stopping, the lateral zero power acceleration (natural deceleration) will be displayed.");
@@ -737,8 +716,7 @@ class LateralZeroPowerAccelerationTuner extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        if (driver1.wasJustPressed(Button.B)) {
+        if (gamepad1.bWasPressed()) {
             stopRobot();
             requestOpModeStop();
         }
@@ -776,7 +754,7 @@ class LateralZeroPowerAccelerationTuner extends OpMode {
             telemetryM.debug("Press A to set the Lateral Zero Power Acceleration temporarily (while robot remains on).");
             telemetryM.update(telemetry);
 
-            if (driver1.wasJustPressed(Button.A)) {
+            if (gamepad1.aWasPressed()) {
                 follower.getConstants().setLateralZeroPowerAcceleration(average);
                 String message = "Lateral Zero Power Acceleration: " + average;
                 changes.add(message);
@@ -830,7 +808,6 @@ class PredictiveBrakingTuner extends OpMode {
     private final ElapsedTime timer = new ElapsedTime();
 
     private int iteration = 0;
-    private GamepadEx driver1;
 
     private Vector startPosition;
     private double measuredVelocity;
@@ -839,9 +816,7 @@ class PredictiveBrakingTuner extends OpMode {
     private final List<BrakeRecord> brakeData = new ArrayList<>();
 
     @Override
-    public void init() {
-        driver1 = new GamepadEx(gamepad1);
-    }
+    public void init() {}
 
     @Override
     public void init_loop() {
@@ -865,10 +840,9 @@ class PredictiveBrakingTuner extends OpMode {
     @SuppressLint("DefaultLocale")
     @Override
     public void loop() {
-        driver1.update();
         follower.update();
 
-        if (driver1.isPressed(Button.B)) {
+        if (gamepad1.b) {
             stopRobot();
             requestOpModeStop();
             return;
@@ -1393,7 +1367,7 @@ class Triangle extends OpMode {
 
 /**
  * This is the Circle autonomous OpMode. It runs the robot in a PathChain that's actually not quite
- * a circle, but some Bézier curves that have control points set essentially in a square. However,
+ * a circle, but some Bezier curves that have control points set essentially in a square. However,
  * it turns enough to tune your centripetal force correction and some of your heading. Some lag in
  * heading is to be expected.
  *
@@ -1520,21 +1494,14 @@ class AnalogMinMaxTuner extends OpMode {
  */
 class SwerveOffsetsTest extends OpMode {
     boolean debugStringEnabled = false;
-    private GamepadEx driver1;
-    private GamepadEx driver2;
 
     @Override
-    public void init() {
-        driver1 = new GamepadEx(gamepad1);
-        driver2 = new GamepadEx(gamepad2);
-    }
+    public void init() {}
 
     /** This initializes the PoseUpdater, the drive motors, and the Panels telemetry. */
     @Override
     public void init_loop() {
-        driver1.update();
-        driver2.update();
-        if (driver1.wasJustPressed(Button.A) || driver2.wasJustPressed(Button.A)) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             debugStringEnabled = !debugStringEnabled;
         }
 
@@ -1560,9 +1527,7 @@ class SwerveOffsetsTest extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        driver2.update();
-        if (driver1.wasJustPressed(Button.A) || driver2.wasJustPressed(Button.A)) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             debugStringEnabled = !debugStringEnabled;
         }
 
@@ -1587,21 +1552,14 @@ class SwerveOffsetsTest extends OpMode {
  */
 class SwerveTurnTest extends OpMode {
     boolean debugStringEnabled = false;
-    private GamepadEx driver1;
-    private GamepadEx driver2;
 
     @Override
-    public void init() {
-        driver1 = new GamepadEx(gamepad1);
-        driver2 = new GamepadEx(gamepad2);
-    }
+    public void init() {}
 
     /** This initializes the PoseUpdater, the drive motors, and the Panels telemetry. */
     @Override
     public void init_loop() {
-        driver1.update();
-        driver2.update();
-        if (driver1.wasJustPressed(Button.A) || driver2.wasJustPressed(Button.A)) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             debugStringEnabled = !debugStringEnabled;
         }
 
@@ -1627,9 +1585,7 @@ class SwerveTurnTest extends OpMode {
      */
     @Override
     public void loop() {
-        driver1.update();
-        driver2.update();
-        if (driver1.wasJustPressed(Button.A) || driver2.wasJustPressed(Button.A)) {
+        if (gamepad1.aWasPressed() || gamepad2.aWasPressed()) {
             debugStringEnabled = !debugStringEnabled;
         }
 
@@ -1718,7 +1674,7 @@ class Drawing {
 
     /**
      * This draws everything that will be used in the Follower's telemetryDebug() method. This takes
-     * a Follower as an input, so an instance of the DashboardDrawingHandler class is not needed.
+     * a Follower as an input, so an instance of the DashbaordDrawingHandler class is not needed.
      *
      * @param follower Pedro Follower instance.
      */

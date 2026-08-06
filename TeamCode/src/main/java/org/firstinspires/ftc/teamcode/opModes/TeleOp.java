@@ -7,16 +7,17 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
+    Mechanisms mechanisms;
     Intake intake;
     RobotDrive drive;
     Limelight limelight;
@@ -39,30 +40,28 @@ public abstract class TeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
-        GpBindings driverResult = driver.result(Button.BACK);
-        intake = Constants.createIntake(hardwareMap);
-        drive = Constants.createDrive(hardwareMap);
+        GpBindings driverResult = driver.result();
+        mechanisms = Constants.createMechanisms(hardwareMap);
+        intake = mechanisms.get(Intake.class);
+        drive = mechanisms.require(RobotDrive.class);
         drive.setStartingPose(getStartingPose());
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
-        limelight = Constants.createLimelight(hardwareMap);
+        limelight = mechanisms.get(Limelight.class);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
-        limelight.start(Limelight.Pipeline.APRIL_TAG);
+        if (limelight != null) {
+            limelight.start(Limelight.Pipeline.APRIL_TAG);
+        }
         while (opModeIsActive()) {
             driver.update();
-            // Update Mechanisms
-            drive.periodic(driverResult);
-            limelight.periodic(driverResult);
-
-            // Intake
-            intake.setPower(driver.rightTrigger.getValue() - driver.leftTrigger.getValue());
+            mechanisms.periodic(driverResult);
 
             // Telemetry
             telemetry.addData("Pose", drive.getPose());
-            telemetry.addData("Intake Power", intake.getTargetPower());
+            telemetry.addData("Intake Power", intake == null ? 0 : intake.getTargetPower());
             telemetry.update();
         }
 

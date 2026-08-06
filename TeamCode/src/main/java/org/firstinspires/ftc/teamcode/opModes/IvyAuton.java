@@ -14,6 +14,7 @@ import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 
@@ -21,6 +22,7 @@ public abstract class IvyAuton extends OpMode {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
     Follower follower;
+    Mechanisms mechanisms;
     Intake intake;
      // = new Path(new BezierLine(
     /*
@@ -44,7 +46,8 @@ public abstract class IvyAuton extends OpMode {
         Scheduler.reset();
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        intake = Constants.createIntake(hardwareMap);
+        mechanisms = Constants.createMechanisms(hardwareMap);
+        intake = mechanisms.require(Intake.class);
     }
 
     public void start() {

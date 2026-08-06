@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.gamepad;
 
 import java.util.Collections;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,28 +18,35 @@ public class GpBindings {
     public final Trigger leftTrigger;
     public final Trigger rightTrigger;
     public final Touchpad touchpad;
-    private final Map<Button, Reader> readers = new EnumMap<>(Button.class);
+    private final Map<Button, Button> readers = new LinkedHashMap<>();
 
     public GpBindings(GamepadEx gamepad) {
-        this(gamepad, gamepad.buttons.getReaders());
+        this(gamepad, (GpCommand[]) null);
     }
 
-    public GpBindings(GamepadEx gamepad, Button... buttons) {
-        this(gamepad, selectReaders(gamepad.buttons, buttons));
-    }
-
-    private GpBindings(GamepadEx gamepad, Map<Button, Reader> readers) {
-        Objects.requireNonNull(gamepad, "gamepad");
+    public GpBindings(GamepadEx gamepad, GpCommand... commands) {
+        Objects.requireNonNull(gamepad, "gamepad must not be null");
         this.buttons = gamepad.buttons;
         this.leftStick = gamepad.leftStick;
         this.rightStick = gamepad.rightStick;
         this.leftTrigger = gamepad.leftTrigger;
         this.rightTrigger = gamepad.rightTrigger;
         this.touchpad = gamepad.touchpad;
-        this.readers.putAll(Objects.requireNonNull(readers, "readers"));
+        if (commands == null || commands.length == 0) {
+            this.readers.putAll(Objects.requireNonNull(gamepad.buttons.getReaders(), "readers must not be null"));
+        } else {
+            for (GpCommand command : commands) {
+                if (command instanceof Button) {
+                    Button button = gamepad.buttons.getReader((Button) command);
+                    if (button != null) {
+                        readers.put((Button) command, button);
+                    }
+                }
+            }
+        }
     }
 
-    public Reader getReader(Button button) {
+    public Button getReader(Button button) {
         return readers.get(button);
     }
 
@@ -47,40 +54,48 @@ public class GpBindings {
         return readers.containsKey(button);
     }
 
-    public Map<Button, Reader> getReaders() {
+    public Map<Button, Button> getReaders() {
         return Collections.unmodifiableMap(readers);
     }
 
     public boolean isPressed(Button button) {
-        Reader reader = readers.get(button);
+        Button reader = readers.get(button);
         return reader != null && reader.isPressed();
     }
 
     public boolean wasJustPressed(Button button) {
-        Reader reader = readers.get(button);
+        Button reader = readers.get(button);
         return reader != null && reader.wasJustPressed();
     }
 
     public boolean wasJustReleased(Button button) {
-        Reader reader = readers.get(button);
+        Button reader = readers.get(button);
         return reader != null && reader.wasJustReleased();
     }
 
     public boolean getToggle(Button button) {
-        Reader reader = readers.get(button);
+        Button reader = readers.get(button);
         return reader != null && reader.getToggle();
     }
 
-    private static Map<Button, Reader> selectReaders(Buttons buttons, Button... selectedButtons) {
-        Objects.requireNonNull(buttons, "buttons");
-        Map<Button, Reader> selected = new EnumMap<>(Button.class);
-        if (selectedButtons == null || selectedButtons.length == 0) {
-            selected.putAll(buttons.getReaders());
-            return selected;
+    @SuppressWarnings("unchecked")
+    public <T extends GpCommand> T getCommand(T command) {
+        if (command == null) {
+            return null;
         }
-        for (Button button : selectedButtons) {
-            selected.put(button, Objects.requireNonNull(buttons.getReader(button), "reader"));
+        if (command instanceof Button) {
+            return (T) readers.get(command);
+        } else if (command instanceof Stick) {
+            Stick stick = (Stick) command;
+            return (T) (stick.getSide() == Stick.Side.LEFT ? leftStick : rightStick);
+        } else if (command instanceof Trigger) {
+            Trigger trigger = (Trigger) command;
+            return (T) (trigger.getSide() == Trigger.Side.LEFT ? leftTrigger : rightTrigger);
+        } else if (command instanceof Touchpad) {
+            return (T) touchpad;
+        } else {
+            return null;
         }
-        return selected;
     }
+
 }

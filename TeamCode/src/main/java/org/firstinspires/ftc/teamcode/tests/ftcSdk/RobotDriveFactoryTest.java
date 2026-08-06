@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 public class RobotDriveFactoryTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
-        GpBindings GpBindings = gamepad1.result(Button.BACK);
+        GpBindings GpBindings = gamepad1.result();
         RobotDrive drive = Constants.createDrive(hardwareMap);
         drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
         drive.startTeleOpDrive();

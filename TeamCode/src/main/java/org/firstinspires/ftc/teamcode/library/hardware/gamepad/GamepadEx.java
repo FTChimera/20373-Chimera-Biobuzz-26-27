@@ -137,8 +137,12 @@ public class GamepadEx {
     /** Creates a gamepad-result view over this wrapper's current readers and analog surfaces. */
     public GpBindings result() { return new GpBindings(this); }
 
-    /** Creates a gamepad-result view with a narrowed bindings subset. */
+    /** Creates a gamepad-result view that eagerly exposes the requested command bindings. */
+    public GpBindings result(GpCommand... commands) { return new GpBindings(this, commands); }
+
+    /** Compatibility overload for button-only bindings. */
     public GpBindings result(Button... buttons) { return new GpBindings(this, buttons); }
+
 
     // ==================== CONVENIENCE: STICKS ====================
 
