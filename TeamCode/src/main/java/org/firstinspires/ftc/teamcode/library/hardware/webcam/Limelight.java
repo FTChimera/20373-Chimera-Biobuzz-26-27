@@ -183,6 +183,12 @@ public class Limelight extends Mechanism {
         }
         return highest;
     }
+    public void setPipeline(int pipeline) {
+        limelight1.pipelineSwitch(pipeline);
+    }
+    public void setPipeline(Pipeline pipeline) {
+        setPipeline(pipeline.getIndex());
+    }
     /**
      * Enter follower.getHeading(); Must be called before LLUpdate();
      */
