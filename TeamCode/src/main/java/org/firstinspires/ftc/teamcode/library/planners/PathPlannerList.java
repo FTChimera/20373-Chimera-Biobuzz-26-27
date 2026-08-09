@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.library.planners;
 
 
-import com.pedropathing.geometry.Pose;
+import static com.pedropathing.ivy.groups.Groups.sequential;
 
-import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.Scheduler;
+
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,6 +35,8 @@ public class PathPlannerList extends ArrayList<PathPlanner> implements List<Path
     }
 
     public void schedule() {
-        forEach(pathPlanner -> pathPlanner.run().schedule());
+        List<Command> commands = new ArrayList<>();
+        forEach(pathPlanner -> commands.add(pathPlanner.asCommand()));
+        Scheduler.schedule(sequential(commands.toArray(new Command[0])));
     }
 }

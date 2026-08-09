@@ -6,6 +6,7 @@ import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.ivy.pedro.PedroCommands;
 import com.pedropathing.paths.PathChain;
 
+import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
@@ -14,10 +15,12 @@ public class Utils {
     public static class StartPose implements PathPlanner {
         Pose pose;
         Mechanisms mechanisms;
+
         public StartPose(Mechanisms mechanisms, Pose pose) {
             this.mechanisms = mechanisms;
             this.pose = pose;
         }
+
         @Override
         public Pose getEndPose() {
             return pose;
@@ -37,20 +40,18 @@ public class Utils {
         public void buildPaths() {
             // no need to do anything
         }
-
-        @Override
-        public void fromPrev(PathPlanner prev) {
-            setStartPose(prev.getEndPose());
-        }
     }
+
     public static class CustomPath implements PathPlanner {
         Mechanisms mechanisms;
         PathChain pathChain;
+
         public CustomPath(Mechanisms mechanisms, PathPlanner prevPlanner, PathChain pathChain) {
             this.mechanisms = mechanisms;
             this.pathChain = pathChain;
-            setStartPose(prevPlanner.getEndPose());
+            fromPrev(prevPlanner);
         }
+
         @Override
         public Pose getEndPose() {
             return pathChain.endPose();
@@ -69,37 +70,91 @@ public class Utils {
         public void buildPaths() {
         }
 
-        @Override
-        public void fromPrev(PathPlanner prev) {
-            setStartPose(prev.getEndPose());
-        }
-
         public static class IntakeWVision implements PathPlanner {
+            Mechanisms mechanisms;
+            Limelight limelight;
+            RobotDrive drive;
+            boolean shouldUseFailSafePath = false;
+            PathChain failSafePath;
+            double numBalls;
+            Pose startPose;
+
+            public IntakeWVision(Mechanisms mechanisms, PathPlanner prevPlanner, double numBalls, PathChain failSafePath) {
+                this.mechanisms = mechanisms;
+                this.numBalls = numBalls;
+                this.failSafePath = failSafePath;
+                setUpMechanisms();
+                fromPrev(prevPlanner);
+            }
+
+            public void setUpMechanisms() {
+                limelight = mechanisms.get(Limelight.class);
+                drive = mechanisms.get(RobotDrive.class);
+                shouldUseFailSafePath = limelight == null || drive == null;
+            }
 
             @Override
             public Pose getEndPose() {
-                return null;
+                return startPose; // Come back to start pose.
             }
 
             @Override
             public Command run() {
-                return null;
+                return Command.build()
+                        .setStart(() ->
+                                {
+                                    if (shouldUseFailSafePath) {
+                                        drive.mecanumDrive.follower.followPath(failSafePath);
+                                    } else {
+                                        // Implement vision-based intake logic here
+                                        // Both limelight and drive are not null
+                                        
+                                    }
+                                }
+                        )
+                        .setDone(() -> !drive.mecanumDrive.follower.isBusy());
             }
 
             @Override
             public void setStartPose(Pose pose) {
-
+                this.startPose = pose;
             }
 
             @Override
             public void buildPaths() {
-
+                // we build paths on fly
             }
 
-            @Override
-            public void fromPrev(PathPlanner prev) {
-                setStartPose(prev.getEndPose());
-            }
+        }
+    }
+
+    public static class Wait implements PathPlanner {
+        Pose startPose;
+        long timeMs;
+
+        public Wait(PathPlanner prevPlanner, long timeMs) {
+            fromPrev(prevPlanner);
+            this.timeMs = timeMs;
+        }
+
+        @Override
+        public Pose getEndPose() {
+            return startPose;
+        }
+
+        @Override
+        public Command run() {
+            return Commands.waitMs(timeMs);
+        }
+
+        @Override
+        public void setStartPose(Pose pose) {
+            this.startPose = pose;
+        }
+
+        @Override
+        public void buildPaths() {
+            // no need to do anything
         }
     }
 }
