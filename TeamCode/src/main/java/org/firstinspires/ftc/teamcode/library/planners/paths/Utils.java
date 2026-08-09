@@ -1,9 +1,12 @@
 package org.firstinspires.ftc.teamcode.library.planners.paths;
 
+import com.pedropathing.geometry.BezierCurve;
+import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
@@ -69,62 +72,71 @@ public class Utils {
         @Override
         public void buildPaths() {
         }
+    }
+    public static class IntakeWVision implements PathPlanner {
+        Mechanisms mechanisms;
+        Limelight limelight;
+        RobotDrive drive;
+        boolean shouldUseFailSafePath = false;
+        PathChain failSafePath;
+        double numBalls;
+        Pose startPose;
 
-        public static class IntakeWVision implements PathPlanner {
-            Mechanisms mechanisms;
-            Limelight limelight;
-            RobotDrive drive;
-            boolean shouldUseFailSafePath = false;
-            PathChain failSafePath;
-            double numBalls;
-            Pose startPose;
+        public IntakeWVision(Mechanisms mechanisms, PathPlanner prevPlanner, double numBalls, PathChain failSafePath) {
+            this.mechanisms = mechanisms;
+            this.numBalls = numBalls;
+            this.failSafePath = failSafePath;
+            setUpMechanisms();
+            fromPrev(prevPlanner);
+        }
 
-            public IntakeWVision(Mechanisms mechanisms, PathPlanner prevPlanner, double numBalls, PathChain failSafePath) {
-                this.mechanisms = mechanisms;
-                this.numBalls = numBalls;
-                this.failSafePath = failSafePath;
-                setUpMechanisms();
-                fromPrev(prevPlanner);
-            }
+        public void setUpMechanisms() {
+            limelight = mechanisms.get(Limelight.class);
+            drive = mechanisms.get(RobotDrive.class);
+            shouldUseFailSafePath = limelight == null || drive == null;
+        }
 
-            public void setUpMechanisms() {
-                limelight = mechanisms.get(Limelight.class);
-                drive = mechanisms.get(RobotDrive.class);
-                shouldUseFailSafePath = limelight == null || drive == null;
-            }
+        @Override
+        public Pose getEndPose() {
+            return startPose; // Come back to start pose.
+        }
 
-            @Override
-            public Pose getEndPose() {
-                return startPose; // Come back to start pose.
-            }
-
-            @Override
-            public Command run() {
-                return Command.build()
-                        .setStart(() ->
-                                {
-                                    if (shouldUseFailSafePath) {
-                                        drive.mecanumDrive.follower.followPath(failSafePath);
-                                    } else {
-                                        // Implement vision-based intake logic here
-                                        // Both limelight and drive are not null
                                         
-                                    }
+        @Override
+        public Command run() {
+            return Command.build()
+                    .setStart(() ->
+                            {
+                                if (shouldUseFailSafePath) {
+                                    drive.mecanumDrive.follower.followPath(failSafePath);
+                                } else {
+                                    // Implement vision-based intake logic here
+                                    // Both limelight and drive are not null
                                 }
-                        )
-                        .setDone(() -> !drive.mecanumDrive.follower.isBusy());
-            }
+                            }
+                    )
+                    .setDone(() -> !drive.mecanumDrive.follower.isBusy());
+        }
 
-            @Override
-            public void setStartPose(Pose pose) {
-                this.startPose = pose;
-            }
+        @Override
+        public void setStartPose(Pose pose) {
+            this.startPose = pose;
+        }
 
-            @Override
-            public void buildPaths() {
-                // we build paths on fly
-            }
+        @Override
+        public void buildPaths() {
+            // we build paths on fly
+        }
 
+    }
+
+    public static class LinearPath extends CustomPath {
+        public LinearPath(Mechanisms mechanisms, PathPlanner prevPlanner, Pose endPose) {
+            super(mechanisms, prevPlanner,
+                    new PathChain(new Path(new BezierLine(
+                            prevPlanner.getEndPose(), endPose
+                    )
+                    )));
         }
     }
 

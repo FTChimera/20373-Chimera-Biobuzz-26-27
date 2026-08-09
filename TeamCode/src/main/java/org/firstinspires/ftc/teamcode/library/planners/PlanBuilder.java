@@ -27,6 +27,10 @@ public class PlanBuilder {
         add(new Utils.CustomPath(mechanisms, planner().last(), path));
         return this;
     }
+    public PlanBuilder linearPathTo(Pose endPose) {
+        add(new Utils.LinearPath(mechanisms, planner().last(), endPose));
+        return this;
+    }
     public PlanBuilder waitMs(long ms) {
         add(new Utils.Wait(planner().last(), ms));
         return this;
