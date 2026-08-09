@@ -4,6 +4,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.HeadingInterpolator;
 
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.math.Polynomial;
 import org.junit.Test;
 
@@ -11,8 +12,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 public class EquationCurveTest {
-    private static final double EPSILON = 1e-9;
-
     @Test
     public void mapsTheEquationAndItsDerivativesAcrossPathTime() {
         EquationCurve curve = new EquationCurve(
@@ -25,13 +24,13 @@ public class EquationCurveTest {
         Vector derivative = curve.getDerivative(0.5);
         Vector secondDerivative = curve.getSecondDerivative(0.5);
 
-        assertEquals(1, midpoint.getX(), EPSILON);
-        assertEquals(1, midpoint.getY(), EPSILON);
-        assertEquals(Math.PI / 2, midpoint.getHeading(), EPSILON);
-        assertEquals(2, derivative.getXComponent(), EPSILON);
-        assertEquals(4, derivative.getYComponent(), EPSILON);
-        assertEquals(0, secondDerivative.getXComponent(), EPSILON);
-        assertEquals(8, secondDerivative.getYComponent(), EPSILON);
+        assertEquals(1, midpoint.getX(), MathUtils.EPSILON);
+        assertEquals(1, midpoint.getY(), MathUtils.EPSILON);
+        assertEquals(Math.PI / 2, midpoint.getHeading(), MathUtils.EPSILON);
+        assertEquals(2, derivative.getXComponent(), MathUtils.EPSILON);
+        assertEquals(4, derivative.getYComponent(), MathUtils.EPSILON);
+        assertEquals(0, secondDerivative.getXComponent(), MathUtils.EPSILON);
+        assertEquals(8, secondDerivative.getYComponent(), MathUtils.EPSILON);
     }
 
     @Test

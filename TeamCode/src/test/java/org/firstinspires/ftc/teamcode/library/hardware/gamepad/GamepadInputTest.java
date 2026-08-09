@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.library.hardware.gamepad;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -10,8 +11,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class GamepadInputTest {
-    private static final double EPSILON = 1e-6;
-
     @Test
     public void readersButtonsAndTypesTrackEdgesTogglesAndCapabilities() {
         Gamepad gamepad = GamepadTestUtils.newGamepad(Gamepad.Type.SONY_PS4);
@@ -59,9 +58,9 @@ public class GamepadInputTest {
         gamepad.left_stick_button = true;
         stick.update(gamepad);
 
-        assertEquals(0.0, stick.getX(), EPSILON);
-        assertEquals(0.16, stick.getY(), EPSILON);
-        assertEquals(0.4, stick.getRawY(), EPSILON);
+        assertEquals(0.0, stick.getX(), MathUtils.EPSILON);
+        assertEquals(0.16, stick.getY(), MathUtils.EPSILON);
+        assertEquals(0.4, stick.getRawY(), MathUtils.EPSILON);
         assertTrue(stick.isButtonPressed());
         assertTrue(stick.wasButtonJustPressed());
 
@@ -70,12 +69,12 @@ public class GamepadInputTest {
         gamepad.left_stick_button = false;
         stick.update(gamepad);
 
-        assertEquals(0.25, stick.getX(), EPSILON);
-        assertEquals(0.0, stick.getY(), EPSILON);
+        assertEquals(0.25, stick.getX(), MathUtils.EPSILON);
+        assertEquals(0.0, stick.getY(), MathUtils.EPSILON);
         assertEquals(0.45, stick.getDeltaX(), 1e-6);
         assertTrue(stick.wasButtonJustReleased());
 
-        assertEquals(1.0, trigger.getThreshold(), EPSILON);
+        assertEquals(1.0, trigger.getThreshold(), MathUtils.EPSILON);
         gamepad.right_trigger = 0.3f;
         trigger.update(gamepad);
         assertFalse(trigger.isPressed());
@@ -103,9 +102,9 @@ public class GamepadInputTest {
         assertTrue(touchpad.wasFinger1JustPressed());
         assertTrue(touchpad.wasButtonJustPressed());
         assertTrue(touchpad.getButtonToggle());
-        assertEquals(0.25, touchpad.getFinger1().x, EPSILON);
-        assertEquals(-0.5, touchpad.getFinger1().y, EPSILON);
-        assertEquals(Math.hypot(0.25, -0.5), touchpad.getFinger1().distanceFromCenter(), EPSILON);
+        assertEquals(0.25, touchpad.getFinger1().x, MathUtils.EPSILON);
+        assertEquals(-0.5, touchpad.getFinger1().y, MathUtils.EPSILON);
+        assertEquals(Math.hypot(0.25, -0.5), touchpad.getFinger1().distanceFromCenter(), MathUtils.EPSILON);
 
         gamepad.touchpad_finger_1 = false;
         gamepad.touchpad = false;
@@ -131,7 +130,7 @@ public class GamepadInputTest {
 
         assertEquals(GamepadType.PS4, extended.getType());
         assertTrue(extended.wasJustPressed(Button.A));
-        assertEquals(1.0, extended.leftStickY(), EPSILON);
+        assertEquals(1.0, extended.leftStickY(), MathUtils.EPSILON);
         assertTrue(extended.anyInput());
 
         gamepad2.right_trigger = 1.0f;

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.library;
 
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -7,8 +8,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
 public class DriveVectorTest {
-    private static final double EPSILON = 1e-9;
-
     @Test
     public void addScaleAndCopyPreserveHeadingAndIndependence() {
         DriveVector base = new DriveVector(1.0, -2.0, 0.5, 1.2);
@@ -16,19 +15,19 @@ public class DriveVectorTest {
         DriveVector scaled = base.scale(0.5);
         DriveVector copy = base.copy();
 
-        assertEquals(0.75, sum.forward, EPSILON);
-        assertEquals(-1.5, sum.strafe, EPSILON);
-        assertEquals(0.75, sum.rotate, EPSILON);
-        assertEquals(1.2, sum.robotHeading, EPSILON);
+        assertEquals(0.75, sum.forward, MathUtils.EPSILON);
+        assertEquals(-1.5, sum.strafe, MathUtils.EPSILON);
+        assertEquals(0.75, sum.rotate, MathUtils.EPSILON);
+        assertEquals(1.2, sum.robotHeading, MathUtils.EPSILON);
 
-        assertEquals(0.5, scaled.forward, EPSILON);
-        assertEquals(-1.0, scaled.strafe, EPSILON);
-        assertEquals(0.25, scaled.rotate, EPSILON);
-        assertEquals(1.2, scaled.robotHeading, EPSILON);
+        assertEquals(0.5, scaled.forward, MathUtils.EPSILON);
+        assertEquals(-1.0, scaled.strafe, MathUtils.EPSILON);
+        assertEquals(0.25, scaled.rotate, MathUtils.EPSILON);
+        assertEquals(1.2, scaled.robotHeading, MathUtils.EPSILON);
 
         assertNotSame(base, copy);
         copy.forward = 99.0;
-        assertEquals(1.0, base.forward, EPSILON);
+        assertEquals(1.0, base.forward, MathUtils.EPSILON);
     }
 
     @Test
@@ -37,15 +36,15 @@ public class DriveVectorTest {
         DriveVector rotated = vector.rotateFieldCentric();
         DriveVector curved = vector.wStickCurve(x -> Math.copySign(x * x, x));
 
-        assertEquals(0.0, rotated.forward, EPSILON);
-        assertEquals(1.0, rotated.strafe, EPSILON);
-        assertEquals(-0.5, rotated.rotate, EPSILON);
-        assertEquals(0.0, rotated.robotHeading, EPSILON);
+        assertEquals(0.0, rotated.forward, MathUtils.EPSILON);
+        assertEquals(1.0, rotated.strafe, MathUtils.EPSILON);
+        assertEquals(-0.5, rotated.rotate, MathUtils.EPSILON);
+        assertEquals(0.0, rotated.robotHeading, MathUtils.EPSILON);
 
-        assertEquals(1.0, curved.forward, EPSILON);
-        assertEquals(0.0, curved.strafe, EPSILON);
-        assertEquals(-0.25, curved.rotate, EPSILON);
-        assertEquals(-0.5, vector.rotate, EPSILON);
+        assertEquals(1.0, curved.forward, MathUtils.EPSILON);
+        assertEquals(0.0, curved.strafe, MathUtils.EPSILON);
+        assertEquals(-0.25, curved.rotate, MathUtils.EPSILON);
+        assertEquals(-0.5, vector.rotate, MathUtils.EPSILON);
     }
 
     @Test
@@ -55,7 +54,7 @@ public class DriveVectorTest {
         assertArrayEquals(
                 new double[]{1.0, -1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0},
                 vector.calculateDrivePowers(),
-                EPSILON
+                MathUtils.EPSILON
         );
     }
 }

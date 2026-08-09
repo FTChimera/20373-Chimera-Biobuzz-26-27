@@ -87,7 +87,7 @@ public class Utils {
         private static final double MIN_TARGET_AREA = 0.15;
         private static final double MIN_FORWARD_DISTANCE_INCHES = 3.0;
         private static final double MAX_FORWARD_DISTANCE_INCHES = 48.0;
-        private static final double MAX_LATERAL_OFFSET_INCHES = 18.0;
+        private static final double MAX_LATERAL_OFFSET_INCHES = 9.0;
         private static final double MERGE_DISTANCE_INCHES = 2.5;
         private static final double CURVE_TENSION = 0.32;
         private static final double SCORE_CONFIDENCE_WEIGHT = 0.45;
@@ -95,7 +95,6 @@ public class Utils {
         private static final double SCORE_LATERAL_WEIGHT = 0.20;
         private static final double SCORE_TURN_WEIGHT = 0.90;
         private static final double SCORE_GAP_WEIGHT = 0.04;
-        private static final double EPSILON = 1e-6;
         private static final int DETECTOR_RETRY_CYCLES = 4;
 
         Mechanisms mechanisms;
@@ -253,7 +252,7 @@ public class Utils {
             for (DetectionCandidate candidate : candidates) {
                 boolean duplicate = false;
                 for (DetectionCandidate existing : deduped) {
-                    if (distance(candidate.forwardDistance, candidate.lateralOffset,
+                    if (MathUtils.distance(candidate.forwardDistance, candidate.lateralOffset,
                             existing.forwardDistance, existing.lateralOffset) < MERGE_DISTANCE_INCHES) {
                         duplicate = true;
                         break;
@@ -292,23 +291,22 @@ public class Utils {
             double angleRadians = MathUtils.units.toRadians(limelight.params.LIMELIGHT_MOUNT_ANGLE_DEGREES + detector.getTargetYDegrees());
             double tangent = Math.tan(angleRadians);
 
-            if (Math.abs(heightDelta) > EPSILON && Math.abs(tangent) > EPSILON) {
+            if (Math.abs(heightDelta) > MathUtils.EPSILON && Math.abs(tangent) > MathUtils.EPSILON) {
                 double tyDistance = heightDelta / tangent;
                 if (Double.isFinite(tyDistance) && tyDistance > 0) {
                     return tyDistance;
                 }
             }
 
-            return AREA_DISTANCE_SCALE / Math.sqrt(Math.max(normalizedArea, EPSILON));
+            return AREA_DISTANCE_SCALE / Math.sqrt(Math.max(normalizedArea, MathUtils.EPSILON));
         }
 
         private Pose robotRelativeToField(Pose robotPose, double forwardDistance, double lateralOffset) {
-            Pose ftcRobotPose = Constants.FTC_COORDINATE_SYSTEM.convertFromPedro(robotPose);
-            double heading = ftcRobotPose.getHeading();
-            double fieldX = ftcRobotPose.getX() + forwardDistance * Math.cos(heading) - lateralOffset * Math.sin(heading);
-            double fieldY = ftcRobotPose.getY() + forwardDistance * Math.sin(heading) + lateralOffset * Math.cos(heading);
-            return Constants.FTC_COORDINATE_SYSTEM.convertToPedro(
-                    new Pose(fieldX, fieldY, heading, Constants.FTC_COORDINATE_SYSTEM)
+            return MathUtils.offsetPoseInRobotFrame(
+                    robotPose,
+                    forwardDistance,
+                    lateralOffset,
+                    Constants.FTC_COORDINATE_SYSTEM
             );
         }
 
@@ -353,9 +351,9 @@ public class Utils {
                                 currentCandidate.forwardDistance - previousCandidate.forwardDistance
                         );
                         double turnPenalty = SCORE_TURN_WEIGHT * Math.abs(
-                                wrapAngle(segmentHeading - arrivalHeadings[sequenceLength - 1][previous])
+                                MathUtils.wrapAngle(segmentHeading - arrivalHeadings[sequenceLength - 1][previous])
                         );
-                        double gapPenalty = SCORE_GAP_WEIGHT * distance(
+                        double gapPenalty = SCORE_GAP_WEIGHT * MathUtils.distance(
                                 currentCandidate.forwardDistance,
                                 currentCandidate.lateralOffset,
                                 previousCandidate.forwardDistance,
@@ -418,17 +416,17 @@ public class Utils {
 
             if (waypoints.size() < 2) return null;
 
-            Pose[] tangents = calculateTangents(waypoints);
+            Pose[] tangents = MathUtils.smoothTangents(waypoints);
             List<Path> segments = new ArrayList<>();
             for (int i = 0; i < waypoints.size() - 1; i++) {
                 Pose start = waypoints.get(i);
                 Pose end = waypoints.get(i + 1);
                 double segmentDistance = start.distanceFrom(end);
-                if (segmentDistance < EPSILON) continue;
+                if (segmentDistance < MathUtils.EPSILON) continue;
 
                 double controlDistance = CURVE_TENSION * segmentDistance;
-                Pose control1 = addScaled(start, tangents[i], controlDistance);
-                Pose control2 = addScaled(end, tangents[i + 1], -controlDistance);
+                Pose control1 = MathUtils.addScaled(start, tangents[i], controlDistance);
+                Pose control2 = MathUtils.addScaled(end, tangents[i + 1], -controlDistance);
 
                 Path segment = new Path(new BezierCurve(start, control1, control2, end));
                 segment.setTangentHeadingInterpolation();
@@ -437,50 +435,6 @@ public class Utils {
 
             if (segments.isEmpty()) return null;
             return new PathChain(segments.toArray(new Path[0]));
-        }
-
-        private Pose[] calculateTangents(List<Pose> waypoints) {
-            Pose[] tangents = new Pose[waypoints.size()];
-            tangents[0] = normalizedDirection(waypoints.get(0), waypoints.get(1));
-            tangents[waypoints.size() - 1] = normalizedDirection(waypoints.get(waypoints.size() - 2), waypoints.get(waypoints.size() - 1));
-
-            for (int i = 1; i < waypoints.size() - 1; i++) {
-                Pose incoming = normalizedDirection(waypoints.get(i - 1), waypoints.get(i));
-                Pose outgoing = normalizedDirection(waypoints.get(i), waypoints.get(i + 1));
-                tangents[i] = normalizeVector(
-                        incoming.getX() + outgoing.getX(),
-                        incoming.getY() + outgoing.getY()
-                );
-            }
-
-            return tangents;
-        }
-
-        private Pose normalizedDirection(Pose start, Pose end) {
-            return normalizeVector(end.getX() - start.getX(), end.getY() - start.getY());
-        }
-
-        private Pose normalizeVector(double x, double y) {
-            double magnitude = Math.hypot(x, y);
-            if (magnitude < EPSILON) return new Pose(1, 0);
-            return new Pose(x / magnitude, y / magnitude);
-        }
-
-        private Pose addScaled(Pose pose, Pose direction, double scale) {
-            return new Pose(
-                    pose.getX() + direction.getX() * scale,
-                    pose.getY() + direction.getY() * scale
-            );
-        }
-
-        private double distance(double x1, double y1, double x2, double y2) {
-            return Math.hypot(x2 - x1, y2 - y1);
-        }
-
-        private double wrapAngle(double angle) {
-            while (angle > Math.PI) angle -= 2 * Math.PI;
-            while (angle < -Math.PI) angle += 2 * Math.PI;
-            return angle;
         }
 
     }

@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.configs;
 
 import com.pedropathing.geometry.Pose;
 
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.junit.After;
 import org.junit.Before;
@@ -12,8 +13,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 
 public class BlackboardTest {
-    private static final double EPSILON = 1e-9;
-
     @Before
     @After
     public void resetBlackboard() {
@@ -33,9 +32,9 @@ public class BlackboardTest {
 
         Pose resetPose = Blackboard.get(Blackboard.Caption.POSE).getValue();
         assertNotNull(resetPose);
-        assertEquals(0.0, resetPose.getX(), EPSILON);
-        assertEquals(0.0, resetPose.getY(), EPSILON);
-        assertEquals(0.0, resetPose.getHeading(), EPSILON);
+        assertEquals(0.0, resetPose.getX(), MathUtils.EPSILON);
+        assertEquals(0.0, resetPose.getY(), MathUtils.EPSILON);
+        assertEquals(0.0, resetPose.getHeading(), MathUtils.EPSILON);
         assertEquals(Driver.DEFAULT, Blackboard.get(Blackboard.Caption.DRIVER).getValue());
     }
 

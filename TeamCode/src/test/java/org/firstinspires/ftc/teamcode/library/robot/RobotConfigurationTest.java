@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
@@ -19,8 +20,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertThrows;
 
 public class RobotConfigurationTest {
-    private static final double EPSILON = 1e-9;
-
     @Test
     public void configureDriveMechanismsAndCreateMechanismUseRegisteredCopies() {
         RobotConstants bot = new RobotConstants().configureDriveMechanisms();
@@ -54,7 +53,7 @@ public class RobotConfigurationTest {
     public void robotProfilesExposeExpectedDriveAndOptionalMechanismConfiguration() {
         RobotConstants first = RobotConfigurations.FirstRobot();
         assertEquals("frontLeft", first.FRONT_LEFT_MOTOR_NAME);
-        assertEquals(0.4, first.MAX_POWER, EPSILON);
+        assertEquals(0.4, first.MAX_POWER, MathUtils.EPSILON);
         assertTrue(first.Mechanisms.contains(RobotDrive.class));
         assertFalse(first.Mechanisms.contains(Intake.class));
         assertFalse(first.USE_FOLLOWER_DRIVE);

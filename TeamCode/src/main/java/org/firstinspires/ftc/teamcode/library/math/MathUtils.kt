@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.math
 
 import com.pedropathing.ftc.FTCCoordinates
+import com.pedropathing.geometry.CoordinateSystem
 import com.pedropathing.geometry.PedroCoordinates
 import com.pedropathing.geometry.Pose
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
@@ -36,11 +37,69 @@ class MathUtils private constructor() {
         const val TAU = 2 * PI
         const val E = Math.E
         const val DEG_TO_RAD = PI / 180.0
+        const val EPSILON = 1e-6
 
         private const val MILLIMETERS_PER_INCH = 25.4
         private const val CENTIMETERS_PER_INCH = 2.54
         private const val INCHES_PER_FOOT = 12.0
         private const val INCHES_PER_METER = 39.37007874015748
+
+        @JvmStatic
+        fun distance(x1: Double, y1: Double, x2: Double, y2: Double): Double = Math.hypot(x2 - x1, y2 - y1)
+
+        @JvmStatic
+        fun normalizeVector(x: Double, y: Double): Pose {
+            val magnitude = Math.hypot(x, y)
+            if (magnitude < EPSILON) return Pose(1.0, 0.0)
+            return Pose(x / magnitude, y / magnitude)
+        }
+
+        @JvmStatic
+        fun normalizedDirection(start: Pose, end: Pose): Pose = normalizeVector(end.x - start.x, end.y - start.y)
+
+        @JvmStatic
+        fun addScaled(pose: Pose, direction: Pose, scale: Double): Pose {
+            return Pose(
+                pose.x + direction.x * scale,
+                pose.y + direction.y * scale
+            )
+        }
+
+        @JvmStatic
+        fun smoothTangents(waypoints: List<Pose>): Array<Pose> {
+            require(waypoints.size >= 2) { "Need at least two waypoints" }
+
+            return Array(waypoints.size) { index ->
+                when (index) {
+                    0 -> normalizedDirection(waypoints[0], waypoints[1])
+                    waypoints.lastIndex -> normalizedDirection(waypoints[waypoints.lastIndex - 1], waypoints[waypoints.lastIndex])
+                    else -> {
+                        val incoming = normalizedDirection(waypoints[index - 1], waypoints[index])
+                        val outgoing = normalizedDirection(waypoints[index], waypoints[index + 1])
+                        normalizeVector(incoming.x + outgoing.x, incoming.y + outgoing.y)
+                    }
+                }
+            }
+        }
+
+        @JvmStatic
+        fun offsetPoseInRobotFrame(
+            robotPose: Pose,
+            forwardDistance: Double,
+            lateralOffset: Double,
+            coordinateSystem: CoordinateSystem
+        ): Pose {
+            val convertedRobotPose = coordinateSystem.convertFromPedro(robotPose)
+            val heading = convertedRobotPose.heading
+            val fieldX = convertedRobotPose.x + forwardDistance * Math.cos(heading) - lateralOffset * Math.sin(heading)
+            val fieldY = convertedRobotPose.y + forwardDistance * Math.sin(heading) + lateralOffset * Math.cos(heading)
+            return coordinateSystem.convertToPedro(Pose(fieldX, fieldY, heading, coordinateSystem))
+        }
+
+        @JvmStatic
+        fun wrapAngle(angle: Double): Double {
+            return units.normalizeHeading(angle, AngleUnit.RADIANS, HeadingNormSettings.CENTERED_AT_ZERO)
+        }
     }
 
     inner class MathUnits {
