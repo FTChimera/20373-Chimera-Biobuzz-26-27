@@ -16,6 +16,7 @@ import org.firstinspires.ftc.teamcode.library.Timer;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlanner;
+import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
@@ -106,6 +107,7 @@ public class Utils {
         Mechanisms mechanisms;
         Limelight limelight;
         RobotDrive drive;
+        Intake intake;
         boolean shouldUseFailSafePath = false;
         PathChain failSafePath;
         int numBalls;
@@ -140,7 +142,8 @@ public class Utils {
         public void setUpMechanisms() {
             limelight = mechanisms.get(Limelight.class);
             drive = mechanisms.get(RobotDrive.class);
-            shouldUseFailSafePath = limelight == null || drive == null;
+            intake = mechanisms.get(Intake.class);
+            shouldUseFailSafePath = limelight == null || drive == null || intake == null;
         }
 
         @Override
@@ -245,12 +248,14 @@ public class Utils {
             generatedPath = pathChain;
             resolvedEndPose = pathChain.endPose();
             outboundPathStarted = true;
+            if (intake != null) intake.FullPower();
             drive.mecanumDrive.follower.followPath(pathChain);
         }
 
         private void startReturnPath(Pose currentPose) {
             returnPathStarted = true;
             PathChain returnPath = buildReturnPath(currentPose);
+            if (intake != null) intake.Stop();
             if (returnPath != null) {
                 drive.mecanumDrive.follower.followPath(returnPath);
             }
