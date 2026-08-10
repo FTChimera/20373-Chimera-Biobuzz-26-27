@@ -112,7 +112,7 @@ public class Utils {
         Pose startPose;
         Pose resolvedEndPose;
         PathChain generatedPath;
-        boolean pathStarted, lastPathStarted;
+        boolean outboundPathStarted, returnPathStarted;
         Timer retryTimer;
 
         private static class DetectionCandidate {
@@ -165,8 +165,8 @@ public class Utils {
                                 generatedPath = null;
                                 retryTimer = new Timer(TimeUnit.SECONDS);
                                 retryTimer.reset();
-                                pathStarted = false;
-                                lastPathStarted = false;
+                                outboundPathStarted = false;
+                                returnPathStarted = false;
 
                                 if (shouldUseFailSafePath) {
                                     startFailSafePath();
@@ -179,15 +179,14 @@ public class Utils {
                             }
                     )
                     .setExecute(() -> {
-                        if (shouldUseFailSafePath || limelight == null) return;
-                        if (pathStarted && !lastPathStarted && !drive.mecanumDrive.follower.isBusy()) {
-                            drive.mecanumDrive.follower.followPath(drive.mecanumDrive.follower.pathBuilder()
-                                    .addPath(new BezierLine(drive.getPose(), startPose))
-                                    .setLinearHeadingInterpolation(drive.getPose().getHeading(), startPose.getHeading()).build());
-                            lastPathStarted = true;
+                        if (outboundPathStarted) {
+                            if (!returnPathStarted && !drive.mecanumDrive.follower.isBusy()) {
+                                startReturnPath(drive.mecanumDrive.follower.getPose());
+                            }
                             return;
                         }
-                        if (pathStarted) return;
+                        if (returnPathStarted || shouldUseFailSafePath || limelight == null) return;
+
                         Pose robotPose = drive.mecanumDrive.follower.getPose();
                         limelight.updateRobotOrientation(robotPose.getHeading());
                         limelight.LLUpdate();
@@ -199,9 +198,7 @@ public class Utils {
                             detectors.sort(Comparator.comparingDouble(this::getScorePass1).reversed());
                             PathChain intakePath = buildIntakePath(robotPose, detectors);
                             if (intakePath != null) {
-                                generatedPath = intakePath;
-                                drive.mecanumDrive.follower.followPath(intakePath);
-                                pathStarted = true;
+                                startOutboundPath(intakePath);
                                 return;
                             }
                         }
@@ -210,7 +207,7 @@ public class Utils {
                             startFailSafePath();
                         }
                     })
-                    .setDone(() -> lastPathStarted && !drive.mecanumDrive.follower.isBusy());
+                    .setDone(() -> returnPathStarted && !drive.mecanumDrive.follower.isBusy());
         }
 
         /** Returns score from 0 to 1 of the result
@@ -237,12 +234,46 @@ public class Utils {
         }
 
         private void startFailSafePath() {
-            generatedPath = failSafePath;
-            pathStarted = true;
-            lastPathStarted = true;
-            if (failSafePath != null) {
-                drive.mecanumDrive.follower.followPath(failSafePath);
+            if (failSafePath == null) {
+                startReturnPath(drive.mecanumDrive.follower.getPose());
+                return;
             }
+            startOutboundPath(failSafePath);
+        }
+
+        private void startOutboundPath(PathChain pathChain) {
+            generatedPath = pathChain;
+            resolvedEndPose = pathChain.endPose();
+            outboundPathStarted = true;
+            drive.mecanumDrive.follower.followPath(pathChain);
+        }
+
+        private void startReturnPath(Pose currentPose) {
+            returnPathStarted = true;
+            PathChain returnPath = buildReturnPath(currentPose);
+            if (returnPath != null) {
+                drive.mecanumDrive.follower.followPath(returnPath);
+            }
+        }
+
+        private PathChain buildReturnPath(Pose currentPose) {
+            if (currentPose.distanceFrom(startPose) < MathUtils.EPSILON) return null;
+
+            double headingToStart = Math.atan2(startPose.getY() - currentPose.getY(), startPose.getX() - currentPose.getX());
+            double reverseTangentHeading = MathUtils.wrapAngle(headingToStart + Math.PI);
+
+            return drive.mecanumDrive.follower.pathBuilder()
+                    .addPath(new BezierLine(currentPose, startPose))
+                    .setHeadingInterpolation(
+                            HeadingInterpolator.piecewise(
+                                    new HeadingInterpolator.PiecewiseNode(0, 0.5, HeadingInterpolator.tangent.reverse()),
+                                    new HeadingInterpolator.PiecewiseNode(0.5, 1, HeadingInterpolator.linear(
+                                            reverseTangentHeading,
+                                            startPose.getHeading()
+                                    ))
+                            )
+                    )
+                    .build();
         }
 
         private PathChain buildIntakePath(Pose robotPose, List<LLResultTypes.DetectorResult> detectors) {
@@ -433,9 +464,6 @@ public class Utils {
             waypoints.add(new Pose(robotPose.getX(), robotPose.getY()));
             for (DetectionCandidate candidate : selected) {
                 waypoints.add(candidate.fieldPose);
-            }
-            if (resolvedEndPose != null) {
-                waypoints.add(resolvedEndPose);
             }
 
             if (waypoints.size() < 2) return null;
