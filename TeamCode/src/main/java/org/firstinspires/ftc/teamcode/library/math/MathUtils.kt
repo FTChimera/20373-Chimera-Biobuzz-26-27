@@ -83,6 +83,64 @@ class MathUtils private constructor() {
         }
 
         @JvmStatic
+        fun adaptiveHandleLengths(waypoints: List<Pose>, maxHandleFraction: Double): DoubleArray {
+            require(waypoints.size >= 2) { "Need at least two waypoints" }
+
+            return DoubleArray(waypoints.size) { index ->
+                when (index) {
+                    0 -> waypoints[0].distanceFrom(waypoints[1]) * maxHandleFraction
+                    waypoints.lastIndex -> waypoints[waypoints.lastIndex - 1].distanceFrom(waypoints[waypoints.lastIndex]) * maxHandleFraction
+                    else -> {
+                        val previous = waypoints[index - 1]
+                        val current = waypoints[index]
+                        val next = waypoints[index + 1]
+
+                        val previousDistance = previous.distanceFrom(current)
+                        val nextDistance = current.distanceFrom(next)
+                        val previousDirection = normalizedDirection(previous, current)
+                        val nextDirection = normalizedDirection(current, next)
+                        val dotProduct = clamp(previousDirection.x * nextDirection.x + previousDirection.y * nextDirection.y, -1.0, 1.0)
+                        val turnScale = Math.sqrt(Math.max(0.0, (1.0 + dotProduct) / 2.0))
+
+                        Math.min(previousDistance, nextDistance) * maxHandleFraction * turnScale
+                    }
+                }
+            }
+        }
+
+        @JvmStatic
+        fun maxTurnAngle(waypoints: List<Pose>): Double {
+            if (waypoints.size < 3) return 0.0
+
+            var maxTurn = 0.0
+            for (index in 1 until waypoints.lastIndex) {
+                val previousDirection = normalizedDirection(waypoints[index - 1], waypoints[index])
+                val nextDirection = normalizedDirection(waypoints[index], waypoints[index + 1])
+                val dotProduct = clamp(previousDirection.x * nextDirection.x + previousDirection.y * nextDirection.y, -1.0, 1.0)
+                maxTurn = Math.max(maxTurn, Math.acos(dotProduct))
+            }
+
+            return maxTurn
+        }
+
+        @JvmStatic
+        fun maxSpacingRatio(waypoints: List<Pose>): Double {
+            if (waypoints.size < 3) return 1.0
+
+            var minDistance = Double.POSITIVE_INFINITY
+            var maxDistance = 0.0
+            for (index in 0 until waypoints.lastIndex) {
+                val distance = waypoints[index].distanceFrom(waypoints[index + 1])
+                if (distance < EPSILON) continue
+                minDistance = Math.min(minDistance, distance)
+                maxDistance = Math.max(maxDistance, distance)
+            }
+
+            if (!minDistance.isFinite() || minDistance < EPSILON) return Double.POSITIVE_INFINITY
+            return maxDistance / minDistance
+        }
+
+        @JvmStatic
         fun offsetPoseInRobotFrame(
             robotPose: Pose,
             forwardDistance: Double,
@@ -99,6 +157,10 @@ class MathUtils private constructor() {
         @JvmStatic
         fun wrapAngle(angle: Double): Double {
             return units.normalizeHeading(angle, AngleUnit.RADIANS, HeadingNormSettings.CENTERED_AT_ZERO)
+        }
+
+        private fun clamp(value: Double, minimum: Double, maximum: Double): Double {
+            return Math.max(minimum, Math.min(maximum, value))
         }
     }
 

@@ -11,6 +11,7 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.Timer;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlanner;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static class StartPose implements PathPlanner {
@@ -81,7 +83,7 @@ public class Utils {
         }
     }
     public static class IntakeWVision implements PathPlanner {
-        private static final double DETECTOR_TARGET_HEIGHT_INCHES = 0.0;
+        private static final double DETECTOR_TARGET_HEIGHT_INCHES = 1.5;
         private static final double AREA_DISTANCE_SCALE = 18.0;
         private static final double MIN_CONFIDENCE = 0.35;
         private static final double MIN_TARGET_AREA = 0.15;
@@ -89,13 +91,16 @@ public class Utils {
         private static final double MAX_FORWARD_DISTANCE_INCHES = 48.0;
         private static final double MAX_LATERAL_OFFSET_INCHES = 9.0;
         private static final double MERGE_DISTANCE_INCHES = 2.5;
-        private static final double CURVE_TENSION = 0.32;
+        private static final double PEDRO_CURVE_THROUGH_TENSION = 0.5;
+        private static final double ADAPTIVE_HANDLE_FRACTION = 1.0 / 3.0;
+        private static final double CURVE_THROUGH_MAX_TURN_RADIANS = Math.toRadians(60);
+        private static final double CURVE_THROUGH_MAX_SPACING_RATIO = 1.8;
         private static final double SCORE_CONFIDENCE_WEIGHT = 0.45;
         private static final double SCORE_AREA_WEIGHT = 0.35;
         private static final double SCORE_LATERAL_WEIGHT = 0.20;
         private static final double SCORE_TURN_WEIGHT = 0.90;
         private static final double SCORE_GAP_WEIGHT = 0.04;
-        private static final int DETECTOR_RETRY_CYCLES = 4;
+        private static final double DETECTOR_RETRY_SECONDS = 0.7;
 
         Mechanisms mechanisms;
         Limelight limelight;
@@ -105,8 +110,8 @@ public class Utils {
         int numBalls;
         Pose startPose;
         PathChain generatedPath;
-        int detectorRetriesRemaining;
         boolean pathStarted;
+        Timer retryTimer;
 
         private static class DetectionCandidate {
             final Pose fieldPose;
@@ -156,7 +161,8 @@ public class Utils {
                     .setStart(() ->
                             {
                                 generatedPath = null;
-                                detectorRetriesRemaining = DETECTOR_RETRY_CYCLES;
+                                retryTimer = new Timer(TimeUnit.SECONDS);
+                                retryTimer.reset();
                                 pathStarted = false;
 
                                 if (shouldUseFailSafePath) {
@@ -190,8 +196,7 @@ public class Utils {
                             }
                         }
 
-                        detectorRetriesRemaining--;
-                        if (detectorRetriesRemaining <= 0) {
+                        if (retryTimer.get() <= DETECTOR_RETRY_SECONDS) {
                             startFailSafePath();
                         }
                     })
@@ -415,8 +420,39 @@ public class Utils {
             }
 
             if (waypoints.size() < 2) return null;
+            if (waypoints.size() == 2) return buildAdaptiveHandlePathChain(waypoints);
 
+            if (shouldUsePedroCurveThrough(waypoints)) {
+                return buildPedroCurveThroughPathChain(waypoints);
+            }
+
+            return buildAdaptiveHandlePathChain(waypoints);
+        }
+
+        private boolean shouldUsePedroCurveThrough(List<Pose> waypoints) {
+            return MathUtils.maxTurnAngle(waypoints) <= CURVE_THROUGH_MAX_TURN_RADIANS
+                    && MathUtils.maxSpacingRatio(waypoints) <= CURVE_THROUGH_MAX_SPACING_RATIO;
+        }
+
+        private PathChain buildPedroCurveThroughPathChain(List<Pose> waypoints) {
+            Pose start = waypoints.get(0);
+            Pose mirroredPreviousPoint = start.minus(waypoints.get(1).minus(start));
+            Pose[] followPoints = waypoints.subList(1, waypoints.size()).toArray(new Pose[0]);
+
+            PathChain pathChain = drive.mecanumDrive.follower.pathBuilder()
+                    .curveThrough(mirroredPreviousPoint, start, PEDRO_CURVE_THROUGH_TENSION, followPoints)
+                    .build();
+
+            for (int i = 0; i < pathChain.size(); i++) {
+                pathChain.getPath(i).setTangentHeadingInterpolation();
+            }
+
+            return pathChain;
+        }
+
+        private PathChain buildAdaptiveHandlePathChain(List<Pose> waypoints) {
             Pose[] tangents = MathUtils.smoothTangents(waypoints);
+            double[] handleLengths = MathUtils.adaptiveHandleLengths(waypoints, ADAPTIVE_HANDLE_FRACTION);
             List<Path> segments = new ArrayList<>();
             for (int i = 0; i < waypoints.size() - 1; i++) {
                 Pose start = waypoints.get(i);
@@ -424,9 +460,8 @@ public class Utils {
                 double segmentDistance = start.distanceFrom(end);
                 if (segmentDistance < MathUtils.EPSILON) continue;
 
-                double controlDistance = CURVE_TENSION * segmentDistance;
-                Pose control1 = MathUtils.addScaled(start, tangents[i], controlDistance);
-                Pose control2 = MathUtils.addScaled(end, tangents[i + 1], -controlDistance);
+                Pose control1 = MathUtils.addScaled(start, tangents[i], handleLengths[i]);
+                Pose control2 = MathUtils.addScaled(end, tangents[i + 1], -handleLengths[i + 1]);
 
                 Path segment = new Path(new BezierCurve(start, control1, control2, end));
                 segment.setTangentHeadingInterpolation();
