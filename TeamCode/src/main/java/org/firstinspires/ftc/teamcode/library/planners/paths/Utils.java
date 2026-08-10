@@ -183,8 +183,7 @@ public class Utils {
                         if (pathStarted && !lastPathStarted && !drive.mecanumDrive.follower.isBusy()) {
                             drive.mecanumDrive.follower.followPath(drive.mecanumDrive.follower.pathBuilder()
                                     .addPath(new BezierLine(drive.getPose(), startPose))
-                                    .setHeadingInterpolation(HeadingInterpolator.tangent.reverse()).build());
-                            // change to linear to match heading from start
+                                    .setLinearHeadingInterpolation(drive.getPose().getHeading(), startPose.getHeading()).build());
                             lastPathStarted = true;
                             return;
                         }
