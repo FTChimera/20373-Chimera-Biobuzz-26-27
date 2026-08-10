@@ -12,6 +12,19 @@ This includes both:
 - profile-managed wrappers and subsystems built around `Mechanism`
 - custom SDK-registerable hardware under `library/hardware/hardwareDevice/`
 
+## Upstream `~/.gradle` lookup
+
+If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
+`~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
+`build.dependencies.gradle`.
+
+- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
+  FTC SDK device and controller behavior
+- `org.firstinspires.ftc/Vision` when wrappers touch webcam or vision APIs
+- `com.bylazar/fullpanels` and related `com.bylazar/...` modules for
+  panels-related wrapper behavior
+- `com.pedropathing/ftc` when a wrapper interacts with Pedro-managed motion
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

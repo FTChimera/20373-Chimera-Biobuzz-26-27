@@ -7,6 +7,19 @@ description: Use this skill when asked to work on Limelight, AprilTag pose updat
 
 This repository currently mixes Pinpoint-based Pedro localization with two separate vision wrappers: a Limelight wrapper and a VisionPortal AprilTag webcam wrapper.
 
+## Upstream `~/.gradle` lookup
+
+If localization or vision behavior depends on external code rather than
+TeamCode, inspect `~/.gradle/caches/modules-2/files-2.1/` using the versions
+from `build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro pose, pathing,
+  and follower behavior
+- `org.firstinspires.ftc/Vision` for AprilTag, VisionPortal, and related FTC
+  vision APIs
+- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
+  supporting SDK details
+
 ## Relevant files
 
 - `build.dependencies.gradle`

@@ -7,6 +7,19 @@ description: Use this skill when asked to work directly on the TeamCode Limeligh
 
 Use this skill for Limelight-specific work that is narrower than the broader localization-and-vision skill.
 
+## Upstream `~/.gradle` lookup
+
+If a pipeline or camera behavior appears to come from an SDK dependency instead
+of the TeamCode wrapper, inspect `~/.gradle/caches/modules-2/files-2.1/` using
+the version pinned in `build.dependencies.gradle`.
+
+- `org.firstinspires.ftc/Vision` for FTC camera, processor, and vision-portal
+  behavior
+- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
+  supporting SDK details
+- `com.pedropathing/ftc` when the Limelight issue interacts with Pedro
+  localization/pathing code
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

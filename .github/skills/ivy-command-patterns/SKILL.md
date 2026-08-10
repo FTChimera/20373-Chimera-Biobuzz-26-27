@@ -7,6 +7,17 @@ description: Use this skill when asked to compose Pedro Ivy commands, schedule r
 
 This skill covers the repo’s current Pedro Ivy usage patterns, not generic Ivy examples from elsewhere.
 
+## Upstream `~/.gradle` lookup
+
+When Ivy behavior is unclear, inspect the downloaded artifacts under
+`~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
+`build.dependencies.gradle`.
+
+- `com.pedropathing/ivy` for command, scheduler, group, and builder APIs
+- `com.pedropathing/ftc` when Ivy behavior touches Pedro FTC integrations
+- `com.pedropathing/telemetry` when the problem involves tuning or telemetry
+  op-mode selection rather than scheduler logic itself
+
 ## Relevant files
 
 - `build.dependencies.gradle`

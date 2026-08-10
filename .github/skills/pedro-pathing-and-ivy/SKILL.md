@@ -7,6 +7,18 @@ description: Use this skill when asked to add or tune Pedro Pathing followers, p
 
 This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathing:telemetry:1.0.0`, and `com.pedropathing:ivy:1.0.0` (`build.dependencies.gradle`).
 
+## Upstream `~/.gradle` lookup
+
+When TeamCode behavior depends on Pedro artifacts instead of repo-local code,
+inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
+`build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for the motion, path,
+  follower, and geometry library
+- `com.pedropathing/ivy` for Ivy scheduler, command, and grouping behavior
+- `com.pedropathing/telemetry` for Pedro telemetry wiring and
+  `pedroPathing/Tuning.java` op-mode selection issues
+
 ## Key files
 
 - `build.dependencies.gradle`

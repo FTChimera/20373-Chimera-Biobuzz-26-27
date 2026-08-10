@@ -7,6 +7,20 @@ description: Use this skill when asked to add or modify test op modes, Pedro tun
 
 Use this skill when work is focused on validation op modes, tuners, or measurement workflows instead of match-ready robot behavior.
 
+## Upstream `~/.gradle` lookup
+
+If a test or tuner behavior depends on an external library rather than TeamCode,
+inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
+`build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro tuning and
+  follower behavior
+- `com.pedropathing/telemetry` for `pedroPathing/Tuning.java`, telemetry, and
+  op-mode selection issues
+- `com.pedropathing/ivy` when a test flow depends on Ivy command timing
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  `org.firstinspires.ftc/Vision` for FTC SDK tuner/test behavior
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

@@ -7,6 +7,18 @@ description: Use this skill when asked to extend lightweight shared types in `li
 
 Use this skill when changes belong in the lightweight `library/` package rather than in a mechanism or op mode.
 
+## Upstream `~/.gradle` lookup
+
+If a helper in `library/` exists mainly to adapt an external dependency, inspect
+the downloaded module under `~/.gradle/caches/modules-2/files-2.1/` with the
+version pinned in `build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro math, pose, and
+  pathing behavior
+- `com.pedropathing/ivy` for command-adapter helpers
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  sometimes `org.firstinspires.ftc/Vision` for SDK-backed utility behavior
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`

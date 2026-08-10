@@ -7,6 +7,18 @@ description: Use this skill when asked to add or refactor autonomous geometry, `
 
 Use this skill when the main task is autonomous geometry, path sequencing, or the control flow around path following.
 
+## Upstream `~/.gradle` lookup
+
+If a pathing behavior depends on Pedro rather than TeamCode itself, inspect the
+downloaded module under `~/.gradle/caches/modules-2/files-2.1/` using the
+version pinned in `build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro motion, path,
+  follower, and geometry internals
+- `com.pedropathing/ivy` for Ivy-based autonomous sequencing details
+- `com.pedropathing/telemetry` for Pedro telemetry and tuner op-mode wiring
+  issues such as `pedroPathing/Tuning.java`
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

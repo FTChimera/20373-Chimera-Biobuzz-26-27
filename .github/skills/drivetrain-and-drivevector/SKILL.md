@@ -7,6 +7,18 @@ description: Use this skill when asked to change teleop drive math, field-centri
 
 This skill covers the team’s custom teleop-drive stack.
 
+## Upstream `~/.gradle` lookup
+
+If drive behavior depends on Pedro follower internals or FTC SDK motor math,
+inspect the matching dependency under
+`~/.gradle/caches/modules-2/files-2.1/` with the version pinned in
+`build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for follower, motion, and
+  drivetrain-pathing behavior
+- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
+  FTC SDK joystick, IMU, and motor-control implementation details
+
 ## Key files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

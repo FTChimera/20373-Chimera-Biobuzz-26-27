@@ -7,6 +7,18 @@ description: Use this skill when asked to add annotated variants, share logic ac
 
 Use this skill when working on the repo’s shared-base-class plus thin-wrapper pattern.
 
+## Upstream `~/.gradle` lookup
+
+If a variant or shared base class depends on external op-mode infrastructure,
+inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
+`build.dependencies.gradle`.
+
+- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
+  SDK op-mode and hardware behavior
+- `com.pedropathing/ivy` for Ivy-based shared autonomous/teleop orchestration
+- `com.pedropathing/telemetry` when `pedroPathing/Tuning.java` selection or
+  registration is part of the issue
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

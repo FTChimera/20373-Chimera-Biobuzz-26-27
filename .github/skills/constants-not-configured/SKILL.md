@@ -7,6 +7,20 @@ description: Use this skill when asked to fill in TeamCode constant values that 
 
 Use this skill when needing to change constants that were left blank because of unknowns.
 
+## Upstream `~/.gradle` lookup
+
+If a constant or tuning field mirrors behavior defined by a dependency, inspect
+the downloaded module under `~/.gradle/caches/modules-2/files-2.1/` using the
+version pinned in `build.dependencies.gradle` before assuming the external API.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro motion and
+  follower constants
+- `com.pedropathing/ivy` for Ivy timing or scheduling assumptions
+- `com.pedropathing/telemetry` for `pedroPathing/Tuning.java` and tuner
+  selection issues
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  sometimes `org.firstinspires.ftc/Vision` for FTC SDK-side defaults
+
 ## Autonomous and Field Setup
 
 - The Field Setup and scoring elements will be released September 2026.

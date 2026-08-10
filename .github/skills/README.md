@@ -28,6 +28,29 @@ This folder contains repo-specific skills for working on
 Choose the narrowest matching skill first; cross-cutting work can require more
 than one guide.
 
+When a docs-maintenance request says to update "all the skill files", treat that
+as updating every repo document that acts as a reference for anyone or anything
+modifying the codebase: this index, the relevant `SKILL.md` files, and
+companion reference docs such as `ftcdev-20373.html`.
+
+## External dependency lookup shortcuts
+
+When TeamCode behavior comes from an external dependency instead of repo-local
+code, inspect the downloaded module under
+`~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
+`build.dependencies.gradle` before guessing from memory.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro Pathing motion,
+  path, and follower internals
+- `com.pedropathing/ivy` for Ivy command, scheduler, and builder behavior
+- `com.pedropathing/telemetry` for Pedro telemetry wiring and
+  `pedroPathing/Tuning.java` op-mode selection issues
+- `com.bylazar/fullpanels` and sibling `com.bylazar/...` modules for
+  panels-related code
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and,
+  when vision APIs are involved, `org.firstinspires.ftc/Vision` for FTC SDK
+  implementation details
+
 ## Current architecture notes
 
 - `Constants.currentBot` selects the profile used by op-mode factories. A

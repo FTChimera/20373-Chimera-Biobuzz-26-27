@@ -7,6 +7,21 @@ description: Use this skill when asked to call FTC SDK APIs directly, work with 
 
 Use this skill for direct FTC SDK integration work.
 
+## Upstream `~/.gradle` lookup
+
+When TeamCode wraps an FTC SDK behavior, inspect the downloaded SDK modules
+under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
+`build.dependencies.gradle`.
+
+- `org.firstinspires.ftc/RobotCore` for op mode, telemetry, gamepad, and core
+  hardware-map behavior
+- `org.firstinspires.ftc/Hardware` for controllers, motors, sensors, and
+  hardware wrappers
+- `org.firstinspires.ftc/Vision` when AprilTag, camera, or vision-portal APIs
+  are involved
+- `com.pedropathing/telemetry` if the issue is actually tied to
+  `pedroPathing/Tuning.java` op-mode selection rather than base SDK lifecycle
+
 ## Repo context
 
 - The project depends on FTC SDK `11.1.0`.

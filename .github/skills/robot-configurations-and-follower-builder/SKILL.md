@@ -12,6 +12,17 @@ Use this skill for robot-profile work centered around:
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 
+## Upstream `~/.gradle` lookup
+
+If follower or profile behavior depends on external libraries rather than
+TeamCode, inspect `~/.gradle/caches/modules-2/files-2.1/` using the versions
+from `build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro follower,
+  drivetrain, and path-constraint internals
+- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
+  FTC SDK motor, IMU, and hardware behavior that profile builders depend on
+
 ## How this repo is wired
 
 1. `Constants.currentBot` selects the active robot profile.

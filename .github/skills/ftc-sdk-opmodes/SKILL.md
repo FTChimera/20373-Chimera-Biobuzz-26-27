@@ -7,6 +7,18 @@ description: Use this skill when asked to create or edit FTC SDK op modes, wire 
 
 Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/firstinspires/ftc/teamcode`.
 
+## Upstream `~/.gradle` lookup
+
+If an op-mode behavior depends on FTC SDK or Pedro infrastructure rather than
+repo-local code, inspect `~/.gradle/caches/modules-2/files-2.1/` using the
+versions pinned in `build.dependencies.gradle`.
+
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  `org.firstinspires.ftc/Vision` for SDK-side op-mode behavior
+- `com.pedropathing/ivy` for Ivy command-driven op modes
+- `com.pedropathing/telemetry` for `pedroPathing/Tuning.java` op-mode selection
+  or telemetry registration issues
+
 ## Repository context
 
 - The app uses FTC SDK `11.1.0`.
@@ -40,7 +52,7 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 
 When an op mode needs a subsystem:
 
-- call `Constants.createIntake(hardwareMap)` instead of `new Intake(...)`
+- prefer `Constants.createMechanisms(hardwareMap)` in shared op modes, then use `mechanisms.require(Intake.class)` or `mechanisms.get(...)` for profile-managed subsystems
 - call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
 - call `Constants.createMechanisms(hardwareMap)` when a shared op mode wants the whole registered mechanism set, then use `mechanisms.require(RobotDrive.class)` or optional `mechanisms.get(...)` lookups as needed
 - call `Constants.createDrive(hardwareMap)` when you intentionally want just the public drive mechanism

@@ -7,6 +7,17 @@ description: Use this skill when asked to work on driver controls, raw FTC gamep
 
 This skill covers the TeamCode gamepad wrapper utilities in `library/hardware/gamepad` and how they replace direct FTC gamepad reads in repo code.
 
+## Upstream `~/.gradle` lookup
+
+If a driver-input behavior appears to come from the FTC SDK or an external
+dependency rather than TeamCode wrappers, inspect
+`~/.gradle/caches/modules-2/files-2.1/` with the version pinned in
+`build.dependencies.gradle`.
+
+- `org.firstinspires.ftc/RobotCore` for FTC gamepad and event semantics
+- `org.firstinspires.ftc/Hardware` when controller-device behavior is relevant
+- `com.pedropathing/ivy` if the input issue is really in Ivy command triggering
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

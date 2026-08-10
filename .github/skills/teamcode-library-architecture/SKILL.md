@@ -7,6 +7,21 @@ description: Use this skill when asked to work with the team's current library, 
 
 Use this skill to stay aligned with the repo’s current architecture instead of falling back to generic FTC examples.
 
+## Upstream `~/.gradle` lookup
+
+If an architectural decision depends on external library behavior instead of
+repo-local code, inspect `~/.gradle/caches/modules-2/files-2.1/` using the
+versions pinned in `build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro architecture and
+  motion/pathing assumptions
+- `com.pedropathing/ivy` for command-architecture assumptions
+- `com.pedropathing/telemetry` for tuning and telemetry-op-mode assumptions
+- `com.bylazar/fullpanels` and related `com.bylazar/...` modules for
+  panels-related architecture
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  `org.firstinspires.ftc/Vision` for FTC SDK-backed architecture details
+
 ## Package layout
 
 - `configs/`: `Blackboard` plus one-shot configuration op modes such as `ZeroPose`, `ResetAllBlackboard`, and `Set*Driver`.
@@ -38,7 +53,7 @@ Use this pattern:
 3. Use the `bot` profile passed into that constructor for shared robot-profile data and mechanism enablement checks.
 4. Register optional subsystems in each robot preset with `RobotConstants.configureDriveMechanisms()` and/or `RobotConstants.addMechanism(...)`.
 5. If the mechanism has local configuration, keep it in a nested builder-style params class that implements `Mechanism.Params<...>` and resolve it through `Mechanism.resolveParams(...)`.
-6. Instantiate from `RobotConstants.createMechanism(...)`, usually through a small convenience helper in `Constants` such as `createIntake(hardwareMap)`.
+6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createMechanisms(hardwareMap)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
 7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `RobotDrive.ROBOT_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, or `RGBIndicator.RGBIndicator_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.

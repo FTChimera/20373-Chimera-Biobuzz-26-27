@@ -1110,6 +1110,7 @@ class KotlinTeleOpTest: LinearOpMode() {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
     Follower follower;
+    Mechanisms mechanisms;
     Intake intake;
 
     public IvyAuton(AllianceColor col, IvyAuton_Paths paths) {
@@ -1122,7 +1123,8 @@ class KotlinTeleOpTest: LinearOpMode() {
         Scheduler.reset();
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        intake = Constants.createIntake(hardwareMap);
+        mechanisms = Constants.createMechanisms(hardwareMap);
+        intake = mechanisms.require(Intake.class);
     }
 
     public void start() {
@@ -1667,6 +1669,7 @@ public class Red_TeleOp extends TeleOp {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
     Follower follower;
+    Mechanisms mechanisms;
     Intake intake;
 
     @Override
@@ -1674,7 +1677,8 @@ public class Red_TeleOp extends TeleOp {
         Scheduler.reset();
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        intake = Constants.createIntake(hardwareMap);
+        mechanisms = Constants.createMechanisms(hardwareMap);
+        intake = mechanisms.require(Intake.class);
     }
 
     public void start() {
@@ -2361,6 +2365,7 @@ applyCodeHighlighting(document);
                         lead: 'Shared competition logic lives in <code>opModes/TeleOp.java</code>. Alliance-specific wrappers inherit it and only supply the starting pose.',
                         body: `
                         ${codeBlock('TeamCode/opModes/TeleOp.java', CODE.teleOpBase)}
+                        ${note('dnote', '<strong>Mechanism pattern:</strong> the shared teleop base now constructs a <code>Mechanisms</code> aggregate first, then requires <code>RobotDrive</code> and treats subsystems like <code>Intake</code> or <code>Limelight</code> as optional profile-managed lookups.')}
                         ${note('dnote', '<strong>Structure rule:</strong> reusable logic belongs in base classes under <code>opModes/</code>; driver-station-visible wrappers belong under <code>opModes/variants/</code>.')}
                         `
                     },
@@ -2475,7 +2480,7 @@ applyCodeHighlighting(document);
                         lead: '<code>Polynomial</code> is the main concrete implementation used today for evaluating, differentiating, and integrating equations in the repo.',
                         body: `
                         ${codeBlock('TeamCode/library/math/Polynomial.java', CODE.polynomial)}
-                        ${note('dnote', '<strong>Current limitation:</strong> <code>Polynomial</code> is the practical implementation today. <code>Term</code> exists in the repo but is still scaffold-only, so symbolic equation support is not finished.')}
+                        ${note('dnote', '<strong>Current math-layer reality:</strong> <code>Polynomial</code> is still the main practical curve primitive, but symbolic support is no longer scaffold-only. <code>Term</code> and the internal <code>SumEquation</code> now provide real mixed-expression algebra, while unsupported antiderivatives fail explicitly instead of silently returning placeholders.')}
                         `
                     },
                     {
@@ -2503,8 +2508,9 @@ applyCodeHighlighting(document);
                         lead: 'The BioBuzz codebase separates shared match architecture from validation code. Test op modes are driver-station-visible utilities for checking hardware, drive behavior, wrappers, and proof-of-concept ideas.',
                         body: `
                         ${table(['Folder', 'Typical use'], [
-                            ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, or manual follower tests.'],
-                            ['<code>tests/ftcSdk/</code>', 'SDK-level wrapper/device validation like <code>MotorTest</code>, <code>RGBIndicatorTest</code>, and <code>SlidesMotorTest</code>.'],
+                            ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, manual follower tests, or the experimental planner check in <code>TestPathPlanner</code>.'],
+                            ['<code>tests/ftcSdk/</code>', 'SDK-level wrapper/device validation like <code>FollowerFactoryTest</code>, <code>RobotDriveFactoryTest</code>, <code>RGBFactoryTest</code>, <code>WebcamFactoryTest</code>, <code>MotorTest</code>, and the direct-device tests.'],
+                            ['<code>src/test/java/</code>', 'Host-side JVM tests such as <code>EquationMathTest</code>, <code>TimerTest</code>, and the <code>UnitTestAll</code> suite entry point.'],
                             ['<code>learning/</code>', 'Teaching/scratch examples like the Kotlin TeleOp, Java/Kotlin ExampleIvyAuto, and other unfinished scaffolds.'],
                             ['<code>opModes/</code>', 'Shared match logic, not ad hoc experiments.']
                         ])}
@@ -2587,13 +2593,14 @@ applyCodeHighlighting(document);
                         nav: 'Overview',
                         eyebrow: '// Path Following',
                         title: 'Path Following with <span>Pedro Pathing</span>',
-                        lead: 'In this repo, Pedro path following starts with the active follower from <strong>Constants.createFollower()</strong>, then layers in lines, heading interpolation, PathChains, and custom curves when needed.',
+                        lead: 'In this repo, Pedro path following starts with the active follower from <strong>Constants.createFollower()</strong>, then layers in lines, heading interpolation, PathChains, and custom curves when needed. A separate planner-style stack now exists under <code>library/planners/</code>, but shared match code still primarily uses direct follower/path-builder flows.',
                         body: `
                         <div class="dsgrid">
                             <div class="dscard"><div class="dscard-t">Follower Source</div><p class="dp">Always create the follower through <code>Constants.createFollower(hardwareMap)</code> so the active robot profile drives the configuration.</p></div>
                             <div class="dscard"><div class="dscard-t">Main Path Types</div><p class="dp"><code>BezierLine</code> handles straight segments, while <code>EquationCurve</code> covers paths easier to express as equations.</p></div>
-                            <div class="dscard"><div class="dscard-t">Common Container</div><p class="dp"><code>PathBuilder</code> builds <code>PathChain</code> objects so multiple segments can run as one motion plan.</p></div>
+                            <div class="dscard"><div class="dscard-t">Common Container</div><p class="dp"><code>PathBuilder</code> is still the main integrated way to build <code>PathChain</code> objects for shared autonomous code.</p></div>
                             <div class="dscard"><div class="dscard-t">Heading Control</div><p class="dp">Each segment can choose its own heading interpolation instead of forcing one global turning behavior.</p></div>
+                            <div class="dscard"><div class="dscard-t">Experimental Planner Layer</div><p class="dp"><code>PlanBuilder</code> and <code>PathPlannerList</code> now provide mechanism-aware step sequencing, but they are currently exercised through <code>tests/TestPathPlanner.java</code> rather than the main match-autonomous path.</p></div>
                         </div>
                         `
                     },
@@ -2625,6 +2632,7 @@ applyCodeHighlighting(document);
                         ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.pathBuilder)}
                         <h2 class="dh2">Builder pattern</h2>
                         <p class="dp">The team’s usual sequence is: create follower, define poses, add path segments, set interpolation per segment, then call <code>build()</code> to get a reusable <code>PathChain</code>.</p>
+                        ${note('dnote', '<strong>Planner-stack note:</strong> the repo also has <code>library/planners/PlanBuilder</code>, <code>PathPlannerList</code>, and <code>tests/TestPathPlanner.java</code> for experimental mechanism-aware path sequencing. This page still treats that layer as secondary because it has not replaced the shared follower/path-builder flow in the main match architecture yet.')}
                         `
                     },
                     {

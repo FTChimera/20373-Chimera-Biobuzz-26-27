@@ -7,6 +7,22 @@ description: Use this skill when asked to update `.github/skills/README.md` and 
 
 Use this skill when the user asks for documentation maintenance work on the repo-specific Copilot skills under `.github/skills/`.
 
+## Upstream `~/.gradle` lookup
+
+If the docs need to describe behavior owned by a dependency rather than repo
+code, inspect `~/.gradle/caches/modules-2/files-2.1/` using the versions pinned
+in `build.dependencies.gradle` before documenting the API from memory.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro motion/pathing
+  library details
+- `com.pedropathing/ivy` for Ivy command and scheduler details
+- `com.pedropathing/telemetry` for Pedro telemetry and
+  `pedroPathing/Tuning.java` op-mode selection issues
+- `com.bylazar/fullpanels` and related `com.bylazar/...` modules for
+  panels-related docs
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  `org.firstinspires.ftc/Vision` for FTC SDK-backed behavior
+
 Typical prompts include requests like:
 
 - “Update all the `SKILL.md` files, and the `.github/skills/README.md` on all the latest changes.”
@@ -17,6 +33,11 @@ Typical prompts include requests like:
 ## Default contract for skill-update requests
 
 - Start by checking what the user actually wants updated.
+- In this repo, a request like “update all the skill files” means “update every
+  document that serves as reference material for anyone or anything modifying
+  the codebase,” not just the `SKILL.md` files. That includes
+  `.github/skills/README.md`, the relevant skill guides, and companion repo docs
+  such as `ftcdev-20373.html`.
 - Unless the user explicitly insists on updating **all** skill files, only update the files that are actually necessary.
 - If the user says “update all,” you should still determine whether some files truly need no changes; if so, tell the user that those files were reviewed and left unchanged.
 - If the update scope or history boundary is ambiguous, state the assumption you used and proceed.
@@ -88,8 +109,8 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 6. `Constants.currentBot` can change quickly, do not update SKILL files/README.md to state the current profile as it might become outdated quickly.
 7. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
 8. If the index file `.github/skills/README.md` should mention a new pattern, package, or skill, update it too.
-9. If `ftcdev-20373.html` is present and acts as repo documentation, review whether its branding, links, docs cards, and TeamCode-derived snippets also need to change alongside the skill docs.
-10. After editing docs, validate the changed markdown files for obvious consistency issues and summarize exactly which skill files changed.
+9. If `ftcdev-20373.html` is present and acts as repo documentation, treat it as part of the same “update all the skill files” maintenance surface unless the user explicitly narrows the scope away from it.
+10. After editing docs, validate the changed markdown files and any touched companion reference docs for obvious consistency issues, then summarize exactly which skill files and companion docs changed.
 
 ## What kinds of code changes usually require skill updates
 

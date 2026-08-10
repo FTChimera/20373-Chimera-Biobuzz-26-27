@@ -7,6 +7,19 @@ description: Use this skill when asked to work on Pinpoint setup, custom localiz
 
 Use this skill for localization work that is narrower than general autonomous/path construction.
 
+## Upstream `~/.gradle` lookup
+
+If a localization behavior comes from Pedro or the FTC SDK rather than TeamCode,
+inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
+`build.dependencies.gradle`.
+
+- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro localizer, pose,
+  and follower internals
+- `org.firstinspires.ftc/Hardware` and `org.firstinspires.ftc/RobotCore` for
+  SDK sensor and pose-support behavior
+- `org.firstinspires.ftc/Vision` if a pose estimate depends on camera or
+  AprilTag APIs
+
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`

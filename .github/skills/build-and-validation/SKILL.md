@@ -7,6 +7,20 @@ description: Use this skill when asked to build, validate, or sanity-check chang
 
 Use this skill when validating changes or diagnosing why the project does or does not build.
 
+## Upstream `~/.gradle` lookup
+
+When a build or runtime issue comes from a dependency instead of repo-local
+code, inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned
+in `build.dependencies.gradle`.
+
+- `com.pedropathing/core`, `com.pedropathing/ftc`, `com.pedropathing/ivy`, and
+  `com.pedropathing/telemetry` for Pedro/Ivy/tuning dependency behavior
+- `com.bylazar/fullpanels` and sibling `com.bylazar/...` modules for
+  panels-related dependency issues
+- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
+  `org.firstinspires.ftc/Vision` for FTC SDK implementation and packaging
+  details
+
 ## Build layout
 
 - Root Gradle project with modules `:FtcRobotController` and `:TeamCode`
