@@ -97,12 +97,12 @@ Use as many of these checks as are relevant:
 - constructors should match `(HardwareMap, RobotConstants)`
 - optional mechanisms should check enablement before `hardwareMap.get(...)`
 - `RobotConfigurations` should register profile-managed mechanisms with `.addMechanism(...)` or `configureDriveMechanisms()`
-- direct `new Intake(...)`, `new Drivetrain(...)`, `new Limelight(...)`, etc. should be treated as suspicious unless intentionally internal
+- direct `new Intake(...)`, `new RobotDrive(...)`, `new MecanumDrive(...)`, `new Limelight(...)`, etc. should be treated as suspicious unless intentionally internal
 
 Useful search:
 
 ```zsh
-git --no-pager grep -nE 'new (Intake|Drivetrain|MecanumDrive|Limelight|LogitechWebcam)\(' -- TeamCode/src/main/java/org/firstinspires/ftc/teamcode
+git --no-pager grep -nE 'new (Intake|RobotDrive|MecanumDrive|Limelight|LogitechWebcam)\(' -- TeamCode/src/main/java/org/firstinspires/ftc/teamcode
 ```
 
 #### 3. Hardware-name and profile drift
@@ -111,7 +111,7 @@ git --no-pager grep -nE 'new (Intake|Drivetrain|MecanumDrive|Limelight|LogitechW
 - IMU hardware name and REV Hub logo/USB orientation should come from `RobotConstants` / `RobotConfigurations` through `Constants.createIMU(...)`
 - mechanism-specific names should come from the owning nested `*_PARAMS` class when they are not yet profile-managed
 - tests should not reintroduce stale standalone hardware strings when centralized names already exist
-- drive directions should stay aligned between `RobotConfigurations`, `Drivetrain`, and follower construction
+- drive directions should stay aligned between `RobotConfigurations`, `RobotDrive` / `MecanumDrive`, and follower construction
 
 Useful search:
 
@@ -129,7 +129,7 @@ git --no-pager grep -nE 'hardwareMap\.get\(.*".+"' -- TeamCode/src/main/java/org
 
 - only one consistent `follower.update()` loop per active control path
 - `DriveVector` sign/curve behavior should stay consistent with teleop expectations
-- field-centric math and heading-reset logic should agree between `DriveVector`, `Drivetrain`, `MecanumDrive`, and test op modes
+- field-centric math and heading-reset logic should agree between `DriveVector`, `RobotDrive`, `MecanumDrive`, and test op modes
 - `RobotConstants.createFollower(...)` should stay aligned with the active localizer and drivetrain config
 
 #### 6. Vision and localization assumptions

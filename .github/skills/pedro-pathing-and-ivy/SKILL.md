@@ -14,6 +14,10 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlanner.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlannerList.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PlanBuilder.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/paths/Utils.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
@@ -29,6 +33,7 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TestPathPlanner.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`
 - `java-autogen/Ftc-PedroPathing-PathBuilder-toJavaAuto.html`
@@ -45,6 +50,7 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 7. The standard robot-subsystem construction path is `Mechanism` + `(HardwareMap, RobotConstants)` + `RobotConstants.createMechanism(...)` + `Constants.create...(...)`.
 8. Profile-managed factory helpers work only for classes registered through `.addMechanism(...)` in the profile selected by `Constants.currentBot`.
 9. When planning which factory calls (`Constants.createIntake(...)`, `Constants.createLimelight(...)`, etc.) succeed at runtime, verify which mechanisms the selected profile actually registers with `.addMechanism(...)`.
+10. `library/planners/PlanBuilder` seeds a `PathPlannerList` with `Utils.StartPose`, and `PathPlannerList.schedule()` turns the accumulated planner steps into one sequential Ivy schedule.
 
 ## Pathing conventions to follow
 
@@ -53,6 +59,7 @@ This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathi
 3. Return a `PathChain` from autonomous builders, even when there is only one `Path`; `Test_IvyAuton.Paths#getPath1()` is the current example.
 4. Set heading interpolation explicitly near the geometry.
 5. In non-Ivy code, call `follower.update()` exactly once per loop after teleop or path-following commands are issued.
+6. In planner-style code, let `PathPlanner.asCommand()` own the `buildPaths()` + `run()` pairing instead of duplicating that sequencing in the op mode.
 
 ## `EquationCurve` / math-layer facts
 
@@ -75,6 +82,9 @@ TeamCode currently composes Ivy behavior with:
 - `Groups.loop(...)`
 - `PedroCommands.follow(...)`
 - `CommandConverter.toCommand(...)`
+- `PathPlannerList.schedule()`
+
+`PlanBuilder.waitMs(double)` and `learning/ExampleIvyWithSubsystems.waitMs(double)` both round to Ivy's long-millisecond API before delegating to `Commands.waitMs(...)`.
 
 There is no current TeamCode example that implements `Command` directly, extends `CommandBuilder`, or constructs `new CommandBuilder()`. If you introduce those patterns, validate them against the `com.pedropathing:ivy:1.0.0` dependency instead of assuming a repo-local precedent exists.
 
@@ -89,6 +99,7 @@ There is no current TeamCode example that implements `Command` directly, extends
 
 - Do not treat profile follower or localizer values as competition-tuned without verifying them on the configured robot.
 - `LimelightPinpointLocalizer` is `@Deprecated` and is not wired into `RobotConstants.createFollower(...)`.
+- `library/planners/paths/Utils.IntakeWVision` is the current dynamic-path example. It preserves a `resolvedEndPose`, can fall back to a fail-safe path, and chooses between Pedro curve-through and adaptive-handle Bezier generation based on waypoint geometry.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that uses the standard follower plus raw Limelight color results.
 - `tests/PreseasonWebcamAuto.java` gets its Limelight hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
 - `learning/ExampleIvyWithSubsystems.java` is teaching code, not the profile-managed subsystem pattern: its `autoAlign()` step is commented out and its intake motor is resolved directly from `hardwareMap`.

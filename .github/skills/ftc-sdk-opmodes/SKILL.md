@@ -13,9 +13,9 @@ Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/first
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
 - Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  FirstRobot registers only `MecanumDrive` and `Drivetrain`. Its Pinpoint setup
-  is configured, but its planned intake and all vision/other optional
-  mechanisms are not registered.
+  FirstRobot currently registers only the normal `RobotDrive` mechanism through
+  `configureDriveMechanisms()`. Its Pinpoint setup is configured, but its
+  planned intake and all vision/other optional mechanisms are not registered.
 - Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
 - Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` and `TestIvyAuto` are annotated classes in the `opModes/` root.
@@ -42,7 +42,8 @@ When an op mode needs a subsystem:
 
 - call `Constants.createIntake(hardwareMap)` instead of `new Intake(...)`
 - call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
-- call `Constants.createTeleOpFollower(hardwareMap)` for the public `MecanumDrive` entry point, or `Constants.createDrivetrain(hardwareMap)` only when you intentionally want the lower-level raw drive mechanism
+- call `Constants.createMechanisms(hardwareMap)` when a shared op mode wants the whole registered mechanism set, then use `mechanisms.require(RobotDrive.class)` or optional `mechanisms.get(...)` lookups as needed
+- call `Constants.createDrive(hardwareMap)` when you intentionally want just the public drive mechanism
 - call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
 - call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
 
@@ -59,7 +60,7 @@ The important repo contract is that profile-managed subsystems can be created un
 
 ## Current repo conventions
 
-- Teleop drive is usually routed through `MecanumDrive`.
+- Teleop drive is usually routed through `RobotDrive`, which wraps `MecanumDrive`.
 - Intake is wrapped by `mechanisms/Intake.java`, and `Constants.createIntake(...)` is the intended factory path when the active profile registers `Intake.class`.
 - Limelight usage is wrapped by `library/hardware/webcam/Limelight.java`, and `Constants.createLimelight(...)` is the intended factory path when the active profile registers `Limelight.class`.
 - Logitech webcam has a `Constants` helper, but `Constants.currentBot` does not currently register that mechanism.
@@ -68,7 +69,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
 - `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory pattern, but their `createIntake(...)` and `createLimelight(...)` calls require a profile that registers those classes.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory pattern through `Constants.createMechanisms(hardwareMap)`. They require `RobotDrive` and tolerate missing `Intake` / `Limelight` by reading those mechanisms through nullable aggregate lookups.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.

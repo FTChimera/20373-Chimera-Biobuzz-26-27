@@ -10,8 +10,8 @@ Use this skill to stay aligned with the repo’s current architecture instead of
 ## Package layout
 
 - `configs/`: `Blackboard` plus one-shot configuration op modes such as `ZeroPose`, `ResetAllBlackboard`, and `Set*Driver`.
-- `library/`: small reusable types and wrappers, now split across areas such as `control/`, `filters/`, `hardware/`, `interpolation/`, `math/`, and `robot/`.
-- `library/robot/drivetrain/`: plain reusable drive wrappers such as `Drivetrain` and `MecanumDrive`.
+- `library/`: small reusable types and wrappers, now split across areas such as `control/`, `filters/`, `game/`, `hardware/`, `interpolation/`, `math/`, `planners/`, and `robot/`.
+- `library/robot/drivetrain/`: the reusable `MecanumDrive` helper under the public drive mechanism layer.
 - `library/hardware/hardwareDevice/`: SDK-registerable custom devices such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`.
 - `mechanisms/`: robot subsystems plus the shared abstract base class `Mechanism`.
 - `library/OpModeHelper.kt`: optional op-mode utility for manual Lynx bulk caching and loop `dt` tracking.
@@ -62,7 +62,6 @@ helper, and prefer runtime-test guards for optional subsystems.
 
 - `library.hardware.actuators.Direction`
 - `library.hardware.actuators.Motor`
-- `library.robot.drivetrain.Drivetrain`
 - `library.robot.drivetrain.MecanumDrive`
 - `library.hardware.hardwareDevice.RevPotentiometer`
 - `library.hardware.hardwareDevice.SlidesMotor`
@@ -124,7 +123,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
 - Every concrete `Mechanism` subclass now implements `periodic(GpBindings GpBindings)`, so direct loop-driven and Ivy-scheduled updates share the same surface through explicit wrapper-result calls rather than subclass-owned periodic commands.
 - `Constants.createMechanisms(hardwareMap)` is the aggregate helper for constructing a `Mechanisms` object that instantiates every class registered in the active profile’s `Mechanisms` set.
-- `RobotDrive` is the public profile-managed drive mechanism. The plain `library/robot/drivetrain/Drivetrain` and `MecanumDrive` classes are reusable helpers underneath it, not separately registered mechanisms.
+- `RobotDrive` is the public profile-managed drive mechanism. `library/robot/drivetrain/MecanumDrive` is the reusable helper underneath it, not a separately registered mechanism.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
 - The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.

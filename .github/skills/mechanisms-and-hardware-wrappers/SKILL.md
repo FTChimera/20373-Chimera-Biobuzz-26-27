@@ -18,7 +18,6 @@ This includes both:
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/Drivetrain.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
@@ -37,7 +36,7 @@ This includes both:
 1. Low-level device access belongs in wrappers such as `Motor`, `Limelight`, or `LogitechWebcam`.
 2. Reusable subsystems and high-level wrappers share the `Mechanism` base class so they all receive `HardwareMap` and the active `RobotConstants` profile the same way.
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
-4. `Constants` now exposes dedicated helpers for common wrappers (`createIntake`, `createLimelight`, `createDrivetrain`, `createRGB`, `createWebcam`, `createTeleOpFollower`) plus a generic `createMechanism(...)` fallback.
+4. `Constants` now exposes dedicated helpers for common wrappers (`createDrive`, `createIntake`, `createLimelight`, `createRGB`, `createWebcam`) plus the aggregate `createMechanisms(...)` helper and a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
 The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
@@ -79,9 +78,8 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
 - `RGBIndicator` extends `Mechanism`, owns builder-style `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
 - `LogitechWebcam` extends `Mechanism`, owns builder-style `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
-- `library/robot/drivetrain/Drivetrain` is now a plain reusable drive wrapper, not a `Mechanism`.
-- `library/robot/drivetrain/MecanumDrive` is now a plain reusable follower-backed drive wrapper, not a `Mechanism`.
-- `RobotDrive` is the profile-managed `Mechanism` that owns nested drive params, constructs the plain drivetrain classes from the active profile, and turns `GpBindings` into teleop drive behavior.
+- `library/robot/drivetrain/MecanumDrive` is the reusable drive helper under the public mechanism layer; it owns both follower-backed drive behavior and the fallback manual-motor path used when `USE_FOLLOWER_DRIVE` is false.
+- `RobotDrive` is the profile-managed `Mechanism` that owns nested drive params, constructs the `MecanumDrive` helper from the active profile, and turns `GpBindings` into teleop drive behavior.
 - `Mechanisms` is the aggregate wrapper over every class in `bot.Mechanisms`; it instantiates the current profile-managed mechanism set, exposes typed lookup helpers, and fans out `periodic(GpBindings)` calls to the aggregated mechanisms.
 - `RobotConstants` now stores per-mechanism params overrides through `mechanismParams(...)` / `getMechanismParams(...)`, so builder-style nested params can vary by robot profile without moving all subsystem data into the robot profile class.
 - Profile params supplied through `mechanismParams(...)` do not make a class factory-eligible; the profile selected by `Constants.currentBot` must also register it with `addMechanism(...)`.
@@ -107,7 +105,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - New LED indicator behavior or params: `RGBIndicator.java`
 - New custom FTC device registration or controller/port behavior: `library/hardware/hardwareDevice/...`
 - New slides raw-device behavior: `SlidesMotor.java`
-- New drive behavior or teleop helper: `library/robot/drivetrain/Drivetrain.java`, `library/robot/drivetrain/MecanumDrive.java`, or `mechanisms/RobotDrive.java`
+- New drive behavior or teleop helper: `library/robot/drivetrain/MecanumDrive.java` or `mechanisms/RobotDrive.java`
 - New camera wrapper behavior: `Limelight.java` or `LogitechWebcam.java`
 
 ## Things to avoid

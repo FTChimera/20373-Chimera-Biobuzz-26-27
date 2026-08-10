@@ -1010,19 +1010,12 @@
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);
     }
-    public static MecanumDrive createTeleOpFollower(HardwareMap hardwareMap) {
-        assertHasMechanism(MecanumDrive.class);
-        return currentBot.createMechanism(hardwareMap, MecanumDrive.class);
+    public static RobotDrive createDrive(HardwareMap hardwareMap) {
+        assertHasMechanism(RobotDrive.class);
+        return currentBot.createMechanism(hardwareMap, RobotDrive.class);
     }
-
-    public static Intake createIntake(HardwareMap hardwareMap) {
-        assertHasMechanism(Intake.class);
-        return currentBot.createMechanism(hardwareMap, Intake.class);
-    }
-
-    public static Limelight createLimelight(HardwareMap hardwareMap) {
-        assertHasMechanism(Limelight.class);
-        return currentBot.createMechanism(hardwareMap, Limelight.class);
+    public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
+        return new Mechanisms(hardwareMap, currentBot);
     }
 }</pre>
                     </div>
@@ -1056,32 +1049,31 @@
                     <div class="code-pane" id="tab-teleop">
 <pre>public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
+    Mechanisms mechanisms;
     Intake intake;
-    MecanumDrive drive;
+    RobotDrive drive;
     Limelight limelight;
-
-    public TeleOp(AllianceColor col) {
-      this.allianceColor = col;
-    }
 
     @NonNull
     protected abstract Pose getStartingPose();
+
     @Override
     public void runOpMode() {
-        intake = Constants.createIntake(hardwareMap);
-        drive = Constants.createTeleOpFollower(hardwareMap);
+        GamepadEx driver = new GamepadEx(gamepad1);
+        GpBindings driverResult = driver.result();
+        mechanisms = Constants.createMechanisms(hardwareMap);
+        intake = mechanisms.get(Intake.class);
+        drive = mechanisms.require(RobotDrive.class);
         drive.setStartingPose(getStartingPose());
-        drive.setStickCurve((x -> Math.signum(x)*x*x));
+        drive.setStickCurve(x -> Math.signum(x) * x * x);
         drive.startTeleOpDrive();
-        limelight = Constants.createLimelight(hardwareMap);
+        limelight = mechanisms.get(Limelight.class);
 
         waitForStart();
-        limelight.start(Limelight.Pipeline.APRIL_TAG);
+        if (limelight != null) limelight.start(Limelight.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
-            drive.periodic();
-            limelight.LLUpdate();
-            drive.setTeleOpDrive(new DriveVector(gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x));
-            intake.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+            driver.update();
+            mechanisms.periodic(driverResult);
             telemetry.addData("Pose", drive.getPose());
             telemetry.update();
         }
@@ -1554,31 +1546,31 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);
     }
-    public static MecanumDrive createTeleOpFollower(HardwareMap hardwareMap) {
-        assertHasMechanism(MecanumDrive.class);
-        return currentBot.createMechanism(hardwareMap, MecanumDrive.class);
+    public static RobotDrive createDrive(HardwareMap hardwareMap) {
+        assertHasMechanism(RobotDrive.class);
+        return currentBot.createMechanism(hardwareMap, RobotDrive.class);
     }
-
-    public static Intake createIntake(HardwareMap hardwareMap) {
-        assertHasMechanism(Intake.class);
-        return currentBot.createMechanism(hardwareMap, Intake.class);
+    public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
+        return new Mechanisms(hardwareMap, currentBot);
     }
 }`,
         robotConfig: `public static RobotConstants OldDECODERobotTesting() {
     return new RobotConstants()
             .maxPower(0.9)
-            .frontLeftMotorName("frontLeft")
-            .frontRightMotorName("frontRight")
-            .backLeftMotorName("backLeft")
-            .backRightMotorName("backRight")
-            .frontLeftMotorDirection(Direction.FORWARD)
-            .frontRightMotorDirection(Direction.REVERSE)
-            .backLeftMotorDirection(Direction.FORWARD)
-            .backRightMotorDirection(Direction.REVERSE)
+            .frontLeftMotorName("frontLeftMotor")
+            .frontRightMotorName("frontRightMotor")
+            .backLeftMotorName("backLeftMotor")
+            .backRightMotorName("backRightMotor")
+            .frontLeftMotorDirection(Direction.REVERSE)
+            .frontRightMotorDirection(Direction.FORWARD)
+            .backLeftMotorDirection(Direction.REVERSE)
+            .backRightMotorDirection(Direction.FORWARD)
             .configureDriveMechanisms()
-            .addMechanism(Intake.class)
-            .addMechanism(Limelight.class)
-            .addMechanism(RGBIndicator.class)
+            .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
+                    .hardwareMapName("intake")
+                    .intakeMotorDirection(Direction.REVERSE))
+            .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
+                    .hardwareMapName("limelight"))
             .useFollowerDrive(true);
 }`,
         robotConstantsFollower: `public Follower createFollower(HardwareMap map) {
@@ -1635,20 +1627,24 @@ protected Pose getStartingPose() {
 }`,
         teleOpBase: `public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
+    Mechanisms mechanisms;
     Intake intake;
-    MecanumDrive drive;
+    RobotDrive drive;
     Limelight limelight;
 
     @NonNull
     protected abstract Pose getStartingPose();
     @Override
     public void runOpMode() {
-        intake = Constants.createIntake(hardwareMap);
-        drive = Constants.createTeleOpFollower(hardwareMap);
+        GamepadEx driver = new GamepadEx(gamepad1);
+        GpBindings driverResult = driver.result();
+        mechanisms = Constants.createMechanisms(hardwareMap);
+        intake = mechanisms.get(Intake.class);
+        drive = mechanisms.require(RobotDrive.class);
         drive.setStartingPose(getStartingPose());
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive();
-        limelight = Constants.createLimelight(hardwareMap);
+        limelight = mechanisms.get(Limelight.class);
     }
 }`,
         redTeleOpWrapper: `@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "RED TELEOP", group = "0: TeleOp")
@@ -2260,7 +2256,8 @@ applyCodeHighlighting(document);
                             <div class="dscard"><div class="dscard-t">control/</div><p class="dp">Generic PIDF helpers and coefficient containers used by wrappers and mechanisms.</p></div>
                             <div class="dscard"><div class="dscard-t">filters/</div><p class="dp">The current repo-level filter abstraction is lightweight: <code>NoiseFilter</code> and <code>LowPassFilter</code>.</p></div>
                             <div class="dscard"><div class="dscard-t">hardware/</div><p class="dp">Actuators, gamepad wrappers, FTC devices, and team-specific wrappers like Limelight or RGBIndicator.</p></div>
-                            <div class="dscard"><div class="dscard-t">interpolation/ + math/</div><p class="dp">Heading interpolation, equations, polynomials, and other motion/math primitives.</p></div>
+                            <div class="dscard"><div class="dscard-t">interpolation/ + math/</div><p class="dp">Heading interpolation, equations, polynomials, FTC/Pedro conversions, and adaptive path-geometry helpers.</p></div>
+                            <div class="dscard"><div class="dscard-t">game/ + planners/</div><p class="dp">Lightweight game-element markers plus planner-style autonomous building blocks like <code>PathPlanner</code>, <code>PlanBuilder</code>, and <code>PathPlannerList</code>.</p></div>
                             <div class="dscard"><div class="dscard-t">robot/</div><p class="dp">Robot profile data, mechanism enabling, drivetrain names, directions, and follower factories.</p></div>
                         </div>
                         ${note('dnote', '<strong>Rule of thumb:</strong> if a class starts owning robot behavior, it probably belongs in <code>mechanisms/</code>, not in <code>library/</code>.')}
@@ -2310,7 +2307,7 @@ applyCodeHighlighting(document);
                         lead: 'In this repo, <strong>Constants.java</strong> is the convenience layer used by op modes. The heavy configuration lives below it in <strong>RobotConstants</strong> and <strong>RobotConfigurations</strong>.',
                         body: `
                         ${table(['File', 'Job'], [
-                            ['<code>Constants.java</code>', 'Top-level factory helpers like <code>createFollower()</code>, <code>createIntake()</code>, and default start poses.'],
+                            ['<code>Constants.java</code>', 'Top-level helpers like <code>createFollower()</code>, <code>createDrive()</code>, <code>createMechanisms()</code>, and the default start poses.'],
                             ['<code>RobotConfigurations.java</code>', 'Builds named robot presets by chaining names, directions, follower constants, and enabled mechanisms.'],
                             ['<code>RobotConstants.java</code>', 'Holds active profile data and knows how to build followers/mechanisms from it.']
                         ])}
@@ -2322,7 +2319,7 @@ applyCodeHighlighting(document);
                         nav: 'Factory Layer',
                         eyebrow: '// Constants & Robot Profiles',
                         title: 'The op-mode-facing <span>factory layer</span>',
-                        lead: '<code>Constants.java</code> is intentionally small: it exposes the active robot profile and the factory methods used directly by TeleOp and autonomous code.',
+                        lead: '<code>Constants.java</code> is intentionally small: it exposes the active robot profile, direct helper factories, and the aggregate mechanism factory used by the shared teleops.',
                         body: `
                         ${codeBlock('TeamCode/Constants.java', CODE.constantsFactory)}
                         `
@@ -2407,7 +2404,7 @@ applyCodeHighlighting(document);
                         ${table(['Java pattern in this repo', 'Kotlin equivalent in this repo'], [
                             ['<code>new Pose()</code>', '<code>Pose()</code>'],
                             ['<code>while (opModeIsActive())</code>', '<code>while (opModeIsActive())</code>'],
-                            ['<code>drive = Constants.createTeleOpFollower(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
+                            ['<code>mechanisms = Constants.createMechanisms(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
                             ['Explicit types everywhere', 'Type inference plus <code>lateinit var</code> for FTC objects initialized in <code>runOpMode()</code>.']
                         ])}
                         `

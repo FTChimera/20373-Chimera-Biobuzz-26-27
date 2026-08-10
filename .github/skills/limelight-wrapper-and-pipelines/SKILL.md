@@ -26,15 +26,17 @@ Use this skill for Limelight-specific work that is narrower than the broader loc
 - `Limelight.Pipeline` currently exposes `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR`.
 - `start(...)` chooses a pipeline and starts the FTC `Limelight3A` device.
 - `LLUpdate()` pulls the latest result, tracks disconnect state, and caches fiducials, colors, and detectors.
+- `getDetectorHighestConfidence()` is the current wrapper helper for picking one detector result from the cached neural-detector list.
 - `updateRobotOrientation(double orientationRad)` now expects a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM.convertFromPedro(...)`.
 - `getBotposeMT2()` now returns a Pedro `Pose`, converting Limelight MT2 `Pose3D` data through `MathUtils.units.toPedroPathing(...)`.
 - `periodic(GpBindings GpBindings)` is the mechanism-wide update hook, and `updateCommand(GpBindings GpBindings)` is the Limelight-specific Ivy convenience wrapper around that call.
 
 ## Repo conventions
 
-- Teleop starts the camera in `APRIL_TAG` mode.
+- The shared teleops create a `Mechanisms` aggregate, then read `Limelight` through `mechanisms.get(Limelight.class)` and start it in `APRIL_TAG` mode only when that optional mechanism is present.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
 - `tests/ftcSdk/LimelightFactoryTest` is the current runtime smoke test for wrapper creation plus repeated `LLUpdate()` calls on the AprilTag pipeline.
+- `library/planners/paths/Utils.IntakeWVision` is the current in-repo wrapper consumer that builds a vision-assisted path from detector results and falls back to a fail-safe path if detection/path generation does not succeed in time.
 - Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
 - Shared Limelight behavior should read from the wrapper’s cached fields; the current raw-SDK exceptions are `tests/PreseasonWebcamAuto.java` and the deprecated `pedroPathing/custom/LimelightPinpointLocalizer.java`.
 - Wrapper-based Limelight creation through `Constants.createLimelight(...)`

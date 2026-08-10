@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode.library;
 import java.util.concurrent.TimeUnit;
 
 public class Timer {
-    double startTime; // nanoseconds
-    double dtPrev; // nanoseconds
+    long startTime; // nanoseconds
+    long dtPrev; // nanoseconds
     public TimeUnit unit;
     public Timer() {
         this(TimeUnit.MILLISECONDS);
@@ -30,13 +30,13 @@ public class Timer {
         return get(timeUnit) > time;
     }
     public double dt() {
-        double now = System.nanoTime();
+        long now = System.nanoTime();
         double dt = convertFromNanoseconds(now - dtPrev, unit);
         dtPrev = now;
         return dt;
     }
     public double dt(TimeUnit timeUnit) {
-        double now = System.nanoTime();
+        long now = System.nanoTime();
         double dt = convertFromNanoseconds(now - dtPrev, timeUnit);
         dtPrev = now;
         return dt;

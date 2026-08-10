@@ -38,15 +38,26 @@ than one guide.
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only mechanisms registered by the active profile; the helpers throw when the
   requested mechanism is absent.
+- `Constants.createMechanisms(hardwareMap)` is the aggregate factory for every
+  profile-managed mechanism. The shared teleops currently require
+  `RobotDrive.class` from that aggregate and treat `Intake` / `Limelight` as
+  optional lookups.
 - Profile-managed mechanisms now resolve nested builder-style params through
   `Mechanism.Params`, `Mechanism.resolveParams(...)`, and
   `RobotConstants.getMechanismParams(...)`.
+- `RobotConstants.configureDriveMechanisms()` currently registers the public
+  `RobotDrive` mechanism, while direct follower construction still lives on
+  `RobotConstants.createFollower(...)`.
+- `library/planners/` now contains the planner-style autonomous stack:
+  `PathPlanner`, `PathPlannerList`, `PlanBuilder`, and
+  `library/planners/paths/Utils.java`.
 - SDK-registerable devices are separate from profile-managed mechanisms:
   `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are
   under `library/hardware/hardwareDevice/`.
 - Validation is now split between driver-station test op modes under `tests/`
   / `tests/ftcSdk/` and JVM unit tests under `TeamCode/src/test/java`, with
   `UnitTestAll.java` acting as the single suite entry point.
-- `library/math/MathUtils.kt` now centralizes unit conversion, heading
-  normalization, and FTC/Pedro pose conversion helpers used by math and
-  vision code such as `library/hardware/webcam/Limelight.java`.
+- `Timer` and `OpModeHelper.dt` now use `double` time values, and
+  `library/math/MathUtils.kt` also owns adaptive path-smoothing helpers used by
+  planner code in addition to unit conversion, heading normalization, and
+  FTC/Pedro pose conversion.

@@ -13,8 +13,9 @@ Use this skill for direct FTC SDK integration work.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  FirstRobot registers only `MecanumDrive` and `Drivetrain`; do not call an
-  optional mechanism factory with that profile until its class has been added.
+  FirstRobot currently registers only the public `RobotDrive` mechanism, so do
+  not call an optional mechanism factory with that profile until its class has
+  been added.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
@@ -30,7 +31,7 @@ Use this skill for direct FTC SDK integration work.
 - `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended `Constants.create...(...)` factory style; their `createIntake(...)` and `createLimelight(...)` calls require a profile that registers those classes.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended aggregate factory style: they call `Constants.createMechanisms(hardwareMap)`, require `RobotDrive`, and treat `Intake` / `Limelight` as optional aggregate lookups.
 
 ## HardwareMap rules in this repo
 

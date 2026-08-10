@@ -180,12 +180,13 @@ public class Utils {
                     )
                     .setExecute(() -> {
                         if (shouldUseFailSafePath || limelight == null) return;
-                        if (pathStarted && !drive.mecanumDrive.follower.isBusy()) {
+                        if (pathStarted && !lastPathStarted && !drive.mecanumDrive.follower.isBusy()) {
                             drive.mecanumDrive.follower.followPath(drive.mecanumDrive.follower.pathBuilder()
                                     .addPath(new BezierLine(drive.getPose(), startPose))
                                     .setHeadingInterpolation(HeadingInterpolator.tangent.reverse()).build());
                             // change to linear to match heading from start
                             lastPathStarted = true;
+                            return;
                         }
                         if (pathStarted) return;
                         Pose robotPose = drive.mecanumDrive.follower.getPose();
@@ -239,6 +240,7 @@ public class Utils {
         private void startFailSafePath() {
             generatedPath = failSafePath;
             pathStarted = true;
+            lastPathStarted = true;
             if (failSafePath != null) {
                 drive.mecanumDrive.follower.followPath(failSafePath);
             }

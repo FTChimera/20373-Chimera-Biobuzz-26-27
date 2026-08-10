@@ -36,7 +36,7 @@ Use this skill when needing to change constants that were left blank because of 
   - `RED_DEFAULT_START_POSE`
   - `BLUE_DEFAULT_START_POSE`
   - `currentBot`, which selects the active robot profile (assigned in `Constants.java`)
-  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createTeleOpFollower(...)`, `createIntake(...)`, `createLimelight(...)`, `createDrivetrain(...)`, `createRGB(...)`, `createWebcam(...)`, and generic `createMechanism(...)`
+  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createDrive(...)`, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, `createWebcam(...)`, aggregate `createMechanisms(...)`, and generic `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
@@ -97,10 +97,10 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Op modes and tests that are especially affected by constant changes
 
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createIntake(...)`, `Constants.createTeleOpFollower(...)`, and `Constants.createLimelight(...)`. FirstRobot registers only `MecanumDrive` and `Drivetrain`, so these shared teleops cannot run with that profile until intake and Limelight are registered; `createWebcam(...)` additionally requires `LogitechWebcam` to be registered.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createMechanisms(hardwareMap)`, then require `RobotDrive.class` and treat `Intake` / `Limelight` as optional aggregate lookups. With FirstRobot selected they can still run the drive stack, but intake and Limelight behavior stays absent until those classes are registered.
 - `opModes/IvyAuton.java` uses `Constants.createFollower(...)` and `Constants.createIntake(...)`, but its starting pose comes from the selected `IvyAuton_Paths.getStartingPose()` implementation, not from the default alliance poses in `Constants`.
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
-- `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring; it calls `Constants.createDrivetrain(...)` and `Constants.createIntake(...)`, so it requires a profile that registers both `Drivetrain.class` and `Intake.class`.
+- `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring; it calls `Constants.createDrive(...)` and `Constants.createIntake(...)`, so it requires a profile that registers both `RobotDrive.class` and `Intake.class`.
 - `opModes/variants/Red_TeleOp.java` and `Blue_TeleOp.java` first reuse `Blackboard.Caption.POSE` when it is non-zero, then fall back to the default alliance start poses.
 - `tests/FieldCentricMecanumTeleOp.java` gets its IMU through `Constants.createIMU(hardwareMap)`, but its right-side motor directions are still hardcoded to `DcMotorSimple.Direction.REVERSE` rather than read from `Constants.currentBot`.
 - `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper for behavior, but now still sources the camera name from `Limelight.LIMELIGHT_PARAMS`; camera-name or vision-tuning updates may still need to touch it explicitly.
@@ -110,11 +110,11 @@ Use this skill when needing to change constants that were left blank because of 
 
 ## Repo-specific warning signs
 
-- The active profile is set via `Constants.currentBot`. FirstRobot registers only `MecanumDrive` and `Drivetrain`; when that profile is selected, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` all fail early until their classes are explicitly registered with `.addMechanism(...)`.
+- The active profile is set via `Constants.currentBot`. `configureDriveMechanisms()` currently registers `RobotDrive.class`; when FirstRobot is selected, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` still fail early until their classes are explicitly registered with `.addMechanism(...)`.
 - `RobotConstants.createMechanism(...)` throws if the mechanism class is not registered in `Mechanisms`. If a constant change introduces or enables a subsystem, also check `.addMechanism(...)`.
 - IMU settings are robot-profile-wide: update `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` through the existing fluent builders, then use `Constants.createIMU(hardwareMap)` from op modes. The factory initializes orientation but intentionally does not reset yaw.
 - `Constants.assertHasMechanism(...)` now also fails early on the convenience-factory path, so mechanism registration issues may surface before reflection-based construction.
-- `MecanumDrive` and `Drivetrain` are normally enabled together through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
+- `RobotDrive` is the normal drive mechanism enabled through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
 - A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. With FirstRobot selected, every non-drive factory helper fails early because its class is absent from `bot.Mechanisms`.
 - `Limelight`, `LogitechWebcam`, and `RGBIndicator` do still toggle themselves off when constructed with a profile that omits their class, but the normal convenience-factory path now usually hits `assertHasMechanism(...)` first.
 - `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.

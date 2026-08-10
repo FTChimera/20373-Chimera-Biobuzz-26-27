@@ -26,15 +26,16 @@ This repository currently mixes Pinpoint-based Pedro localization with two separ
 1. The build includes FTC Vision `11.1.0` plus Pedro Pathing / Ivy dependencies.
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(GpBindings GpBindings)` hook.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
-   Limelight through `Constants.createLimelight(...)`, start it in `APRIL_TAG`
-   mode, and refresh it every loop. They require the selected profile to
-   register `Limelight.class` before the factory call is valid.
+   `Mechanisms` aggregate, read `Limelight` through `mechanisms.get(...)`,
+   start it in `APRIL_TAG` mode when present, and refresh it every loop through
+   aggregate mechanism updates.
 4. Vision wrapper availability is profile-driven. Verify the selected profile registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
 5. `tests/PreseasonWebcamAuto.java` bypasses the wrapper, reads raw `Limelight3A` color results, switches pipeline `1`, and gets the hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
 6. `Limelight.updateRobotOrientation(...)` now takes a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM`, while `getBotposeMT2()` converts Limelight MT2 `Pose3D` results back into Pedro `Pose` through `MathUtils.units.toPedroPathing(...)`.
 7. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but vision-wrapper use still depends on profile registration.
 8. `tests/ftcSdk/LimelightFactoryTest.java` is the current driver-station smoke test for Limelight wrapper creation and AprilTag polling.
-9. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
+9. `library/planners/paths/Utils.IntakeWVision` is the current vision-assisted pathing example: it reads detector results from the wrapper, preserves a fail-safe path, and can choose between Pedro curve-through and adaptive-handle Bezier generation.
+10. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
 
 ## Wrapper configuration pattern that exists in code
 

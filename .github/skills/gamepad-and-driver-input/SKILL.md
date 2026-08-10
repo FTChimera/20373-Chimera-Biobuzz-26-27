@@ -13,6 +13,7 @@ This skill covers the TeamCode gamepad wrapper utilities in `library/hardware/ga
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/DualGamepad.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GamepadEx.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GpCommand.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GpBindings.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Button.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Buttons.java`
@@ -33,12 +34,14 @@ This skill covers the TeamCode gamepad wrapper utilities in `library/hardware/ga
 - `TeleOp`, `LLTester`, `PreseasonWebcamAuto`, `MotorDirectionTest`, `PedroPathingTeleOpTest`, `FieldCentricMecanumTeleOp`, and the FTC SDK test wrappers now all use the wrapper surface.
 - `IvyTeleOp` is the main `DualGamepad.updateCommand()` example.
 - `GpBindings` is the wrapper-side aggregate of one gamepad’s current selected button readers, sticks, triggers, and touchpad state.
+- `GpCommand` is the typed identity base for `Button`, `Stick`, `Trigger`, and `Touchpad`; `GpBindings.getCommand(...)` is the repo’s generic way to resolve one of those command descriptors back to its live wrapper object.
 - `MecanumTeleOp` still applies its own deadzone and response curve inline, but it now reads buttons, triggers, and raw stick values through a wrapper configured with neutral stick shaping.
 - `MecanumTeleOp` now also stays aligned with the active drivetrain profile by sourcing motor names and default directions from `Constants.currentBot`.
 - `GamepadEx` exists as a richer wrapper with buttons, sticks, triggers, touchpad, LED, and rumble support.
-- `GamepadEx.result()` and `GamepadEx.result(Button...)` create a `GpBindings` view that higher-level helpers can pass around without reaching back into raw FTC gamepad state.
+- `GamepadEx.result()` and `GamepadEx.result(...)` create a `GpBindings` view that higher-level helpers can pass around without reaching back into raw FTC gamepad state; when no explicit command list is supplied, the binding view exposes every tracked button reader.
 - `DualGamepad` wraps two `GamepadEx` objects and is the repo’s dual-controller utility surface when one abstraction needs to manage both `gamepad1` and `gamepad2` together.
 - `Button.OPTIONS` now exists because TeamCode uses the wrapper to cover the FTC `options` button path as well as the face buttons, dpad, and back/start controls.
+- `RobotDrive` is the current example of param-owned control mapping: it stores `TRANSLATION_STICK`, `ROTATION_STICK`, and `ZERO_HEADING_BUTTON` in `ROBOT_DRIVE_PARAMS` and resolves them each loop through `GpBindings.getCommand(...)`.
 - `OpModeHelper.kt` is available for loop timing and manual bulk-caching work, but it is separate from the input wrappers and should not become a second button/joystick abstraction.
 
 ## `DualGamepad` conventions
@@ -89,6 +92,7 @@ Do not collapse finger-specific or touchpad-specific queries into a single ambig
 - Prefer the wrapper surface over raw FTC gamepad reads in TeamCode op modes and tests.
 - If you need reusable input behavior like toggles, edge detection, touchpad tracking, or controller LED support, extend the wrapper utilities instead of recreating them ad hoc.
 - Use `GpBindings` when a subsystem or periodic path should depend on selected button readers plus analog inputs from the same wrapper object.
+- If a mechanism stores its own control descriptors in params, resolve them through `GpBindings.getCommand(...)` instead of hard-casting raw wrapper fields.
 - Call wrapper `update()` methods once per loop before reading values.
 - Keep stick-curve logic consistent with drive expectations; the repo often applies shaping in `MecanumDrive` / `DriveVector`, not directly in every button handler.
 - When a new button action needs a new mechanism, add that mechanism through the normal `Mechanism` / `RobotConstants.createMechanism(...)` flow before wiring buttons to it.

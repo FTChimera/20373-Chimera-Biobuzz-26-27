@@ -24,7 +24,7 @@ Use this skill for robot-profile work centered around:
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
-8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createRGB(...)`, `createWebcam(...)`, `createDrivetrain(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
+8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createDrive(...)`, `createRGB(...)`, `createWebcam(...)`, aggregate `createMechanisms(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
 9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.
 
 ## What belongs where
@@ -68,7 +68,7 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - Configure each profile's IMU name and REV Hub logo/USB directions with `imuHardwareMapName(...)`, `imuLogoFacingDirection(...)`, and `imuUsbFacingDirection(...)`.
 - Create IMUs through `Constants.createIMU(hardwareMap)`; it initializes orientation but deliberately does not reset yaw.
 - Keep Pinpoint-related updates bundled through `pinpointConstants(...)`.
-- Keep drive motor directions on the shared `Direction` enum so `Drivetrain` and `RobotConstants.createFollower(...)` stay aligned.
+- Keep drive motor directions on the shared `Direction` enum so `RobotDrive`, `MecanumDrive`, and `RobotConstants.createFollower(...)` stay aligned.
 - Use `configureDriveMechanisms()` when you want the normal drive mechanism (`RobotDrive`) enabled by default.
 - When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)`, store profile-specific params with `.mechanismParams(...)` when needed, and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.

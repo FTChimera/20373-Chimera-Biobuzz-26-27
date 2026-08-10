@@ -11,6 +11,8 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/GameElement.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/Pollen.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Timer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/PIDFController.java`
@@ -44,19 +46,21 @@ Use this skill when changes belong in the lightweight `library/` package rather 
 
 - `AllianceColor` carries alliance-level intent for shared op mode bases.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
-- `DriveVector.applyStickCurve(...)` mutates the instance and negates forward for stick-convention alignment; use `copy()` or `wStickCurve(...)` when a caller needs shaped input without mutating the original vector.
+- `DriveVector.applyStickCurve(...)` mutates the instance without changing axis signs; the drive stack's forward inversion happens later in `MecanumDrive`.
+- `GameElement` and `Pollen` are lightweight preseason game-piece marker types under `library/game/`.
 - `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
 - `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
-- `MathUtils.kt` is the shared home for unit conversion, heading normalization, and FTC/Pedro pose-conversion helpers.
+- `MathUtils.kt` is the shared home for unit conversion, heading normalization, FTC/Pedro pose-conversion helpers, and planner geometry helpers such as `adaptiveHandleLengths(...)`, `maxTurnAngle(...)`, and `maxSpacingRatio(...)`.
 - `Equation` is the shared math interface for reusable symbolic/value-returning curve expressions.
 - `Polynomial` now lives under `library/math/`, implements `Equation`, and still stores coefficients highest-degree first.
 - `SumEquation` is the internal normalized representation returned by `Equation.of(...)`; it combines like terms and drops zero terms instead of leaving callers with ad hoc lists.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
-- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it enforces a simple state machine and promotes `STARTED -> LOOP` on the first `update()` call. Its unmodified Kotlin visibility is `public`, so it is available to other packages in the TeamCode module.
+- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it enforces a simple state machine, keeps `dt` as a `Double` in milliseconds, and promotes `STARTED -> LOOP` on the first `update()` call. Its unmodified Kotlin visibility is `public`, so it is available to other packages in the TeamCode module.
 - `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
 - `Term` is now a real immutable `Equation` implementation for constants, powers, and several elementary functions (`sin`, `cos`, `tan`, `exp`, and related integral-only helper forms), with derivative/product-rule behavior and explicit `UnsupportedOperationException` for unsupported antiderivatives.
+- `Timer` is a unit-aware helper whose `get(...)`, `dt(...)`, and `past(...)` APIs now return or accept `double` values in the requested `TimeUnit`.
 - `Timer` and hardware wrappers support op modes and mechanisms without owning robot behavior.
 - `library/robot/RobotConstants` is a configuration object rather than an active subsystem.
 
