@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit
  * This class is meant to be initialized in init, start, and updated every loop
  * to provide fresh data.
  * <br>
- * This class provides: Dt (as a long in millis), Bulk reads to optimize loop time
+ * This class provides: Dt (as a double in millis), Bulk reads to optimize loop time
  */
 class OpModeHelper {
     enum class State {
@@ -41,7 +41,7 @@ class OpModeHelper {
 
     lateinit var hardwareMap: HardwareMap
     lateinit var dtTimer: Timer
-    var dt: Long = 0L
+    var dt: Double = 0.0
     lateinit var allHubs: List<LynxModule>
 
     fun init(hardwareMap: HardwareMap) {

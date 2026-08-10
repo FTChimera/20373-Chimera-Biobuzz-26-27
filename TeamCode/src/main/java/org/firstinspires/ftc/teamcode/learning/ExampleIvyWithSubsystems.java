@@ -131,7 +131,7 @@ public class ExampleIvyWithSubsystems extends OpMode {
     public Command sequential(Command... commands) {
         return Groups.sequential(commands);
     }
-    public Command waitMs(long ms) {
-        return Commands.waitMs(ms);
+    public Command waitMs(double ms) {
+        return Commands.waitMs(Math.round(ms));
     }
 }

@@ -11,7 +11,7 @@ public class TimerTest {
     @Test
     public void reportsElapsedTimeDtAndResetsInConfiguredUnits() {
         Timer timer = new Timer(TimeUnit.MILLISECONDS);
-        long now = System.nanoTime();
+        double now = System.nanoTime();
         timer.startTime = now - TimeUnit.MILLISECONDS.toNanos(25);
         timer.dtPrev = now - TimeUnit.MILLISECONDS.toNanos(15);
 

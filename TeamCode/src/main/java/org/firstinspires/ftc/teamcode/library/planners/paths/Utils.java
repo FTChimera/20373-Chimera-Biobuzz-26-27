@@ -109,6 +109,7 @@ public class Utils {
         PathChain failSafePath;
         int numBalls;
         Pose startPose;
+        Pose resolvedEndPose;
         PathChain generatedPath;
         boolean pathStarted;
         Timer retryTimer;
@@ -143,7 +144,9 @@ public class Utils {
 
         @Override
         public Pose getEndPose() {
-            return generatedPath == null ? startPose : generatedPath.endPose();
+            if (generatedPath != null) return generatedPath.endPose();
+            if (resolvedEndPose != null) return resolvedEndPose;
+            return startPose;
         }
         @Override
         public void buildPaths() {
@@ -196,7 +199,7 @@ public class Utils {
                             }
                         }
 
-                        if (retryTimer.get() <= DETECTOR_RETRY_SECONDS) {
+                        if (retryTimer.get() >= DETECTOR_RETRY_SECONDS) {
                             startFailSafePath();
                         }
                     })
@@ -219,10 +222,15 @@ public class Utils {
         @Override
         public void setStartPose(Pose pose) {
             this.startPose = pose;
+            if (failSafePath != null) {
+                resolvedEndPose = failSafePath.endPose();
+            } else if (resolvedEndPose == null) {
+                resolvedEndPose = pose;
+            }
         }
 
         private void startFailSafePath() {
-            generatedPath = null;
+            generatedPath = failSafePath;
             pathStarted = true;
             if (failSafePath != null) {
                 drive.mecanumDrive.follower.followPath(failSafePath);
@@ -418,6 +426,9 @@ public class Utils {
             for (DetectionCandidate candidate : selected) {
                 waypoints.add(candidate.fieldPose);
             }
+            if (resolvedEndPose != null) {
+                waypoints.add(resolvedEndPose);
+            }
 
             if (waypoints.size() < 2) return null;
             if (waypoints.size() == 2) return buildAdaptiveHandlePathChain(waypoints);
@@ -447,6 +458,7 @@ public class Utils {
                 pathChain.getPath(i).setTangentHeadingInterpolation();
             }
 
+            resolvedEndPose = pathChain.endPose();
             return pathChain;
         }
 
@@ -469,7 +481,9 @@ public class Utils {
             }
 
             if (segments.isEmpty()) return null;
-            return new PathChain(segments.toArray(new Path[0]));
+            PathChain pathChain = new PathChain(segments.toArray(new Path[0]));
+            resolvedEndPose = pathChain.endPose();
+            return pathChain;
         }
 
     }
@@ -486,9 +500,9 @@ public class Utils {
 
     public static class Wait implements PathPlanner {
         Pose startPose;
-        long timeMs;
+    double timeMs;
 
-        public Wait(PathPlanner prevPlanner, long timeMs) {
+    public Wait(PathPlanner prevPlanner, double timeMs) {
             fromPrev(prevPlanner);
             this.timeMs = timeMs;
         }
@@ -500,7 +514,7 @@ public class Utils {
 
         @Override
         public Command run() {
-            return Commands.waitMs(timeMs);
+            return Commands.waitMs(Math.round(timeMs));
         }
 
         @Override

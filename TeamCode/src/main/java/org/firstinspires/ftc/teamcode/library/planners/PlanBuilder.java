@@ -31,7 +31,7 @@ public class PlanBuilder {
         add(new Utils.LinearPath(mechanisms, planner().last(), endPose));
         return this;
     }
-    public PlanBuilder waitMs(long ms) {
+    public PlanBuilder waitMs(double ms) {
         add(new Utils.Wait(planner().last(), ms));
         return this;
     }
