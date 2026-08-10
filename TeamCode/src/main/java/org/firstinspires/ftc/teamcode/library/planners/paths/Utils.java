@@ -6,6 +6,7 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.ivy.pedro.PedroCommands;
+import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -111,7 +112,7 @@ public class Utils {
         Pose startPose;
         Pose resolvedEndPose;
         PathChain generatedPath;
-        boolean pathStarted;
+        boolean pathStarted, lastPathStarted;
         Timer retryTimer;
 
         private static class DetectionCandidate {
@@ -144,8 +145,6 @@ public class Utils {
 
         @Override
         public Pose getEndPose() {
-            if (generatedPath != null) return generatedPath.endPose();
-            if (resolvedEndPose != null) return resolvedEndPose;
             return startPose;
         }
         @Override
@@ -167,6 +166,7 @@ public class Utils {
                                 retryTimer = new Timer(TimeUnit.SECONDS);
                                 retryTimer.reset();
                                 pathStarted = false;
+                                lastPathStarted = false;
 
                                 if (shouldUseFailSafePath) {
                                     startFailSafePath();
@@ -179,8 +179,15 @@ public class Utils {
                             }
                     )
                     .setExecute(() -> {
-                        if (pathStarted || shouldUseFailSafePath || limelight == null) return;
-
+                        if (shouldUseFailSafePath || limelight == null) return;
+                        if (pathStarted && !drive.mecanumDrive.follower.isBusy()) {
+                            drive.mecanumDrive.follower.followPath(drive.mecanumDrive.follower.pathBuilder()
+                                    .addPath(new BezierLine(drive.getPose(), startPose))
+                                    .setHeadingInterpolation(HeadingInterpolator.tangent.reverse()).build());
+                            // change to linear to match heading from start
+                            lastPathStarted = true;
+                        }
+                        if (pathStarted) return;
                         Pose robotPose = drive.mecanumDrive.follower.getPose();
                         limelight.updateRobotOrientation(robotPose.getHeading());
                         limelight.LLUpdate();
@@ -203,7 +210,7 @@ public class Utils {
                             startFailSafePath();
                         }
                     })
-                    .setDone(() -> pathStarted && !drive.mecanumDrive.follower.isBusy());
+                    .setDone(() -> lastPathStarted && !drive.mecanumDrive.follower.isBusy());
         }
 
         /** Returns score from 0 to 1 of the result
