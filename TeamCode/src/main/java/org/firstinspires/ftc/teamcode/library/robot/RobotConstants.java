@@ -35,6 +35,8 @@ public class RobotConstants {
     public Direction FRONT_RIGHT_MOTOR_DIRECTION = Direction.REVERSE;
     public Direction BACK_LEFT_MOTOR_DIRECTION = Direction.FORWARD;
     public Direction BACK_RIGHT_MOTOR_DIRECTION = Direction.REVERSE;
+    public double BOT_WIDTH = 18.0;
+    public double BOT_LENGTH = 18.0;
     public double MAX_POWER = 0.9;
     public double X_VELOCITY = 0;
     public double Y_VELOCITY = 0;
@@ -94,6 +96,14 @@ public class RobotConstants {
     }
     public RobotConstants backRightMotorDirection(Direction direction) {
         this.BACK_RIGHT_MOTOR_DIRECTION = direction;
+        return this;
+    }
+    public RobotConstants botWidth(double botWidth) {
+        this.BOT_WIDTH = botWidth;
+        return this;
+    }
+    public RobotConstants botLength(double botLength) {
+        this.BOT_LENGTH = botLength;
         return this;
     }
     public RobotConstants imuHardwareMapName(String name) {

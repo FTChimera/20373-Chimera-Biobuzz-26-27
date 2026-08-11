@@ -54,12 +54,16 @@ public class RobotConfigurationTest {
         RobotConstants first = RobotConfigurations.FirstRobot();
         assertEquals("frontLeft", first.FRONT_LEFT_MOTOR_NAME);
         assertEquals(0.4, first.MAX_POWER, MathUtils.EPSILON);
+        assertEquals(18.0, first.BOT_WIDTH, MathUtils.EPSILON);
+        assertEquals(18.0, first.BOT_LENGTH, MathUtils.EPSILON);
         assertTrue(first.Mechanisms.contains(RobotDrive.class));
         assertFalse(first.Mechanisms.contains(Intake.class));
         assertFalse(first.USE_FOLLOWER_DRIVE);
 
         RobotConstants oldDecoder = RobotConfigurations.OldDECODERobotTesting();
         assertEquals("frontLeftMotor", oldDecoder.FRONT_LEFT_MOTOR_NAME);
+        assertEquals(18.0, oldDecoder.BOT_WIDTH, MathUtils.EPSILON);
+        assertEquals(18.0, oldDecoder.BOT_LENGTH, MathUtils.EPSILON);
         assertTrue(oldDecoder.Mechanisms.contains(RobotDrive.class));
         assertTrue(oldDecoder.Mechanisms.contains(Intake.class));
         assertTrue(oldDecoder.Mechanisms.contains(Limelight.class));

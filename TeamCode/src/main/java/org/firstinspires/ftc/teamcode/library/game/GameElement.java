@@ -1,4 +1,5 @@
 package org.firstinspires.ftc.teamcode.library.game;
 
-public class GameElement {
+public abstract class GameElement {
+
 }

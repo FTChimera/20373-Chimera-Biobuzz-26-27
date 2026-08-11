@@ -5,6 +5,7 @@ import org.firstinspires.ftc.teamcode.library.DriveVectorTest;
 import org.firstinspires.ftc.teamcode.library.TimerTest;
 import org.firstinspires.ftc.teamcode.library.control.PIDFControlTest;
 import org.firstinspires.ftc.teamcode.library.filters.LowPassFilterTest;
+import org.firstinspires.ftc.teamcode.library.game.FieldTest;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadInputTest;
 import org.firstinspires.ftc.teamcode.library.interpolation.InterpolationTest;
 import org.firstinspires.ftc.teamcode.library.math.EquationMathTest;
@@ -27,6 +28,7 @@ import org.junit.runners.Suite;
         TimerTest.class,
         PIDFControlTest.class,
         LowPassFilterTest.class,
+        FieldTest.class,
         GamepadInputTest.class,
         InterpolationTest.class,
         EquationMathTest.class,

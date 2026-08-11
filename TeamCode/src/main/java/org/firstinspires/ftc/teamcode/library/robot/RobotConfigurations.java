@@ -11,7 +11,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 
 /**
@@ -33,6 +32,8 @@ public class RobotConfigurations {
                 .frontRightMotorDirection(Direction.FORWARD)
                 .backLeftMotorDirection(Direction.REVERSE)
                 .backRightMotorDirection(Direction.FORWARD)
+                .botWidth(18.0)
+                .botLength(17.008)
                 .xVelocity(82.28564164769932)
                 .yVelocity(65.39811886764886)
                 // IMU CONSTANTS
@@ -88,6 +89,8 @@ public class RobotConfigurations {
                 .frontRightMotorDirection(Direction.FORWARD)
                 .backLeftMotorDirection(Direction.REVERSE)
                 .backRightMotorDirection(Direction.FORWARD)
+                .botWidth(18.0)
+                .botLength(18.0)
                 .xVelocity(0)
                 .yVelocity(0)
                 // IMU CONSTANTS

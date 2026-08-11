@@ -54,4 +54,5 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     androidTestImplementation 'junit:junit:4.13.2'
     implementation("dev.frozenmilk.sinister:Sloth:0.2.4")
+    implementation 'org.locationtech.jts:jts-core:1.20.0'
 }
