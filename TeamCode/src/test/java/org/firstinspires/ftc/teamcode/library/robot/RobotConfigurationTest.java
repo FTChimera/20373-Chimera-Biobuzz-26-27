@@ -50,31 +50,47 @@ public class RobotConfigurationTest {
     }
 
     @Test
-    public void robotProfilesExposeExpectedDriveAndOptionalMechanismConfiguration() {
-        RobotConstants first = RobotConfigurations.FirstRobot();
-        assertEquals("frontLeft", first.FRONT_LEFT_MOTOR_NAME);
-        assertEquals(0.4, first.MAX_POWER, MathUtils.EPSILON);
-        assertEquals(18.0, first.BOT_WIDTH, MathUtils.EPSILON);
-        assertEquals(18.0, first.BOT_LENGTH, MathUtils.EPSILON);
-        assertTrue(first.Mechanisms.contains(RobotDrive.class));
-        assertFalse(first.Mechanisms.contains(Intake.class));
-        assertFalse(first.USE_FOLLOWER_DRIVE);
+    public void robotConstantsExposeStableDefaultsAndLocallyConfiguredMechanisms() {
+        RobotConstants defaults = new RobotConstants();
+        assertEquals("frontLeft", defaults.FRONT_LEFT_MOTOR_NAME);
+        assertEquals("frontRight", defaults.FRONT_RIGHT_MOTOR_NAME);
+        assertEquals("backLeft", defaults.BACK_LEFT_MOTOR_NAME);
+        assertEquals("backRight", defaults.BACK_RIGHT_MOTOR_NAME);
+        assertEquals(0.9, defaults.MAX_POWER, MathUtils.EPSILON);
+        assertEquals(18.0, defaults.BOT_WIDTH, MathUtils.EPSILON);
+        assertEquals(18.0, defaults.BOT_LENGTH, MathUtils.EPSILON);
+        assertFalse(defaults.Mechanisms.contains(RobotDrive.class));
+        assertFalse(defaults.Mechanisms.contains(Intake.class));
+        assertTrue(defaults.USE_FOLLOWER_DRIVE);
 
-        RobotConstants oldDecoder = RobotConfigurations.OldDECODERobotTesting();
-        assertEquals("frontLeftMotor", oldDecoder.FRONT_LEFT_MOTOR_NAME);
-        assertEquals(18.0, oldDecoder.BOT_WIDTH, MathUtils.EPSILON);
-        assertEquals(18.0, oldDecoder.BOT_LENGTH, MathUtils.EPSILON);
-        assertTrue(oldDecoder.Mechanisms.contains(RobotDrive.class));
-        assertTrue(oldDecoder.Mechanisms.contains(Intake.class));
-        assertTrue(oldDecoder.Mechanisms.contains(Limelight.class));
-        assertTrue(oldDecoder.Mechanisms.contains(RGBIndicator.class));
-        assertTrue(oldDecoder.USE_FOLLOWER_DRIVE);
+        RobotConstants configured = new RobotConstants()
+                .frontLeftMotorName("frontLeftMotor")
+                .maxPower(0.4)
+                .botWidth(18.0)
+                .botLength(17.008)
+                .configureDriveMechanisms()
+                .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
+                        .hardwareMapName("intake")
+                        .intakeMotorDirection(Direction.REVERSE))
+                .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS())
+                .addMechanism(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS())
+                .useFollowerDrive(false);
 
-        Intake.INTAKE_PARAMS intakeParams = oldDecoder.getMechanismParams(Intake.class, new Intake.INTAKE_PARAMS());
+        assertEquals("frontLeftMotor", configured.FRONT_LEFT_MOTOR_NAME);
+        assertEquals(0.4, configured.MAX_POWER, MathUtils.EPSILON);
+        assertEquals(18.0, configured.BOT_WIDTH, MathUtils.EPSILON);
+        assertEquals(17.008, configured.BOT_LENGTH, MathUtils.EPSILON);
+        assertTrue(configured.Mechanisms.contains(RobotDrive.class));
+        assertTrue(configured.Mechanisms.contains(Intake.class));
+        assertTrue(configured.Mechanisms.contains(Limelight.class));
+        assertTrue(configured.Mechanisms.contains(RGBIndicator.class));
+        assertFalse(configured.USE_FOLLOWER_DRIVE);
+
+        Intake.INTAKE_PARAMS intakeParams = configured.getMechanismParams(Intake.class, new Intake.INTAKE_PARAMS());
         assertEquals("intake", intakeParams.HARDWAREMAP_NAME);
         assertEquals(Direction.REVERSE, intakeParams.INTAKE_MOTOR_DIRECTION);
 
-        RobotDrive.ROBOT_DRIVE_PARAMS robotDriveParams = oldDecoder.getMechanismParams(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
+        RobotDrive.ROBOT_DRIVE_PARAMS robotDriveParams = configured.getMechanismParams(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
         assertEquals(Button.BACK, robotDriveParams.ZERO_HEADING_BUTTON);
     }
 

@@ -12,8 +12,8 @@ public class TimerTest {
     public void reportsElapsedTimeDtAndResetsInConfiguredUnits() {
         Timer timer = new Timer(TimeUnit.MILLISECONDS);
         double now = System.nanoTime();
-        timer.startTime = now - TimeUnit.MILLISECONDS.toNanos(25);
-        timer.dtPrev = now - TimeUnit.MILLISECONDS.toNanos(15);
+        timer.startTime = (long) (now - TimeUnit.MILLISECONDS.toNanos(25));
+        timer.dtPrev = (long) (now - TimeUnit.MILLISECONDS.toNanos(15));
 
         assertTrue(timer.get() >= 20);
         assertTrue(timer.get(TimeUnit.MILLISECONDS) >= 20);

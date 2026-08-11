@@ -226,7 +226,7 @@ public class Field {
             return Field.getContactState(shape, position, velocity, deltaTime, robotWidth, robotLength);
         }
 
-        private ContactState getContactState(Pose position, Pose velocity, double deltaTime, double robotWidth, double robotLength) {
+        ContactState getContactState(Pose position, Pose velocity, double deltaTime, double robotWidth, double robotLength) {
             return getContactState(position, new Vector(velocity), deltaTime, robotWidth, robotLength);
         }
 
@@ -257,7 +257,7 @@ public class Field {
             return getContactState(position, new Vector(velocity), deltaTime, getRobotWidth(), getRobotLength());
         }
 
-        private ContactState getContactState(Pose position, Vector velocity, double deltaTime, double robotWidth, double robotLength) {
+        ContactState getContactState(Pose position, Vector velocity, double deltaTime, double robotWidth, double robotLength) {
             return Field.getContactState(polygon, position, velocity, deltaTime, robotWidth, robotLength);
         }
 

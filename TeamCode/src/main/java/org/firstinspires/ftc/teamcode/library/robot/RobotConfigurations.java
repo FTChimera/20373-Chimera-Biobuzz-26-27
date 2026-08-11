@@ -21,6 +21,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 public class RobotConfigurations {
 
     public static RobotConstants OldDECODERobotTesting() {
+        // TODO DELETE THIS ONCE 1ST ROBOT BUILT
         return new RobotConstants()
                 // DRIVE CONSTANTS
                 .maxPower(0.9)
@@ -32,8 +33,8 @@ public class RobotConfigurations {
                 .frontRightMotorDirection(Direction.FORWARD)
                 .backLeftMotorDirection(Direction.REVERSE)
                 .backRightMotorDirection(Direction.FORWARD)
-                .botWidth(18.0)
-                .botLength(17.008)
+                .botWidth(18.0) // close enough doesnt matter
+                .botLength(18.0) //close enough doesnt matter
                 .xVelocity(82.28564164769932)
                 .yVelocity(65.39811886764886)
                 // IMU CONSTANTS
@@ -90,7 +91,7 @@ public class RobotConfigurations {
                 .backLeftMotorDirection(Direction.REVERSE)
                 .backRightMotorDirection(Direction.FORWARD)
                 .botWidth(18.0)
-                .botLength(18.0)
+                .botLength(18)
                 .xVelocity(0)
                 .yVelocity(0)
                 // IMU CONSTANTS
