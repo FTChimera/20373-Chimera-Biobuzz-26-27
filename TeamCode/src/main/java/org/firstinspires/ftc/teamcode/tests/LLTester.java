@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 
-@TeleOp(name = "LL Tester", group = "1: Tests")
+@Utility(name = "LL Tester")
 public class LLTester extends LinearOpMode {
     enum Mode {
         NEURAL_DETECTOR(Limelight.Pipeline.NEURAL_DETECTOR),

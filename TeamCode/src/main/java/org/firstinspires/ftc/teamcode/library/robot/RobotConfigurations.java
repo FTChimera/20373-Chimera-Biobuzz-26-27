@@ -115,6 +115,11 @@ public class RobotConfigurations {
                 .centripetalScaling(0)
                 // MECHANISM USAGE
                 .configureDriveMechanisms()
+                .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
+                        .hardwareMapName("intake")
+                        .intakeMotorDirection(Direction.REVERSE))
+                .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
+                        .hardwareMapName("limelight"))
                 // COMPATIBILITY
                 .useFollowerDrive(false);
     }

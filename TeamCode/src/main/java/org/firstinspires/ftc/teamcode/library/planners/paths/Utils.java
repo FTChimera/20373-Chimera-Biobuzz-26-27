@@ -541,9 +541,9 @@ public class Utils {
 
     public static class Wait implements PathPlanner {
         Pose startPose;
-    double timeMs;
+        double timeMs;
 
-    public Wait(PathPlanner prevPlanner, double timeMs) {
+        public Wait(PathPlanner prevPlanner, double timeMs) {
             fromPrev(prevPlanner);
             this.timeMs = timeMs;
         }

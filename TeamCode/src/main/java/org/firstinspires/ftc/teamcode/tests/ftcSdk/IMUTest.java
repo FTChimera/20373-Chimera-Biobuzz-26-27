@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.tests.ftcSdk;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -9,7 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
-@TeleOp(name = "FTC SDK IMU Test", group = "1: Tests")
+@Utility(name = "FTC SDK IMU Test")
 public class IMUTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {

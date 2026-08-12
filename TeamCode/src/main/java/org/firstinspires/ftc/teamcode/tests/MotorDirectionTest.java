@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 
 import java.util.Arrays;
 
-@TeleOp(name = "Motor Direction Test", group = "1: Tests")
+@Utility(name = "Motor Direction Test")
 public class MotorDirectionTest extends LinearOpMode {
     /**
      * Use the panels configurable on constants to set directions.

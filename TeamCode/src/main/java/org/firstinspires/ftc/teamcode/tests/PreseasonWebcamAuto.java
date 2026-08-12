@@ -7,7 +7,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.Constants;
@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
  * Results: Because of factors such as the lighting, the limelight was not able to detect the artifact reliably, and
  * the PIDF values haven't been tuned much. However, the robot was able to somewhat move towards whatever was detected.
  */
-@TeleOp(name = "Preseason Artifact Sensor Auto", group = "Test")
+@Utility(name = "Preseason Artifact Sensor Auto")
 public class PreseasonWebcamAuto extends LinearOpMode {
     // CONSTANTS
 

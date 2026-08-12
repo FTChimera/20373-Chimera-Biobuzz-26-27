@@ -9,7 +9,7 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Configurable
-@TeleOp(name = "Pedro Pathing TeleOp Test", group = "1: Tests")
+@Utility(name = "Pedro Pathing TeleOp Test")
 public class PedroPathingTeleOpTest extends OpMode {
     private Follower follower;
     public static Pose startingPose; //See ExampleAuto to understand how to use this

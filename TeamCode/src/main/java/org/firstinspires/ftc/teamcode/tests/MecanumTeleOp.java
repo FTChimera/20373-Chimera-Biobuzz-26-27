@@ -33,7 +33,7 @@
 package org.firstinspires.ftc.teamcode.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -48,7 +48,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
  * Mecanum drivetrain. This teleop has field centric and robot centric control
  */
 
-@TeleOp(name = "Mecanum Drivetrain Teleop", group = "1: Tests")
+@Utility(name = "Mecanum Drivetrain Teleop")
 public class MecanumTeleOp extends OpMode {
 
     /*

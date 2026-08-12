@@ -35,6 +35,10 @@ public class PlanBuilder {
         add(new Utils.Wait(planner().last(), ms));
         return this;
     }
+    public PlanBuilder intakeWVision(int numBalls, PathChain failSafePath) {
+        add(new Utils.IntakeWVision(mechanisms, planner().last(), numBalls, failSafePath));
+        return this;
+    }
 
     public PathPlannerList planner() {
         return list;
