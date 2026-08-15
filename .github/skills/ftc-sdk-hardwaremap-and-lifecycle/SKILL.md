@@ -24,13 +24,14 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 
 ## Repo context
 
-- The project depends on FTC SDK `11.1.0`.
+- The project depends on FTC SDK `11.2.1`.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
+- Reusable wrappers, math, game, and profile code now also live in the standalone `:library` module under `library/src/main/java/com/rmsftc/library/...`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  FirstRobot currently registers only the public `RobotDrive` mechanism, so do
-  not call an optional mechanism factory with that profile until its class has
-  been added.
+  FirstRobot currently registers the public `RobotDrive` mechanism plus
+  `Intake` and `Limelight`, so those factory helpers are available there while
+  `RGBIndicator` and `LogitechWebcam` still require explicit registration.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
@@ -38,6 +39,7 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `opModes/TeleOp.java` uses `LinearOpMode` with `waitForStart()` and `while (opModeIsActive())`.
 - `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
 - `opModes/IvyAuton.java` uses iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
+- `tests/PlannerIntakeVisionAuto.java` is a current `LinearOpMode` example that uses `Constants.createMechanisms(hardwareMap)` to resolve drive/intake/Limelight once before `waitForStart()`.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that mixes raw Limelight SDK access with a follower control loop.
 - `configs/ConfigOpMode.java` is a one-shot iterative config helper that runs a `Runnable` in `start()` and then requests stop.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted test, sleep briefly, and then request stop.

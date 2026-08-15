@@ -23,12 +23,13 @@ the version pinned in `build.dependencies.gradle`.
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `library/src/main/java/com/rmsftc/library/hardware/webcam/Limelight.java`
+- `library/src/main/java/com/rmsftc/library/math/MathUtils.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
 
@@ -48,6 +49,7 @@ the version pinned in `build.dependencies.gradle`.
 
 - The shared teleops create a `Mechanisms` aggregate, then read `Limelight` through `mechanisms.get(Limelight.class)` and start it in `APRIL_TAG` mode only when that optional mechanism is present.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
+- `tests/PlannerIntakeVisionAuto` is the current wrapper-based vision/planner example: it creates mechanisms through `Constants.createMechanisms(...)`, starts Limelight in `NEURAL_DETECTOR`, and lets `PlanBuilder.intakeWVision(...)` consume wrapper results.
 - `tests/ftcSdk/LimelightFactoryTest` is the current runtime smoke test for wrapper creation plus repeated `LLUpdate()` calls on the AprilTag pipeline.
 - `library/planners/paths/Utils.IntakeWVision` is the current in-repo wrapper consumer that builds a vision-assisted path from detector results and falls back to a fail-safe path if detection/path generation does not succeed in time.
 - Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.

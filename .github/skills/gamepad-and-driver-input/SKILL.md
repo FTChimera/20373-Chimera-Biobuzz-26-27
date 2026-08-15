@@ -21,17 +21,17 @@ dependency rather than TeamCode wrappers, inspect
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/DualGamepad.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GamepadEx.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GpCommand.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/GpBindings.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Button.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Buttons.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Reader.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Stick.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Touchpad.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/Trigger.java`
+- `library/src/main/java/com/rmsftc/library/OpModeHelper.kt`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/DualGamepad.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/GamepadEx.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/GpCommand.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/GpBindings.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/Button.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/Buttons.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/Reader.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/Stick.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/Touchpad.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/Trigger.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`

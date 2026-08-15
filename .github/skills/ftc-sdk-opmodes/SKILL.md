@@ -21,13 +21,14 @@ versions pinned in `build.dependencies.gradle`.
 
 ## Repository context
 
-- The app uses FTC SDK `11.1.0`.
+- The app uses FTC SDK `11.2.1`.
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
-- Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
+- Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration now coming from the standalone `:library` module under `library/src/main/java/com/rmsftc/library/robot/`.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  FirstRobot currently registers only the normal `RobotDrive` mechanism through
-  `configureDriveMechanisms()`. Its Pinpoint setup is configured, but its
-  planned intake and all vision/other optional mechanisms are not registered.
+  FirstRobot currently registers the normal `RobotDrive` mechanism through
+  `configureDriveMechanisms()` and also registers `Intake` plus `Limelight`.
+  Its Pinpoint setup is configured, but `RGBIndicator`, `LogitechWebcam`, and
+  drivetrain tuning values remain separate follow-up work.
 - Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
 - Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` and `TestIvyAuto` are annotated classes in the `opModes/` root.
@@ -87,6 +88,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that intentionally uses direct Limelight SDK access for color-based artifact tracking.
 - `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
+- `tests/PlannerIntakeVisionAuto.java` is the current wrapper-based planner test op mode for `PlanBuilder.intakeWVision(...)` plus `Constants.createMechanisms(hardwareMap)`.
 - `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they use repo-local `PIDMaster` / `DualMotorPIDMaster` adapters plus `TuningConstants`, with `pidautotuner-core` providing the tuning primitives.
 - `configs/ConfigOpMode.java` is the shared base for the blackboard-reset / driver-selection op modes.

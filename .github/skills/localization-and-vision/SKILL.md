@@ -24,11 +24,12 @@ from `build.dependencies.gradle`.
 
 - `build.dependencies.gradle`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `library/src/main/java/com/rmsftc/library/hardware/webcam/Limelight.java`
+- `library/src/main/java/com/rmsftc/library/math/MathUtils.kt`
+- `library/src/main/java/com/rmsftc/library/hardware/webcam/LogitechWebcam.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
@@ -36,7 +37,7 @@ from `build.dependencies.gradle`.
 
 ## Verified current state
 
-1. The build includes FTC Vision `11.1.0` plus Pedro Pathing / Ivy dependencies.
+1. The build includes FTC Vision `11.2.1` plus Pedro Pathing / Ivy dependencies.
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(GpBindings GpBindings)` hook.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
    `Mechanisms` aggregate, read `Limelight` through `mechanisms.get(...)`,
@@ -48,7 +49,8 @@ from `build.dependencies.gradle`.
 7. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but vision-wrapper use still depends on profile registration.
 8. `tests/ftcSdk/LimelightFactoryTest.java` is the current driver-station smoke test for Limelight wrapper creation and AprilTag polling.
 9. `library/planners/paths/Utils.IntakeWVision` is the current vision-assisted pathing example: it reads detector results from the wrapper, preserves a fail-safe path, and can choose between Pedro curve-through and adaptive-handle Bezier generation.
-10. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
+10. `tests/PlannerIntakeVisionAuto.java` is the current end-to-end wrapper-based example that exercises `PlanBuilder.intakeWVision(...)` from a `LinearOpMode`.
+11. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
 
 ## Wrapper configuration pattern that exists in code
 

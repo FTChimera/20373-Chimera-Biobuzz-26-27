@@ -8,9 +8,9 @@ description: Use this skill when asked to edit robot profiles, drivetrain naming
 Use this skill for robot-profile work centered around:
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
+- `library/src/main/java/com/rmsftc/library/hardware/actuators/Direction.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConstants.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
 
 ## Upstream `~/.gradle` lookup
 
@@ -27,9 +27,10 @@ from `build.dependencies.gradle`.
 
 1. `Constants.currentBot` selects the active robot profile.
 2. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`.
-   FirstRobot registers only the normal drive stack. Its Pinpoint offsets and
-   encoder directions are configured, while its Pedro drive-tuning fields and
-   intake integration are not.
+   FirstRobot registers the normal drive stack plus `Intake` and `Limelight`.
+   Its Pinpoint offsets and encoder directions are configured, while its Pedro
+   drive-tuning fields remain calibration targets; `RGBIndicator` and
+   `LogitechWebcam` are still separate optional registrations.
 3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, the set of enabled `Mechanism` classes, and profile-owned mechanism params overrides.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
@@ -37,6 +38,7 @@ from `build.dependencies.gradle`.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
 8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createDrive(...)`, `createRGB(...)`, `createWebcam(...)`, aggregate `createMechanisms(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
 9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.
+10. The reusable profile/follower layer now lives in the standalone `:library` module under `library/src/main/java/com/rmsftc/library/robot/...`.
 
 ## What belongs where
 

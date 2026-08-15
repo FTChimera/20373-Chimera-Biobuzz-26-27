@@ -7,7 +7,7 @@ description: Use this skill when asked to add or modify TeamCode wrappers, hardw
 
 Use this skill when extending the team’s abstraction layers instead of writing raw FTC SDK calls directly in op modes.
 
-This includes both:
+This includes both reusable classes in the standalone `:library` module and TeamCode-side mechanisms:
 
 - profile-managed wrappers and subsystems built around `Mechanism`
 - custom SDK-registerable hardware under `library/hardware/hardwareDevice/`
@@ -28,21 +28,21 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
+- `library/src/main/java/com/rmsftc/library/hardware/actuators/Direction.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConstants.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `library/src/main/java/com/rmsftc/library/robot/drivetrain/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanisms.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/leds/RGBIndicator.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
+- `library/src/main/java/com/rmsftc/library/hardware/actuators/Motor.java`
+- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/RevPotentiometer.java`
+- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/SlidesMotor.java`
+- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/RGBIndicator.java`
+- `library/src/main/java/com/rmsftc/library/hardware/leds/RGBIndicator.java`
+- `library/src/main/java/com/rmsftc/library/hardware/webcam/Limelight.java`
+- `library/src/main/java/com/rmsftc/library/hardware/webcam/LogitechWebcam.java`
 
 ## Design intent in this repo
 
@@ -53,8 +53,9 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
 The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
-registers only `RobotDrive`; its intake is planned but not
-yet registered. Those helpers still depend on profile registration:
+registers `RobotDrive`, `Intake`, and `Limelight`. `RGBIndicator` and
+`LogitechWebcam` remain optional profile registrations. Those helpers still
+depend on profile registration:
 `Constants.assertHasMechanism(...)` runs before construction, so the selected
 profile must register the requested class.
 

@@ -99,12 +99,20 @@ If you need to inspect only the recent code under `TeamCode/`:
 git --no-pager log --stat --decorate -10 -- TeamCode | cat
 ```
 
+If the recent change moved shared code into the standalone `:library` module,
+inspect that history too:
+
+```zsh
+git --no-pager log --stat --decorate -10 -- TeamCode library | cat
+```
+
 ## Workflow for a skill-doc update request
 
 1. Read `.github/copilot-instructions.md` and `.github/skills/README.md` first.
 2. If history is allowed and relevant, find the most recent skills-update commit.
 3. If history is allowed and relevant, inspect commits after that point.
-4. Inspect the actual current code, not just commit messages.
+4. Inspect the actual current code, not just commit messages, including the
+   standalone `library/` module when shared code moved there.
 5. Map which skill files are affected by those changes.
 6. `Constants.currentBot` can change quickly, do not update SKILL files/README.md to state the current profile as it might become outdated quickly.
 7. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
@@ -122,6 +130,8 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 - new op mode base classes, variants, or pose-handoff patterns
 - new Pedro/Ivy workflow changes
 - new planner-style pathing layers under `library/planners/`
+- a new standalone `library/` Android module or package moves to
+  `com.rmsftc.library`
 - new tuning packages or calibration op modes such as `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pid/autoTune/`
 - new third-party build wiring in `build.dependencies.gradle`, especially new repositories or driver-station-facing libraries
 - new build, lint, or validation expectations

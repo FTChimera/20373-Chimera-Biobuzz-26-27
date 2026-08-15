@@ -22,11 +22,11 @@ When Ivy behavior is unclear, inspect the downloaded artifacts under
 
 - `build.dependencies.gradle`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/gamepad/DualGamepad.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlannerList.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PlanBuilder.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
+- `library/src/main/java/com/rmsftc/library/hardware/gamepad/DualGamepad.java`
+- `library/src/main/java/com/rmsftc/library/planners/PathPlannerList.java`
+- `library/src/main/java/com/rmsftc/library/planners/PlanBuilder.java`
+- `library/src/main/java/com/rmsftc/library/robot/drivetrain/MecanumDrive.java`
+- `library/src/main/java/com/rmsftc/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`

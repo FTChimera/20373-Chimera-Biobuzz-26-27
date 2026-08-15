@@ -23,16 +23,16 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 
 - `build.dependencies.gradle`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlanner.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlannerList.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PlanBuilder.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/paths/Utils.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
+- `library/src/main/java/com/rmsftc/library/OpModeHelper.kt`
+- `library/src/main/java/com/rmsftc/library/math/Equation.java`
+- `library/src/main/java/com/rmsftc/library/math/Polynomial.java`
+- `library/src/main/java/com/rmsftc/library/planners/PathPlanner.java`
+- `library/src/main/java/com/rmsftc/library/planners/PathPlannerList.java`
+- `library/src/main/java/com/rmsftc/library/planners/PlanBuilder.java`
+- `library/src/main/java/com/rmsftc/library/planners/paths/Utils.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConstants.java`
+- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `library/src/main/java/com/rmsftc/library/robot/drivetrain/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
@@ -45,6 +45,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TestPathPlanner.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`
@@ -63,6 +64,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 8. Profile-managed factory helpers work only for classes registered through `.addMechanism(...)` in the profile selected by `Constants.currentBot`.
 9. When planning which factory calls (`Constants.createIntake(...)`, `Constants.createLimelight(...)`, etc.) succeed at runtime, verify which mechanisms the selected profile actually registers with `.addMechanism(...)`.
 10. `library/planners/PlanBuilder` seeds a `PathPlannerList` with `Utils.StartPose`, and `PathPlannerList.schedule()` turns the accumulated planner steps into one sequential Ivy schedule.
+11. TeamCode now imports that reusable pathing/gamepad/config layer from the standalone `:library` Android module, so current shared-code imports use `com.rmsftc.library...` instead of the old TeamCode-local package tree.
 
 ## Pathing conventions to follow
 
@@ -114,6 +116,7 @@ There is no current TeamCode example that implements `Command` directly, extends
 - `library/planners/paths/Utils.IntakeWVision` is the current dynamic-path example. It preserves a `resolvedEndPose`, can fall back to a fail-safe path, and chooses between Pedro curve-through and adaptive-handle Bezier generation based on waypoint geometry.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that uses the standard follower plus raw Limelight color results.
 - `tests/PreseasonWebcamAuto.java` gets its Limelight hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
+- `tests/PlannerIntakeVisionAuto.java` is the current wrapper-based planner example: it builds a `PlanBuilder`, uses `intakeWVision(...)`, and runs the result through `PathPlannerList.schedule()`.
 - `learning/ExampleIvyWithSubsystems.java` is teaching code, not the profile-managed subsystem pattern: its `autoAlign()` step is commented out and its intake motor is resolved directly from `hardwareMap`.
 
 ## Rules
