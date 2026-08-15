@@ -5,6 +5,7 @@ import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.rmsftc.library.hardware.gamepad.GpBindings;
+import com.rmsftc.library.hardware.webcam.Limelight;
 import com.rmsftc.library.robot.RobotConstants;
 
 import java.util.Collection;
@@ -72,4 +73,7 @@ public class Mechanisms extends Mechanism {
         Objects.requireNonNull(GpBindingsSupplier, "GpBindingsSupplier");
         Scheduler.schedule(Commands.infinite(() -> periodic(GpBindingsSupplier.get())));
     }
+
+    // Now create wrapper methods on all the mechanisms
+    // like intake full power, etc.
 }
