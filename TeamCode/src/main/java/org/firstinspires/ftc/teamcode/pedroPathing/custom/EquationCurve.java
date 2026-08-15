@@ -7,7 +7,7 @@ import com.pedropathing.math.Vector;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.PathPoint;
 
-import org.firstinspires.ftc.teamcode.library.math.Equation;
+import com.rmsftc.library.math.Equation;
 
 import java.util.Objects;
 

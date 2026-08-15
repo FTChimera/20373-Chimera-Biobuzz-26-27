@@ -3,13 +3,13 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
-import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
-import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.SlidesMotor;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Trigger;
-import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import com.rmsftc.library.hardware.actuators.Direction;
+import com.rmsftc.library.hardware.actuators.Motor;
+import com.rmsftc.library.hardware.gamepad.GpCommand;
+import com.rmsftc.library.hardware.hardwareDevice.SlidesMotor;
+import com.rmsftc.library.hardware.gamepad.GpBindings;
+import com.rmsftc.library.hardware.gamepad.Trigger;
+import com.rmsftc.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.Supplier;

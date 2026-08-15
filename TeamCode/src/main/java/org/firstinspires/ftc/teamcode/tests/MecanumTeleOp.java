@@ -40,8 +40,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import com.rmsftc.library.hardware.gamepad.Button;
+import com.rmsftc.library.hardware.gamepad.GamepadEx;
 
 /*
  * This file includes a teleop (driver-controlled) file for a

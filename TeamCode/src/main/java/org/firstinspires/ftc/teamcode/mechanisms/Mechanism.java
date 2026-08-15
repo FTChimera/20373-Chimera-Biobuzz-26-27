@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
-import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import com.rmsftc.library.hardware.gamepad.GpBindings;
+import com.rmsftc.library.robot.RobotConstants;
 
 public abstract class Mechanism {
     public interface Params<T extends Params<T>> {

@@ -5,9 +5,9 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
-import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import com.rmsftc.library.hardware.actuators.Direction;
+import com.rmsftc.library.hardware.actuators.Motor;
+import com.rmsftc.library.hardware.gamepad.GamepadEx;
 
 //@Disabled
 @Utility

@@ -11,9 +11,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
-import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
+import com.rmsftc.library.planners.PathPlannerList;
+import com.rmsftc.library.planners.PlanBuilder;
+import com.rmsftc.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;

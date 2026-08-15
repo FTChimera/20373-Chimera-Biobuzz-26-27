@@ -6,9 +6,9 @@ import com.pedropathing.ivy.Scheduler;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.math.MathUtils;
-import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
-import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
+import com.rmsftc.library.math.MathUtils;
+import com.rmsftc.library.planners.PathPlannerList;
+import com.rmsftc.library.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 
 public class TestPathPlanner extends LinearOpMode {

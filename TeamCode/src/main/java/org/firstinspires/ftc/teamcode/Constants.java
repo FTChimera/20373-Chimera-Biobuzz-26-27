@@ -9,11 +9,11 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
-import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurations;
-import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import com.rmsftc.library.hardware.leds.RGBIndicator;
+import com.rmsftc.library.hardware.webcam.Limelight;
+import com.rmsftc.library.hardware.webcam.LogitechWebcam;
+import com.rmsftc.library.robot.RobotConfigurations;
+import com.rmsftc.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;

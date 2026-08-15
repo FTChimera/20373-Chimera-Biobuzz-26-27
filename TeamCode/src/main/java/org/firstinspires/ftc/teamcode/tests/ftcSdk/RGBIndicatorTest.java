@@ -4,10 +4,10 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
-import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.RGBIndicator_PARAMS;
-import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.RGBIndicator;
-import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
+import com.rmsftc.library.hardware.gamepad.GamepadEx;
+import com.rmsftc.library.hardware.leds.RGBIndicator.RGBIndicator_PARAMS;
+import com.rmsftc.library.hardware.hardwareDevice.RGBIndicator;
+import com.rmsftc.library.robot.RobotConstants;
 
 //@Disabled
 @Utility
@@ -23,8 +23,8 @@ public class RGBIndicatorTest extends androidTest {
         telemetry.update();
         sleep(2000);
         rgbIndicator.close();
-        org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator rgb2 = new org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator(hardwareMap, new RobotConstants().addMechanism(org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.class));
-        rgb2.setColor(org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator.Color.BLUE);
+        com.rmsftc.library.hardware.leds.RGBIndicator rgb2 = new com.rmsftc.library.hardware.leds.RGBIndicator(hardwareMap, new RobotConstants().addMechanism(com.rmsftc.library.hardware.leds.RGBIndicator.class));
+        rgb2.setColor(com.rmsftc.library.hardware.leds.RGBIndicator.Color.BLUE);
         // should show blue
         telemetry.addData("Color2 (should be BLUE)", rgb2.getColor());
         telemetry.update();

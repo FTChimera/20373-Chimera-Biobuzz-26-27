@@ -6,7 +6,7 @@ import com.pedropathing.geometry.Pose;
 
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.AllianceColor;
+import com.rmsftc.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.opModes.TeleOp;
 
 @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "BLUE TELEOP", group = "0: TeleOp")

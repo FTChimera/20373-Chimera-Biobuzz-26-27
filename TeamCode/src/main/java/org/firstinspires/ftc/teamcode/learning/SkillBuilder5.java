@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.learning;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import com.rmsftc.library.hardware.gamepad.GamepadEx;
 
 public class SkillBuilder5 extends LinearOpMode {
 

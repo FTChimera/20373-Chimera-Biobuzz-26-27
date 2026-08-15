@@ -5,8 +5,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
+import com.rmsftc.library.hardware.gamepad.GamepadEx;
+import com.rmsftc.library.hardware.webcam.Limelight;
 
 @Utility(name = "FTC SDK Limelight Test")
 public class LimelightFactoryTest extends androidTest {

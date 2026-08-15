@@ -4,8 +4,8 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.HeadingInterpolator;
 
-import org.firstinspires.ftc.teamcode.library.math.MathUtils;
-import org.firstinspires.ftc.teamcode.library.math.Polynomial;
+import com.rmsftc.library.math.MathUtils;
+import com.rmsftc.library.math.Polynomial;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
