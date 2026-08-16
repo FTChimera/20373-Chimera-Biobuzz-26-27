@@ -44,6 +44,8 @@ class MathUtils private constructor() {
         private const val INCHES_PER_FOOT = 12.0
         private const val INCHES_PER_METER = 39.37007874015748
 
+        val SMOOTH_STEP_FUNCTION = Polynomial(doubleArrayOf(0.0,0.0,3.0,-2.0))
+        val SMOOTHER_STEP_FUNCTION = Polynomial(doubleArrayOf(0.0,0.0,0.0,10.0,-15.0,6.0))
         @JvmStatic
         fun distance(x1: Double, y1: Double, x2: Double, y2: Double): Double = Math.hypot(x2 - x1, y2 - y1)
 
@@ -251,5 +253,20 @@ class MathUtils private constructor() {
                     if (positiveWrapped == 0.0) 0.0 else positiveWrapped - fullTurn
             }
         }
+    }
+
+    inner class MathFunc {
+        fun smoothFunc(): Polynomial {
+            return SMOOTHER_STEP_FUNCTION
+        }
+        // Now add smooth interp
+        fun evalSmoothF(t: Double): Double {
+            return smoothFunc().getY(t)
+        }
+
+        fun evalSmoothFInterp(t: Double, h0: Double, h1: Double): Double {
+            return h0 + (h1-h0)*evalSmoothF(t)
+        }
+
     }
 }
