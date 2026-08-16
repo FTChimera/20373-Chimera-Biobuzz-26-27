@@ -36,6 +36,20 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    sourceSets {
+        main {
+            java.srcDirs += ['../library/src/main/java']
+        }
+
+        // Optional: if you want TeamCode tests to also see library tests
+        test {
+            java.srcDirs += ['../library/src/test/java']
+        }
+        androidTest {
+            java.srcDirs += ['../library/src/androidTest/java']
+        }
+    }
 }
 repositories {
     maven { url = "https://repo.dairy.foundation/releases" }
@@ -44,7 +58,6 @@ repositories {
 
 dependencies {
     implementation project(':FtcRobotController')
-    implementation project(':library')
     implementation "androidx.core:core:1.12.0"
     implementation "androidx.core:core-ktx:1.12.0"
     testImplementation 'junit:junit:4.13.2'
