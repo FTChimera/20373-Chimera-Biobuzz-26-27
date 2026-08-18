@@ -10,9 +10,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.Constants;
-
-import com.rmsftc.library.control.PIDFCoefficients;
-import com.rmsftc.library.control.PIDFController;
 import com.rmsftc.library.hardware.gamepad.Button;
 import com.rmsftc.library.hardware.gamepad.GamepadEx;
 import com.rmsftc.library.hardware.webcam.Limelight;

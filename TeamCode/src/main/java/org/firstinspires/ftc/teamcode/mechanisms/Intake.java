@@ -20,7 +20,11 @@ public class Intake extends Mechanism {
         public double HALF_POWER = 0.5;
         public double REVERSE_FULL_POWER = -1.0;
         public double STOP_POWER = 0.0;
+        public int SLIDES_MAX = 1400;
+        public int SLIDES_MIN = 0;
+        public String HARDWAREMAP_NAME_SLIDES = "intakeSlides";
         public String HARDWAREMAP_NAME = "intake";
+        public Direction SLIDES_MOTOR_DIRECTION = Direction.REVERSE;
         public Direction INTAKE_MOTOR_DIRECTION = Direction.REVERSE;
         public GpCommand FORWARD_COMMAND = Trigger.RIGHT;
         public GpCommand REVERSE_COMMAND = Trigger.LEFT;
@@ -31,7 +35,11 @@ public class Intake extends Mechanism {
             HALF_POWER = other.HALF_POWER;
             REVERSE_FULL_POWER = other.REVERSE_FULL_POWER;
             STOP_POWER = other.STOP_POWER;
+            SLIDES_MAX = other.SLIDES_MAX;
+            SLIDES_MIN = other.SLIDES_MIN;
+            HARDWAREMAP_NAME_SLIDES = other.HARDWAREMAP_NAME_SLIDES;
             HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            SLIDES_MOTOR_DIRECTION = other.SLIDES_MOTOR_DIRECTION;
             INTAKE_MOTOR_DIRECTION = other.INTAKE_MOTOR_DIRECTION;
             FORWARD_COMMAND = other.FORWARD_COMMAND;
             REVERSE_COMMAND = other.REVERSE_COMMAND;
@@ -57,8 +65,24 @@ public class Intake extends Mechanism {
             this.HARDWAREMAP_NAME = hardwareMapName;
             return this;
         }
+        public INTAKE_PARAMS slidesHardwareMapName(String hardwareMapNameSlides) {
+            this.HARDWAREMAP_NAME_SLIDES = hardwareMapNameSlides;
+            return this;
+        }
+        public INTAKE_PARAMS slidesMin(int slidesMin) {
+            this.SLIDES_MIN = slidesMin;
+            return this;
+        }
+        public INTAKE_PARAMS slidesMax(int slidesMax) {
+            this.SLIDES_MAX = slidesMax;
+            return this;
+        }
         public INTAKE_PARAMS intakeMotorDirection(Direction intakeMotorDirection) {
             this.INTAKE_MOTOR_DIRECTION = intakeMotorDirection;
+            return this;
+        }
+        public INTAKE_PARAMS slidesMotorDirection(Direction slidesMotorDirection) {
+            this.SLIDES_MOTOR_DIRECTION = slidesMotorDirection;
             return this;
         }
         public INTAKE_PARAMS forwardCommand(GpCommand forwardCommand) {
@@ -86,6 +110,7 @@ public class Intake extends Mechanism {
         }
     }
     public Motor Intake_Motor;
+    public SlidesMotor slidesMotor;
     public INTAKE_PARAMS params;
     public Intake(HardwareMap map, RobotConstants bot) {
         super(map, bot);
@@ -95,6 +120,8 @@ public class Intake extends Mechanism {
         }
         this.Intake_Motor = new Motor(map, params.HARDWAREMAP_NAME);
         Intake_Motor.setDirection(params.INTAKE_MOTOR_DIRECTION);
+        this.slidesMotor = map.get(SlidesMotor.class, params.HARDWAREMAP_NAME_SLIDES);
+        slidesMotor.initialize(params.SLIDES_MIN, params.SLIDES_MAX);
         Stop();
     }
 

@@ -498,7 +498,7 @@ public class Utils {
             for (int i = 0; i < pathChain.size(); i++) {
                 pathChain.getPath(i).setTangentHeadingInterpolation();
             }
-            pathChain.setDecelerationType(PathChain.DecelerationType.LAST_PATH);
+
             resolvedEndPose = pathChain.endPose();
             return pathChain;
         }
@@ -523,7 +523,6 @@ public class Utils {
 
             if (segments.isEmpty()) return null;
             PathChain pathChain = new PathChain(segments.toArray(new Path[0]));
-            pathChain.setDecelerationType(PathChain.DecelerationType.LAST_PATH);
             resolvedEndPose = pathChain.endPose();
             return pathChain;
         }
