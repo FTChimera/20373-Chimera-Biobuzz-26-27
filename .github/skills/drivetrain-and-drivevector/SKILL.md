@@ -22,13 +22,13 @@ inspect the matching dependency under
 ## Key files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `library/src/main/java/com/rmsftc/library/DriveVector.java`
-- `library/src/main/java/com/rmsftc/library/OpModeHelper.kt`
-- `library/src/main/java/com/rmsftc/library/hardware/actuators/Direction.java`
-- `library/src/main/java/com/rmsftc/library/robot/drivetrain/MecanumDrive.java`
-- `library/src/main/java/com/rmsftc/library/robot/Driver.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConstants.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/Driver.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`

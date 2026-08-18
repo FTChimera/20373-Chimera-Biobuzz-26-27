@@ -23,18 +23,15 @@ in `build.dependencies.gradle`.
 
 ## Build layout
 
-- Root Gradle project with modules `:FtcRobotController`, `:TeamCode`, and `:library`
+- Root Gradle project with modules `:FtcRobotController` and `:TeamCode`
 - The root `build.gradle` currently sets `kotlin_version = '2.1.20'`
 - `TeamCode/build.gradle` applies `build.common.gradle` and `build.dependencies.gradle`
 - `TeamCode/build.gradle` applies `org.jetbrains.kotlin.android`, so `:TeamCode:compileDebugKotlin` is part of a normal TeamCode build
 - `TeamCode/build.gradle` also applies the Sloth load plugin (`dev.frozenmilk.sinister.sloth.load`) and adds the Sloth runtime dependency
 - `TeamCode/build.gradle` includes `annotationProcessor` entries for both the FTC op-mode processor and Project Lombok
-- `TeamCode/build.gradle` now also depends on `implementation project(':library')`, so TeamCode compilation validates imports from the reusable `com.rmsftc.library` module
-- `library/build.gradle` is a standalone Android-library build for the reusable `com.rmsftc.library` sources, with its own `src/test/java` and `src/androidTest/java` trees
 - FTC SDK and Pedro dependencies are declared in `build.dependencies.gradle`
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
 - `TeamCode/src/test/java/` now contains real JVM JUnit coverage, including the suite entry point `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/UnitTestAll.java`
-- Many reusable utility tests now live under `library/src/test/java/com/rmsftc/library/...`; `UnitTestAll.java` imports those library-side tests so one TeamCode target still exercises the shared suite
 - Driver-station/runtime validation still lives under `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/` and `tests/ftcSdk/`; `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base, not the Gradle `src/androidTest/` source set
 - `java-autogen/` contains browser-side HTML/JS generators and is outside the Gradle-compiled Android source set
 - Custom SDK-registerable hardware now also lives under `library/hardware/hardwareDevice/`, including `RevPotentiometer`, `SlidesMotor`, and a device-level `RGBIndicator`
@@ -51,14 +48,13 @@ in `build.dependencies.gradle`.
 ## Primary validation steps
 
 1. Make sure Gradle runs under Java 11+.
-2. Build `:library:assembleDebug` when a change touches the reusable `com.rmsftc.library` module or package wiring.
-3. Build `:TeamCode:assembleDebug` to catch source, dependency, annotation-processing, and plugin-wiring issues in the team module.
-4. Run `:TeamCode:lint` when you want Android/lifecycle/static warnings as well.
-5. If needed, build the whole project after the touched modules succeed.
-6. Run `:library:testDebugUnitTest` when shared utility tests changed, and run `:TeamCode:testDebugUnitTest` for the repo’s non-hardware regression coverage; `UnitTestAll.java` remains the single explicit suite entry point.
-7. Use the driver-station validation op modes under `tests/ftcSdk/` when a change needs actual FTC runtime or hardware-construction checks; those are complementary to the JVM suite, not a replacement for it.
-8. For robot behavior changes, follow the build with driver-station or on-robot validation because many issues are lifecycle or hardware-configuration dependent.
-9. If a change only touches `java-autogen/`, review the generated HTML/JS directly; Gradle will not validate that tooling until its output is copied into `TeamCode/`.
+2. Build `:TeamCode:assembleDebug` to catch source, dependency, annotation-processing, and plugin-wiring issues in the team module.
+3. Run `:TeamCode:lint` when you want Android/lifecycle/static warnings as well.
+4. If needed, build the whole project after TeamCode succeeds.
+5. Run `:TeamCode:testDebugUnitTest` for non-hardware regression coverage; `UnitTestAll.java` is the single entry point if you want one suite that explicitly enumerates the current TeamCode JVM tests.
+6. Use the driver-station validation op modes under `tests/ftcSdk/` when a change needs actual FTC runtime or hardware-construction checks; those are complementary to the JVM suite, not a replacement for it.
+7. For robot behavior changes, follow the build with driver-station or on-robot validation because many issues are lifecycle or hardware-configuration dependent.
+8. If a change only touches `java-autogen/`, review the generated HTML/JS directly; Gradle will not validate that tooling until its output is copied into `TeamCode/`.
 
 ## When the user asks for a full `TeamCode` audit
 

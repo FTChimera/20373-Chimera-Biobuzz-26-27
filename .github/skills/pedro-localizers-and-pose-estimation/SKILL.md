@@ -24,9 +24,9 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
-- `library/src/main/java/com/rmsftc/library/robot/drivetrain/MecanumDrive.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConstants.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Red_TeleOp.java`
@@ -55,10 +55,10 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - If localization work also touches a vision wrapper, keep that wrapper on the `Mechanism` + `RobotConstants.createMechanism(...)` path.
 
 The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot provides
-the drive stack, Pinpoint, and the `Limelight` wrapper, but it still does not
-register `LogitechWebcam`. Localization changes that use
-`Constants.createWebcam(...)` must first register that wrapper in the selected
-profile.
+the drive stack and Pinpoint but does not register either vision wrapper.
+Localization changes that use
+`Constants.createLimelight(...)` or `Constants.createWebcam(...)` must first
+register the required wrapper in the selected profile.
 
 ## Rules
 

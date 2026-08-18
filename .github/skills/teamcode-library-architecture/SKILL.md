@@ -25,14 +25,11 @@ versions pinned in `build.dependencies.gradle`.
 ## Package layout
 
 - `configs/`: `Blackboard` plus one-shot configuration op modes such as `ZeroPose`, `ResetAllBlackboard`, and `Set*Driver`.
-- `library/`: standalone Android library module; reusable sources now live under `library/src/main/java/com/rmsftc/library/...` and are consumed from TeamCode via `implementation project(':library')`.
-- `library/src/main/java/com/rmsftc/library/robot/drivetrain/`: the reusable `MecanumDrive` helper under the public drive mechanism layer.
-- `library/src/main/java/com/rmsftc/library/game/`: reusable field/game helpers such as `Field`, `GameElement`, and `Pollen`.
-- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/`: SDK-registerable custom devices such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`.
-- `library/src/test/java/`: JVM tests for reusable library utilities and wrappers.
-- `library/src/androidTest/java/`: Android instrumentation tests for the library module.
+- `library/`: small reusable types and wrappers, now split across areas such as `control/`, `filters/`, `game/`, `hardware/`, `interpolation/`, `math/`, `planners/`, and `robot/`.
+- `library/robot/drivetrain/`: the reusable `MecanumDrive` helper under the public drive mechanism layer.
+- `library/hardware/hardwareDevice/`: SDK-registerable custom devices such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`.
 - `mechanisms/`: robot subsystems plus the shared abstract base class `Mechanism`.
-- `library/src/main/java/com/rmsftc/library/OpModeHelper.kt`: optional op-mode utility for manual Lynx bulk caching and loop `dt` tracking.
+- `library/OpModeHelper.kt`: optional op-mode utility for manual Lynx bulk caching and loop `dt` tracking.
 - `opModes/`: shared base op mode logic.
 - `opModes/variants/`: thin FTC-annotated wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`.
 - `pid/autoTune/`: FTC AutoTune relay-feedback tuner op modes, repo-local FTC master adapters, and a shared `TuningConstants` config class for calibration-only workflows.
@@ -71,7 +68,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
 - Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
-- Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, generic PIDF controllers, and `Field` geometry utilities in the standalone `:library` module.
+- Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
 - Keep Pedro-specific curve integration such as `EquationCurve` in `pedroPathing/custom/`.
 - Do not turn `RobotConstants` into a catch-all for arbitrary per-mechanism tuning unless that data is truly robot-profile-wide.
@@ -149,7 +146,5 @@ helper, and prefer runtime-test guards for optional subsystems.
 ## Current build-tooling note
 
 - `TeamCode/build.gradle` wires Project Lombok annotation processing, Sloth load/runtime support, and the Kotlin Android plugin.
-- `settings.gradle` includes `:library`, and `TeamCode/build.gradle` consumes it with `implementation project(':library')`.
-- `library/build.gradle` is real build wiring, not a placeholder: it carries the Android-library manifest/proguard setup plus its own unit/instrumentation tests.
 - `build.dependencies.gradle` now wires JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the repo-local `pid/autoTune/master/` classes supply the removed FTC-specific adapter layer.
 - The root `build.gradle` currently pins the Kotlin Gradle plugin with `kotlin_version = '2.1.20'`, so build or architecture work should preserve that wiring unless the repo is intentionally being migrated.

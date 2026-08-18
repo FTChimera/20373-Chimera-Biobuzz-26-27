@@ -24,13 +24,12 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 ## Relevant files
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
-- `library/src/main/java/com/rmsftc/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MecanumTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/FieldCentricMecanumTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MotorDirectionTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/androidTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/*FactoryTest.java`
@@ -54,7 +53,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted check, sleep briefly, and then request stop. It now also provides `skipIfMechanismMissing(...)` and `showStep(...)` helpers so factory tests can stay profile-aware and telemetry-friendly.
 - `tests/ftcSdk/` now includes factory-style runtime checks for `Follower`, `IMU`, `Intake`, `Limelight`, `RobotDrive`, `RGBIndicator`, and `LogitechWebcam`.
 - `tests/ftcSdk/` now also includes custom-hardware checks for the device-level `RGBIndicator` and `SlidesMotor` classes under `library/hardware/hardwareDevice/`.
-- TeamCode now also has a JVM test layer under `TeamCode/src/test/java/`, and the shared reusable-library tests now live under `library/src/test/java/com/rmsftc/library/...`; use those for math, utility, field/game, gamepad, robot-configuration, and `EquationCurve` behavior that does not need FTC runtime hardware.
+- TeamCode now also has a JVM test layer under `TeamCode/src/test/java/`; use that for math, utility, blackboard, gamepad, robot-configuration, and `EquationCurve` behavior that does not need FTC runtime hardware.
 - `pid/autoTune/` now contains FTC AutoTune relay-feedback tuners built around repo-local `pid.autoTune.master.PIDMaster` / `DualMotorPIDMaster` FTC adapters, the external `pidautotuner-core` algorithms, and a repo-local `@Configurable` `TuningConstants` class.
 - Those FTC AutoTune op modes are driver-station-visible `@TeleOp` entries in group `FtcAutoTune`, and they are calibration tools rather than match-ready robot behavior.
 - Pedro tuning is centralized in `pedroPathing/Tuning.java`, which exposes many selectable tuner sub-modes.
@@ -69,14 +68,13 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `MotorDirectionTest` is a looping low-speed sanity check for the constants-driven drivetrain profile, and it also checks intake direction when the active profile registers `Intake.class`. It updates telemetry live while you flip directions.
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `TestPathPlanner` is the current planner-stack validation op mode; it builds a `PlanBuilder`, inserts a timed wait, and schedules the resulting `PathPlannerList`.
-- `PlannerIntakeVisionAuto` is the current planner + Limelight wrapper validation op mode; it builds a `PlanBuilder`, follows a custom approach path, then exercises `intakeWVision(...)` with a fail-safe search path.
 - `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.
 - `MotorTest` is a small SDK-level wrapper check built on the custom `androidTest` base.
 - `FollowerFactoryTest`, `RobotDriveFactoryTest`, `IntakeFactoryTest`, `LimelightFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short factory/construction smoke tests built on the shared `androidTest` base. `RobotDriveFactoryTest` validates the public `Constants.createDrive(...)` path and reports whether the active profile is using manual or follower drive.
 - `IMUTest` is the runtime check for `Constants.createIMU(...)`; it resets yaw once, reports before/after values, and leaves live heading movement confirmation to the driver.
 - `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `SlidesMotor.DEFAULT_HARDWAREMAP_NAME`.
-- `UnitTestAll` is the single JVM suite entry point for non-hardware repo tests; it lives under TeamCode but now also imports the reusable-library tests for `DriveVector`, `Timer`, PIDF control, filters, field geometry, gamepad input, interpolation, symbolic math, and robot configuration.
+- `UnitTestAll` is the single JVM suite entry point for non-hardware TeamCode tests, currently covering `Blackboard`, `DriveVector`, `Timer`, PIDF control, filters, gamepad input, interpolation, symbolic math, robot configuration, and `EquationCurve`.
 - `PositionPIDTunerOpMode`, `VelocityPIDFTunerOpMode`, and `DualVelocityPIDFTunerOpMode` are thin wrappers around the FTC AutoTune library that run relay-feedback calibration plus optional `gamepad1.a` live tests.
 - `TuningConstants` is the shared place for FTC AutoTune motor names, direction booleans, target RPM / ticks, relay amplitude, and feedforward sweep settings.
 - `Tuning.java` contains localization, velocity, braking, PIDF, centripetal, and path-shape tuners.

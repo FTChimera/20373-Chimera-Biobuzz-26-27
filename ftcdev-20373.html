@@ -879,7 +879,7 @@
     <div class="container">
         <div class="stats reveal">
             <div class="stat">
-                <div class="stat-num">47</div>
+                <div class="stat-num">35</div>
                 <div class="stat-label">Library Files</div>
             </div>
             <div class="stat">
@@ -887,7 +887,7 @@
                 <div class="stat-label">Docs Panels</div>
             </div>
             <div class="stat">
-                <div class="stat-num">64</div>
+                <div class="stat-num">68</div>
                 <div class="stat-label">TeamCode Files</div>
             </div>
             <div class="stat">
@@ -918,9 +918,8 @@
                     <span class="card-icon">📚</span>
                     <div class="card-title">Library Layer</div>
                     <p class="card-text">
-                        The reusable core now lives in the standalone <code>:library</code> module under
-                        <code>com.rmsftc.library</code>: drive vectors, timers, filters, interpolation,
-                        hardware wrappers, robot config, game geometry, and math.
+                        The reusable core lives under <code>com.rmsftc.library</code>:
+                        drive vectors, timers, filters, interpolation, hardware wrappers, robot config, and math.
                     </p>
                 </div>
 
@@ -1191,7 +1190,7 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
                 <div class="card reveal tl-item-clickable" data-guide="library-overview">
                     <span class="card-icon">📦</span>
                     <div class="card-title">Library Overview</div>
-                    <p class="card-text">Categorized docs for the standalone <code>:library</code> module: drive math, timers, wrappers, controls, filters, interpolation, field/game helpers, and robot configuration.</p>
+                    <p class="card-text">Categorized docs for <code>library/</code>: drive math, timers, wrappers, controls, filters, interpolation, and robot configuration.</p>
                 </div>
                 <div class="card reveal tl-item-clickable" data-guide="constants-robot">
                     <span class="card-icon">🧩</span>
@@ -2277,10 +2276,10 @@ applyCodeHighlighting(document);
                         body: `
                         <h2 class="dh2">DriveVector</h2>
                         <p class="dp"><code>DriveVector</code> carries forward/strafe/rotate intent, optional heading, field-centric rotation, and stick-curve application without requiring FTC SDK state.</p>
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/DriveVector.java', CODE.driveVector)}
+                        ${codeBlock('TeamCode/library/DriveVector.java', CODE.driveVector)}
                         <h2 class="dh2">OpModeHelper</h2>
                         <p class="dp"><code>OpModeHelper.kt</code> manages hub bulk-cache clearing and loop <code>dt</code> tracking in a small reusable helper.</p>
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/OpModeHelper.kt', CODE.opModeHelper)}
+                        ${codeBlock('TeamCode/library/OpModeHelper.kt', CODE.opModeHelper)}
                         `
                     },
                     {
@@ -2291,10 +2290,10 @@ applyCodeHighlighting(document);
                         lead: 'The library layer also holds generic math/control blocks that mechanisms can reuse instead of each subsystem re-implementing the same logic.',
                         body: `
                         <h2 class="dh2">PIDF Controller</h2>
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/control/PIDFController.java', CODE.pidfController)}
+                        ${codeBlock('TeamCode/library/control/PIDFController.java', CODE.pidfController)}
                         <h2 class="dh2">Noise Filter Contract</h2>
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/filters/NoiseFilter.java', CODE.noiseFilter)}
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
+                        ${codeBlock('TeamCode/library/filters/NoiseFilter.java', CODE.noiseFilter)}
+                        ${codeBlock('TeamCode/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
                         `
                     }
                 ]
@@ -2336,8 +2335,8 @@ applyCodeHighlighting(document);
                         title: 'Profile presets and <span>follower creation</span>',
                         lead: '<code>RobotConfigurations</code> builds the preset, and <code>RobotConstants</code> handles follower construction and mechanism availability.',
                         body: `
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java', CODE.robotConfig)}
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
+                        ${codeBlock('TeamCode/library/robot/RobotConfigurations.java', CODE.robotConfig)}
+                        ${codeBlock('TeamCode/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
                         `
                     }
                 ]
@@ -2429,8 +2428,8 @@ applyCodeHighlighting(document);
                         title: 'What the repo has <span>today</span>',
                         lead: 'Today the codebase includes a lightweight noise-filter abstraction and a low-pass implementation. There is <strong>no checked-in Kalman filter class yet</strong>.',
                         body: `
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/filters/NoiseFilter.java', CODE.noiseFilter)}
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
+                        ${codeBlock('TeamCode/library/filters/NoiseFilter.java', CODE.noiseFilter)}
+                        ${codeBlock('TeamCode/library/filters/LowPassFilter.java', CODE.lowPassFilter)}
                         `
                     },
                     {
@@ -2453,7 +2452,7 @@ applyCodeHighlighting(document);
                         title: 'Where a <span>Kalman filter</span> would fit',
                         lead: 'A Kalman filter would go further by maintaining a prediction, a measurement estimate, and a confidence model for both, which is useful when fusing multiple noisy sources.',
                         body: `
-                        ${note('dwarn', '<strong>Repo-specific note:</strong> because there is no Kalman class in <code>library/src/main/java/com/rmsftc/library/filters</code> yet, any example code on this page must come from <code>NoiseFilter</code> and <code>LowPassFilter</code>.')}
+                        ${note('dwarn', '<strong>Repo-specific note:</strong> because there is no Kalman class in <code>TeamCode/library/filters</code> yet, any example code on this page must come from <code>NoiseFilter</code> and <code>LowPassFilter</code>.')}
                         `
                     }
                 ]
@@ -2470,7 +2469,7 @@ applyCodeHighlighting(document);
                         title: 'The shared <span>Equation</span> contract',
                         lead: 'The current custom-curve stack is split in two layers: generic math primitives under <strong>library/math</strong> and Pedro-specific curve adaptation under <strong>pedroPathing/custom</strong>.',
                         body: `
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/math/Equation.java', CODE.equation)}
+                        ${codeBlock('TeamCode/library/math/Equation.java', CODE.equation)}
                         `
                     },
                     {
@@ -2480,7 +2479,7 @@ applyCodeHighlighting(document);
                         title: 'The current practical <span>Polynomial</span> implementation',
                         lead: '<code>Polynomial</code> is the main concrete implementation used today for evaluating, differentiating, and integrating equations in the repo.',
                         body: `
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/math/Polynomial.java', CODE.polynomial)}
+                        ${codeBlock('TeamCode/library/math/Polynomial.java', CODE.polynomial)}
                         ${note('dnote', '<strong>Current math-layer reality:</strong> <code>Polynomial</code> is still the main practical curve primitive, but symbolic support is no longer scaffold-only. <code>Term</code> and the internal <code>SumEquation</code> now provide real mixed-expression algebra, while unsupported antiderivatives fail explicitly instead of silently returning placeholders.')}
                         `
                     },
@@ -2678,7 +2677,7 @@ applyCodeHighlighting(document);
                         lead: 'Pedro Pathing in this repo is tied to the active robot profile through <strong>Constants.createFollower()</strong> rather than ad hoc per-op-mode setup.',
                         body: `
                         ${codeBlock('TeamCode/Constants.java', CODE.constantsFactory)}
-                        ${codeBlock('library/src/main/java/com/rmsftc/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
+                        ${codeBlock('TeamCode/library/robot/RobotConstants.java', CODE.robotConstantsFollower)}
                         `
                     },
                     {

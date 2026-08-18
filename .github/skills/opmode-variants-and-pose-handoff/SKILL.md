@@ -24,7 +24,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/ConfigOpMode.java`
-- `library/src/main/java/com/rmsftc/library/OpModeHelper.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`

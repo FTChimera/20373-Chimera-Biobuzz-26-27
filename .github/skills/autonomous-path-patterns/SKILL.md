@@ -23,15 +23,15 @@ version pinned in `build.dependencies.gradle`.
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
-- `library/src/main/java/com/rmsftc/library/math/Equation.java`
-- `library/src/main/java/com/rmsftc/library/math/Polynomial.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConfigurations.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
-- `library/src/main/java/com/rmsftc/library/planners/PathPlanner.java`
-- `library/src/main/java/com/rmsftc/library/planners/PathPlannerList.java`
-- `library/src/main/java/com/rmsftc/library/planners/PlanBuilder.java`
-- `library/src/main/java/com/rmsftc/library/planners/paths/Utils.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlanner.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlannerList.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PlanBuilder.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/paths/Utils.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
@@ -39,7 +39,6 @@ version pinned in `build.dependencies.gradle`.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Blue_TeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TestPathPlanner.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`
@@ -50,14 +49,13 @@ version pinned in `build.dependencies.gradle`.
 
 1. Shared iterative Ivy sequencing: `opModes/IvyAuton.java` plus a variant-local `IvyAuton_Paths` implementation such as `opModes/variants/Test_IvyAuton.java`.
 2. Standalone iterative Ivy teaching examples: `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt`.
-3. Planner-style mechanism-backed path sequences: `library/planners/PlanBuilder.java`, `PathPlannerList.java`, and `library/planners/paths/Utils.java`, currently exercised by both `tests/TestPathPlanner.java` and `tests/PlannerIntakeVisionAuto.java`.
+3. Planner-style mechanism-backed path sequences: `library/planners/PlanBuilder.java`, `PathPlannerList.java`, and `library/planners/paths/Utils.java`, currently exercised by `tests/TestPathPlanner.java`.
 4. Proof-of-concept sensor-following test code: `tests/PreseasonWebcamAuto.java`, which is a `LinearOpMode` test op mode that steers a follower from raw Limelight color results.
 
 ## Path-building conventions
 
 - Use `PathChain` for the shared `IvyAuton_Paths` flow, even when there is only one `Path`.
 - Use `PlanBuilder` / `PathPlannerList` when the autonomous is easier to express as sequential mechanism-aware path steps such as `linearPathTo(...)`, `followPath(...)`, and `waitMs(double)`.
-- `PlanBuilder.intakeWVision(int numBalls, PathChain failSafePath)` is the current planner-step extension for vision-assisted intake routing.
 - Use `BezierLine`, `BezierCurve`, or `EquationCurve` based on the geometry you actually need.
 - Keep start pose and path geometry near each other.
 - Set heading interpolation explicitly instead of relying on library defaults.
@@ -69,7 +67,6 @@ version pinned in `build.dependencies.gradle`.
 - `Test_IvyAuton.Paths#getPath1()` returns `new PathChain(path1)` from a single `Path`.
 - `tests/PedroPathingTeleOpTest.java` creates a path lazily with `follower.pathBuilder()` and a `BezierLine` that starts from `follower::getPose`.
 - `tests/TestPathPlanner.java` seeds a `PlanBuilder` with a start pose, chains `linearPathTo(...)`, inserts `waitMs(1000)`, and then calls `PathPlannerList.schedule()`.
-- `tests/PlannerIntakeVisionAuto.java` is the current end-to-end example for chaining `followPath(...)`, `waitMs(...)`, and `intakeWVision(...)` in one planner-backed autonomous.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` each build two `PathChain`s and schedule them sequentially with `PedroCommands.follow(...)`.
 - `learning/ExampleIvyWithSubsystems.java` now exposes a `waitMs(double)` helper that rounds to Ivy's millisecond API before delegating to `Commands.waitMs(...)`.
 - `tests/PreseasonWebcamAuto.java` uses the normal follower plus a generic `PIDFController<Pose>`; it does not use the shared `IvyAuton_Paths` base.

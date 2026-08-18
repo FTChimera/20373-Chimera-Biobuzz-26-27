@@ -61,9 +61,6 @@ code, inspect the downloaded module under
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only mechanisms registered by the active profile; the helpers throw when the
   requested mechanism is absent.
-- Reusable shared code now lives in the standalone `:library` Android module
-  under `library/src/main/java/com/rmsftc/library/...`; `TeamCode/build.gradle`
-  consumes it with `implementation project(':library')`.
 - `Constants.createMechanisms(hardwareMap)` is the aggregate factory for every
   profile-managed mechanism. The shared teleops currently require
   `RobotDrive.class` from that aggregate and treat `Intake` / `Limelight` as
@@ -77,17 +74,12 @@ code, inspect the downloaded module under
 - `library/planners/` now contains the planner-style autonomous stack:
   `PathPlanner`, `PathPlannerList`, `PlanBuilder`, and
   `library/planners/paths/Utils.java`.
-- `library/game/` now includes `Field.java` alongside `GameElement` and
-  `Pollen`, so field-geometry helpers live with the reusable game-layer types.
-- `tests/PlannerIntakeVisionAuto.java` is the current end-to-end planner +
-  Limelight wrapper example for `PlanBuilder.intakeWVision(...)`.
 - SDK-registerable devices are separate from profile-managed mechanisms:
   `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are
   under `library/hardware/hardwareDevice/`.
 - Validation is now split between driver-station test op modes under `tests/`
-  / `tests/ftcSdk/` and JVM unit tests split between `TeamCode/src/test/java`
-  and `library/src/test/java`, with `UnitTestAll.java` still acting as the
-  single suite entry point.
+  / `tests/ftcSdk/` and JVM unit tests under `TeamCode/src/test/java`, with
+  `UnitTestAll.java` acting as the single suite entry point.
 - `Timer` and `OpModeHelper.dt` now use `double` time values, and
   `library/math/MathUtils.kt` also owns adaptive path-smoothing helpers used by
   planner code in addition to unit conversion, heading normalization, and

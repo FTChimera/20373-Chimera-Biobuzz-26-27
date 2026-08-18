@@ -5,7 +5,7 @@ description: Use this skill when asked to extend lightweight shared types in `li
 
 # Library Utilities and Shared Types
 
-Use this skill when changes belong in the reusable `:library` module (`library/src/main/java/com/rmsftc/library/...`) rather than in a mechanism or op mode.
+Use this skill when changes belong in the lightweight `library/` package rather than in a mechanism or op mode.
 
 ## Upstream `~/.gradle` lookup
 
@@ -21,33 +21,31 @@ version pinned in `build.dependencies.gradle`.
 
 ## Relevant files
 
-- `library/src/main/java/com/rmsftc/library/AllianceColor.java`
-- `library/src/main/java/com/rmsftc/library/DriveVector.java`
-- `library/src/main/java/com/rmsftc/library/game/Field.java`
-- `library/src/main/java/com/rmsftc/library/game/GameElement.java`
-- `library/src/main/java/com/rmsftc/library/game/Pollen.java`
-- `library/src/main/java/com/rmsftc/library/OpModeHelper.kt`
-- `library/src/main/java/com/rmsftc/library/Timer.java`
-- `library/src/main/java/com/rmsftc/library/control/PIDFController.java`
-- `library/src/main/java/com/rmsftc/library/control/DoublePIDFController.java`
-- `library/src/main/java/com/rmsftc/library/control/DoublePIDFCoeffs.java`
-- `library/src/main/java/com/rmsftc/library/filters/NoiseFilter.java`
-- `library/src/main/java/com/rmsftc/library/filters/LowPassFilter.java`
-- `library/src/main/java/com/rmsftc/library/hardware/actuators/Direction.java`
-- `library/src/main/java/com/rmsftc/library/hardware/actuators/Motor.java`
-- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/RevPotentiometer.java`
-- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/SlidesMotor.java`
-- `library/src/main/java/com/rmsftc/library/hardware/hardwareDevice/RGBIndicator.java`
-- `library/src/main/java/com/rmsftc/library/interpolation/LinearInterp.java`
-- `library/src/main/java/com/rmsftc/library/interpolation/LagrangeInterp.java`
-- `library/src/main/java/com/rmsftc/library/math/Equation.java`
-- `library/src/main/java/com/rmsftc/library/math/MathUtils.kt`
-- `library/src/main/java/com/rmsftc/library/math/Polynomial.java`
-- `library/src/main/java/com/rmsftc/library/math/SumEquation.java`
-- `library/src/main/java/com/rmsftc/library/math/Term.java`
-- `library/src/main/java/com/rmsftc/library/robot/RobotConstants.java`
-- `library/src/main/java/com/rmsftc/library/hardware/...`
-- `library/src/test/java/com/rmsftc/library/game/FieldTest.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/GameElement.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/Pollen.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Timer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/PIDFController.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/DoublePIDFController.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/control/DoublePIDFCoeffs.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/filters/NoiseFilter.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/filters/LowPassFilter.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LinearInterp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/interpolation/LagrangeInterp.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/SumEquation.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Term.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/...`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
 
 ## Design intent
@@ -61,8 +59,7 @@ version pinned in `build.dependencies.gradle`.
 - `AllianceColor` carries alliance-level intent for shared op mode bases.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
 - `DriveVector.applyStickCurve(...)` mutates the instance without changing axis signs; the drive stack's forward inversion happens later in `MecanumDrive`.
-- `Field` is the reusable field-geometry helper in `library/game/`; it now owns polygon/circle helpers plus `Boundaries`, `Shapes`, and `ContactState` checks used by the current game layer.
-- `GameElement` and `Pollen` are lightweight preseason game-piece marker types that now live alongside `Field` under `library/game/`.
+- `GameElement` and `Pollen` are lightweight preseason game-piece marker types under `library/game/`.
 - `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
 - `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
@@ -72,7 +69,7 @@ version pinned in `build.dependencies.gradle`.
 - `SumEquation` is the internal normalized representation returned by `Equation.of(...)`; it combines like terms and drops zero terms instead of leaving callers with ad hoc lists.
 - `Direction` is the shared drive-direction enum used by `RobotConstants` and `Motor`, with helpers like `reverse()` and `toFtcSdk()`.
 - `Motor` is still a low-level wrapper, but it now also implements `HardwareDevice` so it can integrate more naturally with FTC-style helper code.
-- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it enforces a simple state machine, keeps `dt` as a `Double` in milliseconds, and promotes `STARTED -> LOOP` on the first `update()` call. Its unmodified Kotlin visibility is `public`, so it is available to both the library module and TeamCode callers that import it.
+- `OpModeHelper.kt` is a small op-mode utility for manual Lynx bulk caching plus loop `dt` timing; it enforces a simple state machine, keeps `dt` as a `Double` in milliseconds, and promotes `STARTED -> LOOP` on the first `update()` call. Its unmodified Kotlin visibility is `public`, so it is available to other packages in the TeamCode module.
 - `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are lower-level FTC hardware adapters that support direct `hardwareMap.get(...)` use cases.
 - `Term` is now a real immutable `Equation` implementation for constants, powers, and several elementary functions (`sin`, `cos`, `tan`, `exp`, and related integral-only helper forms), with derivative/product-rule behavior and explicit `UnsupportedOperationException` for unsupported antiderivatives.
 - `Timer` is a unit-aware helper whose `get(...)`, `dt(...)`, and `past(...)` APIs now return or accept `double` values in the requested `TimeUnit`.
