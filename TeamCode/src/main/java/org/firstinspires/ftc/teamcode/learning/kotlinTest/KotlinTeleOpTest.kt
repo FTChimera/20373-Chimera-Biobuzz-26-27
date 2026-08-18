@@ -5,8 +5,8 @@ import com.pedropathing.geometry.Pose
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp
 import org.firstinspires.ftc.teamcode.Constants
-import com.rmsftc.library.hardware.gamepad.Button
-import com.rmsftc.library.hardware.gamepad.GamepadEx
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx
 
 @TeleOp(name = "Kotlin TeleOp", group = "Kotlin")
 class KotlinTeleOpTest: LinearOpMode() {

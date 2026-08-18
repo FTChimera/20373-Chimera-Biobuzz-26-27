@@ -5,8 +5,8 @@ import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.rmsftc.library.hardware.gamepad.Button;
-import com.rmsftc.library.hardware.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
 /**
  * Auto-tunes PID gains for a run-to-position mechanism (arm, lift, turret,

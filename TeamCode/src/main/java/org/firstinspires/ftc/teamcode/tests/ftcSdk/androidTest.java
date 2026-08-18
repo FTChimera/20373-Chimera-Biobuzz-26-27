@@ -5,9 +5,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
-import com.rmsftc.library.hardware.gamepad.DualGamepad;
-import com.rmsftc.library.hardware.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
+
+import java.util.HashMap;
 // ADD @Disabled for all tests once they are run.
 
 public abstract class androidTest extends LinearOpMode {

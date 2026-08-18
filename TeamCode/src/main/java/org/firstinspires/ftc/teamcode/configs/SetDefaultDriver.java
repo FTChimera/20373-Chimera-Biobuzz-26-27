@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.configs;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import com.rmsftc.library.robot.Driver;
+import org.firstinspires.ftc.teamcode.library.robot.Driver;
 
 @TeleOp(name = "Set Default Driver", group = "Configuration")
 public class SetDefaultDriver extends ConfigOpMode {

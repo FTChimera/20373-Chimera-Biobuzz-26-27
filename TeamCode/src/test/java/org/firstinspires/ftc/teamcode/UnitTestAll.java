@@ -1,15 +1,15 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.configs.BlackboardTest;
-import com.rmsftc.library.DriveVectorTest;
-import com.rmsftc.library.TimerTest;
-import com.rmsftc.library.control.PIDFControlTest;
-import com.rmsftc.library.filters.LowPassFilterTest;
-import com.rmsftc.library.game.FieldTest;
-import com.rmsftc.library.hardware.gamepad.GamepadInputTest;
-import com.rmsftc.library.interpolation.InterpolationTest;
-import com.rmsftc.library.math.EquationMathTest;
-import com.rmsftc.library.robot.RobotConfigurationTest;
+import org.firstinspires.ftc.teamcode.library.DriveVectorTest;
+import org.firstinspires.ftc.teamcode.library.TimerTest;
+import org.firstinspires.ftc.teamcode.library.control.PIDFControlTest;
+import org.firstinspires.ftc.teamcode.library.filters.LowPassFilterTest;
+import org.firstinspires.ftc.teamcode.library.game.FieldTest;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadInputTest;
+import org.firstinspires.ftc.teamcode.library.interpolation.InterpolationTest;
+import org.firstinspires.ftc.teamcode.library.math.EquationMathTest;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurationTest;
 import org.firstinspires.ftc.teamcode.pedroPathing.custom.EquationCurveTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

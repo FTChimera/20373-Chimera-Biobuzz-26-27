@@ -6,13 +6,13 @@ import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import com.rmsftc.library.DriveVector;
-import com.rmsftc.library.robot.drivetrain.MecanumDrive;
-import com.rmsftc.library.hardware.actuators.Motor;
-import com.rmsftc.library.hardware.gamepad.Button;
-import com.rmsftc.library.hardware.gamepad.GpBindings;
-import com.rmsftc.library.hardware.gamepad.Stick;
-import com.rmsftc.library.robot.RobotConstants;
+import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.robot.drivetrain.MecanumDrive;
+import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Stick;
+import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;

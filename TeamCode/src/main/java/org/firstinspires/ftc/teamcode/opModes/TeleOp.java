@@ -6,10 +6,10 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import com.rmsftc.library.AllianceColor;
-import com.rmsftc.library.hardware.gamepad.GamepadEx;
-import com.rmsftc.library.hardware.gamepad.GpBindings;
-import com.rmsftc.library.hardware.webcam.Limelight;
+import org.firstinspires.ftc.teamcode.library.AllianceColor;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;

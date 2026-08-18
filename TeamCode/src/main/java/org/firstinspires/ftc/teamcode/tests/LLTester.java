@@ -6,9 +6,9 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
-import com.rmsftc.library.hardware.gamepad.Button;
-import com.rmsftc.library.hardware.gamepad.GamepadEx;
-import com.rmsftc.library.hardware.webcam.Limelight;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 
 @Utility(name = "LL Tester")
 public class LLTester extends LinearOpMode {

@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode.configs;
 
 import com.pedropathing.geometry.Pose;
 
-import com.rmsftc.library.math.MathUtils;
-import com.rmsftc.library.robot.Driver;
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
+import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
