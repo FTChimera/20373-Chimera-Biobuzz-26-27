@@ -26,7 +26,7 @@ public class MecanumDrive {
     public final RobotDrive.ROBOT_DRIVE_PARAMS params;
     private DoubleUnaryOperator stickCurve;
 
-    public static Pose lastPose = new Pose(0, 0, 0);
+    public Pose lastPose = new Pose(0, 0, 0);
     public double headingOffset;
 
     public MecanumDrive(HardwareMap map, RobotConstants bot) {

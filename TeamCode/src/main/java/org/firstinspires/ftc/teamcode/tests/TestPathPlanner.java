@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.tests;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Scheduler;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 
+@Utility
 public class TestPathPlanner extends LinearOpMode {
     Mechanisms mechanisms;
     PathPlannerList steps;
