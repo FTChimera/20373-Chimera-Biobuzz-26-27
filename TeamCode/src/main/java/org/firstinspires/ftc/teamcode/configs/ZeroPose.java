@@ -1,10 +1,10 @@
 package org.firstinspires.ftc.teamcode.configs;
 
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 
-@TeleOp(name = "Reset Pose", group = "Configuration")
+@Utility(name = "Reset Pose", description = "Configuration")
 public class ZeroPose extends ConfigOpMode {
 
     @Override

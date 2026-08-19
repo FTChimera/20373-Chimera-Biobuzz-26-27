@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.configs;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
-@TeleOp(name = "Reset All Blackboard Preferences", group = "Configuration")
+@Utility(name = "Reset All Blackboard Preferences", description = "Configuration")
 public class ResetAllBlackboard extends ConfigOpMode {
     @Override
     protected Runnable getRunnable() {

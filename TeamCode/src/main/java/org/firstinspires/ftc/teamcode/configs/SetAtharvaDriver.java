@@ -1,10 +1,10 @@
 package org.firstinspires.ftc.teamcode.configs;
 
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 
-@TeleOp(name = "Set Atharva Driver", group = "Configuration")
+@Utility(name = "Set Atharva Driver", description = "Configuration")
 public class SetAtharvaDriver extends ConfigOpMode {
 
     @Override

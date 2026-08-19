@@ -74,7 +74,7 @@ public abstract class IvyAuton extends OpMode {
 
     @Override
     public void stop() {
-        Blackboard.put(Blackboard.Caption.POSE, follower.getPose()); // if 0,0,0 issue still persists put it in the scheduler loop and add a check for 0,0,0
+        Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy()); // if 0,0,0 issue still persists put it in the scheduler loop and add a check for 0,0,0
         Scheduler.reset();
     }
 
