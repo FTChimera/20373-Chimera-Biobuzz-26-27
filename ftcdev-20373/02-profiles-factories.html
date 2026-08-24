@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Profiles & Factories | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
+<div class="layout"><nav class="toc"><h2>Configuration</h2><a href="#layers">Configuration layers</a><a href="#registration">Mechanism registration</a><a href="#factories">Factory calls</a><a href="#parameters">Local parameters</a><a href="#profile-change">Change a profile</a></nav>
+<main class="article"><p class="eyebrow">02 / Configuration</p><h1>Profiles decide what the robot can construct.</h1><p class="lead">The configuration stack is intentionally layered. <code>Constants</code> is the op-mode-facing convenience surface; <code>RobotConfigurations</code> declares named robot presets; <code>RobotConstants</code> holds the builder data and constructs a follower or a registered mechanism.</p>
+<section id="first-call"><h2>Call factories from an OpMode</h2><p>Most op modes should call the profile-facing helpers, then use typed aggregate lookups. This is the usual caller-side code; profile builders stay out of the op mode.</p><pre>@Override public void runOpMode() {
+    Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+    RobotDrive drive = mechanisms.require(RobotDrive.class);
+    Intake intake = mechanisms.get(Intake.class);
+    IMU imu = Constants.createIMU(hardwareMap);
+
+    telemetry.addData("Configured", mechanisms.getConfiguredMechanismClasses());
+    telemetry.addData("Has intake", intake != null);
+    telemetry.update();
+    waitForStart();
+}</pre></section>
+<section id="layers"><h2>Three layers, three responsibilities</h2><table><tr><th>Layer</th><th>What it owns</th><th>Do not use it for</th></tr><tr><td><code>Constants.java</code></td><td>Default poses, active-profile factories, aggregate construction, IMU setup, registration guards</td><td>Duplicating per-bot motor names</td></tr><tr><td><code>RobotConfigurations.java</code></td><td>Named presets with motor names/directions, Pinpoint data, follower tuning, and registrations</td><td>Loop behavior or raw gamepad reads</td></tr><tr><td><code>RobotConstants.java</code></td><td>Builder state, <code>createFollower()</code>, <code>createMechanism()</code>, per-mechanism parameter overrides</td><td>Match strategy</td></tr></table>
+<pre>// Constants is a delegation boundary, not a second configuration store.
+public static RobotDrive createDrive(HardwareMap hardwareMap) {
+    assertHasMechanism(RobotDrive.class);
+    return currentBot.createMechanism(hardwareMap, RobotDrive.class);
+}</pre></section>
+<section id="registration"><h2>Registration is a runtime contract</h2><p>A factory helper existing in <code>Constants</code> does not mean every profile supports its mechanism. The selected profile must register the class. <code>configureDriveMechanisms()</code> supplies the standard <code>RobotDrive</code> registration; optional features require their own <code>.addMechanism(...)</code> call.</p>
+<pre>return new RobotConstants()
+    .configureDriveMechanisms()
+    .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
+        .hardwareMapName("intake")
+        .intakeMotorDirection(Direction.REVERSE))
+    .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
+        .hardwareMapName("limelight"));</pre>
+<div class="source"><span class="label">Source of truth</span>Inspect <code>RobotConfigurations.java</code> before assuming that an optional mechanism is available. Use <code>Constants.hasMechanism(SomeMechanism.class)</code> in cross-profile test code.</div></section>
+<section id="factories"><h2>Choose the correct factory</h2><div class="grid"><div class="card"><h3>Aggregate mechanism set</h3><p><code>Constants.createMechanisms(hardwareMap)</code> constructs every class registered on the active profile. Shared teleops use <code>require(RobotDrive.class)</code> and nullable <code>get(...)</code> calls.</p></div><div class="card"><h3>One profile mechanism</h3><p><code>Constants.createIntake(...)</code>, <code>createLimelight(...)</code>, or <code>createDrive(...)</code> assert registration first, then use <code>RobotConstants.createMechanism(...)</code>.</p></div><div class="card"><h3>Follower and IMU</h3><p><code>createFollower(...)</code> and <code>createIMU(...)</code> are profile-configured helpers, not mechanism factories. The IMU helper initializes REV Hub orientation but does not reset yaw.</p></div><div class="card"><h3>Direct custom device</h3><p>Use <code>hardwareMap.get(SlidesMotor.class, ...)</code> only for a custom SDK device/test flow, not for a profile-managed subsystem.</p></div></div>
+<div class="warning"><span class="label">Failure mode</span><code>assertHasMechanism()</code> throws before a wrapper can quietly disable itself. This is useful: it tells you that profile registration, not a motor name, is the first bug to fix.</div></section>
+<section id="parameters"><h2>Local parameter overrides belong with the mechanism</h2><p>Mechanisms define nested builder-style parameter classes implementing <code>Mechanism.Params</code>. The base <code>Mechanism.resolveParams(...)</code> asks the active profile for an override, copies it, and invokes <code>updateFromBot(bot)</code>. This lets the same mechanism retain its own meaningful defaults while a robot profile can override hardware-dependent values.</p>
+<pre>params = resolveParams(Intake.class, new Intake.INTAKE_PARAMS());
+if (!params.ISBEINGUSED) return;
+Intake_Motor = new Motor(map, params.HARDWAREMAP_NAME);
+Intake_Motor.setDirection(params.INTAKE_MOTOR_DIRECTION);</pre>
+<ul><li>Keep drive, localizer, and IMU settings in <code>RobotConstants</code>.</li><li>Keep a mechanism's power presets, bindings, and local hardware fields in its nested params type.</li><li>Adding parameter overrides does not register a class. Registration and parameter data are separate.</li></ul></section>
+<section id="profile-change"><h2>Workflow: change or add a robot profile</h2><ol><li>Copy the closest preset in <code>RobotConfigurations</code>; retain its builder order so drive, IMU, Pinpoint, follower, registration, and compatibility fields stay readable.</li><li>Update all four drive names and directions together.</li><li>Set IMU name and logo/USB orientation together; then validate it with <code>Constants.createIMU(...)</code>.</li><li>Keep Pinpoint offsets, encoder directions, unit, and resolution together in <code>PinpointConstants</code>.</li><li>Register each supported profile mechanism explicitly and provide its params override when needed.</li><li>Use the factory tests and a safe drivetrain test before calling the profile match-ready.</li></ol></section>
+<nav class="pager"><a href="01-start-here.html">← Start here</a><a href="03-mechanisms-hardware.html">Mechanisms & hardware →</a></nav></main></div><footer class="footer">Configuration guide · Verify physical hardware names and directions before field use.</footer></body></html>

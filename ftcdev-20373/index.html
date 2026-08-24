@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>20373 RMS Chimera | TeamCode Programming Guide</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a>
+  <a class="header-link" href="../ftcdev-20373.html">Hub home</a>
+</header>
+<main class="landing">
+  <p class="eyebrow">BioBuzz TeamCode Documentation</p>
+  <h1>Build programs the way this repository is built.</h1>
+  <p class="lead">This is the detailed, source-backed guide for the 20373 RMS Chimera FTC codebase. It explains what belongs where, how the factory and mechanism layers work, and how to progress from a safe hardware check to a match-ready program.</p>
+  <div class="lede"><strong>Recommended reading order:</strong> start with architecture and lifecycle, then mechanisms and driver control. Read the autonomous, vision, localization, and tuning guides only after the robot profile and basic teleop flow are understood.</div>
+  <section class="guide-grid" aria-label="Programming guide chapters">
+    <a class="guide-card" href="01-start-here.html" target="_blank"><span class="number">01 / FOUNDATION</span><h2>Start Here</h2><p>Package map, decision tree, and the standard workflow for adding code without bypassing house style.</p><span>Read the foundation →</span></a>
+    <a class="guide-card" href="02-profiles-factories.html" target="_blank"><span class="number">02 / CONFIGURATION</span><h2>Profiles & Factories</h2><p><code>Constants</code>, <code>RobotConfigurations</code>, <code>RobotConstants</code>, and mechanism registration.</p><span>Configure a robot →</span></a>
+    <a class="guide-card" href="03-mechanisms-hardware.html" target="_blank"><span class="number">03 / SUBSYSTEMS</span><h2>Mechanisms & Hardware</h2><p>Build profile-managed mechanisms, distinguish direct FTC devices, and use the aggregate container.</p><span>Add a mechanism →</span></a>
+    <a class="guide-card" href="04-opmodes-lifecycle.html" target="_blank"><span class="number">04 / EXECUTION</span><h2>OpModes & Lifecycle</h2><p>Choose LinearOpMode or iterative OpMode, preserve shared behavior, and use Blackboard configuration safely.</p><span>Create an OpMode →</span></a>
+    <a class="guide-card" href="05-input-drive.html" target="_blank"><span class="number">05 / TELEOP</span><h2>Input & Drive</h2><p><code>GamepadEx</code>, <code>GpBindings</code>, driver preference, DriveVector, and MecanumDrive behavior.</p><span>Wire driver controls →</span></a>
+    <a class="guide-card" href="06-autonomous-ivy.html" target="_blank"><span class="number">06 / AUTONOMOUS</span><h2>Pedro & Ivy</h2><p>Path chains, followers, scheduler ownership, and the existing shared Ivy autonomous patterns.</p><span>Build an autonomous →</span></a>
+    <a class="guide-card" href="07-planners-vision.html" target="_blank"><span class="number">07 / PLANNING</span><h2>Planner & Vision Intake</h2><p>PlanBuilder sequencing, dynamic detector paths, fail-safe behavior, and return-path ownership.</p><span>Use planner steps →</span></a>
+    <a class="guide-card" href="08-localization-field.html" target="_blank"><span class="number">08 / POSITION</span><h2>Localization & Field</h2><p>Pinpoint profile data, Limelight wrapper pipelines, coordinate conversion, and JTS field geometry.</p><span>Work with poses →</span></a>
+    <a class="guide-card" href="09-tests-tuning.html" target="_blank"><span class="number">09 / VALIDATION</span><h2>Tests & Tuning</h2><p>JVM tests, driver-station checks, factory smoke tests, Pedro tuning, and PID relay tuning.</p><span>Validate safely →</span></a>
+    <a class="guide-card" href="10-library-math-simulation.html" target="_blank"><span class="number">10 / REUSABLE CODE</span><h2>Library, Math & Simulation</h2><p>Utilities, control, equations, filtering, field geometry, and the host-side simulator surface.</p><span>Extend shared code →</span></a>
+  </section>
+</main>
+<footer class="footer">Maintained against <code>TeamCode/</code>. Source paths in these pages refer to this workspace; verify current profile registration and hardware configuration on the robot before field use.</footer>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Planner & Vision Intake | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
+<div class="layout"><nav class="toc"><h2>Planning</h2><a href="#model">Planner model</a><a href="#builder">PlanBuilder</a><a href="#vision">IntakeWVision</a><a href="#fail-safe">Fail-safe and return</a><a href="#test">Integration test</a></nav>
+<main class="article"><p class="eyebrow">07 / Planning</p><h1>Use planner steps for mechanism-aware sequences.</h1><p class="lead">The planner stack is a repository layer on top of Pedro and Ivy. A <code>PathPlanner</code> step owns its start/end pose relationship, path construction, and command. <code>PlanBuilder</code> makes a sequence readable when it combines travel, waits, dynamic vision collection, and parking.</p>
+<section id="first-call"><h2>Call a plan from a LinearOpMode</h2><p>This is the call pattern used by <code>PlannerIntakeVisionAuto</code>: construct registered mechanisms once, build the sequence before start, then schedule and execute it in the active loop.</p><pre>Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+RobotDrive drive = mechanisms.require(RobotDrive.class);
+PathPlannerList plan = new PlanBuilder(mechanisms, START_POSE)
+    .linearPathTo(STAGING_POSE)
+    .waitMs(250)
+    .intakeWVision(2, createVisionFailSafePath())
+    .linearPathTo(PARK_POSE)
+    .build();
+
+waitForStart();
+plan.schedule();
+while (opModeIsActive()) {
+    Scheduler.execute();
+    drive.periodic(null);
+}</pre></section>
+<section id="model"><h2>Understand the PathPlanner contract</h2><pre>public interface PathPlanner {
+    Pose getEndPose();
+    Command run();
+    void setStartPose(Pose pose);
+    void buildPaths();
+}</pre><p><code>PathPlannerList</code> turns individual steps into a sequence. The start pose flows from one planner to the next; a step must accurately report its end pose. <code>PathPlanner.asCommand()</code> owns the <code>buildPaths()</code> then <code>run()</code> pairing, so callers do not duplicate that lifecycle.</p><div class="source"><span class="label">Built-in steps</span><code>library/planners/paths/Utils.java</code> currently supplies <code>StartPose</code>, <code>CustomPath</code>, <code>LinearPath</code>, <code>Wait</code>, and <code>IntakeWVision</code>.</div></section>
+<section id="builder"><h2>Compose a readable PlanBuilder sequence</h2><pre>plan = new PlanBuilder(mechanisms, START_POSE)
+    .linearPathTo(STAGING_POSE)
+    .followPath(createApproachPath())
+    .waitMs(250)
+    .intakeWVision(2, createVisionFailSafePath())
+    .linearPathTo(PARK_POSE)
+    .build();</pre><p>This is not a generic fluent API: it is an autonomous sequence over the aggregate mechanism set. The builder seeds its list with <code>Utils.StartPose</code>, so the drive follower receives the declared beginning before path steps run.</p><table><tr><th>Builder method</th><th>Use</th></tr><tr><td><code>linearPathTo(pose)</code></td><td>Create a repo-provided linear planner step from the previous end pose.</td></tr><tr><td><code>followPath(chain)</code></td><td>Insert explicit prebuilt Pedro geometry.</td></tr><tr><td><code>waitMs(ms)</code></td><td>Insert intentional timing, not a busy wait.</td></tr><tr><td><code>intakeWVision(count, failSafe)</code></td><td>Collect with neural-detector results while retaining a deterministic fallback.</td></tr></table></section>
+<section id="vision"><h2>IntakeWVision owns a dynamic path decision</h2><p><code>Utils.IntakeWVision</code> gets the profile-created <code>Limelight</code>, <code>RobotDrive</code>, and <code>Intake</code> from the aggregate. It switches to <code>NEURAL_DETECTOR</code>, retries for a bounded period, filters and scores detector candidates, chooses a sequence, then creates either a Pedro curve-through path or adaptive-handle Bezier segments based on waypoint geometry.</p><ul><li>Candidate filtering rejects weak confidence, too-small target area, non-finite distance, and excessive lateral offset.</li><li>It deduplicates nearby detections and scores a forward-ordered collection route.</li><li>It starts the intake while it follows the selected outbound path.</li><li>It retains a resolved end pose and does not pretend a dynamic route is guaranteed.</li></ul><div class="warning"><span class="label">Pipeline ownership</span>Do not silently leave the Limelight in AprilTag mode when a planner step expects detector output. <code>IntakeWVision.buildPaths()</code> and its start logic explicitly select the neural detector pipeline.</div></section>
+<section id="fail-safe"><h2>Dynamic paths require a fail-safe and a return owner</h2><p>Vision can be unavailable, poorly calibrated, or timeout before a valid route exists. <code>IntakeWVision</code> uses the supplied fail-safe outbound chain when it cannot use vision. After the outbound follower is no longer busy, it creates a return line to the step's configured start pose with piecewise heading interpolation. It stops the intake before following the return.</p><pre>if (shouldUseFailSafePath) {
+    startFailSafePath();
+}
+// After outbound completion:
+startReturnPath(drive.mecanumDrive.follower.getPose());</pre><p>When adding another dynamic planner, make the failure decision explicit. A plan should either choose a known fallback, finish safely, or return a no-op that its caller understands; it should not leave a follower or mechanism running indefinitely.</p></section>
+<section id="test"><h2>Use the integration test as the starting point</h2><p><code>tests/PlannerIntakeVisionAuto.java</code> is the current Driver Station-visible integration test. It creates aggregate mechanisms, requires drive, treats intake/limelight as optional references for telemetry/cleanup, starts the optional wrapper in detector mode after start, schedules the plan, calls <code>Scheduler.execute()</code>, and calls <code>drive.periodic(null)</code> in its active loop.</p><div class="checklist"><span class="label">Before adding a new planner step</span><ul><li>Validate the step with a deterministic fail-safe route first.</li><li>Keep start/end pose behavior correct so later steps attach to the intended place.</li><li>Validate optional mechanism absence instead of dereferencing a missing wrapper.</li><li>Keep detector calibration and robot safety bounds conservative until tested on field.</li></ul></div></section>
+<nav class="pager"><a href="06-autonomous-ivy.html">← Pedro & Ivy</a><a href="08-localization-field.html">Localization & field →</a></nav></main></div><footer class="footer">Planner guide · Dynamic perception needs deterministic fallback behavior.</footer></body></html>

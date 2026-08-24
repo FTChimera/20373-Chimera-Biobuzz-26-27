@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OpModes & Lifecycle | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
+<div class="layout"><nav class="toc"><h2>Execution</h2><a href="#choose">Choose lifecycle type</a><a href="#linear">LinearOpMode pattern</a><a href="#iterative">Iterative pattern</a><a href="#variants">Base classes & variants</a><a href="#blackboard">Config & handoff</a></nav>
+<main class="article"><p class="eyebrow">04 / Execution</p><h1>One OpMode owns the FTC lifecycle.</h1><p class="lead">FTC code must choose a lifecycle shape before it chooses control logic. This repo uses both <code>LinearOpMode</code> and iterative <code>OpMode</code>; both are valid, but their initialization, active loop, and cleanup points are different.</p>
+<section id="first-call"><h2>Call a shared base by writing a small variant</h2><p>For an alliance teleop, callers generally do not copy the entire control loop. They extend the repo base and supply only the selected start pose. The existing red wrapper follows this pattern.</p><pre>@TeleOp(name = "My Red TeleOp", group = "0: TeleOp")
+public class MyRedTeleOp extends TeleOp {
+    public MyRedTeleOp() {
+        super(AllianceColor.RED);
+    }
+
+    @Override protected Pose getStartingPose() {
+        return Constants.RED_DEFAULT_START_POSE.copy();
+    }
+}</pre><p>For pre-start preferences, select <code>ConfigOpMode</code> on the Driver Station, choose the D-pad item, then start it to persist Blackboard state. A match op mode reads that state; it does not reimplement the menu.</p></section>
+<section id="choose"><h2>Choose the lifecycle that matches the control flow</h2><table><tr><th>Use</th><th>When it fits</th><th>Current repository examples</th></tr><tr><td><code>LinearOpMode</code></td><td>A clear sequential setup, <code>waitForStart()</code>, and active loop fits naturally.</td><td><code>opModes/TeleOp.java</code>, <code>tests/PlannerIntakeVisionAuto.java</code>, factory-test base flows</td></tr><tr><td>Iterative <code>OpMode</code></td><td>The operation benefits from distinct <code>init()</code>, <code>start()</code>, <code>loop()</code>, and <code>stop()</code> hooks.</td><td><code>opModes/IvyAuton.java</code>, <code>configs/ConfigOpMode.java</code></td></tr></table><div class="warning"><span class="label">Lifecycle rule</span>Never use <code>waitForStart()</code> inside an iterative <code>OpMode</code>. Conversely, do not turn a LinearOpMode into an uncontrolled busy loop; use <code>opModeIsActive()</code> as the active condition.</div></section>
+<section id="linear"><h2>The shared LinearOpMode teleop pattern</h2><pre>public void runOpMode() {
+    GamepadEx driver = new GamepadEx(gamepad1);
+    GpBindings bindings = driver.result();
+    mechanisms = Constants.createMechanisms(hardwareMap);
+    drive = mechanisms.require(RobotDrive.class);
+    intake = mechanisms.get(Intake.class);
+
+    telemetry.addData("Status", "Initialized");
+    telemetry.update();
+    waitForStart();
+
+    while (opModeIsActive()) {
+        driver.update();
+        mechanisms.periodic(bindings);
+        telemetry.addData("Pose", drive.getPose());
+        telemetry.update();
+    }
+}</pre><p>That sequence gives input edge detection a single update point, makes required/optional mechanism behavior explicit, and preserves telemetry ownership in the op mode.</p></section>
+<section id="iterative"><h2>The iterative autonomous pattern</h2><p><code>IvyAuton</code> resets the scheduler and builds shared resources in <code>init()</code>, schedules the sequence in <code>start()</code>, executes scheduler work and follower updates in <code>loop()</code>, then writes pose handoff and resets the scheduler in <code>stop()</code>.</p><pre>@Override public void init() {
+    Scheduler.reset();
+    follower = Constants.createFollower(hardwareMap);
+    follower.setStartingPose(paths.getStartingPose());
+    mechanisms = Constants.createMechanisms(hardwareMap);
+    intake = mechanisms.require(Intake.class);
+}
+@Override public void loop() {
+    Scheduler.execute();
+    follower.update();
+}
+@Override public void stop() {
+    Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy());
+    Scheduler.reset();
+}</pre><p>Do not casually add another follower update loop around this base. The shared lifecycle already owns it.</p></section>
+<section id="variants"><h2>Keep shared behavior in bases and selection in variants</h2><p>Shared competition code belongs in a base class under <code>opModes/</code>. A Driver Station-visible variant under <code>opModes/variants/</code> should be small: it supplies the alliance or path implementation and carries the FTC annotation. This reduces duplicate mechanism construction and keeps pose handoff consistent.</p><div class="source"><span class="label">Existing pattern</span><code>TeleOp</code> is a shared abstract LinearOpMode. <code>Blue_TeleOp</code> and <code>Red_TeleOp</code> are concrete wrappers that select an alliance-specific starting pose. <code>IvyAuton</code> is an abstract iterative base paired with an <code>IvyAuton_Paths</code> implementation.</div></section>
+<section id="blackboard"><h2>Configuration and pose handoff use Blackboard</h2><p><code>Blackboard</code> stores typed runtime values for <code>POSE</code>, <code>DRIVER</code>, and <code>ALLIANCE</code>. It is not the robot configuration profile. <code>ConfigOpMode</code> is an iterative pre-start menu: <code>init()</code> builds selectable actions, <code>init_loop()</code> handles D-pad navigation, and <code>loop()</code> stops after the driver starts the op mode.</p><div class="checklist"><span class="label">Before adding shared state</span><ul><li>Add a typed <code>Caption</code> and a sensible default.</li><li>Decide which lifecycle owner writes it and which concrete mode consumes it.</li><li>Handle default state versus a meaningful restored value explicitly. Teleop pose wrappers currently guard the zero pose before reuse.</li><li>Use the config menu for preferences; do not multiply one-action annotated configuration op modes.</li></ul></div></section>
+<nav class="pager"><a href="03-mechanisms-hardware.html">← Mechanisms & hardware</a><a href="05-input-drive.html">Input & drive →</a></nav></main></div><footer class="footer">Lifecycle guide · Keep initialization, loop work, and cleanup in the correct FTC phase.</footer></body></html>

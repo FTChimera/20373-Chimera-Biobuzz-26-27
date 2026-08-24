@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mechanisms & Hardware | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
+<div class="layout"><nav class="toc"><h2>Subsystems</h2><a href="#mechanism">Mechanism contract</a><a href="#aggregate">Aggregate access</a><a href="#new">Add a mechanism</a><a href="#hardware">Direct hardware devices</a><a href="#validation">Validate construction</a></nav>
+<main class="article"><p class="eyebrow">03 / Subsystems</p><h1>Put robot behavior behind a mechanism.</h1><p class="lead">A profile-managed mechanism gets a <code>HardwareMap</code> and active <code>RobotConstants</code>, resolves its own parameters, participates in aggregate updates, and becomes available only after its profile registers it. This prevents each op mode from inventing a new hardware construction path.</p>
+<section id="first-call"><h2>Call a mechanism from an OpMode</h2><p>Once a mechanism is registered, callers should request it through the aggregate and invoke its public behavior. For example, an explicit intake action can be used in a focused test while normal teleop lets <code>periodic(...)</code> consume its configured trigger bindings.</p><pre>Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+RobotDrive drive = mechanisms.require(RobotDrive.class);
+Intake intake = mechanisms.get(Intake.class);
+
+waitForStart();
+if (intake != null) intake.HalfPower();
+sleep(250);
+if (intake != null) intake.Stop();
+
+// Shared teleop normally delegates all configured controls here:
+mechanisms.periodic(driverBindings);</pre></section>
+<section id="mechanism"><h2>The Mechanism contract is small on purpose</h2><pre>public abstract class Mechanism {
+    protected HardwareMap hardwareMap;
+    protected RobotConstants bot;
+
+    protected &lt;P extends Params&lt;P&gt;&gt; P resolveParams(
+            Class&lt;? extends Mechanism&gt; mechanismClass, P defaultParams) {
+        return bot.getMechanismParams(mechanismClass, defaultParams)
+                .updateFromBot(bot);
+    }
+
+    public abstract void periodic(GpBindings bindings);
+}</pre><p>The small API is the point. A mechanism owns its hardware and per-loop behavior; the op mode owns the loop. Implement <code>periodic(...)</code> even when it intentionally does nothing, because the aggregate container calls a consistent surface.</p>
+<div class="source"><span class="label">Existing examples</span><code>mechanisms/RobotDrive.java</code> resolves stick bindings and delegates to <code>MecanumDrive</code>. <code>mechanisms/Intake.java</code> resolves power/binding parameters, creates a <code>Motor</code>, and combines trigger command values in <code>periodic(...)</code>.</div></section>
+<section id="aggregate"><h2>Use the aggregate container for shared op modes</h2><p><code>Mechanisms</code> constructs every class in <code>bot.Mechanisms</code>, keeps typed lookup methods, and fans a single <code>GpBindings</code> update to every mechanism. It is the normal shared-teleop construction path.</p>
+<pre>Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+RobotDrive drive = mechanisms.require(RobotDrive.class);
+Intake intake = mechanisms.get(Intake.class);
+
+// One updated input view; one aggregate periodic call each loop.
+driver.update();
+mechanisms.periodic(driverResult);</pre>
+<table><tr><th>Method</th><th>Use it when</th></tr><tr><td><code>get(SomeClass.class)</code></td><td>The mechanism is optional across profiles. Handle <code>null</code> intentionally.</td></tr><tr><td><code>require(SomeClass.class)</code></td><td>The op mode cannot run safely without it. A missing registration should fail clearly.</td></tr><tr><td><code>has(SomeClass.class)</code></td><td>A test or conditional path needs to inspect the aggregate before choosing work.</td></tr><tr><td><code>all()</code></td><td>Telemetry or generic inspection needs the registered set.</td></tr></table></section>
+<section id="new"><h2>Workflow: add a profile-managed mechanism</h2><ol><li>Create the class under <code>mechanisms/</code> or an appropriate <code>library/hardware/...</code> package, extending <code>Mechanism</code>.</li><li>Add a nested params type implementing <code>Mechanism.Params&lt;T&gt;</code>. Give it <code>copy()</code>, <code>updateFromBot(...)</code>, and focused builder methods for meaningful local values.</li><li>Use <code>resolveParams(NewMechanism.class, new PARAMS())</code> in the constructor before touching hardware.</li><li>Construct lower-level wrappers such as <code>Motor</code> inside the mechanism, not in every caller.</li><li>Implement <code>periodic(GpBindings)</code>. Keep the method safe when bindings are absent if that is part of the mechanism's intended lifecycle.</li><li>Register the class with <code>.addMechanism(NewMechanism.class, params)</code> in every supporting profile.</li><li>Add a narrow <code>Constants.createNewMechanism(...)</code> helper only when direct callers need it; otherwise prefer the aggregate.</li></ol>
+<div class="warning"><span class="label">Do not skip registration</span>Matching the constructor signature alone is not enough. <code>RobotConstants.createMechanism(...)</code> intentionally rejects an unregistered class.</div></section>
+<section id="hardware"><h2>Do not confuse mechanisms with direct SDK devices</h2><p>The repo also has custom device classes under <code>library/hardware/hardwareDevice/</code>. These represent an FTC SDK registration/use path and are appropriate for direct <code>hardwareMap.get(...)</code> in a lower-level test or device flow. They are not automatically part of the profile mechanism set.</p><div class="grid"><div class="card"><h3>Profile-managed</h3><p><code>RobotDrive</code>, <code>Intake</code>, wrapper-side <code>Limelight</code>, and wrapper-side RGB indicator use the <code>Mechanism</code> factory path.</p></div><div class="card"><h3>Direct devices</h3><p><code>SlidesMotor</code>, <code>RevPotentiometer</code>, and the device-level <code>RGBIndicator</code> are SDK-facing classes used through hardware mapping and dedicated tests.</p></div></div></section>
+<section id="validation"><h2>Validate mechanism construction in layers</h2><div class="checklist"><span class="label">A safe validation ladder</span><ol><li>Build <code>:TeamCode:assembleDebug</code> after changing constructors, params, or registrations.</li><li>For pure parameter behavior, add or update a JVM test.</li><li>Use a matching <code>tests/ftcSdk/*FactoryTest</code> style flow to validate profile creation on hardware.</li><li>Only then drive the mechanism from a shared or match op mode.</li></ol></div></section>
+<nav class="pager"><a href="02-profiles-factories.html">← Profiles & factories</a><a href="04-opmodes-lifecycle.html">OpModes & lifecycle →</a></nav></main></div><footer class="footer">Mechanism guide · One construction path per profile-managed subsystem.</footer></body></html>

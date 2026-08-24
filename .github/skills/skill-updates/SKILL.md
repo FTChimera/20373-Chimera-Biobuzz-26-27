@@ -36,8 +36,9 @@ Typical prompts include requests like:
 - In this repo, a request like “update all the skill files” means “update every
   document that serves as reference material for anyone or anything modifying
   the codebase,” not just the `SKILL.md` files. That includes
-  `.github/skills/README.md`, the relevant skill guides, and companion repo docs
-  such as `ftcdev-20373.html`.
+  `.github/skills/README.md`, the relevant skill guides, the
+  `ftcdev-20373.html` landing hub, and its long-form static chapters under
+  `ftcdev-20373/`.
 - Unless the user explicitly insists on updating **all** skill files, only update the files that are actually necessary.
 - If the user says “update all,” you should still determine whether some files truly need no changes; if so, tell the user that those files were reviewed and left unchanged.
 - If the update scope or history boundary is ambiguous, state the assumption you used and proceed.
@@ -109,7 +110,7 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 6. `Constants.currentBot` can change quickly, do not update SKILL files/README.md to state the current profile as it might become outdated quickly.
 7. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
 8. If the index file `.github/skills/README.md` should mention a new pattern, package, or skill, update it too.
-9. If `ftcdev-20373.html` is present and acts as repo documentation, treat it as part of the same “update all the skill files” maintenance surface unless the user explicitly narrows the scope away from it.
+9. If `ftcdev-20373.html` is present and acts as repo documentation, treat both it and the long-form static chapters under `ftcdev-20373/` as part of the same “update all the skill files” maintenance surface unless the user explicitly narrows the scope away from them.
 10. After editing docs, validate the changed markdown files and any touched companion reference docs for obvious consistency issues, then summarize exactly which skill files and companion docs changed.
 
 ## What kinds of code changes usually require skill updates
@@ -126,7 +127,7 @@ git --no-pager log --stat --decorate -10 -- TeamCode | cat
 - new third-party build wiring in `build.dependencies.gradle`, especially new repositories or driver-station-facing libraries
 - new build, lint, or validation expectations
 - new skill directories or renamed skills
-- repo documentation drift in `ftcdev-20373.html`, especially stale snippets, outdated BioBuzz architecture notes, or non-FTChimera links
+- repo documentation drift in `ftcdev-20373.html` or `ftcdev-20373/`, especially stale snippets, outdated BioBuzz architecture notes, broken hub-to-chapter links, or non-FTChimera links
 
 ## How to decide which skill files to touch
 
@@ -166,7 +167,7 @@ Examples:
 - Prefer concrete file names and actual current symbols.
 - Remove stale references when current architecture supersedes them.
 - Do not claim a pattern is active unless you verified it in the current code.
-- When updating `ftcdev-20373.html`, source examples from `TeamCode/` instead of inventing generic FTC snippets, and keep FTChimera / 20373 RMS Chimera branding current.
+- When updating `ftcdev-20373.html` or `ftcdev-20373/`, source examples from `TeamCode/` instead of inventing generic FTC snippets, keep FTChimera / 20373 RMS Chimera branding current, and preserve the landing hub's links to the corresponding static chapters.
 - Distinguish between:
   - profile-managed `Mechanism`/factory flows
   - lower-level direct `hardwareMap.get(...)` custom devices

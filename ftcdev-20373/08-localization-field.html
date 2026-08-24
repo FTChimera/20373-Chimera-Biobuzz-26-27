@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Localization & Field | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
+<div class="layout"><nav class="toc"><h2>Position</h2><a href="#pinpoint">Pinpoint profile data</a><a href="#limelight">Limelight wrapper</a><a href="#coordinates">Coordinate conversion</a><a href="#field">Field geometry</a><a href="#safety">Validation & limits</a></nav>
+<main class="article"><p class="eyebrow">08 / Position</p><h1>Keep localization, vision, and geometry explicit.</h1><p class="lead">The default follower localization path is configured through the active robot profile and Pedro Pinpoint localizer. Limelight is a profile-managed camera wrapper that can provide AprilTag, color, or neural-detector data. The new field utility is separate JTS-backed geometry for contact checks. These layers should cooperate without silently overwriting each other.</p>
+<section id="first-call"><h2>Call follower and Limelight from an OpMode</h2><p>Use the profile-created follower for localization. If the active profile includes the optional Limelight wrapper, start a selected pipeline and update the wrapper while reporting Pedro poses.</p><pre>Follower follower = Constants.createFollower(hardwareMap);
+Limelight limelight = Constants.hasMechanism(Limelight.class)
+    ? Constants.createLimelight(hardwareMap) : null;
+follower.setStartingPose(Constants.RED_DEFAULT_START_POSE);
+
+waitForStart();
+if (limelight != null) limelight.start(Limelight.Pipeline.APRIL_TAG);
+while (opModeIsActive()) {
+    follower.update();
+    if (limelight != null) {
+        limelight.updateRobotOrientation(follower.getPose().getHeading());
+        limelight.LLUpdate();
+    }
+    telemetry.addData("Pedro pose", follower.getPose());
+    telemetry.update();
+}
+if (limelight != null) limelight.stop();</pre></section>
+<section id="pinpoint"><h2>Pinpoint belongs in the robot profile</h2><p><code>RobotConfigurations</code> supplies Pinpoint hardware name, pod offsets, encoder directions, distance unit, and pod resolution through <code>PinpointConstants</code>. <code>RobotConstants.createFollower(...)</code> puts those constants into its <code>FollowerBuilder(...).pinpointLocalizer(...)</code> flow. Changing one of these in an autonomous op mode creates profile drift.</p><pre>.pinpointConstants(new PinpointConstants()
+    .hardwareMapName("pinpoint")
+    .forwardPodY(/* measured value */)
+    .strafePodX(/* measured value */)
+    .forwardEncoderDirection(...)
+    .strafeEncoderDirection(...))</pre><p>Profile construction does not certify calibration. Measure physical offsets and validate follower behavior before treating follower tuning as competition-ready.</p></section>
+<section id="limelight"><h2>Use the Limelight wrapper and select a pipeline deliberately</h2><p><code>library/hardware/webcam/Limelight.java</code> extends <code>Mechanism</code> and exposes <code>APRIL_TAG</code>, <code>COLOR</code>, and <code>NEURAL_DETECTOR</code> pipelines. Normal creation flows through <code>Constants.createLimelight(...)</code> or the aggregate mechanism set if the active profile registers it.</p><table><tr><th>Pipeline</th><th>Current intended use</th></tr><tr><td><code>APRIL_TAG</code></td><td>Shared teleop can start the optional wrapper in this mode for cached fiducial/pose information.</td></tr><tr><td><code>COLOR</code></td><td><code>tests/PreseasonWebcamAuto.java</code> uses raw SDK color behavior as a proof-of-concept exception.</td></tr><tr><td><code>NEURAL_DETECTOR</code></td><td><code>Utils.IntakeWVision</code> uses detector results to build a collection path.</td></tr></table><div class="warning"><span class="label">Deprecated localizer</span><code>pedroPathing/custom/LimelightPinpointLocalizer.java</code> is marked <code>@Deprecated</code> and is not the default follower path. Do not make it the starting point for new localization work.</div></section>
+<section id="coordinates"><h2>Pose data needs an explicit coordinate boundary</h2><p><code>Constants.FTC_COORDINATE_SYSTEM</code> is the repo's inverted FTC coordinate system. The Limelight wrapper converts a Pedro heading before it reaches FTC/Limelight orientation calls and converts MT2 pose data back through <code>MathUtils.units.toPedroPathing(...)</code>. Keep those conversions in the wrapper/math layer; do not scatter one-off degree/radian or axis swaps across op modes.</p><div class="source"><span class="label">Practical rule</span>Use Pedro <code>Pose</code> inside TeamCode pathing/planner logic. When crossing an FTC SDK or Limelight boundary, use the existing coordinate and unit helpers and document the expected frame.</div></section>
+<section id="field"><h2>Field is a geometry utility, not an autonomous strategy engine</h2><p><code>library/game/Field.java</code> uses JTS geometry to create ordered polygons and circles, project a robot footprint through a velocity sweep, and classify contact as <code>OUTSIDE</code>, <code>PARTIAL</code>, or <code>OVERLAPPING</code>. It exposes placeholder shapes and alliance-specific autonomous midline boundaries while the game geometry remains preseason work.</p><pre>Field.ContactState state = Field.Boundaries.AUTO_MID_LINE_BLUE
+    .getContactState(position, velocity, deltaTime);</pre><p>The contact check considers both the robot footprint and sweep rather than only the robot center. That makes it suitable for constraints like “would a moving robot cross this boundary?” but it does not generate a detour or replace a path planner.</p></section>
+<section id="safety"><h2>Validate in the correct order</h2><div class="checklist"><span class="label">Pose and vision validation</span><ol><li>Verify follower construction and Pinpoint orientation through the profile before tuning paths.</li><li>Use safe static and low-speed movement checks before trusting a pose.</li><li>Confirm the active Limelight pipeline and call <code>LLUpdate()</code> regularly when consuming cached wrapper results.</li><li>Treat Limelight mounting dimensions and distance-derived detector positions as calibration targets until measured.</li><li>Run <code>FieldTest</code> for pure geometry changes, then test field-boundary behavior at controlled speed.</li></ol></div></section>
+<nav class="pager"><a href="07-planners-vision.html">← Planner & vision intake</a><a href="09-tests-tuning.html">Tests & tuning →</a></nav></main></div><footer class="footer">Localization and field guide · Explicit frames and conservative validation beat invisible pose fusion.</footer></body></html>

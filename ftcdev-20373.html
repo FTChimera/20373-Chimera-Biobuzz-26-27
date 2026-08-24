@@ -907,9 +907,9 @@
                 <h2 class="section-title">How this <span>TeamCode repo</span> is organized</h2>
                 <div class="divider"></div>
                 <p class="section-desc">
-                    Start with the layers that matter in this repository: library utilities,
-                    robot profiles, Blackboard state handoff, Kotlin examples, Ivy scheduling,
-                    and the test/tuning flows that support match code.
+                    Start with the calls you make in a program: create profile-managed mechanisms,
+                    update driver input, run a shared base, schedule paths, and validate safely.
+                    Each concept card opens caller-side examples before its supporting implementation notes.
                 </p>
             </div>
 
@@ -918,8 +918,8 @@
                     <span class="card-icon">📚</span>
                     <div class="card-title">Library Layer</div>
                     <p class="card-text">
-                        The reusable core lives under <code>org.firstinspires.ftc.teamcode.library</code>:
-                        drive vectors, timers, filters, interpolation, hardware wrappers, robot config, and math.
+                        Call shared helpers such as <code>Timer</code>, <code>GamepadEx</code>, <code>DriveVector</code>,
+                        filters, and wrappers from an OpMode instead of rewriting utility behavior locally.
                     </p>
                 </div>
 
@@ -927,9 +927,8 @@
                     <span class="card-icon">🧩</span>
                     <div class="card-title">Constants &amp; Robot Profiles</div>
                     <p class="card-text">
-                        <code>Constants.java</code> exposes op-mode-facing factories while
-                        <code>library.robot</code> stores the robot profile, follower setup,
-                        drive names, directions, and enabled mechanisms.
+                        Start an OpMode with <code>Constants.createMechanisms(hardwareMap)</code>, then use typed
+                        <code>require(...)</code> or optional <code>get(...)</code> calls.
                     </p>
                 </div>
 
@@ -937,8 +936,8 @@
                     <span class="card-icon">🧠</span>
                     <div class="card-title">Blackboard &amp; Pose Handoff</div>
                     <p class="card-text">
-                        Shared state such as the last autonomous pose and chosen driver lives in
-                        <code>configs.Blackboard</code>, then gets consumed by variant op modes.
+                        Call <code>Blackboard.put(...)</code> when a lifecycle flow owns shared state, then read it in
+                        a concrete variant with an explicit default-pose fallback.
                     </p>
                 </div>
 
@@ -946,8 +945,8 @@
                     <span class="card-icon">🏗️</span>
                     <div class="card-title">OpMode Structure</div>
                     <p class="card-text">
-                        Shared bases live under <code>opModes/</code>, annotated wrappers live under
-                        <code>opModes/variants/</code>, and tests/proofs-of-concept live under <code>tests/</code>.
+                        Call a shared base by extending it in a small annotated variant; do not copy whole shared loops
+                        into each Driver Station entry.
                     </p>
                 </div>
 
@@ -955,8 +954,8 @@
                     <span class="card-icon">🟣</span>
                     <div class="card-title">Kotlin in TeamCode</div>
                     <p class="card-text">
-                        The repo already includes Kotlin support, with TeleOp and iterative Ivy autonomous
-                        examples that show the repo’s follower-first style from Kotlin files.
+                        Kotlin calls the same <code>Constants.createFollower(hardwareMap)</code> and follower APIs as Java;
+                        it does not use a separate robot architecture.
                     </p>
                 </div>
 
@@ -964,8 +963,8 @@
                     <span class="card-icon">🧪</span>
                     <div class="card-title">Tests, Tuners &amp; Ivy</div>
                     <p class="card-text">
-                        Validation op modes, PIDF auto-tuners, and Pedro Ivy autonomous helpers
-                        are already in the repo — use the existing patterns instead of starting from scratch.
+                        Start with a no-motion factory test or a focused test OpMode, then call planner/Ivy/tuning flows
+                        only after the basic profile-created hardware path works.
                     </p>
                 </div>
             </div>
@@ -982,8 +981,8 @@
                 <h2 class="section-title">Real Code, <span>Ready to Use</span></h2>
                 <div class="divider"></div>
                 <p class="section-desc">
-                    Battle-tested patterns for common FTC robot tasks.
-                    Click the tabs to explore each snippet.
+                    Copy the call patterns that belong inside an OpMode. Each tab shows how to use an existing
+                    TeamCode surface; the detailed chapters explain the implementation only when it helps.
                     <!--✏️ EDIT -->
                 </p>
             </div>
@@ -991,93 +990,64 @@
             <div style="margin-top:44px;" class="reveal">
                 <!-- Tab bar -->
                 <div class="code-tabs">
-                    <button class="tab-btn active" data-tab="constants">Constants.java</button>
-                    <button class="tab-btn" data-tab="blackboard">Blackboard.java</button>
-                    <button class="tab-btn" data-tab="teleop">TeleOp.java</button>
-                    <button class="tab-btn" data-tab="kotlin">Kotlin TeleOp</button>
-                    <button class="tab-btn" data-tab="ivy">IvyAuton.java</button>
-                    <button class="tab-btn" data-tab="tuner">Velocity PIDF Tuner</button>
+                    <button class="tab-btn active" data-tab="constants">Create Mechanisms</button>
+                    <button class="tab-btn" data-tab="blackboard">Use Blackboard</button>
+                    <button class="tab-btn" data-tab="teleop">Run TeleOp Loop</button>
+                    <button class="tab-btn" data-tab="kotlin">Call From Kotlin</button>
+                    <button class="tab-btn" data-tab="ivy">Create Ivy Auto</button>
+                    <button class="tab-btn" data-tab="tuner">Write a Factory Test</button>
                 </div>
 
                 <div class="code-panel">
 
                     <div class="code-pane active" id="tab-constants">
-<pre>public class Constants {
-    public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
-    public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
-    public static final RobotConstants currentBot = /* selected RobotConfigurations profile */;
+<pre>Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+RobotDrive drive = mechanisms.require(RobotDrive.class);
+Intake intake = mechanisms.get(Intake.class); // Optional by profile.
+Limelight limelight = mechanisms.get(Limelight.class);
 
-    public static Follower createFollower(HardwareMap hardwareMap) {
-        return currentBot.createFollower(hardwareMap);
-    }
-    public static RobotDrive createDrive(HardwareMap hardwareMap) {
-        assertHasMechanism(RobotDrive.class);
-        return currentBot.createMechanism(hardwareMap, RobotDrive.class);
-    }
-    public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
-        return new Mechanisms(hardwareMap, currentBot);
-    }
-}</pre>
+telemetry.addData("Registered", mechanisms.getConfiguredMechanismClasses());
+telemetry.addData("Has intake", intake != null);
+telemetry.update();
+
+// For a follower-only operation:
+Follower follower = Constants.createFollower(hardwareMap);
+follower.setStartingPose(Constants.RED_DEFAULT_START_POSE);
+</pre>
                     </div>
 
                     <div class="code-pane" id="tab-blackboard">
-<pre>public class Blackboard {
-    private static final List&lt;Item&gt; items = new ArrayList&lt;&gt;(List.of(
-            new Item(Caption.POSE, new Pose()),
-            new Item(Caption.DRIVER, Driver.DEFAULT)
-    ));
+<pre>// A configuration or autonomous flow writes state deliberately.
+Blackboard.put(Blackboard.Caption.ALLIANCE, AllianceColor.RED);
+Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy());
 
-    public static Item get(Caption cap) {
-        for (Item item : items) {
-            if (item.cap == cap) {
-                return item;
-            }
-        }
-        return null;
-    }
-    public static void put(Caption cap, Object value) {
-        put(new Item(cap, value));
-    }
-
-    public enum Caption {
-        POSE(Pose.class),
-        DRIVER(Driver.class);
-    }
+// A variant reads the stored pose, then falls back when it is still zero.
+Pose saved = Blackboard.get(Blackboard.Caption.POSE).getValue();
+if (saved.getX() != 0 || saved.getY() != 0 || saved.getHeading() != 0) {
+    drive.setStartingPose(saved);
+} else {
+    drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
+}
 }</pre>
                     </div>
 
                     <div class="code-pane" id="tab-teleop">
-<pre>public abstract class TeleOp extends LinearOpMode {
-    AllianceColor allianceColor;
-    Mechanisms mechanisms;
-    Intake intake;
-    RobotDrive drive;
-    Limelight limelight;
+<pre>GamepadEx driver = new GamepadEx(gamepad1);
+GpBindings bindings = driver.result();
+Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+RobotDrive drive = mechanisms.require(RobotDrive.class);
 
-    @NonNull
-    protected abstract Pose getStartingPose();
+drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
+drive.setStickCurve(x -> Math.signum(x) * x * x);
+drive.startTeleOpDrive();
+waitForStart();
 
-    @Override
-    public void runOpMode() {
-        GamepadEx driver = new GamepadEx(gamepad1);
-        GpBindings driverResult = driver.result();
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        intake = mechanisms.get(Intake.class);
-        drive = mechanisms.require(RobotDrive.class);
-        drive.setStartingPose(getStartingPose());
-        drive.setStickCurve(x -> Math.signum(x) * x * x);
-        drive.startTeleOpDrive();
-        limelight = mechanisms.get(Limelight.class);
-
-        waitForStart();
-        if (limelight != null) limelight.start(Limelight.Pipeline.APRIL_TAG);
-        while (opModeIsActive()) {
-            driver.update();
-            mechanisms.periodic(driverResult);
-            telemetry.addData("Pose", drive.getPose());
-            telemetry.update();
-        }
-    }
+while (opModeIsActive()) {
+    driver.update();
+    mechanisms.periodic(bindings);
+    telemetry.addData("Pose", drive.getPose());
+    telemetry.update();
+}
 }</pre>
                     </div>
 
@@ -1106,63 +1076,38 @@ class KotlinTeleOpTest: LinearOpMode() {
                     </div>
 
                     <div class="code-pane" id="tab-ivy">
-<pre>public abstract class IvyAuton extends OpMode {
-    AllianceColor allianceColor;
-    IvyAuton_Paths paths;
-    Follower follower;
-    Mechanisms mechanisms;
-    Intake intake;
-
-    public IvyAuton(AllianceColor col, IvyAuton_Paths paths) {
-        this.allianceColor = col;
-        this.paths = paths;
+<pre>@Autonomous(name = "My Red Auto")
+public class MyRedAuto extends IvyAuton {
+    static class Paths extends IvyAuton_Paths {
+        Pose start = new Pose(36, 12, Math.toRadians(180));
+        @Override protected Pose getStartingPose() { return start.copy(); }
+        @Override protected PathChain getPath1() {
+            Path line = new Path(new BezierLine(start, new Pose(36, 36)));
+            line.setHeadingInterpolation(
+                HeadingInterpolator.linear(start.getHeading(), Math.toRadians(180)));
+            return new PathChain(line);
+        }
     }
-
-    @Override
-    public void init() {
-        Scheduler.reset();
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(paths.getStartingPose());
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        intake = mechanisms.require(Intake.class);
-    }
-
-    public void start() {
-        Scheduler.schedule(Groups.sequential(
-            intake.halfPower(),
-            PedroCommands.follow(follower, paths.getPath1(), true),
-            intake.fullPower(),
-            waitMs(1000),
-            intake.stop(),
-            CommandConverter.toCommand(this::requestOpModeStop)
-        ));
-    }
+    public MyRedAuto() { super(AllianceColor.RED, new Paths()); }
 }</pre>
                     </div>
 
                     <div class="code-pane" id="tab-tuner">
-<pre>@TeleOp(name = "Velocity PIDF Tuner", group = "FtcAutoTune")
-public class VelocityPIDFTunerOpMode extends LinearOpMode {
-    @Override
-    public void runOpMode() {
-        TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
-        double targetTicksPerSec = TuningConstants.targetTicksPerSec();
+<pre>@Override
+protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
+        GamepadEx gamepad2, Telemetry telemetry) {
+    Follower follower = Constants.createFollower(hardwareMap);
+    follower.setStartingPose(Constants.RED_DEFAULT_START_POSE);
+    follower.update();
+    follower.startTeleopDrive();
+    follower.setTeleOpDrive(0, 0, 0, false);
 
-        PIDMaster pid = new PIDMaster(
-                hardwareMap, TuningConstants.MOTOR_NAME, TuningConstants.REVERSED, false,
-                targetTicksPerSec, TuningConstants.hysteresisTicksPerSec(),
-                TuningConstants.RELAY_AMPLITUDE, TuningConstants.CYCLES_TO_COLLECT, TuningConstants.CYCLES_TO_IGNORE,
-                TuningConstants.RELAY_TEST_TIMEOUT_S, TuningConstants.FEEDFORWARD_TEST_POWERS,
-                TuningConstants.FEEDFORWARD_SETTLE_TIME_S, TuningConstants.TUNE_INTEGRAL_TERM,
-                TuningConstants.TICKS_PER_REV);
-
-        waitForStart();
-        while (opModeIsActive() && !pid.isTuningComplete()) {
-            pid.tuningStep(getRuntime());
-            for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-            panelsTelemetry.update();
-        }
+    telemetry.addData("Pose", follower.getPose());
+    telemetry.addData("Velocity", follower.getVelocity());
+    telemetry.addLine("This construction test should not move the robot.");
+    telemetry.update();
     }
+</pre>
 }</pre>
                     </div>
 
@@ -1181,61 +1126,63 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
                 <h2 class="section-title">Reference cards for the <span>BioBuzz codebase</span></h2>
                 <div class="divider"></div>
                 <p class="section-desc">
-                    Open any card to jump into repo-specific documentation generated from the current
-                    TeamCode architecture, using snippets and patterns from this repository.
+                    Open any chapter for a source-backed, long-form guide to building programs with the
+                    current TeamCode architecture. The detailed pages cover the full path from robot
+                    profile configuration through safe on-robot validation.
                 </p>
+                <p style="margin-top:20px;"><a class="btn btn-primary" href="ftcdev-20373/index.html" target="_blank">All Chapters</a></p>
             </div>
 
             <div class="cards">
-                <div class="card reveal tl-item-clickable" data-guide="library-overview">
-                    <span class="card-icon">📦</span>
-                    <div class="card-title">Library Overview</div>
-                    <p class="card-text">Categorized docs for <code>library/</code>: drive math, timers, wrappers, controls, filters, interpolation, and robot configuration.</p>
+                <div class="card reveal tl-item-clickable" data-guide="start-here">
+                    <span class="card-icon">1</span>
+                    <div class="card-title">Start Here</div>
+                    <p class="card-text">Package map, decision tree, architecture boundaries, and the standard safe workflow for adding TeamCode behavior.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="constants-robot">
-                    <span class="card-icon">🧩</span>
-                    <div class="card-title">Constants &amp; library/robot</div>
-                    <p class="card-text">How <code>Constants.java</code>, <code>RobotConstants</code>, and <code>RobotConfigurations</code> split responsibilities in this repo.</p>
+                <div class="card reveal tl-item-clickable" data-guide="profiles-factories">
+                    <span class="card-icon">2</span>
+                    <div class="card-title">Profiles &amp; Factories</div>
+                    <p class="card-text">How <code>Constants</code>, <code>RobotConfigurations</code>, <code>RobotConstants</code>, registration, and local params work together.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="blackboard-opmodes">
-                    <span class="card-icon">🧠</span>
-                    <div class="card-title">Blackboard &amp; OpModes</div>
-                    <p class="card-text">Shared state, pose handoff, base op modes, and the wrapper classes under <code>opModes/variants/</code>.</p>
+                <div class="card reveal tl-item-clickable" data-guide="mechanisms-hardware">
+                    <span class="card-icon">3</span>
+                    <div class="card-title">Mechanisms &amp; Hardware</div>
+                    <p class="card-text">The <code>Mechanism</code> contract, aggregate access, parameter resolution, and direct SDK-device exceptions.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="kotlin-guide">
-                    <span class="card-icon">🟣</span>
-                    <div class="card-title">Kotlin vs Java</div>
-                    <p class="card-text">The Kotlin TeleOp example, syntax differences, and how Kotlin fits into the same follower-based TeamCode architecture.</p>
+                <div class="card reveal tl-item-clickable" data-guide="opmodes-lifecycle">
+                    <span class="card-icon">4</span>
+                    <div class="card-title">OpModes &amp; Lifecycle</div>
+                    <p class="card-text">Choose <code>LinearOpMode</code> or iterative <code>OpMode</code>, preserve shared bases, and use Blackboard/configuration correctly.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="filters-guide">
-                    <span class="card-icon">📉</span>
-                    <div class="card-title">Filters &amp; Kalman Notes</div>
-                    <p class="card-text">Noise filtering in the repo today, how low-pass filtering works, and where a future Kalman filter would conceptually fit.</p>
+                <div class="card reveal tl-item-clickable" data-guide="input-drive">
+                    <span class="card-icon">5</span>
+                    <div class="card-title">Input &amp; Drive</div>
+                    <p class="card-text"><code>GamepadEx</code>, <code>GpBindings</code>, driver preferences, <code>DriveVector</code>, and <code>MecanumDrive</code>.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="math-guide">
-                    <span class="card-icon">📐</span>
-                    <div class="card-title">Math &amp; EquationCurve</div>
-                    <p class="card-text">Polynomial math, the <code>Equation</code> interface, interpolation helpers, and the Pedro adapter in <code>EquationCurve</code>.</p>
+                <div class="card reveal tl-item-clickable" data-guide="autonomous-ivy">
+                    <span class="card-icon">6</span>
+                    <div class="card-title">Pedro &amp; Ivy</div>
+                    <p class="card-text">Follower creation, <code>PathChain</code> construction, scheduler ownership, and the shared autonomous base.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="tests-guide">
-                    <span class="card-icon">🧪</span>
-                    <div class="card-title">Tests &amp; Validation</div>
-                    <p class="card-text">What belongs in <code>tests/</code>, when to use SDK-level checks, and how the current test op modes are organized.</p>
+                <div class="card reveal tl-item-clickable" data-guide="planners-vision">
+                    <span class="card-icon">7</span>
+                    <div class="card-title">Planner &amp; Vision Intake</div>
+                    <p class="card-text"><code>PlanBuilder</code>, dynamic detector paths, fail-safe behavior, and automatic return-path ownership.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="autotune-guide">
-                    <span class="card-icon">🎯</span>
-                    <div class="card-title">AutoTune PIDF</div>
-                    <p class="card-text">The relay-feedback tuner package, two-phase tuning workflow, and the settings surfaced through <code>TuningConstants</code>.</p>
+                <div class="card reveal tl-item-clickable" data-guide="localization-field">
+                    <span class="card-icon">8</span>
+                    <div class="card-title">Localization &amp; Field</div>
+                    <p class="card-text">Pinpoint profiles, Limelight wrapper pipelines, coordinate conversion, and field-contact geometry.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="path-following-guide">
-                    <span class="card-icon">🛤️</span>
-                    <div class="card-title">Path Following</div>
-                    <p class="card-text">How this repo builds <code>Path</code> and <code>PathChain</code> objects, chooses heading interpolation, and mixes Pedro lines with custom curves.</p>
+                <div class="card reveal tl-item-clickable" data-guide="tests-tuning">
+                    <span class="card-icon">9</span>
+                    <div class="card-title">Tests &amp; Tuning</div>
+                    <p class="card-text">JVM coverage, Driver Station tests, factory checks, Pedro tuning, and relay-feedback PID calibration.</p>
                 </div>
-                <div class="card reveal tl-item-clickable" data-guide="pedro-ivy-guide">
-                    <span class="card-icon">🧭</span>
-                    <div class="card-title">Pedro Pathing &amp; Ivy</div>
-                    <p class="card-text">Follower creation, path builders, Ivy scheduling, and the current autonomous patterns used in TeamCode.</p>
+                <div class="card reveal tl-item-clickable" data-guide="library-math-simulation">
+                    <span class="card-icon">10</span>
+                    <div class="card-title">Library, Math &amp; Simulation</div>
+                    <p class="card-text">Reusable helpers, PIDF, filters, equations, interpolation, field geometry, and host-side simulation boundaries.</p>
                 </div>
             </div>
         </div>
@@ -1280,6 +1227,8 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 <footer>
     FTC 20373 Programming Hub · Built for 20373 RMS Chimera ·
     <a href="https://ftc-docs.firstinspires.org" target="_blank">FTC Docs</a>
+    ·
+    <a href="index.html" target="_blank">Back to index</a>
 </footer>
 
 
@@ -1540,6 +1489,48 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 ═══════════════════════════════════════════ -->
 <script>
     const CODE = {
+        factoryUsage: `Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+    RobotDrive drive = mechanisms.require(RobotDrive.class);
+    Intake intake = mechanisms.get(Intake.class); // May be null on another profile.
+    Limelight limelight = mechanisms.get(Limelight.class);`,
+        blackboardUsage: `// Write only where this lifecycle flow owns the state.
+    Blackboard.put(Blackboard.Caption.ALLIANCE, AllianceColor.RED);
+    Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy());
+
+    // A concrete variant reads with an intentional fallback.
+    Pose saved = Blackboard.get(Blackboard.Caption.POSE).getValue();
+    return saved.getX() != 0 || saved.getY() != 0 || saved.getHeading() != 0
+        ? saved : Constants.RED_DEFAULT_START_POSE;`,
+        aggregateUsage: `GamepadEx driver = new GamepadEx(gamepad1);
+    GpBindings bindings = driver.result();
+    Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+
+    while (opModeIsActive()) {
+        driver.update();
+        mechanisms.periodic(bindings);
+        telemetry.update();
+    }`,
+        timerUsage: `Timer loopTimer = new Timer(TimeUnit.MILLISECONDS);
+    LowPassFilter filtered = new LowPassFilter(0.2);
+
+    while (opModeIsActive()) {
+        filtered.updateState(rawSensorValue);
+        telemetry.addData("Filtered", filtered.getState());
+        telemetry.addData("Loop ms", loopTimer.dt());
+        telemetry.update();
+    }`,
+        ivyVariantUsage: `@Autonomous(name = "My Auto")
+    public class MyAuto extends IvyAuton {
+        public MyAuto() {
+        super(AllianceColor.RED, new MyPaths());
+        }
+    }`,
+        factoryTestUsage: `Follower follower = Constants.createFollower(hardwareMap);
+    follower.setStartingPose(Constants.RED_DEFAULT_START_POSE);
+    follower.update();
+    follower.startTeleopDrive();
+    follower.setTeleOpDrive(0, 0, 0, false);
+    telemetry.addData("Pose", follower.getPose());`,
         constantsFactory: `public class Constants {
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
@@ -2005,12 +1996,12 @@ public class MecanumTeleOp extends OpMode {
             title: 'How `library/` is used in TeamCode',
             body: `
                 <p class="modal-desc">
-                    The reusable core of this repo lives under <code>library/</code>: drive math, filters,
-                    interpolation, control helpers, hardware wrappers, gamepad helpers, and robot-profile data.
+                    Start by calling reusable helpers from your OpMode. Keep the helper implementation in
+                    <code>library/</code> only when more than one caller benefits from it.
                 </p>
                 ${tabbedCode('lib', [
-                    { id: 'drivevector', title: 'DriveVector.java', code: CODE.driveVector },
-                    { id: 'opmodehelper', title: 'OpModeHelper.kt', code: CODE.opModeHelper }
+                    { id: 'timer', title: 'Timer + Filter in an OpMode', code: CODE.timerUsage },
+                    { id: 'drive', title: 'Aggregate Drive Call', code: CODE.aggregateUsage }
                 ])}
             `
         },
@@ -2019,13 +2010,12 @@ public class MecanumTeleOp extends OpMode {
             title: 'Factories, profiles, and enabled mechanisms',
             body: `
                 <p class="modal-desc">
-                    <code>Constants.java</code> is the op-mode-facing factory layer. It defers to
-                    <code>RobotConfigurations</code> and <code>RobotConstants</code> for hardware names,
-                    follower configuration, and mechanism enablement.
+                    Call <code>Constants</code> from the OpMode, then let the active robot profile choose the
+                    registered mechanisms and follower configuration behind that factory surface.
                 </p>
                 ${tabbedCode('constants', [
-                    { id: 'factory', title: 'Constants.java', code: CODE.constantsFactory },
-                    { id: 'profile', title: 'RobotConfigurations.java', code: CODE.robotConfig }
+                    { id: 'factory', title: 'Create Mechanisms', code: CODE.factoryUsage },
+                    { id: 'follower', title: 'Create a Follower', code: CODE.factoryTestUsage }
                 ])}
             `
         },
@@ -2034,12 +2024,12 @@ public class MecanumTeleOp extends OpMode {
             title: 'Shared pose and driver state',
             body: `
                 <p class="modal-desc">
-                    Blackboard is the shared store for pose handoff and driver selection. Variant op modes
-                    decide whether to reuse that saved state or fall back to their alliance default pose.
+                    Use Blackboard at deliberate OpMode boundaries: a configuration/autonomous flow writes state,
+                    and a concrete variant reads it with a defined fallback.
                 </p>
                 ${tabbedCode('blackboard', [
-                    { id: 'store', title: 'Blackboard.java', code: CODE.blackboardStore },
-                    { id: 'pose', title: 'Blue_TeleOp.java', code: CODE.bluePose }
+                    { id: 'store', title: 'Write and Read State', code: CODE.blackboardUsage },
+                    { id: 'pose', title: 'Use in a Variant', code: CODE.bluePose }
                 ])}
             `
         },
@@ -2048,12 +2038,12 @@ public class MecanumTeleOp extends OpMode {
             title: 'Base classes and wrappers',
             body: `
                 <p class="modal-desc">
-                    Shared match logic lives in base classes under <code>opModes/</code>, with thin annotated
-                    wrappers under <code>opModes/variants/</code>. Tests and experiments stay out of match op modes.
+                    Call a shared base by extending it in a thin annotated wrapper. The wrapper supplies only
+                    alliance/path choices while the base keeps the hardware and loop behavior consistent.
                 </p>
                 ${tabbedCode('opmodes', [
-                    { id: 'teleop', title: 'TeleOp.java', code: CODE.teleOpBase },
-                    { id: 'wrapper', title: 'Red_TeleOp.java', code: CODE.redTeleOpWrapper }
+                    { id: 'loop', title: 'Run the Shared Loop', code: CODE.aggregateUsage },
+                    { id: 'wrapper', title: 'Extend the TeleOp Base', code: CODE.redTeleOpWrapper }
                 ])}
             `
         },
@@ -2062,12 +2052,12 @@ public class MecanumTeleOp extends OpMode {
             title: 'Kotlin support in the BioBuzz repo',
             body: `
                 <p class="modal-desc">
-                    Kotlin is wired into TeamCode already. The TeleOp and iterative Ivy autonomous examples
-                    stay close to the repo’s follower-first style instead of introducing a separate architecture.
+                    Kotlin is wired into TeamCode already. Call the same factory and follower APIs used by Java;
+                    Kotlin changes syntax, not the profile or mechanism architecture.
                 </p>
                 ${tabbedCode('kotlin', [
-                    { id: 'kt', title: 'KotlinTeleOpTest.kt', code: CODE.kotlinTeleOp },
-                    { id: 'java', title: 'TeleOp.java', code: CODE.teleOpBase }
+                    { id: 'kt', title: 'Kotlin Follower Call', code: CODE.kotlinTeleOp },
+                    { id: 'java', title: 'Java Aggregate Call', code: CODE.aggregateUsage }
                 ])}
             `
         },
@@ -2076,12 +2066,12 @@ public class MecanumTeleOp extends OpMode {
             title: 'Validation op modes, tuners, and Ivy examples',
             body: `
                 <p class="modal-desc">
-                    Use <code>tests/</code> for direct checks, <code>pid/autoTune/</code> for relay-feedback tuning,
-                    and the Ivy examples when you want a command-based autonomous scaffold.
+                    Begin with a narrow, safe call pattern: construct through <code>Constants</code>, report telemetry,
+                    and prove the profile path before driving a full test, tuner, or autonomous sequence.
                 </p>
                 ${tabbedCode('tuning', [
-                    { id: 'test', title: 'MecanumTeleOp.java', code: CODE.mecanumTest },
-                    { id: 'tuner', title: 'VelocityPIDFTunerOpMode.java', code: CODE.velocityTuner }
+                    { id: 'test', title: 'No-Motion Factory Test', code: CODE.factoryTestUsage },
+                    { id: 'ivy', title: 'Create an Ivy Variant', code: CODE.ivyVariantUsage }
                 ])}
             `
         }
@@ -2707,19 +2697,23 @@ applyCodeHighlighting(document);
             }
         };
 
-        const GUIDES = Object.fromEntries(
-            Object.entries(GUIDE_CONFIGS).map(([key, config]) => [key, buildGuidePage(config)])
-        );
+        const GUIDE_PATHS = {
+            'start-here': 'ftcdev-20373/01-start-here.html',
+            'profiles-factories': 'ftcdev-20373/02-profiles-factories.html',
+            'mechanisms-hardware': 'ftcdev-20373/03-mechanisms-hardware.html',
+            'opmodes-lifecycle': 'ftcdev-20373/04-opmodes-lifecycle.html',
+            'input-drive': 'ftcdev-20373/05-input-drive.html',
+            'autonomous-ivy': 'ftcdev-20373/06-autonomous-ivy.html',
+            'planners-vision': 'ftcdev-20373/07-planners-vision.html',
+            'localization-field': 'ftcdev-20373/08-localization-field.html',
+            'tests-tuning': 'ftcdev-20373/09-tests-tuning.html',
+            'library-math-simulation': 'ftcdev-20373/10-library-math-simulation.html'
+        };
 
         document.querySelectorAll('.tl-item-clickable').forEach(item => {
             item.addEventListener('click', () => {
-                const html = GUIDES[item.dataset.guide];
-                if (!html) return;
-                const w = window.open('', '_blank');
-                if (w) {
-                    w.document.write(html);
-                    w.document.close();
-                }
+                const path = GUIDE_PATHS[item.dataset.guide];
+                if (path) window.open(path, '_blank');
             });
         });
     })();

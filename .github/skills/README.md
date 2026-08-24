@@ -31,7 +31,8 @@ than one guide.
 When a docs-maintenance request says to update "all the skill files", treat that
 as updating every repo document that acts as a reference for anyone or anything
 modifying the codebase: this index, the relevant `SKILL.md` files, and
-companion reference docs such as `ftcdev-20373.html`.
+the `ftcdev-20373.html` landing hub plus its long-form static chapters under
+`ftcdev-20373/`.
 
 ## External dependency lookup shortcuts
 

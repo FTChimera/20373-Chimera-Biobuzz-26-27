@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pedro & Ivy | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
+<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
+<div class="layout"><nav class="toc"><h2>Autonomous</h2><a href="#follower">Follower setup</a><a href="#path">Build paths</a><a href="#scheduler">Scheduler ownership</a><a href="#shared">Shared IvyAuton</a><a href="#new">New autonomous workflow</a></nav>
+<main class="article"><p class="eyebrow">06 / Autonomous</p><h1>Use one follower and one scheduler execution loop.</h1><p class="lead">Pedro pathing and Ivy scheduling are separate concepts that meet in an FTC lifecycle class. The repository creates followers from the active robot profile, uses <code>PathChain</code> as the reusable path container, composes commands with Ivy, and deliberately keeps scheduler execution and follower updates visible.</p>
+<section id="first-call"><h2>Call the shared autonomous base from a variant</h2><p>For a simple shared Ivy autonomous, the new class supplies the path provider and passes it to <code>IvyAuton</code>. The inherited base owns hardware construction, scheduler setup, command execution, follower updates, and Blackboard pose handoff.</p><pre>@Autonomous(name = "My Red Auto")
+public class MyRedAuto extends IvyAuton {
+    static class Paths extends IvyAuton_Paths {
+        private final Pose start = new Pose(36, 12, Math.toRadians(180));
+        @Override protected Pose getStartingPose() { return start.copy(); }
+        @Override protected PathChain getPath1() {
+            Path path = new Path(new BezierLine(start, new Pose(36, 36)));
+            path.setHeadingInterpolation(
+                HeadingInterpolator.linear(start.getHeading(), Math.toRadians(180)));
+            return new PathChain(path);
+        }
+    }
+    public MyRedAuto() { super(AllianceColor.RED, new Paths()); }
+}</pre></section>
+<section id="follower"><h2>Start from the active profile follower</h2><p>Use <code>Constants.createFollower(hardwareMap)</code>. It delegates to the selected <code>RobotConstants.createFollower(...)</code>, where FollowerBuilder receives profile drive names/directions, path constraints, and Pinpoint localizer constants. Do not create a second standalone FollowerBuilder inside an autonomous op mode.</p><pre>follower = Constants.createFollower(hardwareMap);
+follower.setStartingPose(startPose);</pre><div class="source"><span class="label">Configuration boundary</span>Follower tuning and Pinpoint geometry belong in <code>library/robot/RobotConfigurations.java</code> and <code>RobotConstants.java</code>. Autonomous geometry belongs near the autonomous path provider or planner step.</div></section>
+<section id="path"><h2>Build PathChain objects with explicit heading behavior</h2><p>Use a <code>PathChain</code> even when the geometry contains only one <code>Path</code>. Place heading interpolation next to the geometry rather than relying on external defaults.</p><pre>Path path = new Path(new BezierLine(STARTING_POSE, endPose));
+path.setHeadingInterpolation(HeadingInterpolator.linear(
+    STARTING_POSE.getHeading(), endPose.getHeading()));
+return new PathChain(path);</pre><p>Use <code>BezierLine</code> for a direct segment and <code>BezierCurve</code> when control points express the route better. <code>EquationCurve</code> is a Pedro-specific adapter for an equation-through-endpoints model; use it only when that model really fits the path.</p></section>
+<section id="scheduler"><h2>Ivy owns command composition, not the FTC loop</h2><p>Ivy commands are assembled with existing operations such as <code>Commands.instant(...)</code>, <code>Commands.waitMs(...)</code>, <code>Groups.sequential(...)</code>, and <code>PedroCommands.follow(...)</code>. The FTC op mode still calls <code>Scheduler.execute()</code> once per loop. A command sequence does not run by itself.</p><pre>Scheduler.schedule(Groups.sequential(
+    intake.halfPower(),
+    PedroCommands.follow(follower, paths.getPath1(), true),
+    intake.fullPower(),
+    waitMs(1000),
+    intake.stop(),
+    CommandConverter.toCommand(this::requestOpModeStop)
+));</pre><div class="warning"><span class="label">Avoid duplicate ownership</span>Do not schedule two infinite updates for the same mechanism. Do not add a second <code>follower.update()</code> loop if the selected shared base already updates the follower in <code>loop()</code>.</div></section>
+<section id="shared"><h2>The shared iterative IvyAuton pattern</h2><p><code>opModes/IvyAuton.java</code> is an abstract iterative base. A concrete variant supplies an <code>AllianceColor</code> and an <code>IvyAuton_Paths</code> implementation. The base initializes follower and aggregate mechanisms, schedules its representative command sequence, executes Ivy and follower updates in the iterative loop, and stores pose in <code>Blackboard</code> during <code>stop()</code>.</p><div class="grid"><div class="card"><h3>Use this for</h3><p>Shared match-style autonomous behavior that benefits from a common lifecycle and variant-specific geometry.</p></div><div class="card"><h3>Do not use this for</h3><p>A raw quick test, a blocking SDK experiment, or a second scheduler abstraction. Put those in <code>tests/</code> or learn from the unannotated examples.</p></div></div></section>
+<section id="new"><h2>Workflow: make a new autonomous safely</h2><ol><li>Choose shared <code>IvyAuton</code>, a planner test, or a fresh LinearOpMode based on whether the behavior is shared match code, planner experimentation, or a focused test.</li><li>Define and validate the start pose. Set it on the follower before running any paths.</li><li>Build each <code>PathChain</code> with explicit heading interpolation.</li><li>Decide which owner calls <code>follower.update()</code>; preserve exactly one active update path.</li><li>Schedule commands only after <code>Scheduler.reset()</code>.</li><li>Use <code>stop()</code> to persist pose when the next teleop will use Blackboard handoff.</li><li>Validate individual geometry in a safe test before combining mechanisms and timing.</li></ol></section>
+<nav class="pager"><a href="05-input-drive.html">← Input & drive</a><a href="07-planners-vision.html">Planner & vision intake →</a></nav></main></div><footer class="footer">Pedro and Ivy guide · Scheduler execution and follower updates need one clear owner.</footer></body></html>
