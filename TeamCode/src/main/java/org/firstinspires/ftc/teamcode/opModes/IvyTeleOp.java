@@ -34,7 +34,7 @@ public class IvyTeleOp extends LinearOpMode {
     public void runOpMode() {
         Scheduler.reset();
         DualGamepad gamepads = new DualGamepad(gamepad1, gamepad2);
-        GpBindings driverResult = gamepads.gamepad1.result();
+        GpBindings driverResult = gamepads.getGamepad1().result();
         mechanisms = Constants.createMechanisms(hardwareMap);
         intake = mechanisms.get(Intake.class);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
@@ -42,7 +42,7 @@ public class IvyTeleOp extends LinearOpMode {
         drive.setStartingPose(startPose);
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
-        vision = mechanisms.require(Vision.class);
+        vision = mechanisms.get(Vision.class);
 
         Scheduler.schedule(
                 gamepads.updateCommand(),
@@ -52,7 +52,7 @@ public class IvyTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
-        vision.start(Vision.Pipeline.APRIL_TAG);
+        if (vision != null) vision.start(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             Scheduler.execute();
 

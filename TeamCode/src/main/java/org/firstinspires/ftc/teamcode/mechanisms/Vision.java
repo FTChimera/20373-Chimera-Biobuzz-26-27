@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.pedropathing.geometry.Pose;
@@ -65,6 +66,11 @@ public class Vision extends Mechanism {
         camera.setPipeline(pipeline.cameraPipeline);
     }
 
+    public LLResult getLatestResult() {
+        update();
+        return camera.result;
+    }
+
     public boolean updateRobotOrientation(double orientationRad) {
         return camera.updateRobotOrientation(orientationRad);
     }
@@ -120,7 +126,7 @@ public class Vision extends Mechanism {
     public Pose getCachedPose() {
         return MathUtils.units.toPedroPathing(camera.botpose);
     }
-    
+
 
     @Override
     public void periodic(GpBindings GpBindings) {
