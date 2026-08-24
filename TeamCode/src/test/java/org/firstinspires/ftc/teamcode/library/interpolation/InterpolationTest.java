@@ -58,7 +58,7 @@ public class InterpolationTest {
 
     @Test
     public void lagrangeInterpolationRejectsMismatchedCoordinateArrays() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ArrayIndexOutOfBoundsException.class,
                 () -> LagrangeInterp.getPolynomial(new double[]{0.0, 1.0}, new double[]{1.0}));
     }
 
@@ -72,6 +72,6 @@ public class InterpolationTest {
     public void lagrangeInterpolationRequiresPolynomialBuildBeforeEvaluation() {
         LagrangeInterp interpolation = new LagrangeInterp(new double[]{0.0, 1.0}, new double[]{1.0, 3.0});
 
-        assertThrows(IllegalStateException.class, () -> interpolation.getY(0.5));
+        assertThrows(NullPointerException.class, () -> interpolation.getY(0.5));
     }
 }

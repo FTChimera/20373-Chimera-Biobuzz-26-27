@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.library.interpolation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -23,7 +26,7 @@ import java.util.List;
 @SuppressWarnings("SpellCheckingInspection")
 public class LinearInterp {
     List<Double> keys, values;
-    double min, max;
+    double min=Double.NaN, max=Double.NaN;
     public LinearInterp() {
         keys = new ArrayList<>();
         values = new ArrayList<>();
@@ -50,6 +53,14 @@ public class LinearInterp {
         return this;
     }
     public double calculate(double x) {
+        if (Double.isNaN(min) || Double.isNaN(max) || keys.isEmpty()) {
+            throw new IllegalStateException("Points not configured");
+        }
+        List<Double> sortedVals = new ArrayList<>(values);
+        sortedVals.sort(null);
+        if (!Arrays.equals(values.toArray(new Double[0]), sortedVals.toArray(new Double[0]))) {
+            throw new IllegalStateException("Inputs not sorted");
+        }
         if (x <= this.keys.get(0)) {
             return this.min; // edge case lower
         } else if (x >= this.keys.get(this.keys.size() - 1)) {

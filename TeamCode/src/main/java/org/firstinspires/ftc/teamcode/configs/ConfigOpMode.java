@@ -1,24 +1,20 @@
 package org.firstinspires.ftc.teamcode.configs;
 
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.telemetry.Selector;
+import com.pedropathing.telemetry.SelectableOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 
-@TeleOp(name = "Configuration", group = "Configuration")
-public class ConfigOpMode extends OpMode {
-    private final Selector<Runnable> selector;
-    private GamepadEx controller;
-    private String lastAction = "";
+import java.util.function.Supplier;
 
+@TeleOp(name = "Configuration", group = "Configuration")
+public class ConfigOpMode extends SelectableOpMode {
     public ConfigOpMode() {
-        selector = Selector.create("Robot Configuration", scope -> {
+        super("Robot Configuration", scope -> {
             scope.folder("Alliance Color", alliance -> {
                 alliance.add("Set Alliance Color RED", action("Set Alliance Color RED",
                         () -> Blackboard.put(Blackboard.Caption.ALLIANCE, AllianceColor.RED)));
@@ -46,55 +42,38 @@ public class ConfigOpMode extends OpMode {
             scope.folder("Miscellaneous", miscellaneous ->
                     miscellaneous.add("Reset All Blackboard",
                             action("Reset All Blackboard", Blackboard::resetAll)));
-        }, new String[] {
-                "D-pad up/down: move cursor",
-                "Right bumper: open folder or apply selection",
-                "Left bumper: go back"
         });
     }
 
-    private Runnable action(String name, Runnable action) {
-        return () -> {
+    private static Supplier<OpMode> action(String name, Runnable action) {
+        return () -> new BlackboardActionOpMode(name, action);
+    }
+
+    private static final class BlackboardActionOpMode extends OpMode {
+        private final String actionName;
+        private final Runnable action;
+
+        private BlackboardActionOpMode(String actionName, Runnable action) {
+            this.actionName = actionName;
+            this.action = action;
+        }
+
+        @Override
+        public void init() {
             action.run();
-            lastAction = "Applied: " + name;
-        };
-    }
-
-    @Override
-    public void init() {
-        controller = new GamepadEx(gamepad1);
-    }
-
-    @Override
-    public void init_loop() {
-        controller.update();
-        updateControls();
-
-        telemetry.clear();
-        for (String line : selector.getLines()) {
-            telemetry.addLine(line);
         }
-        if (!lastAction.isEmpty()) {
-            telemetry.addLine();
-            telemetry.addLine(lastAction);
-        }
-        telemetry.update();
-    }
 
-    private void updateControls() {
-        if (controller.wasJustPressed(Button.DPAD_UP)) {
-            selector.decrementSelected();
-        } else if (controller.wasJustPressed(Button.DPAD_DOWN)) {
-            selector.incrementSelected();
-        } else if (controller.wasJustPressed(Button.RIGHT_BUMPER)) {
-            selector.select();
-        } else if (controller.wasJustPressed(Button.LEFT_BUMPER)) {
-            selector.goBack();
+        @Override
+        public void init_loop() {
+            telemetry.clear();
+            telemetry.addLine("Applied: " + actionName);
+            telemetry.addLine("Press Start to finish.");
+            telemetry.update();
         }
-    }
 
-    @Override
-    public void loop() {
-        requestOpModeStop();
+        @Override
+        public void loop() {
+            requestOpModeStop();
+        }
     }
 }
