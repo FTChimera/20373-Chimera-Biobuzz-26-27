@@ -18,6 +18,20 @@
 import java.util.regex.Pattern
 
 apply plugin: 'com.android.application'
+apply plugin: 'eclipse'
+
+// Expose Android's Java source tree through Gradle's Eclipse model so JDT LS
+// can place it on the VS Code Java classpath.
+eclipse {
+    classpath {
+        file {
+            whenMerged { classpath ->
+                classpath.entries.removeAll { it.kind == 'src' && it.path == 'src/main/java' }
+                classpath.entries.add(new org.gradle.plugins.ide.eclipse.model.SourceFolder('src/main/java', 'bin/main'))
+            }
+        }
+    }
+}
 
 android {
 

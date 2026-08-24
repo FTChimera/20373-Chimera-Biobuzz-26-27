@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.configs;
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 
+import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 
 import java.util.ArrayList;
@@ -21,7 +22,11 @@ import java.util.List;
  */
 @Configurable
 public class Blackboard {
-    private static final List<Item> items = new ArrayList<>(List.of(new Item(Caption.POSE, new Pose()),  new Item(Caption.DRIVER, Driver.DEFAULT)));
+    private static final List<Item> items = new ArrayList<>(List.of(
+            new Item(Caption.POSE, new Pose()),
+            new Item(Caption.DRIVER, Driver.DEFAULT),
+            new Item(Caption.ALLIANCE, AllianceColor.RED)
+    ));
 
     public static Item get(Caption cap) {
         for (Item item : items) {
@@ -52,7 +57,8 @@ public class Blackboard {
 
     public enum Caption {
         POSE(Pose.class),
-        DRIVER(Driver.class);
+        DRIVER(Driver.class),
+        ALLIANCE(AllianceColor.class);
 
         Class<?> clazz;
         Caption(Class<?> objectClass) {
