@@ -21,16 +21,15 @@ versions pinned in `build.dependencies.gradle`.
 
 ## Repository context
 
-- The app uses FTC SDK `11.1.0`.
+- The app uses FTC SDK `11.2.1`.
 - `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
 - Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
 - The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  FirstRobot currently registers only the normal `RobotDrive` mechanism through
-  `configureDriveMechanisms()`. Its Pinpoint setup is configured, but its
-  planned intake and all vision/other optional mechanisms are not registered.
+  `configureDriveMechanisms()` supplies the normal `RobotDrive` registration,
+  while each profile explicitly registers any optional mechanism it supports.
 - Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
 - Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
-- Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` and `TestIvyAuto` are annotated classes in the `opModes/` root.
+- Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` is an annotated class in the `opModes/` root.
 - Validation and proof-of-concept op modes live under `tests/`.
 - FTC AutoTune calibration op modes live under `pid/autoTune/`.
 - One-shot configuration op modes live under `configs/`.
@@ -89,7 +88,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
 - `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they use repo-local `PIDMaster` / `DualMotorPIDMaster` adapters plus `TuningConstants`, with `pidautotuner-core` providing the tuning primitives.
-- `configs/ConfigOpMode.java` is the shared base for the blackboard-reset / driver-selection op modes.
+- `configs/ConfigOpMode.java` is the single iterative configuration menu for blackboard alliance, driver, pose, and reset mutations; it no longer delegates those actions to separate annotated config op modes.
 
 ## Rules
 
@@ -106,13 +105,13 @@ The important repo contract is that profile-managed subsystems can be created un
 - Shared teleop base: `opModes/TeleOp.java`
 - Ivy teleop: `opModes/IvyTeleOp.java`
 - Iterative Ivy autonomous base and concrete example: `opModes/IvyAuton.java` and `opModes/variants/Test_IvyAuton.java`
-- Linear Ivy autonomous base and concrete example: `pedroPathing/IvyAuto.java` and `opModes/TestIvyAuto.java`
+- Linear Ivy autonomous helper: `pedroPathing/IvyAuto.java`
 - Annotated teleop wrappers: `opModes/variants/Blue_TeleOp.java` and `opModes/variants/Red_TeleOp.java`
 - Standalone validation op mode: `tests/MecanumTeleOp.java`
 - Proof-of-concept test op mode: `tests/PreseasonWebcamAuto.java`
 - Scratch iterative Ivy autonomous examples: `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt`
 - FTC AutoTune calibration op modes: `pid/autoTune/PositionPIDTunerOpMode.java`, `pid/autoTune/VelocityPIDFTunerOpMode.java`, `pid/autoTune/DualVelocityPIDFTunerOpMode.java`
-- One-shot config op mode family: `configs/ResetAllBlackboard.java`, `configs/ZeroPose.java`, `configs/Set*Driver.java`
+- Pre-start blackboard configuration menu: `configs/ConfigOpMode.java`
 
 ## Validation
 

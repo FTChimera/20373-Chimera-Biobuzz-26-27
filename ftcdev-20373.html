@@ -1599,7 +1599,8 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
         blackboardStore: `public class Blackboard {
     private static final List<Item> items = new ArrayList<>(List.of(
             new Item(Caption.POSE, new Pose()),
-            new Item(Caption.DRIVER, Driver.DEFAULT)
+            new Item(Caption.DRIVER, Driver.DEFAULT),
+            new Item(Caption.ALLIANCE, AllianceColor.RED)
     ));
 
     public static Item get(Caption cap) {
@@ -1616,7 +1617,8 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 
     public enum Caption {
         POSE(Pose.class),
-        DRIVER(Driver.class);
+        DRIVER(Driver.class),
+        ALLIANCE(AllianceColor.class);
     }
 }`,
         bluePose: `@Override
@@ -2351,9 +2353,9 @@ applyCodeHighlighting(document);
                         nav: 'Blackboard',
                         eyebrow: '// Blackboard & OpModes',
                         title: 'Shared state through <span>Blackboard</span>',
-                        lead: 'The repo uses <strong>configs.Blackboard</strong> to preserve small pieces of global state between op modes, especially the last autonomous pose and the chosen driver preset.',
+                        lead: 'The repo uses <strong>configs.Blackboard</strong> to preserve small pieces of global state between op modes, especially the last autonomous pose, chosen driver preset, and alliance setting.',
                         body: `
-                        <p class="dp">Blackboard stores typed values by <code>Caption</code>. Right now the key concepts are pose handoff and driver selection.</p>
+                        <p class="dp">Blackboard stores typed values by <code>Caption</code>. <code>ConfigOpMode</code> provides the pre-start D-pad menu for pose, driver, alliance, and reset mutations.</p>
                         ${codeBlock('TeamCode/configs/Blackboard.java', CODE.blackboardStore)}
                         `
                     },
@@ -2508,9 +2510,9 @@ applyCodeHighlighting(document);
                         lead: 'The BioBuzz codebase separates shared match architecture from validation code. Test op modes are driver-station-visible utilities for checking hardware, drive behavior, wrappers, and proof-of-concept ideas.',
                         body: `
                         ${table(['Folder', 'Typical use'], [
-                            ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, manual follower tests, or the experimental planner check in <code>TestPathPlanner</code>.'],
+                            ['<code>tests/</code>', 'Iterative or linear validation op modes such as drivetrain checks, proof-of-concept vision, manual follower tests, and planner checks in <code>TestPathPlanner</code> and <code>PlannerIntakeVisionAuto</code>.'],
                             ['<code>tests/ftcSdk/</code>', 'SDK-level wrapper/device validation like <code>FollowerFactoryTest</code>, <code>RobotDriveFactoryTest</code>, <code>RGBFactoryTest</code>, <code>WebcamFactoryTest</code>, <code>MotorTest</code>, and the direct-device tests.'],
-                            ['<code>src/test/java/</code>', 'Host-side JVM tests such as <code>EquationMathTest</code>, <code>TimerTest</code>, and the <code>UnitTestAll</code> suite entry point.'],
+                            ['<code>src/test/java/</code>', 'Host-side JVM tests such as <code>EquationMathTest</code>, <code>FieldTest</code>, <code>TimerTest</code>, and the <code>UnitTestAll</code> suite entry point.'],
                             ['<code>learning/</code>', 'Teaching/scratch examples like the Kotlin TeleOp, Java/Kotlin ExampleIvyAuto, and other unfinished scaffolds.'],
                             ['<code>opModes/</code>', 'Shared match logic, not ad hoc experiments.']
                         ])}
@@ -2600,7 +2602,7 @@ applyCodeHighlighting(document);
                             <div class="dscard"><div class="dscard-t">Main Path Types</div><p class="dp"><code>BezierLine</code> handles straight segments, while <code>EquationCurve</code> covers paths easier to express as equations.</p></div>
                             <div class="dscard"><div class="dscard-t">Common Container</div><p class="dp"><code>PathBuilder</code> is still the main integrated way to build <code>PathChain</code> objects for shared autonomous code.</p></div>
                             <div class="dscard"><div class="dscard-t">Heading Control</div><p class="dp">Each segment can choose its own heading interpolation instead of forcing one global turning behavior.</p></div>
-                            <div class="dscard"><div class="dscard-t">Experimental Planner Layer</div><p class="dp"><code>PlanBuilder</code> and <code>PathPlannerList</code> now provide mechanism-aware step sequencing, but they are currently exercised through <code>tests/TestPathPlanner.java</code> rather than the main match-autonomous path.</p></div>
+                            <div class="dscard"><div class="dscard-t">Experimental Planner Layer</div><p class="dp"><code>PlanBuilder</code> and <code>PathPlannerList</code> provide mechanism-aware step sequencing. The current tests include <code>TestPathPlanner</code> and the detector-driven <code>PlannerIntakeVisionAuto</code>; this layer has not replaced the shared match-autonomous path yet.</p></div>
                         </div>
                         `
                     },
@@ -2632,7 +2634,7 @@ applyCodeHighlighting(document);
                         ${codeBlock('TeamCode/learning/ExampleIvyAuto.java', CODE.pathBuilder)}
                         <h2 class="dh2">Builder pattern</h2>
                         <p class="dp">The team’s usual sequence is: create follower, define poses, add path segments, set interpolation per segment, then call <code>build()</code> to get a reusable <code>PathChain</code>.</p>
-                        ${note('dnote', '<strong>Planner-stack note:</strong> the repo also has <code>library/planners/PlanBuilder</code>, <code>PathPlannerList</code>, and <code>tests/TestPathPlanner.java</code> for experimental mechanism-aware path sequencing. This page still treats that layer as secondary because it has not replaced the shared follower/path-builder flow in the main match architecture yet.')}
+                        ${note('dnote', '<strong>Planner-stack note:</strong> the repo also has <code>library/planners/PlanBuilder</code>, <code>PathPlannerList</code>, <code>tests/TestPathPlanner.java</code>, and <code>tests/PlannerIntakeVisionAuto.java</code> for experimental mechanism-aware path sequencing. The vision test uses wrapper detector results, a fail-safe path, and an automatic return path. This layer remains secondary to the shared follower/path-builder match architecture.')}
                         `
                     },
                     {

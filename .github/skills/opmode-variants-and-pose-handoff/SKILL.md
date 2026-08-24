@@ -47,7 +47,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 - `IvyAuton` is an abstract `OpMode` that accepts an `AllianceColor` plus an `IvyAuton_Paths` implementation, but the current base also stores rather than branches on the alliance value.
 - `Test_IvyAuton` provides a nested `Paths` implementation and currently passes `AllianceColor.RED` to the shared base.
 - `IvyAuton.stop()` writes `follower.getPose()` into `Blackboard.Caption.POSE` and then resets the Ivy `Scheduler`.
-- The config op modes under `configs/` mutate `Blackboard` entries such as `POSE` and `DRIVER`.
+- `ConfigOpMode` is the one iterative pre-start menu for `Blackboard` mutations. Its D-pad menus set `POSE`, `DRIVER`, or `ALLIANCE`, or reset every entry before the op mode is started.
 - `OpModeHelper.kt` is available as shared lifecycle plumbing if a future base op mode needs loop timing or manual bulk-cache handling, but it is not itself an annotated op mode base.
 
 ## Mechanism construction rule for shared bases
@@ -81,6 +81,6 @@ If a new subsystem is introduced for a base op mode:
 
 ## Things to watch
 
-- `Blackboard` is currently seeded with default `POSE` and `DRIVER` entries, so consumers should understand the difference between “default value” and “meaningful restored value”.
+- `Blackboard` is currently seeded with default `POSE`, `DRIVER`, and `ALLIANCE` entries, so consumers should understand the difference between “default value” and “meaningful restored value”.
 - `LinearOpMode` and iterative `OpMode` bases behave differently; do not blindly move logic between them.
 - Keep `waitForStart()` only in `LinearOpMode` flows.

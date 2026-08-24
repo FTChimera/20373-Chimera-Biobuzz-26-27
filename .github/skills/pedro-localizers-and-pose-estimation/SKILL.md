@@ -54,11 +54,10 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - Keep non-drive subsystem behavior out of the robot-profile layer unless it truly varies by robot profile.
 - If localization work also touches a vision wrapper, keep that wrapper on the `Mechanism` + `RobotConstants.createMechanism(...)` path.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot provides
-the drive stack and Pinpoint but does not register either vision wrapper.
-Localization changes that use
-`Constants.createLimelight(...)` or `Constants.createWebcam(...)` must first
-register the required wrapper in the selected profile.
+The `OldDECODERobotTesting` and `FirstRobot` profiles use explicit mechanism
+sets. Localization changes that use `Constants.createLimelight(...)` or
+`Constants.createWebcam(...)` must verify the required wrapper is registered
+in the selected profile before calling its helper.
 
 ## Rules
 

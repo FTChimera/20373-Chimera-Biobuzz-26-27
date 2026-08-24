@@ -24,8 +24,9 @@ versions pinned in `build.dependencies.gradle`.
 
 ## Package layout
 
-- `configs/`: `Blackboard` plus one-shot configuration op modes such as `ZeroPose`, `ResetAllBlackboard`, and `Set*Driver`.
+- `configs/`: `Blackboard` plus `ConfigOpMode`, the iterative pre-start menu for alliance, driver, pose, and reset preferences.
 - `library/`: small reusable types and wrappers, now split across areas such as `control/`, `filters/`, `game/`, `hardware/`, `interpolation/`, `math/`, `planners/`, and `robot/`.
+- `library/game/Field.java`: JTS-backed preseason geometry for polygons, circles, robot-footprint sweeps, and autonomous-boundary contact classification.
 - `library/robot/drivetrain/`: the reusable `MecanumDrive` helper under the public drive mechanism layer.
 - `library/hardware/hardwareDevice/`: SDK-registerable custom devices such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`.
 - `mechanisms/`: robot subsystems plus the shared abstract base class `Mechanism`.
@@ -85,6 +86,8 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `library.hardware.webcam.Limelight`
 - `library.hardware.webcam.LogitechWebcam`
 - `library.DriveVector`
+- `library.Tuple`
+- `library.game.Field`
 - `library.control.PIDFController`
 - `library.control.DoublePIDFController`
 - `library.interpolation.LinearInterp`

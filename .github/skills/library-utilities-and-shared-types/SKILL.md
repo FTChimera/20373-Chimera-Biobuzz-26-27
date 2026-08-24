@@ -23,6 +23,8 @@ version pinned in `build.dependencies.gradle`.
 
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/AllianceColor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/DriveVector.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/Tuple.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/Field.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/GameElement.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/game/Pollen.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
@@ -60,6 +62,8 @@ version pinned in `build.dependencies.gradle`.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
 - `DriveVector.applyStickCurve(...)` mutates the instance without changing axis signs; the drive stack's forward inversion happens later in `MecanumDrive`.
 - `GameElement` and `Pollen` are lightweight preseason game-piece marker types under `library/game/`.
+- `Tuple<A, B>` is a minimal shared pair type with `getA()` and `getB()` accessors; keep it value-focused rather than adding robot behavior to it.
+- `Field` is the JTS-backed preseason field-geometry utility. It creates polygons/circles, projects a robot footprint through a velocity sweep, and reports `OUTSIDE`, `PARTIAL`, or `OVERLAPPING` contact for its shapes and autonomous-midline boundaries.
 - `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
 - `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.

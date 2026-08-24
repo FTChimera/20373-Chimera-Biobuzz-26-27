@@ -24,13 +24,10 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 
 ## Repo context
 
-- The project depends on FTC SDK `11.1.0`.
+- The project depends on FTC SDK `11.2.1`.
 - Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
 - This repo uses both `LinearOpMode` and iterative `OpMode` styles.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  FirstRobot currently registers only the public `RobotDrive` mechanism, so do
-  not call an optional mechanism factory with that profile until its class has
-  been added.
+- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories; always verify the selected profile's registrations before calling an optional mechanism factory.
 - The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
 
 ## Current examples to follow
@@ -39,7 +36,7 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
 - `opModes/IvyAuton.java` uses iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that mixes raw Limelight SDK access with a follower control loop.
-- `configs/ConfigOpMode.java` is a one-shot iterative config helper that runs a `Runnable` in `start()` and then requests stop.
+- `configs/ConfigOpMode.java` is an iterative pre-start configuration menu. `init()` builds the available blackboard mutations, `init_loop()` handles the D-pad selection UI, and `loop()` immediately requests stop after the driver starts the op mode.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted test, sleep briefly, and then request stop.
 - `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
 - `Constants.createIMU(hardwareMap)` resolves the active profile's IMU, initializes it with the profile's REV Hub logo/USB orientation, and intentionally leaves yaw unchanged.

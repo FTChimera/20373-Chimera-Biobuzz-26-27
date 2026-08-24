@@ -30,6 +30,7 @@ in `build.dependencies.gradle`.
 - `TeamCode/build.gradle` also applies the Sloth load plugin (`dev.frozenmilk.sinister.sloth.load`) and adds the Sloth runtime dependency
 - `TeamCode/build.gradle` includes `annotationProcessor` entries for both the FTC op-mode processor and Project Lombok
 - FTC SDK and Pedro dependencies are declared in `build.dependencies.gradle`
+- `TeamCode/build.gradle` also declares the JTS geometry dependency used by `library/game/Field.java` and PsiKit dependencies used by the simulator surface.
 - TeamCode now contains both Java and Kotlin sources, including validation or learning op modes
 - `TeamCode/src/test/java/` now contains real JVM JUnit coverage, including the suite entry point `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/UnitTestAll.java`
 - Driver-station/runtime validation still lives under `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/` and `tests/ftcSdk/`; `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base, not the Gradle `src/androidTest/` source set

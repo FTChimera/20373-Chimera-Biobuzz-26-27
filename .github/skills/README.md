@@ -71,9 +71,12 @@ code, inspect the downloaded module under
 - `RobotConstants.configureDriveMechanisms()` currently registers the public
   `RobotDrive` mechanism, while direct follower construction still lives on
   `RobotConstants.createFollower(...)`.
-- `library/planners/` now contains the planner-style autonomous stack:
+- `library/planners/` contains the planner-style autonomous stack:
   `PathPlanner`, `PathPlannerList`, `PlanBuilder`, and
-  `library/planners/paths/Utils.java`.
+  `library/planners/paths/Utils.java`; `tests/PlannerIntakeVisionAuto.java`
+  exercises its detector-driven intake and return-path flow.
+- `library/game/Field.java` owns JTS-backed field polygons, robot-footprint
+  sweeps, and `ContactState` classification for preseason geometry work.
 - SDK-registerable devices are separate from profile-managed mechanisms:
   `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are
   under `library/hardware/hardwareDevice/`.

@@ -31,6 +31,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/MotorDirectionTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PedroPathingTeleOpTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/androidTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/*FactoryTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/IMUTest.java`
@@ -38,6 +39,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/RGBIndicatorTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/SlidesMotorTest.java`
 - `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/UnitTestAll.java`
+- `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/library/game/FieldTest.java`
 - `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/...`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pid/autoTune/TuningConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pid/autoTune/PositionPIDTunerOpMode.java`
@@ -68,13 +70,14 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `MotorDirectionTest` is a looping low-speed sanity check for the constants-driven drivetrain profile, and it also checks intake direction when the active profile registers `Intake.class`. It updates telemetry live while you flip directions.
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `TestPathPlanner` is the current planner-stack validation op mode; it builds a `PlanBuilder`, inserts a timed wait, and schedules the resulting `PathPlannerList`.
+- `PlannerIntakeVisionAuto` is the planner-stack integration op mode for staging, neural-detector intake collection, generated/fail-safe return behavior, and parking. It uses profile-created aggregate mechanisms and tolerates missing optional `Intake` / `Limelight` wrappers.
 - `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.
 - `MotorTest` is a small SDK-level wrapper check built on the custom `androidTest` base.
 - `FollowerFactoryTest`, `RobotDriveFactoryTest`, `IntakeFactoryTest`, `LimelightFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short factory/construction smoke tests built on the shared `androidTest` base. `RobotDriveFactoryTest` validates the public `Constants.createDrive(...)` path and reports whether the active profile is using manual or follower drive.
 - `IMUTest` is the runtime check for `Constants.createIMU(...)`; it resets yaw once, reports before/after values, and leaves live heading movement confirmation to the driver.
 - `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `SlidesMotor.DEFAULT_HARDWAREMAP_NAME`.
-- `UnitTestAll` is the single JVM suite entry point for non-hardware TeamCode tests, currently covering `Blackboard`, `DriveVector`, `Timer`, PIDF control, filters, gamepad input, interpolation, symbolic math, robot configuration, and `EquationCurve`.
+- `UnitTestAll` is the single JVM suite entry point for non-hardware TeamCode tests, currently covering `Blackboard`, `DriveVector`, `Timer`, field contact geometry, PIDF control, filters, gamepad input, interpolation, symbolic math, robot configuration, and `EquationCurve`.
 - `PositionPIDTunerOpMode`, `VelocityPIDFTunerOpMode`, and `DualVelocityPIDFTunerOpMode` are thin wrappers around the FTC AutoTune library that run relay-feedback calibration plus optional `gamepad1.a` live tests.
 - `TuningConstants` is the shared place for FTC AutoTune motor names, direction booleans, target RPM / ticks, relay amplitude, and feedforward sweep settings.
 - `Tuning.java` contains localization, velocity, braking, PIDF, centripetal, and path-shape tuners.

@@ -47,7 +47,7 @@ inspect the matching dependency under
 
 ## Repo-specific conventions
 
-- Driver preference for field-centric versus robot-centric mode is stored in `configs.Blackboard` through `Blackboard.Caption.DRIVER` and the `Driver` enum.
+- Driver preference for field-centric versus robot-centric mode is stored in `configs.Blackboard` through `Blackboard.Caption.DRIVER` and the `Driver` preference objects (`ATHARVA`, `SHLOK`, `EASON`, `DEFAULT`, and `SIMPLE`).
 - `TeleOp` and `IvyTeleOp` now set their stick curve once on `RobotDrive`, which forwards it to the underlying `MecanumDrive`.
 - Heading reset is mapped to `gamepad1.back` in the shared teleop bases; `tests/FieldCentricMecanumTeleOp.java` uses `gamepad1.options`.
 - IMU lookup and REV Hub orientation are profile-owned through `RobotConstants`; use `Constants.createIMU(hardwareMap)` to initialize the active-profile IMU, then reset yaw explicitly in the op mode.
@@ -81,7 +81,7 @@ If a new drive-adjacent mechanism is added, make it follow the `Mechanism` + `(H
 - Preserve `periodic()` calling `follower.update()` exactly once per loop path.
 - Prefer extending `RobotDrive` or the plain drivetrain helper APIs over having op modes reach inside the follower directly.
 - Keep drivetrain profile data in `RobotConstants`; keep the public drive mechanism construction on the existing `Constants` / `RobotConstants.createMechanism(...)` path.
-- If a change touches driver defaults, update the `Driver` enum and any `Blackboard`-based preference flow rather than inventing a second field-centric toggle source.
+- If a change touches driver defaults, update `Driver` and the `Blackboard`-based preference flow rather than inventing a second field-centric toggle source.
 
 ## Common edit targets
 

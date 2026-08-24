@@ -52,11 +52,11 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 4. `Constants` now exposes dedicated helpers for common wrappers (`createDrive`, `createIntake`, `createLimelight`, `createRGB`, `createWebcam`) plus the aggregate `createMechanisms(...)` helper and a generic `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. FirstRobot
-registers only `RobotDrive`; its intake is planned but not
-yet registered. Those helpers still depend on profile registration:
-`Constants.assertHasMechanism(...)` runs before construction, so the selected
-profile must register the requested class.
+The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Their mechanism
+sets are explicit profile configuration: `configureDriveMechanisms()` registers
+`RobotDrive`, and optional mechanisms need their own `.addMechanism(...)`
+entries. `Constants.assertHasMechanism(...)` runs before construction, so code
+that supports multiple profiles must verify the requested class is registered.
 
 There is also a lower layer for custom FTC devices:
 

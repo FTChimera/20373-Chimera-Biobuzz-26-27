@@ -27,9 +27,10 @@ from `build.dependencies.gradle`.
 
 1. `Constants.currentBot` selects the active robot profile.
 2. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`.
-   FirstRobot registers only the normal drive stack. Its Pinpoint offsets and
-   encoder directions are configured, while its Pedro drive-tuning fields and
-   intake integration are not.
+  `configureDriveMechanisms()` provides `RobotDrive`; each profile can then
+  register optional mechanisms with `.addMechanism(...)`. FirstRobot's
+  Pinpoint offsets and encoder directions are configured, while its Pedro
+  drive-tuning fields remain unconfigured.
 3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, the set of enabled `Mechanism` classes, and profile-owned mechanism params overrides.
 4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.

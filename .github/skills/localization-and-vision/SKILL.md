@@ -30,13 +30,14 @@ from `build.dependencies.gradle`.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 
 ## Verified current state
 
-1. The build includes FTC Vision `11.1.0` plus Pedro Pathing / Ivy dependencies.
+1. The build includes FTC Vision `11.2.1` plus Pedro Pathing / Ivy dependencies.
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(GpBindings GpBindings)` hook.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
    `Mechanisms` aggregate, read `Limelight` through `mechanisms.get(...)`,
@@ -49,6 +50,7 @@ from `build.dependencies.gradle`.
 8. `tests/ftcSdk/LimelightFactoryTest.java` is the current driver-station smoke test for Limelight wrapper creation and AprilTag polling.
 9. `library/planners/paths/Utils.IntakeWVision` is the current vision-assisted pathing example: it reads detector results from the wrapper, preserves a fail-safe path, and can choose between Pedro curve-through and adaptive-handle Bezier generation.
 10. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
+11. `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible integration test for `IntakeWVision`; it uses the neural-detector pipeline for planning and stops the optional wrapper during cleanup.
 
 ## Wrapper configuration pattern that exists in code
 
