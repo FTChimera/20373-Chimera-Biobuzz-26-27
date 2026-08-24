@@ -7,10 +7,10 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -72,7 +72,7 @@ public class RobotConfigurationTest {
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
                         .hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))
-                .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS())
+                .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 .addMechanism(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS())
                 .useFollowerDrive(false);
 
@@ -82,7 +82,7 @@ public class RobotConfigurationTest {
         assertEquals(17.008, configured.BOT_LENGTH, MathUtils.EPSILON);
         assertTrue(configured.Mechanisms.contains(RobotDrive.class));
         assertTrue(configured.Mechanisms.contains(Intake.class));
-        assertTrue(configured.Mechanisms.contains(Limelight.class));
+        assertTrue(configured.Mechanisms.contains(Vision.class));
         assertTrue(configured.Mechanisms.contains(RGBIndicator.class));
         assertFalse(configured.USE_FOLLOWER_DRIVE);
 

@@ -60,12 +60,11 @@ code, inspect the downloaded module under
   runtime-test guards such as `tests/ftcSdk/androidTest.java`'s
   `skipIfMechanismMissing(...)` before assuming a factory helper is available.
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
-  only mechanisms registered by the active profile; the helpers throw when the
-  requested mechanism is absent.
+  only profile-managed mechanisms registered by the active profile. Camera
+  behavior is exposed through the profile-managed `Vision` mechanism.
 - `Constants.createMechanisms(hardwareMap)` is the aggregate factory for every
-  profile-managed mechanism. The shared teleops currently require
-  `RobotDrive.class` from that aggregate and treat `Intake` / `Limelight` as
-  optional lookups.
+  profile-managed mechanism, including `Vision`. The aggregate updates Vision;
+  its owning flow explicitly starts and stops the selected pipeline.
 - Profile-managed mechanisms now resolve nested builder-style params through
   `Mechanism.Params`, `Mechanism.resolveParams(...)`, and
   `RobotConstants.getMechanismParams(...)`.

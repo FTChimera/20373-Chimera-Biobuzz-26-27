@@ -10,8 +10,8 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 /**
  * A utility class to hold all the robot constants for each bot
@@ -69,8 +69,7 @@ public class RobotConfigurations {
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
                         .hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))
-                .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
-                        .hardwareMapName("limelight"))
+                .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 .addMechanism(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS()
                         .hardwareMapName("rgb")
                         .panelsName("RGB INDICATOR"))
@@ -118,8 +117,7 @@ public class RobotConfigurations {
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
                         .hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))
-                .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
-                        .hardwareMapName("limelight"))
+                .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 // COMPATIBILITY
                 .useFollowerDrive(false);
     }

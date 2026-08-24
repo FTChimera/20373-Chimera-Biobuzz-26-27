@@ -73,7 +73,11 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `PlannerIntakeVisionAuto` is the planner-stack integration op mode for staging, neural-detector intake collection, generated/fail-safe return behavior, and parking. It uses profile-created aggregate mechanisms and tolerates missing optional `Intake` / `Limelight` wrappers.
 - `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.
 - `MotorTest` is a small SDK-level wrapper check built on the custom `androidTest` base.
-- `FollowerFactoryTest`, `RobotDriveFactoryTest`, `IntakeFactoryTest`, `LimelightFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short factory/construction smoke tests built on the shared `androidTest` base. `RobotDriveFactoryTest` validates the public `Constants.createDrive(...)` path and reports whether the active profile is using manual or follower drive.
+- `FollowerFactoryTest`, `RobotDriveFactoryTest`, `IntakeFactoryTest`,
+  `VisionFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short
+  factory/construction smoke tests built on the shared `androidTest` base.
+  `RobotDriveFactoryTest` validates the public `Constants.createDrive(...)`
+  path and reports whether the active profile is using manual or follower drive.
 - `IMUTest` is the runtime check for `Constants.createIMU(...)`; it resets yaw once, reports before/after values, and leaves live heading movement confirmation to the driver.
 - `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `SlidesMotor.DEFAULT_HARDWAREMAP_NAME`.

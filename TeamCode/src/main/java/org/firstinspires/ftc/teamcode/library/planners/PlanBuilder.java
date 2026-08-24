@@ -5,14 +5,29 @@ import com.pedropathing.paths.PathChain;
 
 import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
+
+import java.util.Objects;
 
 public class PlanBuilder {
     PathPlannerList list;
     Mechanisms mechanisms;
+    Vision vision;
+
     public PlanBuilder(Mechanisms mechanisms, Pose startPose) {
+        this(mechanisms, null, startPose);
+    }
+
+    public PlanBuilder(Mechanisms mechanisms, Vision vision, Pose startPose) {
         this.mechanisms = mechanisms;
+        this.vision = vision;
         list = new PathPlannerList();
         list.add(0, new Utils.StartPose(mechanisms, startPose));
+    }
+
+    public PlanBuilder withVision(Vision vision) {
+        this.vision = Objects.requireNonNull(vision, "vision");
+        return this;
     }
     public PlanBuilder add(PathPlanner pathPlanner) {
         list.add(pathPlanner);
@@ -36,7 +51,12 @@ public class PlanBuilder {
         return this;
     }
     public PlanBuilder intakeWVision(int numBalls, PathChain failSafePath) {
-        add(new Utils.IntakeWVision(mechanisms, planner().last(), numBalls, failSafePath));
+        if (vision == null) {
+            throw new IllegalStateException(
+                    "A Vision mechanism must be supplied through the constructor or withVision() before intakeWVision()."
+            );
+        }
+        add(new Utils.IntakeWVision(mechanisms, vision, planner().last(), numBalls, failSafePath));
         return this;
     }
 

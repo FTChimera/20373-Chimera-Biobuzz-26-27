@@ -31,7 +31,7 @@ from `build.dependencies.gradle`.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/VisionFactoryTest.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
 
@@ -47,7 +47,8 @@ from `build.dependencies.gradle`.
 5. `tests/PreseasonWebcamAuto.java` bypasses the wrapper, reads raw `Limelight3A` color results, switches pipeline `1`, and gets the hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
 6. `Limelight.updateRobotOrientation(...)` now takes a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM`, while `getBotposeMT2()` converts Limelight MT2 `Pose3D` results back into Pedro `Pose` through `MathUtils.units.toPedroPathing(...)`.
 7. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but vision-wrapper use still depends on profile registration.
-8. `tests/ftcSdk/LimelightFactoryTest.java` is the current driver-station smoke test for Limelight wrapper creation and AprilTag polling.
+8. `tests/ftcSdk/VisionFactoryTest.java` is the current driver-station smoke
+   test for Vision mechanism creation and AprilTag polling.
 9. `library/planners/paths/Utils.IntakeWVision` is the current vision-assisted pathing example: it reads detector results from the wrapper, preserves a fail-safe path, and can choose between Pedro curve-through and adaptive-handle Bezier generation.
 10. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
 11. `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible integration test for `IntakeWVision`; it uses the neural-detector pipeline for planning and stops the optional wrapper during cleanup.

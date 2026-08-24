@@ -62,7 +62,9 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 6. `EquationCurve` adapts `Equation` into a Pedro `CustomCurve`, but no current TeamCode op mode instantiates it.
 7. The standard robot-subsystem construction path is `Mechanism` + `(HardwareMap, RobotConstants)` + `RobotConstants.createMechanism(...)` + `Constants.create...(...)`.
 8. Profile-managed factory helpers work only for classes registered through `.addMechanism(...)` in the profile selected by `Constants.currentBot`.
-9. When planning which factory calls (`Constants.createIntake(...)`, `Constants.createLimelight(...)`, etc.) succeed at runtime, verify which mechanisms the selected profile actually registers with `.addMechanism(...)`.
+9. When planning which factory calls (`Constants.createIntake(...)`,
+   `Constants.createVision(...)`, etc.) succeed at runtime, verify which
+   mechanisms the selected profile actually registers with `.addMechanism(...)`.
 10. `library/planners/PlanBuilder` seeds a `PathPlannerList` with `Utils.StartPose`, and `PathPlannerList.schedule()` turns the accumulated planner steps into one sequential Ivy schedule.
 11. `PlanBuilder.intakeWVision(...)` adds `Utils.IntakeWVision`, which uses wrapper detector results to choose an outbound collection path or a fail-safe path, then returns to the planner step's start pose.
 

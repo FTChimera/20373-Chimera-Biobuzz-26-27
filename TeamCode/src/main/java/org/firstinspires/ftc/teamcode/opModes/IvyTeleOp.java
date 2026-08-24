@@ -9,10 +9,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @TeleOp(name = "Red Ivy TeleOp", group = "0: TeleOp")
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
@@ -20,7 +20,7 @@ public class IvyTeleOp extends LinearOpMode {
     Mechanisms mechanisms;
     Intake intake;
     RobotDrive drive;
-    Limelight limelight;
+    Vision vision;
 
     /**
      * Override this method and place your code here.
@@ -42,7 +42,7 @@ public class IvyTeleOp extends LinearOpMode {
         drive.setStartingPose(startPose);
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
-        limelight = mechanisms.get(Limelight.class);
+        vision = mechanisms.require(Vision.class);
 
         Scheduler.schedule(
                 gamepads.updateCommand(),
@@ -52,9 +52,7 @@ public class IvyTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
-        if (limelight != null) {
-            limelight.start(Limelight.Pipeline.APRIL_TAG);
-        }
+        vision.start(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             Scheduler.execute();
 
@@ -63,6 +61,7 @@ public class IvyTeleOp extends LinearOpMode {
             telemetry.addData("Intake Power", intake == null ? 0 : intake.getTargetPower());
             telemetry.update();
         }
+        vision.stop();
 
     }
 }

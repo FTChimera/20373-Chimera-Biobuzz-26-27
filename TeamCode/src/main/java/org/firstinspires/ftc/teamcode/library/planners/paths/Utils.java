@@ -13,12 +13,12 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.Timer;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -105,7 +105,7 @@ public class Utils {
         private static final double DETECTOR_RETRY_SECONDS = 0.7;
 
         Mechanisms mechanisms;
-        Limelight limelight;
+        Vision vision;
         RobotDrive drive;
         Intake intake;
         boolean shouldUseFailSafePath = false;
@@ -131,8 +131,9 @@ public class Utils {
             }
         }
 
-        public IntakeWVision(Mechanisms mechanisms, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
+        public IntakeWVision(Mechanisms mechanisms, Vision vision, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
             this.mechanisms = mechanisms;
+            this.vision = vision;
             this.numBalls = numBalls;
             this.failSafePath = failSafePath;
             setUpMechanisms();
@@ -140,10 +141,9 @@ public class Utils {
         }
 
         public void setUpMechanisms() {
-            limelight = mechanisms.get(Limelight.class);
             drive = mechanisms.get(RobotDrive.class);
             intake = mechanisms.get(Intake.class);
-            shouldUseFailSafePath = limelight == null || drive == null || intake == null;
+            shouldUseFailSafePath = vision == null || drive == null || intake == null;
         }
 
         @Override
@@ -154,8 +154,8 @@ public class Utils {
         public void buildPaths() {
             // we build paths on fly
             // set pipeline to make sure it is not in april tag mode.
-            if (limelight != null) {
-                limelight.setPipeline(Limelight.Pipeline.NEURAL_DETECTOR);
+            if (vision != null) {
+                vision.setPipeline(Vision.Pipeline.NEURAL_DETECTOR);
             }
         }
         @Override
@@ -173,9 +173,9 @@ public class Utils {
 
                                 if (shouldUseFailSafePath) {
                                     startFailSafePath();
-                                } else if (limelight != null) {
+                                } else if (vision != null) {
                                     // Switch back because the pipeline may have been changed for localization.
-                                    limelight.setPipeline(Limelight.Pipeline.NEURAL_DETECTOR);
+                                    vision.setPipeline(Vision.Pipeline.NEURAL_DETECTOR);
                                 } else {
                                     startFailSafePath();
                                 }
@@ -188,13 +188,13 @@ public class Utils {
                             }
                             return;
                         }
-                        if (returnPathStarted || shouldUseFailSafePath || limelight == null) return;
+                        if (returnPathStarted || shouldUseFailSafePath || vision == null) return;
 
                         Pose robotPose = drive.mecanumDrive.follower.getPose();
-                        limelight.updateRobotOrientation(robotPose.getHeading());
-                        limelight.LLUpdate();
+                        vision.updateRobotOrientation(robotPose.getHeading());
+                        vision.update();
 
-                        List<LLResultTypes.DetectorResult> detectors = limelight.getDetectors();
+                        List<LLResultTypes.DetectorResult> detectors = vision.getDetectors();
                         if (detectors != null && !detectors.isEmpty()) {
                             // First sort - by tA and a little bit of confidence
                             // This means the closer detectors are first.
@@ -344,8 +344,8 @@ public class Utils {
         }
 
         private double estimateForwardDistanceInches(LLResultTypes.DetectorResult detector, double normalizedArea) {
-            double heightDelta = DETECTOR_TARGET_HEIGHT_INCHES - limelight.params.LIMELIGHT_LENS_HEIGHT_INCHES;
-            double angleRadians = MathUtils.units.toRadians(limelight.params.LIMELIGHT_MOUNT_ANGLE_DEGREES + detector.getTargetYDegrees());
+            double heightDelta = DETECTOR_TARGET_HEIGHT_INCHES - vision.getLensHeightInches();
+            double angleRadians = MathUtils.units.toRadians(vision.getMountAngleDegrees() + detector.getTargetYDegrees());
             double tangent = Math.tan(angleRadians);
 
             if (Math.abs(heightDelta) > MathUtils.EPSILON && Math.abs(tangent) > MathUtils.EPSILON) {

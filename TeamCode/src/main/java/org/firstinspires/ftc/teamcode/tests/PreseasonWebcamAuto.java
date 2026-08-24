@@ -3,9 +3,7 @@ package org.firstinspires.ftc.teamcode.tests;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import org.firstinspires.ftc.teamcode.library.control.*;
-import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.util.Range;
@@ -13,7 +11,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 
 /** A Proof of concept
@@ -42,23 +40,21 @@ public class PreseasonWebcamAuto extends LinearOpMode {
      */
     @Override
     public void runOpMode() throws InterruptedException {
-        Limelight.LIMELIGHT_PARAMS limelightParams = new Limelight.LIMELIGHT_PARAMS();
-        Limelight3A limelight = hardwareMap.get(Limelight3A.class, limelightParams.HARDWAREMAP_NAME);
+        Vision vision = Constants.createVision(hardwareMap);
         Follower follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(new Pose());
-        limelight.pipelineSwitch(1); // Color detection pipeline
         PIDFController<Pose> controller = getController();
         waitForStart();
         GamepadEx driver = new GamepadEx(gamepad1);
-        limelight.start();
+        vision.start(Vision.Pipeline.COLOR);
         follower.startTeleopDrive();
         while (opModeIsActive()) {
             driver.update();
-            LLResult result = limelight.getLatestResult();
-            if (result != null && result.isValid()) {
+            vision.update();
+            if (vision.hasValidResult()) {
                 // Detect Artifact
                 try {
-                    LLResultTypes.ColorResult colorResult = result.getColorResults().get(0);
+                    LLResultTypes.ColorResult colorResult = vision.getColors().get(0);
                     double tx = colorResult.getTargetXPixels();
                     double area = Range.clip(colorResult.getTargetArea(), 2, 70);
                     double distanceProportionalApprox = 1 / Math.sqrt(area); // Almost Proportional to distance
@@ -96,7 +92,7 @@ public class PreseasonWebcamAuto extends LinearOpMode {
             follower.update();
             telemetry.update();
         }
-        limelight.stop();
+        vision.stop();
     }
 
     PIDFCoefficients<Pose> getPIDFCoeff() {

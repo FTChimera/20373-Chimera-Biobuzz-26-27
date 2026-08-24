@@ -8,21 +8,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @Utility(name = "LL Tester")
 public class LLTester extends LinearOpMode {
     enum Mode {
-        NEURAL_DETECTOR(Limelight.Pipeline.NEURAL_DETECTOR),
-        APRIL_TAG(Limelight.Pipeline.APRIL_TAG);
+        NEURAL_DETECTOR(Vision.Pipeline.NEURAL_DETECTOR),
+        APRIL_TAG(Vision.Pipeline.APRIL_TAG);
 
-        private final Limelight.Pipeline pipeline;
+        private final Vision.Pipeline pipeline;
 
-        Mode(Limelight.Pipeline pipeline) {
+        Mode(Vision.Pipeline pipeline) {
             this.pipeline = pipeline;
         }
 
-        public Limelight.Pipeline getPipeline() {
+        public Vision.Pipeline getPipeline() {
             return pipeline;
         }
     }
@@ -32,18 +32,9 @@ public class LLTester extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        if (!Constants.hasMechanism(Limelight.class)) {
-            while (opModeInInit()) {
-                telemetry.addData("Limelight", "Not registered in selected profile");
-                telemetry.addData("Configured Mechanisms", Constants.getMechanisms());
-                telemetry.update();
-                idle();
-            }
-            return;
-        }
         IMU imu = Constants.createIMU(hardwareMap);
         imu.resetYaw();
-        Limelight limelight = Constants.createLimelight(hardwareMap);
+        Vision vision = Constants.createVision(hardwareMap);
         GamepadEx driver = new GamepadEx(gamepad1);
         try {
             while (opModeInInit()) {
@@ -55,7 +46,7 @@ public class LLTester extends LinearOpMode {
                 }
 
                 if (initializedMode != mode) {
-                    limelight.start(mode.getPipeline());
+                    vision.start(mode.getPipeline());
                     initializedMode = mode;
                 }
 
@@ -63,23 +54,23 @@ public class LLTester extends LinearOpMode {
                     imu.resetYaw();
                 }
                 if (mode == Mode.APRIL_TAG) {
-                    limelight.updateRobotOrientation(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
+                    vision.updateRobotOrientation(imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
                 }
-                limelight.LLUpdate();
+                vision.update();
                 switch (mode) {
                     case APRIL_TAG:
-                        telemetry.addData("TID", limelight.tid);
-                        telemetry.addData("Estimated Pedro Pose", limelight.getBotposeMT2());
+                        telemetry.addData("TID", vision.getLastTagId());
+                        telemetry.addData("Estimated Pedro Pose", vision.getBotposeMT2());
                         break;
                     case NEURAL_DETECTOR:
-                        telemetry.addData("Detector Count", limelight.getDetectors() == null ? 0 : limelight.getDetectors().size());
-                        telemetry.addData("Highest Confidence", limelight.getDetectorHighestConfidence());
+                        telemetry.addData("Detector Count", vision.getDetectors() == null ? 0 : vision.getDetectors().size());
+                        telemetry.addData("Highest Confidence", vision.getDetectorHighestConfidence());
                         break;
                 }
-                telemetry.addData("Status", "Initializing Limelight");
+                telemetry.addData("Status", "Initializing Vision");
                 telemetry.addData("Mode", mode);
                 telemetry.addData("Pipeline", mode.getPipeline());
-                telemetry.addData("Disconnected", limelight.isDisconnected);
+                telemetry.addData("Disconnected", vision.isDisconnected());
                 telemetry.addLine("Press X for AprilTag pipeline");
                 telemetry.addLine("Press Y for Neural Detector pipeline");
                 telemetry.addLine("Press Start when the camera has initialized");
@@ -92,18 +83,18 @@ public class LLTester extends LinearOpMode {
             }
 
             while (opModeIsActive()) {
-                limelight.LLUpdate();
+                vision.update();
                 telemetry.addData("Mode", mode);
                 telemetry.addData("Pipeline", mode.getPipeline());
-                telemetry.addData("Disconnected", limelight.isDisconnected);
-                telemetry.addData("Last Tag ID", limelight.tid);
-                telemetry.addData("Approx Distance", limelight.dist);
-                telemetry.addData("Tag Count", limelight.getFiducials() == null ? 0 : limelight.getFiducials().size());
-                telemetry.addData("Detector Count", limelight.getDetectors() == null ? 0 : limelight.getDetectors().size());
+                telemetry.addData("Disconnected", vision.isDisconnected());
+                telemetry.addData("Last Tag ID", vision.getLastTagId());
+                telemetry.addData("Approx Distance", vision.getLastDistanceInches());
+                telemetry.addData("Tag Count", vision.getFiducials() == null ? 0 : vision.getFiducials().size());
+                telemetry.addData("Detector Count", vision.getDetectors() == null ? 0 : vision.getDetectors().size());
                 telemetry.update();
             }
         } finally {
-            limelight.stop();
+            vision.stop();
         }
     }
 }

@@ -9,10 +9,10 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public abstract class TeleOp extends LinearOpMode {
@@ -20,7 +20,7 @@ public abstract class TeleOp extends LinearOpMode {
     Mechanisms mechanisms;
     Intake intake;
     RobotDrive drive;
-    Limelight limelight;
+    Vision vision;
 
     // Constructor for TeleOp, takes in the alliance color.
     public TeleOp(AllianceColor col) {
@@ -47,14 +47,12 @@ public abstract class TeleOp extends LinearOpMode {
         drive.setStartingPose(getStartingPose());
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
-        limelight = mechanisms.get(Limelight.class);
+        vision = mechanisms.require(Vision.class);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
-        if (limelight != null) {
-            limelight.start(Limelight.Pipeline.APRIL_TAG);
-        }
+        vision.start(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             driver.update();
             mechanisms.periodic(driverResult);
@@ -64,6 +62,7 @@ public abstract class TeleOp extends LinearOpMode {
             telemetry.addData("Intake Power", intake == null ? 0 : intake.getTargetPower());
             telemetry.update();
         }
+        vision.stop();
 
     }
 

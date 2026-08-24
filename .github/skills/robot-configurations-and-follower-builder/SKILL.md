@@ -36,14 +36,20 @@ from `build.dependencies.gradle`.
 5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
-8. `Constants` now also exposes helper methods such as `createIMU(...)`, `createDrive(...)`, `createRGB(...)`, `createWebcam(...)`, aggregate `createMechanisms(...)`, generic `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`.
+8. `Constants` now also exposes helper methods such as `createIMU(...)`,
+   `createDrive(...)`, `createVision(...)`, `createRGB(...)`,
+   `createWebcam(...)`, aggregate `createMechanisms(...)`, generic
+   `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and
+   `assertHasMechanism(...)`.
 9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.
 
 ## What belongs where
 
 - Put drive motor names, drive directions, IMU hardware/orientation settings, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
 - Put concrete robot presets in `RobotConfigurations`.
-- Put top-level convenience helpers such as `createIMU(...)`, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, and `createWebcam(...)` in `Constants` when they make op-mode code cleaner.
+- Put top-level convenience helpers such as `createIMU(...)`,
+  `createIntake(...)`, `createVision(...)`, `createRGB(...)`, and
+  `createWebcam(...)` in `Constants` when they make op-mode code cleaner.
 - Keep mechanism-specific behavior and optional nested params types in the owning mechanism or wrapper class.
 - Prefer selecting a profile through `Constants.currentBot` instead of scattering conditionals throughout mechanisms or op modes.
 - Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles.

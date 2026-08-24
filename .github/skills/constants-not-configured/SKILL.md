@@ -40,7 +40,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   `FollowerConstants`, and heading PIDF / centripetal scaling are zero. Its
   motor names, directions, and max power are wiring defaults, not proof that
   follower-drive tuning is complete.
-- Intake and Limelight registrations have profile-owned params in
+- Intake and Vision registrations have profile-owned params in
   `RobotConfigurations`; verify their hardware names and calibration values on
   the physical robot before relying on the integration.
 - When asked to update constants, update every relevant `*_PARAMS` owner (including wrappers under `library/hardware/...`) plus `RobotConstants` / `RobotConfigurations`, and do not forget any relevant op modes under `tests/`.
@@ -51,7 +51,10 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   - `RED_DEFAULT_START_POSE`
   - `BLUE_DEFAULT_START_POSE`
   - `currentBot`, which selects the active robot profile (assigned in `Constants.java`)
-  - factory helpers like `createFollower(...)`, `createIMU(...)`, `createDrive(...)`, `createIntake(...)`, `createLimelight(...)`, `createRGB(...)`, `createWebcam(...)`, aggregate `createMechanisms(...)`, and generic `createMechanism(...)`
+  - factory helpers like `createFollower(...)`, `createIMU(...)`,
+    `createDrive(...)`, `createIntake(...)`, `createVision(...)`,
+    `createRGB(...)`, `createWebcam(...)`, aggregate
+    `createMechanisms(...)`, and generic `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
@@ -65,7 +68,8 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
 - `library/hardware/hardwareDevice/` now contains custom FTC `HardwareDevice` definitions such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`; these are lower-level SDK types, not profile-managed mechanisms.
 - Mechanism-specific placeholder values still live inside the owning classes as builder-style nested params:
   - `mechanisms/Intake.java` -> `INTAKE_PARAMS`
-  - `library/hardware/webcam/Limelight.java` -> `LIMELIGHT_PARAMS`
+  - `mechanisms/Vision.java` -> `VISION_PARAMS` with nested
+    `LIMELIGHT_PARAMS`
   - `library/hardware/webcam/LogitechWebcam.java` -> `LOGITECH_WEBCAM_PARAMS`
   - `library/hardware/leds/RGBIndicator.java` -> `RGBIndicator_PARAMS`
 - FTC AutoTune calibration values now also live in `pid/autoTune/TuningConstants.java`; those constants are for tuning op modes only and are not robot-profile-wide production defaults.

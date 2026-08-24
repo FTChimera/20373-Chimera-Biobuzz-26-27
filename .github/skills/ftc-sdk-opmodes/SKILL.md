@@ -80,12 +80,14 @@ The important repo contract is that profile-managed subsystems can be created un
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
 - `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory pattern through `Constants.createMechanisms(hardwareMap)`. They require `RobotDrive` and tolerate missing `Intake` / `Limelight` by reading those mechanisms through nullable aggregate lookups.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory
+  pattern through `Constants.createMechanisms(hardwareMap)`. They require
+  `RobotDrive` and `Vision`, while `Intake` remains optional.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.
-- `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that intentionally uses direct Limelight SDK access for color-based artifact tracking.
-- `tests/PreseasonWebcamAuto.java` still uses raw `Limelight3A` access for behavior, but now pulls the camera name from `Limelight.LIMELIGHT_PARAMS`.
+- `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that
+  uses `Vision` for color-based artifact tracking.
 - `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they use repo-local `PIDMaster` / `DualMotorPIDMaster` adapters plus `TuningConstants`, with `pidautotuner-core` providing the tuning primitives.
 - `configs/ConfigOpMode.java` is the single iterative configuration menu for blackboard alliance, driver, pose, and reset mutations; it no longer delegates those actions to separate annotated config op modes.

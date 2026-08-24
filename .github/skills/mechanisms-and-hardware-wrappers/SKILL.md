@@ -49,7 +49,10 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 1. Low-level device access belongs in wrappers such as `Motor`, `Limelight`, or `LogitechWebcam`.
 2. Reusable subsystems and high-level wrappers share the `Mechanism` base class so they all receive `HardwareMap` and the active `RobotConstants` profile the same way.
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
-4. `Constants` now exposes dedicated helpers for common wrappers (`createDrive`, `createIntake`, `createLimelight`, `createRGB`, `createWebcam`) plus the aggregate `createMechanisms(...)` helper and a generic `createMechanism(...)` fallback.
+4. `Constants` exposes dedicated helpers for common mechanisms/wrappers
+   (`createDrive`, `createIntake`, `createVision`, `createRGB`, `createWebcam`)
+   plus the aggregate `createMechanisms(...)` helper and a generic
+   `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
 The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Their mechanism
@@ -85,7 +88,9 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - `Mechanism` now requires every subclass to expose `periodic(GpBindings GpBindings)`, where `GpBindings` carries selected button readers plus the current stick/trigger/touchpad wrapper state.
 - `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
-- `Limelight` extends `Mechanism`, keeps a builder-style `LIMELIGHT_PARAMS` instance resolved from the active profile, and is created via `Constants.createLimelight(hardwareMap)`.
+- `Limelight` and `LogitechWebcam` are standalone camera controllers with
+  builder-style params. They are created through their `Constants` helpers or
+  directly with explicit params, not through the mechanism factory.
 - `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or other raw-device flows, and it now exposes convenience helpers like `setUp()`, `setDown()`, `setPositionPercentage(...)`, and `DEFAULT_HARDWAREMAP_NAME` on that raw-device layer.
 - `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
 - There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.

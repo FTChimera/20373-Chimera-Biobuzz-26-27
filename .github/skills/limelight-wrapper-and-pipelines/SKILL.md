@@ -31,62 +31,64 @@ the version pinned in `build.dependencies.gradle`.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/LimelightFactoryTest.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/ftcSdk/VisionFactoryTest.java`
 
 ## Existing abstraction
 
-- `Constants.createLimelight(hardwareMap)` is the normal factory entry point when the active robot profile registers `Limelight.class`.
-- `Limelight` extends `Mechanism`, so the normal factory path is `Constants.createLimelight(...)` → `currentBot.createMechanism(...)`.
-- `Limelight.Pipeline` currently exposes `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR`.
-- `start(...)` chooses a pipeline and starts the FTC `Limelight3A` device.
-- `LLUpdate()` pulls the latest result, tracks disconnect state, and caches fiducials, colors, and detectors.
-- `getDetectorHighestConfidence()` is the current wrapper helper for picking one detector result from the cached neural-detector list.
-- `updateRobotOrientation(double orientationRad)` now expects a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM.convertFromPedro(...)`.
-- `getBotposeMT2()` now returns a Pedro `Pose`, converting Limelight MT2 `Pose3D` data through `MathUtils.units.toPedroPathing(...)`.
-- `periodic(GpBindings GpBindings)` is the mechanism-wide update hook, and `updateCommand(GpBindings GpBindings)` is the Limelight-specific Ivy convenience wrapper around that call.
+- `Vision` is the profile-managed camera mechanism and is created with
+  `Constants.createVision(hardwareMap)` or obtained from `Mechanisms`.
+- `Vision.VISION_PARAMS` owns the nested `Limelight.LIMELIGHT_PARAMS`, so
+  hardware names, geometry, polling, and timeout settings remain configurable
+  per profile.
+- `Vision.Pipeline` exposes `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR`.
+- `start(...)`, `stop()`, `setPipeline(...)`, `updateRobotOrientation(...)`,
+  and cached result access all go through `Vision`; `Limelight` is private to
+  that mechanism.
+- `Vision.periodic(...)` refreshes cached results. Direct owners that do not
+  call aggregate periodic must call `Vision.update()` regularly.
 
 ## Repo conventions
 
-- The shared teleops create a `Mechanisms` aggregate, then read `Limelight` through `mechanisms.get(Limelight.class)` and start it in `APRIL_TAG` mode only when that optional mechanism is present.
+- The shared teleops create the `Mechanisms` aggregate, retrieve `Vision`, and
+  start it in `APRIL_TAG` mode.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
-- `tests/ftcSdk/LimelightFactoryTest` is the current runtime smoke test for wrapper creation plus repeated `LLUpdate()` calls on the AprilTag pipeline.
+- `tests/ftcSdk/VisionFactoryTest` is the current runtime smoke test for
+  profile-managed Vision creation and repeated updates on the AprilTag pipeline.
 - `library/planners/paths/Utils.IntakeWVision` is the current in-repo wrapper consumer that builds a vision-assisted path from detector results and falls back to a fail-safe path if detection/path generation does not succeed in time.
 - `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible integration test for that planner step. It starts the optional wrapper on `NEURAL_DETECTOR`, schedules the plan, and stops the wrapper during cleanup.
-- Even though `PreseasonWebcamAuto` intentionally uses raw `Limelight3A` calls, it now sources the hardware name from `Limelight.LIMELIGHT_PARAMS` instead of a test-only string literal.
-- Shared Limelight behavior should read from the wrapper’s cached fields; the current raw-SDK exceptions are `tests/PreseasonWebcamAuto.java` and the deprecated `pedroPathing/custom/LimelightPinpointLocalizer.java`.
-- Wrapper-based Limelight creation through `Constants.createLimelight(...)`
-  requires the selected robot profile to register `Limelight.class`; runtime
-  tests should guard optional availability with `Constants.hasMechanism(...)` or
-  `skipIfMechanismMissing(...)` instead of assuming every helper is active.
+- Shared Limelight behavior must use Vision's cached result API. The deprecated
+  `pedroPathing/custom/LimelightPinpointLocalizer.java` is the remaining raw SDK
+  exception.
+- Vision creation depends on profile registration; runtime tests should use
+  `Constants.createVision(...)` or obtain it from `Mechanisms`.
 
 ## Params and creation pattern
 
-When working on `Limelight` or adding a similar wrapper:
+When working on the Limelight integration:
 
-1. keep wrapper-specific helper params with the wrapper class when they belong there, and keep them builder-style when the wrapper already follows the repo’s params pattern
-2. make the wrapper extend `Mechanism` if it should participate in the standard robot-subsystem flow
-3. keep the constructor shape `(HardwareMap, RobotConstants)` so `RobotConstants.createMechanism(...)` can instantiate it
-4. register the wrapper in the active robot profile with `.addMechanism(...)`
-5. expose construction through `Constants.create...(...)`
-6. avoid direct wrapper construction in op modes unless the task is specifically refactoring the factory surface
+1. keep wrapper-specific helper params with the wrapper class and builder-style
+2. keep `Limelight` private to the `Vision` mechanism
+3. register `Vision` with each applicable robot profile
+4. expose construction through `Constants.createVision(...)`
+5. let the owning flow choose Vision's pipeline and start/stop lifecycle
 
 The important repo-level uniformity point is the shared `Mechanism` + `RobotConstants.createMechanism(...)` construction path.
 
 ## Rules
 
-- Call `LLUpdate()` regularly if the Limelight is active.
-- Keep pipeline selection explicit in the op mode or mechanism that owns the behavior.
-- Extend the wrapper when new camera behavior is needed rather than scattering `Limelight3A` calls across op modes.
-- Tolerate missing or invalid results; `LLUpdate()` already handles absent data as a normal runtime condition.
+- Keep pipeline selection explicit in the op mode or planner that owns the behavior.
+- Extend `Vision` when new shared camera behavior is needed rather than scattering `Limelight3A` calls across op modes.
+- Tolerate missing or invalid results; `Vision.update()` handles absent data as a normal runtime condition.
 - Keep coordinate-system conversion explicit when wiring pose/orientation data to Pedro consumers; the current repo path is `Constants.FTC_COORDINATE_SYSTEM` plus `MathUtils.units`.
-- If new vision tuning fields are added, keep them on `LIMELIGHT_PARAMS` or the wrapper itself rather than scattering them through op modes.
-- If the wrapper can be disabled by profile selection, make sure it decides that before touching hardware.
+- If new vision tuning fields are added, keep them in `Vision.VISION_PARAMS`
+  and its nested `LIMELIGHT_PARAMS` rather than scattering them through op modes.
 
 ## Current limitations to remember
 
 - The distance helper uses placeholder mounting constants, so those values are not trustworthy until measured.
-- `isDisconnected` depends on repeated updates and the internal timer.
-- The wrapper’s no-device mode is profile-driven: omitting `Limelight.class` from the active `RobotConstants.Mechanisms` set makes the constructor return before any hardware lookup.
+- `isDisconnected` depends on repeated updates and the configured timeout.
+- Vision fails at construction when the configured FTC hardware name does not
+  resolve; this makes camera ownership and configuration explicit.
 
 ## Good extension points
 

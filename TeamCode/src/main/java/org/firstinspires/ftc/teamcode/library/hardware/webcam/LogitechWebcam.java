@@ -1,37 +1,27 @@
 package org.firstinspires.ftc.teamcode.library.hardware.webcam;
 
+import android.util.Size;
+
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
-import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
+import java.util.Objects;
 
-/**
- * Hardware wrapper for a Logitech (or any USB) webcam using the FTC VisionPortal AprilTag pipeline.
- * Detects AprilTags and provides the robot's field pose derived from the best visible tag.
- *
- * <pre>
- * LogitechWebcam cam = new LogitechWebcam(hardwareMap);         // default "Webcam 1"
- * LogitechWebcam cam = new LogitechWebcam(hardwareMap, "Cam2"); // custom name
- * cam.update();
- * if (cam.hasDetection) { ... cam.botpose ... }
- * </pre>
- */
+/** Standalone AprilTag controller for a Logitech or other FTC USB webcam. */
 @SuppressWarnings("SpellCheckingInspection")
-public class LogitechWebcam extends Mechanism {
-    /** Parameters for the Logitech webcam. */
-    public static class LOGITECH_WEBCAM_PARAMS implements Mechanism.Params<LOGITECH_WEBCAM_PARAMS> {
+public class LogitechWebcam implements AutoCloseable {
+    public static class LOGITECH_WEBCAM_PARAMS {
         public String HARDWAREMAP_NAME = "Webcam 1";
         public boolean SET_DRAW_AXES = true;
         public boolean SET_DRAW_CUBE_PROJECTION = true;
@@ -41,8 +31,9 @@ public class LogitechWebcam extends Mechanism {
         public AngleUnit OUTPUT_ANGLE_UNIT = AngleUnit.RADIANS;
         public int CAMERA_RESOLUTION_WIDTH = 640;
         public int CAMERA_RESOLUTION_HEIGHT = 480;
-        public boolean ISBEINGUSED = true;
+
         public LOGITECH_WEBCAM_PARAMS() {}
+
         private LOGITECH_WEBCAM_PARAMS(LOGITECH_WEBCAM_PARAMS other) {
             HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
             SET_DRAW_AXES = other.SET_DRAW_AXES;
@@ -53,203 +44,173 @@ public class LogitechWebcam extends Mechanism {
             OUTPUT_ANGLE_UNIT = other.OUTPUT_ANGLE_UNIT;
             CAMERA_RESOLUTION_WIDTH = other.CAMERA_RESOLUTION_WIDTH;
             CAMERA_RESOLUTION_HEIGHT = other.CAMERA_RESOLUTION_HEIGHT;
-            ISBEINGUSED = other.ISBEINGUSED;
         }
-        public LOGITECH_WEBCAM_PARAMS hardwareMapName(String hardwareMapName) {
-            this.HARDWAREMAP_NAME = hardwareMapName;
+
+        public LOGITECH_WEBCAM_PARAMS hardwareMapName(String value) {
+            HARDWAREMAP_NAME = Objects.requireNonNull(value, "hardwareMapName");
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS setDrawAxes(boolean setDrawAxes) {
-            this.SET_DRAW_AXES = setDrawAxes;
+
+        public LOGITECH_WEBCAM_PARAMS setDrawAxes(boolean value) {
+            SET_DRAW_AXES = value;
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS setDrawCubeProjection(boolean setDrawCubeProjection) {
-            this.SET_DRAW_CUBE_PROJECTION = setDrawCubeProjection;
+
+        public LOGITECH_WEBCAM_PARAMS setDrawCubeProjection(boolean value) {
+            SET_DRAW_CUBE_PROJECTION = value;
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS setDrawTagId(boolean setDrawTagId) {
-            this.SET_DRAW_TAG_ID = setDrawTagId;
+
+        public LOGITECH_WEBCAM_PARAMS setDrawTagId(boolean value) {
+            SET_DRAW_TAG_ID = value;
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS setDrawTagOutline(boolean setDrawTagOutline) {
-            this.SET_DRAW_TAG_OUTLINE = setDrawTagOutline;
+
+        public LOGITECH_WEBCAM_PARAMS setDrawTagOutline(boolean value) {
+            SET_DRAW_TAG_OUTLINE = value;
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS outputDistanceUnit(DistanceUnit outputDistanceUnit) {
-            this.OUTPUT_DISTANCE_UNIT = outputDistanceUnit;
+
+        public LOGITECH_WEBCAM_PARAMS outputDistanceUnit(DistanceUnit value) {
+            OUTPUT_DISTANCE_UNIT = Objects.requireNonNull(value, "outputDistanceUnit");
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS outputAngleUnit(AngleUnit outputAngleUnit) {
-            this.OUTPUT_ANGLE_UNIT = outputAngleUnit;
+
+        public LOGITECH_WEBCAM_PARAMS outputAngleUnit(AngleUnit value) {
+            OUTPUT_ANGLE_UNIT = Objects.requireNonNull(value, "outputAngleUnit");
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS cameraResolutionWidth(int cameraResolutionWidth) {
-            this.CAMERA_RESOLUTION_WIDTH = cameraResolutionWidth;
+
+        public LOGITECH_WEBCAM_PARAMS cameraResolution(int width, int height) {
+            if (width <= 0 || height <= 0) {
+                throw new IllegalArgumentException("camera resolution must be positive.");
+            }
+            CAMERA_RESOLUTION_WIDTH = width;
+            CAMERA_RESOLUTION_HEIGHT = height;
             return this;
         }
-        public LOGITECH_WEBCAM_PARAMS cameraResolutionHeight(int cameraResolutionHeight) {
-            this.CAMERA_RESOLUTION_HEIGHT = cameraResolutionHeight;
-            return this;
-        }
-        public LOGITECH_WEBCAM_PARAMS isBeingUsed(boolean isBeingUsed) {
-            this.ISBEINGUSED = isBeingUsed;
-            return this;
-        }
-        @Override
-        public LOGITECH_WEBCAM_PARAMS updateFromBot(RobotConstants bot) {
-            if (!ISBEINGUSED) return this;
-            HARDWAREMAP_NAME = bot.Mechanisms.contains(LogitechWebcam.class) ? HARDWAREMAP_NAME : "";
-            ISBEINGUSED = bot.Mechanisms.contains(LogitechWebcam.class);
-            return this;
-        }
-        @Override
+
         public LOGITECH_WEBCAM_PARAMS copy() {
             return new LOGITECH_WEBCAM_PARAMS(this);
         }
-
     }
-    public LOGITECH_WEBCAM_PARAMS params;
-    private final boolean isBeingUsed;
-    private AprilTagProcessor tagProcessor;
-    private VisionPortal visionPortal;
 
-    /** The raw FTC AprilTag pose of the most-recent detection. */
+    public final LOGITECH_WEBCAM_PARAMS params;
+    private final AprilTagProcessor tagProcessor;
+    private final VisionPortal visionPortal;
+
     public AprilTagPoseFtc AprilTagPose;
-    /** Full 3D bot pose from the most-recent detection. */
     public Pose3D botpose;
-    /** Pedro-coordinate 2D pose (x, z → x, y; yaw → heading). */
     public com.pedropathing.geometry.Pose pedroPose;
-    /** The tag ID of the most-recent detection. */
     public int id;
-    /** True when at least one tag was detected in the latest {@link #update()} call. */
     public boolean hasDetection;
-    /** True when the camera is disconnected or unavailable. */
     public boolean isDisconnected;
-
-    /** All current detections from the last {@link #update()} call. */
     private List<AprilTagDetection> currentDetections;
 
-    // ==================== CONSTRUCTORS ====================
+    public LogitechWebcam(HardwareMap hardwareMap) {
+        this(hardwareMap, new LOGITECH_WEBCAM_PARAMS());
+    }
 
-    /** Constructs with a specific camera hardware name. */
-    public LogitechWebcam(HardwareMap hwMap, RobotConstants bot) {
-        super(hwMap, bot);
-        this.params = resolveParams(LogitechWebcam.class, new LOGITECH_WEBCAM_PARAMS());
-        isBeingUsed = params.ISBEINGUSED;
-        if (!isBeingUsed) return;
+    public LogitechWebcam(HardwareMap hardwareMap, LOGITECH_WEBCAM_PARAMS params) {
+        this.params = Objects.requireNonNull(params, "params").copy();
+        if (this.params.HARDWAREMAP_NAME.isBlank()) {
+            throw new IllegalArgumentException("hardwareMapName must not be blank.");
+        }
         tagProcessor = new AprilTagProcessor.Builder()
-                .setDrawAxes(params.SET_DRAW_AXES)
-                .setDrawCubeProjection(params.SET_DRAW_CUBE_PROJECTION)
-                .setDrawTagID(params.SET_DRAW_TAG_ID)
-                .setDrawTagOutline(params.SET_DRAW_TAG_OUTLINE)
-                .setOutputUnits(params.OUTPUT_DISTANCE_UNIT, params.OUTPUT_ANGLE_UNIT)
+                .setDrawAxes(this.params.SET_DRAW_AXES)
+                .setDrawCubeProjection(this.params.SET_DRAW_CUBE_PROJECTION)
+                .setDrawTagID(this.params.SET_DRAW_TAG_ID)
+                .setDrawTagOutline(this.params.SET_DRAW_TAG_OUTLINE)
+                .setOutputUnits(this.params.OUTPUT_DISTANCE_UNIT, this.params.OUTPUT_ANGLE_UNIT)
                 .build();
         visionPortal = new VisionPortal.Builder()
                 .addProcessor(tagProcessor)
-                .setCamera(hwMap.get(WebcamName.class, params.HARDWAREMAP_NAME))
-                .setCameraResolution(new android.util.Size(params.CAMERA_RESOLUTION_WIDTH, params.CAMERA_RESOLUTION_HEIGHT))
+                .setCamera(hardwareMap.get(WebcamName.class, this.params.HARDWAREMAP_NAME))
+                .setCameraResolution(new Size(
+                        this.params.CAMERA_RESOLUTION_WIDTH,
+                        this.params.CAMERA_RESOLUTION_HEIGHT
+                ))
                 .build();
-        isDisconnected = false;
     }
 
-    // ==================== UPDATE ====================
+    public AprilTagProcessor getTagProcessor() {
+        return tagProcessor;
+    }
 
-    /**
-     * Polls the VisionPortal for new AprilTag detections.
-     * If at least one tag is found, the first detection's pose is stored
-     * in {@link #AprilTagPose}, {@link #botpose}, and {@link #pedroPose}.
-     */
+    public VisionPortal getVisionPortal() {
+        return visionPortal;
+    }
+
+    /** Polls the portal and caches the first valid AprilTag detection. */
     public void update() {
-        if (!isBeingUsed) return;
-
-        try {
-            currentDetections = tagProcessor.getDetections();
-
-            if (currentDetections == null || currentDetections.isEmpty()) {
-                hasDetection = false;
-                return;
-            }
-
-            // Use the first (highest-confidence) detection
-            AprilTagDetection tag = currentDetections.get(0);
-            if (tag.ftcPose == null) {
-                hasDetection = false;
-                return;
-            }
-
-            AprilTagPose = tag.ftcPose;
-            id = tag.id;
-
-            Position position = new Position(params.OUTPUT_DISTANCE_UNIT,
-                    AprilTagPose.x, AprilTagPose.y, AprilTagPose.z, 0);
-            YawPitchRollAngles orientation = new YawPitchRollAngles(
-                    params.OUTPUT_ANGLE_UNIT,
-                    AprilTagPose.yaw, AprilTagPose.pitch, AprilTagPose.roll, 0);
-            botpose = new Pose3D(position, orientation);
-            pedroPose = toPedro(botpose);
-
-            hasDetection = true;
-            isDisconnected = false;
-        } catch (Exception e) {
+        currentDetections = tagProcessor.getDetections();
+        isDisconnected = visionPortal.getCameraState() == VisionPortal.CameraState.ERROR;
+        if (currentDetections == null || currentDetections.isEmpty()) {
             hasDetection = false;
-            isDisconnected = true;
+            return;
         }
+
+        AprilTagDetection tag = currentDetections.get(0);
+        if (tag.ftcPose == null) {
+            hasDetection = false;
+            return;
+        }
+
+        AprilTagPose = tag.ftcPose;
+        id = tag.id;
+        Position position = new Position(
+                params.OUTPUT_DISTANCE_UNIT,
+                AprilTagPose.x,
+                AprilTagPose.y,
+                AprilTagPose.z,
+                0
+        );
+        YawPitchRollAngles orientation = new YawPitchRollAngles(
+                params.OUTPUT_ANGLE_UNIT,
+                AprilTagPose.yaw,
+                AprilTagPose.pitch,
+                AprilTagPose.roll,
+                0
+        );
+        botpose = new Pose3D(position, orientation);
+        pedroPose = toPedro(botpose);
+        hasDetection = true;
     }
 
-    // ==================== QUERIES ====================
-
-    /**
-     * Gets a detection result for a specific tag ID, or null if not visible.
-     * @param tagID The AprilTag fiducial ID
-     * @return The detection, or null
-     */
-    public AprilTagDetection getDetectionForTag(int tagID) {
-        if (!isBeingUsed || currentDetections == null) return null;
-        for (AprilTagDetection d : currentDetections) {
-            if (d.id == tagID) return d;
+    public AprilTagDetection getDetectionForTag(int tagId) {
+        if (currentDetections == null) {
+            return null;
+        }
+        for (AprilTagDetection detection : currentDetections) {
+            if (detection.id == tagId) {
+                return detection;
+            }
         }
         return null;
     }
 
-    /**
-     * @return true if the specified tag is currently visible
-     */
-    public boolean isTagVisible(int tagID) {
-        return getDetectionForTag(tagID) != null;
+    public boolean isTagVisible(int tagId) {
+        return getDetectionForTag(tagId) != null;
     }
 
-    /**
-     * @return All current AprilTag detections, or null if camera is not in use
-     */
     public List<AprilTagDetection> getDetections() {
-        if (!isBeingUsed) return null;
         return currentDetections;
     }
 
-    /**
-     * @return The number of tags currently detected
-     */
     public int getDetectionCount() {
-        if (currentDetections == null) return 0;
-        return currentDetections.size();
+        return currentDetections == null ? 0 : currentDetections.size();
     }
 
-    // ==================== HELPERS ====================
+    @Override
+    public void close() {
+        visionPortal.close();
+    }
 
-    /**
-     * Converts a Pose3D to a Pedro Pathing Pose (field-relative 2D).
-     * Uses x and z from the 3D position (camera forward = z) and yaw for heading.
-     */
-    private com.pedropathing.geometry.Pose toPedro(Pose3D pose3D) {
+    private static com.pedropathing.geometry.Pose toPedro(Pose3D pose3D) {
         return new com.pedropathing.geometry.Pose(
                 pose3D.getPosition().toUnit(DistanceUnit.INCH).x,
                 pose3D.getPosition().toUnit(DistanceUnit.INCH).z,
                 pose3D.getOrientation().getYaw(AngleUnit.RADIANS)
         );
-    }
-
-    @Override
-    public void periodic(GpBindings GpBindings) {
-        update();
     }
 }

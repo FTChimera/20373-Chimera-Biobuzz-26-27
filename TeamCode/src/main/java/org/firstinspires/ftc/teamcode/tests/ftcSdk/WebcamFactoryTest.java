@@ -12,10 +12,6 @@ import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 public class WebcamFactoryTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
-        if (skipIfMechanismMissing(LogitechWebcam.class, telemetry)) {
-            return;
-        }
-
         LogitechWebcam webcam = Constants.createWebcam(hardwareMap);
         showStep(telemetry, "Polling AprilTag webcam wrapper");
         for (int i = 0; i < 8; i++) {
@@ -29,6 +25,7 @@ public class WebcamFactoryTest extends androidTest {
         telemetry.addData("Last Tag ID", webcam.hasDetection ? webcam.id : -1);
         telemetry.addLine("Point the webcam at a visible AprilTag before pressing Start.");
         telemetry.update();
+        webcam.close();
     }
 
     @Override

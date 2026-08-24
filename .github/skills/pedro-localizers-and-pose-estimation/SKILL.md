@@ -46,18 +46,19 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 4. `library/robot/drivetrain/MecanumDrive` snapshots `follower.getPose()` into static `lastPose` and then calls `follower.update()` inside `periodic()`, while `RobotDrive` is the profile-managed mechanism that owns the public teleop-facing drive behavior.
 5. Shared autonomous-to-teleop pose handoff currently happens when `opModes/IvyAuton.java` writes `follower.getPose()` to `Blackboard.Caption.POSE` in `stop()`, and `variants/Red_TeleOp.java` / `Blue_TeleOp.java` read it back if it is not `(0,0,0)`.
 6. `LimelightPinpointLocalizer` exists as a custom fusion localizer, is marked `@Deprecated`, and is not used by the default follower factory.
-7. `tests/PreseasonWebcamAuto.java` keeps the normal follower and uses raw Limelight color results separately; it does not replace the default localizer.
+7. `tests/PreseasonWebcamAuto.java` keeps the normal follower and consumes
+   Vision color results separately; it does not replace the default localizer.
 
 ## Configuration split to preserve
 
 - Keep drivetrain names, motor directions, follower tuning, and Pinpoint constants in `RobotConstants` / `RobotConfigurations`.
 - Keep non-drive subsystem behavior out of the robot-profile layer unless it truly varies by robot profile.
-- If localization work also touches a vision wrapper, keep that wrapper on the `Mechanism` + `RobotConstants.createMechanism(...)` path.
+- If localization work also touches camera behavior, use the profile-managed
+  `Vision` mechanism through `RobotConstants.createMechanism(...)`.
 
 The `OldDECODERobotTesting` and `FirstRobot` profiles use explicit mechanism
-sets. Localization changes that use `Constants.createLimelight(...)` or
-`Constants.createWebcam(...)` must verify the required wrapper is registered
-in the selected profile before calling its helper.
+sets. Localization changes that use `Constants.createVision(...)` must verify
+that `Vision` is registered in the selected profile before calling its helper.
 
 ## Rules
 

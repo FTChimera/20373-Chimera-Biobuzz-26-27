@@ -13,10 +13,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @Autonomous(name = "Planner Intake Vision Auto", group = "1: Tests")
 public class PlannerIntakeVisionAuto extends LinearOpMode {
@@ -29,7 +29,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
     private Mechanisms mechanisms;
     private RobotDrive drive;
     private Intake intake;
-    private Limelight limelight;
+    private Vision vision;
     private PathPlannerList plan;
 
     @Override
@@ -38,8 +38,8 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
         mechanisms = Constants.createMechanisms(hardwareMap);
         drive = mechanisms.require(RobotDrive.class);
         intake = mechanisms.get(Intake.class);
-        limelight = mechanisms.get(Limelight.class);
-        plan = new PlanBuilder(mechanisms, START_POSE)
+        vision = mechanisms.require(Vision.class);
+        plan = new PlanBuilder(mechanisms, vision, START_POSE)
                 .linearPathTo(STAGING_POSE)
                 .followPath(createApproachPath())
                 .waitMs(250)
@@ -57,9 +57,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
             return;
         }
 
-        if (limelight != null) {
-            limelight.start(Limelight.Pipeline.NEURAL_DETECTOR);
-        }
+        vision.start(Vision.Pipeline.NEURAL_DETECTOR);
 
         plan.schedule();
 
@@ -73,9 +71,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
             telemetry.update();
         }
 
-        if (limelight != null) {
-            limelight.stop();
-        }
+        vision.stop();
         Scheduler.reset();
     }
 

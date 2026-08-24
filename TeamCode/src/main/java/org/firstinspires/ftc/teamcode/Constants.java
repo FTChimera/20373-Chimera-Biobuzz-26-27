@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
-import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurations;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
@@ -18,6 +17,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 import java.util.Set;
 
@@ -51,9 +51,9 @@ public class Constants {
         return currentBot.createMechanism(hardwareMap, Intake.class);
     }
 
-    public static Limelight createLimelight(HardwareMap hardwareMap) {
-        assertHasMechanism(Limelight.class);
-        return currentBot.createMechanism(hardwareMap, Limelight.class);
+    public static Vision createVision(HardwareMap hardwareMap) {
+        assertHasMechanism(Vision.class);
+        return currentBot.createMechanism(hardwareMap, Vision.class);
     }
 
 
@@ -63,8 +63,11 @@ public class Constants {
     }
 
     public static LogitechWebcam createWebcam(HardwareMap hardwareMap) {
-        assertHasMechanism(LogitechWebcam.class);
-        return currentBot.createMechanism(hardwareMap, LogitechWebcam.class);
+        return new LogitechWebcam(hardwareMap);
+    }
+
+    public static LogitechWebcam createWebcam(HardwareMap hardwareMap, LogitechWebcam.LOGITECH_WEBCAM_PARAMS params) {
+        return new LogitechWebcam(hardwareMap, params);
     }
 
     public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
