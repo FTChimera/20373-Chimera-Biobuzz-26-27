@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class InterpolationTest {
     @Test
@@ -33,5 +34,44 @@ public class InterpolationTest {
 
         assertArrayEquals(new double[]{1.0, 1.0, 1.0}, polynomial.coefs, MathUtils.EPSILON);
         assertEquals(4.75, interpolation.getY(1.5), MathUtils.EPSILON);
+    }
+
+    @Test
+    public void linearInterpolationRejectsCalculationWithoutConfiguredPoints() {
+        LinearInterp interpolation = new LinearInterp()
+                .min(100.0)
+                .max(2000.0);
+
+        assertThrows(IllegalStateException.class, () -> interpolation.calculate(0.5));
+    }
+
+    @Test
+    public void linearInterpolationRejectsUnsortedPoints() {
+        LinearInterp interpolation = new LinearInterp()
+                .min(100.0)
+                .point(0.8, 1400.0)
+                .point(0.2, 950.0)
+                .max(2000.0);
+
+        assertThrows(IllegalStateException.class, () -> interpolation.calculate(0.35));
+    }
+
+    @Test
+    public void lagrangeInterpolationRejectsMismatchedCoordinateArrays() {
+        assertThrows(IllegalArgumentException.class,
+                () -> LagrangeInterp.getPolynomial(new double[]{0.0, 1.0}, new double[]{1.0}));
+    }
+
+    @Test
+    public void lagrangeInterpolationRejectsDuplicateXValues() {
+        assertThrows(IllegalArgumentException.class,
+                () -> LagrangeInterp.getPolynomial(new double[]{0.0, 0.0, 1.0}, new double[]{1.0, 2.0, 3.0}));
+    }
+
+    @Test
+    public void lagrangeInterpolationRequiresPolynomialBuildBeforeEvaluation() {
+        LagrangeInterp interpolation = new LagrangeInterp(new double[]{0.0, 1.0}, new double[]{1.0, 3.0});
+
+        assertThrows(IllegalStateException.class, () -> interpolation.getY(0.5));
     }
 }
