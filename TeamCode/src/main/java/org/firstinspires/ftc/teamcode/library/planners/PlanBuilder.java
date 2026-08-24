@@ -48,4 +48,8 @@ public class PlanBuilder {
     public PathPlannerList build() {
         return list;
     }
+
+    public void schedule() {
+        list.schedule();
+    }
 }
