@@ -119,6 +119,6 @@ public class RobotConfigurations {
                         .intakeMotorDirection(Direction.REVERSE))
                 .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 // COMPATIBILITY
-                .useFollowerDrive(false);
+                .useFollowerDrive(true);
     }
 }

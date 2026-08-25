@@ -86,16 +86,16 @@ public class Utils {
     }
     public static class IntakeWVision implements PathPlanner {
         private static final double DETECTOR_TARGET_HEIGHT_INCHES = 1.5;
-        private static final double AREA_DISTANCE_SCALE = 18.0;
+        private static final double AREA_DISTANCE_SCALE = 18.0;//tune - move to ll
         private static final double MIN_CONFIDENCE = 0.35;
         private static final double MIN_TARGET_AREA = 0.15;
-        private static final double MIN_FORWARD_DISTANCE_INCHES = 3.0;
+        private static final double MIN_FORWARD_DISTANCE_INCHES = 1.0;
         private static final double MAX_FORWARD_DISTANCE_INCHES = 48.0;
-        private static final double MAX_LATERAL_OFFSET_INCHES = 9.0;
+        private static final double MAX_LATERAL_OFFSET_INCHES = 10.0;
         private static final double MERGE_DISTANCE_INCHES = 2.5;
         private static final double PEDRO_CURVE_THROUGH_TENSION = 0.5;
         private static final double ADAPTIVE_HANDLE_FRACTION = 1.0 / 3.0;
-        private static final double CURVE_THROUGH_MAX_TURN_RADIANS = Math.toRadians(60);
+        private static final double CURVE_THROUGH_MAX_TURN_RADIANS = Math.toRadians(70);
         private static final double CURVE_THROUGH_MAX_SPACING_RATIO = 1.8;
         private static final double SCORE_CONFIDENCE_WEIGHT = 0.45;
         private static final double SCORE_AREA_WEIGHT = 0.35;
@@ -130,7 +130,7 @@ public class Utils {
                 this.qualityScore = qualityScore;
             }
         }
-
+//todo add boundaries class and pass it here, add checks
         public IntakeWVision(Mechanisms mechanisms, Vision vision, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
             this.mechanisms = mechanisms;
             this.vision = vision;
