@@ -226,8 +226,8 @@ public class Robot extends Mechanism {
 
     public void saveEndVals() {
         if (robotMode == RobotMode.AUTONOMOUS) {
-            Pose estimatedEndPose = getDrive().getPose().copy();
-            Vector robotV = getDrive().getVelocity().times(helper.getDt() / 1_000.0);
+            Pose estimatedEndPose = requireDrive().getPose().copy();
+            Vector robotV = requireDrive().getVelocity().times(helper.getDt() / 1_000.0);
             estimatedEndPose = estimatedEndPose.plus(
                     new Pose(
                             robotV.getXComponent(),

@@ -276,9 +276,12 @@ public class Limelight {
     }
 
     public Pose getBotposeMT2() {
-        return result == null || botpose == null ? null : MathUtils.units.toPedroPathing(botpose);
+        return result == null || !result.isValid() || botpose == null
+                ? null : MathUtils.units.toPedroPathing(botpose);
     }
 
+    /** @deprecated Use {@link #update()} instead. */
+    @Deprecated
     public void LLUpdate() {
         update();
     }

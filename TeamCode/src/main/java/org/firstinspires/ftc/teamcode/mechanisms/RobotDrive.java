@@ -175,7 +175,7 @@ public class RobotDrive extends Mechanism {
             return;
         }
         Button zeroHeadingButton = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);
-        DriveVector driveVector = getDriveVector(state.gpBindings);
+        DriveVector driveVector = getDriveVector(state.getGpBindings());
         if (zeroHeadingButton != null && zeroHeadingButton.isPressed()) {
             zeroHeadingOffset();
         }

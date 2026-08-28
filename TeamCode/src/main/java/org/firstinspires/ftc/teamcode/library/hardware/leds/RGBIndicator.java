@@ -51,6 +51,7 @@ public class RGBIndicator extends Mechanism {
         }
         @Override
         public RGBIndicator_PARAMS updateFromBot(RobotConstants bot) {
+            if (!ISBEINGUSED) return this;
             ISBEINGUSED = bot.Mechanisms.contains(RGBIndicator.class);
             return this;
         }

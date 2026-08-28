@@ -106,13 +106,12 @@ public class Motor implements HardwareDevice {
     }
 
     public Motor setDirection(Direction motorDirection) {
-        if (motor.getDirection() != motorDirection.toFtcSdk()) {
-            reverseDirection();
-        }
+        motor.setDirection(motorDirection.toFtcSdk());
         return this;
     }
     public Direction getDirection() {
-        return Direction.values()[motor.getDirection().ordinal()];
+        return motor.getDirection() == com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD
+                ? Direction.FORWARD : Direction.REVERSE;
     }
     public void setZeroPowerBehavior(DcMotor.ZeroPowerBehavior zeroPowerBehavior) {
         motor.setZeroPowerBehavior(zeroPowerBehavior);

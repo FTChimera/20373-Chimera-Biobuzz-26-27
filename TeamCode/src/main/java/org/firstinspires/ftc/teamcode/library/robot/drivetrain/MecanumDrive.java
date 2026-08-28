@@ -172,8 +172,10 @@ public class MecanumDrive {
     }
 
     public Command teleOp(Supplier<DriveVector> vector) {
-        Driver currentDriver = Blackboard.get(Blackboard.Caption.DRIVER) != null ? Blackboard.get(Blackboard.Caption.DRIVER).getValue() : Driver.DEFAULT;
-        return teleOp(vector, currentDriver.USE_FIELD_CENTRIC);
+        return Groups.sequential(
+                CommandConverter.toCommand(this::startTeleOpDrive),
+                Commands.infinite(() -> setTeleOpDrive(vector.get()))
+        );
     }
 
     public Command startTeleOpDriveCommand() {

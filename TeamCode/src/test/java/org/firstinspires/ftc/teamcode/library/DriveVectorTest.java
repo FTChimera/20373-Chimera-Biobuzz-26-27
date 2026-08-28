@@ -48,6 +48,13 @@ public class DriveVectorTest {
     }
 
     @Test
+    public void idleSentinelProducesZeroDrivePowers() {
+        double[] powers = DriveVector.IDLE.calculateDrivePowers();
+        assertArrayEquals(new double[]{0, 0, 0, 0}, powers, MathUtils.EPSILON);
+        assertNotSame(DriveVector.IDLE, DriveVector.IDLE.copy());
+    }
+
+    @Test
     public void drivePowersNormalizeWhenMagnitudeExceedsOne() {
         DriveVector vector = new DriveVector(1.0, 1.0, 1.0);
 

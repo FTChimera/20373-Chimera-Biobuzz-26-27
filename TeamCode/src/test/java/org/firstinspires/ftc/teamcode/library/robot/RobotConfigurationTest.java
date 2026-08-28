@@ -95,6 +95,40 @@ public class RobotConfigurationTest {
         assertEquals(Button.BACK, robotDriveParams.ZERO_HEADING_BUTTON);
     }
 
+    @Test
+    public void rgbIndicatorParamsUpdateFromBotRespectsExplicitFalse() {
+        // When ISBEINGUSED is explicitly set false, updateFromBot must NOT override it
+        // even though the class is registered in the profile.
+        RobotConstants botWithRGB = new RobotConstants()
+                .addMechanism(RGBIndicator.class,
+                        new RGBIndicator.RGBIndicator_PARAMS().isBeingUsed(false));
+
+        RGBIndicator.RGBIndicator_PARAMS params =
+                botWithRGB.getMechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS());
+        params = params.updateFromBot(botWithRGB);
+
+        assertFalse("updateFromBot must not override an explicit isBeingUsed(false)", params.ISBEINGUSED);
+    }
+
+    @Test
+    public void rgbIndicatorParamsUpdateFromBotEnablesWhenRegistered() {
+        RobotConstants botWithRGB = new RobotConstants().addMechanism(RGBIndicator.class);
+        RGBIndicator.RGBIndicator_PARAMS params =
+                botWithRGB.getMechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS());
+        params = params.updateFromBot(botWithRGB);
+        assertTrue(params.ISBEINGUSED);
+    }
+
+    @Test
+    public void rgbIndicatorParamsUpdateFromBotDisablesWhenNotRegistered() {
+        RobotConstants botWithoutRGB = new RobotConstants();
+        RGBIndicator.RGBIndicator_PARAMS params =
+                botWithoutRGB.getMechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS());
+        params = params.updateFromBot(botWithoutRGB);
+        assertFalse(params.ISBEINGUSED);
+    }
+
+
     public static class FakeMechanism extends Mechanism {
         public final FakeParams params;
 

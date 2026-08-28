@@ -4,7 +4,7 @@ import java.util.function.DoubleUnaryOperator;
 
 /** Utility Drive vector class with forward, strafe, rotate */
 public class DriveVector {
-    public static DriveVector IDLE = new DriveVector(0, 0, 0, 0);
+    public static final DriveVector IDLE = new DriveVector(0, 0, 0, 0);
     public double forward, strafe, rotate, robotHeading;
 
     public DriveVector(double forward, double strafe, double rotate, double robotHeading) {
