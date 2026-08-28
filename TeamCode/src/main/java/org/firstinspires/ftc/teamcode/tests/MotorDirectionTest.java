@@ -35,7 +35,9 @@ public class MotorDirectionTest extends LinearOpMode {
     public void runOpMode() {
         drive = Constants.createDrive(hardwareMap);
         drive.startTeleOpDrive();
-        intake = Constants.createIntake(hardwareMap);
+        if (Constants.hasMechanism(Intake.class)) {
+            intake = Constants.createIntake(hardwareMap);
+        }
         GamepadEx driver = new GamepadEx(gamepad1);
         waitForStart();
         while (opModeIsActive()) {
@@ -53,10 +55,10 @@ public class MotorDirectionTest extends LinearOpMode {
                 reverseDriveMotor(3);
             }
             if (driver.wasJustPressed(Button.A)) {
-                reverseIntake();
+                if (intake != null) reverseIntake();
             }
             drive.setTeleOpDrive(new DriveVector(0.3, 0, 0), false);
-            intake.setPower(0.3);
+            if (intake != null) intake.setPower(0.3);
             telemetry.addLine("-".repeat(30));
             telemetry.addLine("INSTRUCTIONS");
             telemetry.addLine("-".repeat(30));
@@ -80,11 +82,12 @@ public class MotorDirectionTest extends LinearOpMode {
     }
 
     String getMotorDirectionsString() {
-        return getDirString(0) + " " + getDirString(1) + " " + getDirString(2) + " " + getDirString(3) + " | " + getDirString(4);
+        String base = getDirString(0) + " " + getDirString(1) + " " + getDirString(2) + " " + getDirString(3);
+        return intake != null ? base + " | " + getDirString(4) : base + " | N/A";
     }
 
     String getDirString(int idx) {
-        if (idx == 4) return intake.Intake_Motor.getDirection() == Direction.FORWARD? "F" : "R";
+        if (idx == 4) return intake != null && intake.Intake_Motor.getDirection() == Direction.FORWARD ? "F" : "R";
         return drive.getDriveMotors()[idx].getDirection() == Direction.FORWARD? "F" : "R";
     }
 }

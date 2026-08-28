@@ -47,7 +47,7 @@ public abstract class IvyAuton extends OpMode {
         robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
         commands = robot.build();
         autonomousState = new State(RobotMode.AUTONOMOUS);
-        autonomousState.setAllianceColor(AllianceColor.RED);
+        autonomousState.setAllianceColor(allianceColor);
     }
 
     public void start() {

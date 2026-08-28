@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -26,8 +25,10 @@ public class FieldCentricMecanumTeleOp extends LinearOpMode {
         // If your robot moves backwards when commanded to go forwards,
         // reverse the left side instead.
         // See the note about this earlier on this page.
-        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeftMotor.setDirection(Constants.currentBot.FRONT_LEFT_MOTOR_DIRECTION.toFtcSdk());
+        backLeftMotor.setDirection(Constants.currentBot.BACK_LEFT_MOTOR_DIRECTION.toFtcSdk());
+        frontRightMotor.setDirection(Constants.currentBot.FRONT_RIGHT_MOTOR_DIRECTION.toFtcSdk());
+        backRightMotor.setDirection(Constants.currentBot.BACK_RIGHT_MOTOR_DIRECTION.toFtcSdk());
 
         IMU imu = Constants.createIMU(hardwareMap);
         imu.resetYaw();

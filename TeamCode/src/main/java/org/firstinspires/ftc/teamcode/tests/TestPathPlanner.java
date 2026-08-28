@@ -23,6 +23,7 @@ public class TestPathPlanner extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
+        Scheduler.reset();
         robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
         autonomousState = new State(RobotMode.AUTONOMOUS);
         steps = new PlanBuilder(robot, new Pose(0,0,0))
@@ -41,5 +42,6 @@ public class TestPathPlanner extends LinearOpMode {
             Scheduler.execute();
             robot.periodic(autonomousState);
         }
+        Scheduler.reset();
     }
 }
