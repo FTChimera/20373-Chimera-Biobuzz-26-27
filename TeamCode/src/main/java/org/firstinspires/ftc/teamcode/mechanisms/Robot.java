@@ -20,16 +20,16 @@ import java.util.function.Supplier;
 /**
  * Aggregate access to every profile-managed mechanism registered on a robot profile.
  */
-public class Mechanisms extends Mechanism {
+public class Robot extends Mechanism {
     private final Map<Class<? extends Mechanism>, Mechanism> mechanisms = new LinkedHashMap<>();
     private State lastState;
     OpModeHelper helper;
 
-    public Mechanisms(HardwareMap map, RobotConstants bot) {
+    public Robot(HardwareMap map, RobotConstants bot) {
         super(map, bot);
         helper = new OpModeHelper(hardwareMap);
         bot.Mechanisms.stream()
-                .filter(mechanismClass -> mechanismClass == Mechanisms.class)
+                .filter(mechanismClass -> mechanismClass != Robot.class)
                 .sorted(Comparator.comparing(Class::getName))
                 .forEach(mechanismClass -> mechanisms.put(mechanismClass, bot.createMechanism(map, mechanismClass)));
     }

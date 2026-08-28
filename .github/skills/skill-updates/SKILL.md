@@ -153,7 +153,7 @@ Examples:
   - `ftc-sdk-opmodes`
   - `ftc-sdk-hardwaremap-and-lifecycle`
   - `constants-not-configured` if the new package introduces its own configurable tuning constants
-- If the change renames `Constants` helpers, moves drive registration, or adds an aggregate factory like `createMechanisms(...)`, update:
+- If the change renames `Constants` helpers, moves drive registration, or adds an aggregate factory like `createRobot(...)`, update:
   - `ftc-sdk-opmodes`
   - `ftc-sdk-hardwaremap-and-lifecycle`
   - `drivetrain-and-drivevector`

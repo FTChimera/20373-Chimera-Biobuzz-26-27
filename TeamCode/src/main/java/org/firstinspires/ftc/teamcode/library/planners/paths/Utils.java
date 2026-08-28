@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.library.Timer;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
@@ -28,10 +28,10 @@ import java.util.concurrent.TimeUnit;
 public class Utils {
     public static class StartPose implements PathPlanner {
         Pose pose;
-        Mechanisms mechanisms;
+        Robot robot;
 
-        public StartPose(Mechanisms mechanisms, Pose pose) {
-            this.mechanisms = mechanisms;
+        public StartPose(Robot robot, Pose pose) {
+            this.robot = robot;
             this.pose = pose;
         }
 
@@ -42,7 +42,7 @@ public class Utils {
 
         @Override
         public Command run() {
-            return Commands.instant(() -> mechanisms.require(RobotDrive.class).mecanumDrive.setStartingPose(pose));
+            return Commands.instant(() -> robot.require(RobotDrive.class).mecanumDrive.setStartingPose(pose));
         }
 
         @Override
@@ -57,11 +57,11 @@ public class Utils {
     }
 
     public static class CustomPath implements PathPlanner {
-        Mechanisms mechanisms;
+        Robot robot;
         PathChain pathChain;
 
-        public CustomPath(Mechanisms mechanisms, PathPlanner prevPlanner, PathChain pathChain) {
-            this.mechanisms = mechanisms;
+        public CustomPath(Robot robot, PathPlanner prevPlanner, PathChain pathChain) {
+            this.robot = robot;
             this.pathChain = pathChain;
             fromPrev(prevPlanner);
         }
@@ -73,7 +73,7 @@ public class Utils {
 
         @Override
         public Command run() {
-            return PedroCommands.follow(mechanisms.require(RobotDrive.class).mecanumDrive.follower, pathChain);
+            return PedroCommands.follow(robot.require(RobotDrive.class).mecanumDrive.follower, pathChain);
         }
 
         @Override
@@ -104,7 +104,7 @@ public class Utils {
         private static final double SCORE_GAP_WEIGHT = 0.04;
         private static final double DETECTOR_RETRY_SECONDS = 0.7;
 
-        Mechanisms mechanisms;
+        Robot robot;
         Vision vision;
         RobotDrive drive;
         Intake intake;
@@ -131,8 +131,8 @@ public class Utils {
             }
         }
 //todo add boundaries class and pass it here, add checks
-        public IntakeWVision(Mechanisms mechanisms, Vision vision, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
-            this.mechanisms = mechanisms;
+        public IntakeWVision(Robot robot, Vision vision, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
+            this.robot = robot;
             this.vision = vision;
             this.numBalls = numBalls;
             this.failSafePath = failSafePath;
@@ -141,8 +141,8 @@ public class Utils {
         }
 
         public void setUpMechanisms() {
-            drive = mechanisms.get(RobotDrive.class);
-            intake = mechanisms.get(Intake.class);
+            drive = robot.get(RobotDrive.class);
+            intake = robot.get(Intake.class);
             shouldUseFailSafePath = vision == null || drive == null || intake == null;
         }
 
@@ -532,8 +532,8 @@ public class Utils {
     }
 
     public static class LinearPath extends CustomPath {
-        public LinearPath(Mechanisms mechanisms, PathPlanner prevPlanner, Pose endPose) {
-            super(mechanisms, prevPlanner,
+        public LinearPath(Robot robot, PathPlanner prevPlanner, Pose endPose) {
+            super(robot, prevPlanner,
                     new PathChain(new Path(new BezierLine(
                             prevPlanner.getEndPose(), endPose
                     )

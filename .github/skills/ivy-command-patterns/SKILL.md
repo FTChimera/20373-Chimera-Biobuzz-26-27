@@ -50,8 +50,8 @@ When Ivy behavior is unclear, inspect the downloaded artifacts under
 
 ## Common repo examples
 
-- `opModes/IvyTeleOp.java` schedules `DualGamepad.updateCommand()`, then uses `Commands.infinite(() -> mechanisms.periodic(driverResult))` for aggregate Limelight/drive/intake updates.
-- `mechanisms/Mechanisms.java` exposes `schedule(Supplier<GpBindings>)`, which is the repo-local aggregate pattern when one scheduler command should update every currently registered mechanism from one wrapper result source.
+- `opModes/IvyTeleOp.java` schedules `DualGamepad.updateCommand()`, then uses `Commands.infinite(() -> robot.periodic(driverResult))` for aggregate Limelight/drive/intake updates.
+- `mechanisms/Robot.java` exposes `schedule(Supplier<GpBindings>)`, which is the repo-local aggregate pattern when one scheduler command should update every currently registered mechanism from one wrapper result source.
 - `opModes/IvyAuton.java` schedules a `Groups.sequential(...)` routine with intake commands, `PedroCommands.follow(...)`, `Commands.waitMs(...)`, and `requestOpModeStop`.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` schedule `Commands.infinite(follower::update)` alongside a sequential follow-path chain.
 - `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold that still resolves its intake motor directly from `hardwareMap`.

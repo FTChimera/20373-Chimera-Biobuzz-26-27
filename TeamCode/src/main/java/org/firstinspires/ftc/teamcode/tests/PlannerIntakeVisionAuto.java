@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
@@ -26,7 +26,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
     private static final Pose VISION_SEARCH_POSE = new Pose(10, 33, Math.toRadians(180));
     private static final Pose PARK_POSE = new Pose(36, 36, Math.toRadians(90));
 
-    private Mechanisms mechanisms;
+    private Robot robot;
     private RobotDrive drive;
     private Intake intake;
     private Vision vision;
@@ -35,11 +35,11 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
     @Override
     public void runOpMode() {
         Scheduler.reset();
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        drive = mechanisms.require(RobotDrive.class);
-        intake = mechanisms.get(Intake.class);
-        vision = mechanisms.require(Vision.class);
-        plan = new PlanBuilder(mechanisms, vision, START_POSE)
+        robot = Constants.createRobot(hardwareMap);
+        drive = robot.require(RobotDrive.class);
+        intake = robot.get(Intake.class);
+        vision = robot.require(Vision.class);
+        plan = new PlanBuilder(robot, vision, START_POSE)
                 .linearPathTo(STAGING_POSE)
                 .followPath(createApproachPath())
                 .waitMs(250)
@@ -48,7 +48,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
                 .build();
 
         telemetry.addData("Status", "Initialized");
-        telemetry.addData("Mechanisms", mechanisms.getConfiguredMechanismClasses());
+        telemetry.addData("Mechanisms", robot.getConfiguredMechanismClasses());
         telemetry.update();
 
         waitForStart();

@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 
@@ -23,7 +23,7 @@ public abstract class IvyAuton extends OpMode {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
     Follower follower;
-    Mechanisms mechanisms;
+    Robot robot;
     Intake intake;
      // = new Path(new BezierLine(
     /*
@@ -45,15 +45,15 @@ public abstract class IvyAuton extends OpMode {
     @Override
     public void init() {
         Scheduler.reset();
-        mechanisms = Constants.createMechanisms(hardwareMap);
+        robot = Constants.createRobot(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        intake = mechanisms.require(Intake.class);
+        intake = robot.require(Intake.class);
     }
 
     public void start() {
         Scheduler.schedule(
-                infinite(()->mechanisms.periodic(new State())),
+                infinite(()->robot.periodic(new State())),
                 Groups.sequential(
                     intake.halfPower(),
                     PedroCommands.follow(follower, paths.getPath1(), true),

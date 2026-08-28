@@ -10,18 +10,18 @@ import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 
 @Utility
 public class TestPathPlanner extends LinearOpMode {
-    Mechanisms mechanisms;
+    Robot robot;
     PathPlannerList steps;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        steps = new PlanBuilder(mechanisms, new Pose(0,0,0))
+        robot = Constants.createRobot(hardwareMap);
+        steps = new PlanBuilder(robot, new Pose(0,0,0))
                 .linearPathTo(new Pose(12, 12, MathUtils.DEG_TO_RAD * 90))
                 .waitMs(1000)
                 .linearPathTo(new Pose(0, 0, MathUtils.DEG_TO_RAD * 0))
@@ -30,7 +30,7 @@ public class TestPathPlanner extends LinearOpMode {
         steps.schedule();
         telemetry.addData("Scheduled", "Yes");
         telemetry.addLine("---MECHANISMS---");
-        mechanisms.all().forEach(mechanism -> telemetry.addLine(mechanism.getClass().getSimpleName()));
+        robot.all().forEach(mechanism -> telemetry.addLine(mechanism.getClass().getSimpleName()));
         waitForStart();
         while (opModeIsActive()) {
             Scheduler.execute();

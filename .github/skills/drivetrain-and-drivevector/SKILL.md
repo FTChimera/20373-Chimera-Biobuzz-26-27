@@ -68,7 +68,7 @@ inspect the matching dependency under
 - Drive profile and follower configuration live in `RobotConstants` / `RobotConfigurations`.
 - `mechanisms/RobotDrive.java` is the profile-managed wrapper that participates in the shared `Mechanism` creation flow.
 - `Constants.createDrive(hardwareMap)` is the single-drive convenience wrapper around `currentBot.createMechanism(hardwareMap, RobotDrive.class)`.
-- Shared teleops currently prefer `Constants.createMechanisms(hardwareMap)` and then `mechanisms.require(RobotDrive.class)` so optional subsystems can stay nullable while drive remains required.
+- Shared teleops currently prefer `Constants.createRobot(hardwareMap)` and then `robot.require(RobotDrive.class)` so optional subsystems can stay nullable while drive remains required.
 - `RobotConstants.configureDriveMechanisms()` is the profile helper that enables the normal drive mechanism as `RobotDrive`.
 - Higher-level drive code should keep delegating to `RobotDrive` or the `Constants` helpers instead of rebuilding hardware inline.
 

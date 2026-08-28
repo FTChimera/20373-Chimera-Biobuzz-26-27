@@ -35,7 +35,7 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanisms.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Robot.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
@@ -51,7 +51,7 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
 4. `Constants` exposes dedicated helpers for common mechanisms/wrappers
    (`createDrive`, `createIntake`, `createVision`, `createRGB`, `createWebcam`)
-   plus the aggregate `createMechanisms(...)` helper and a generic
+   plus the aggregate `createRobot(...)` helper and a generic
    `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
 
@@ -98,7 +98,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - `LogitechWebcam` extends `Mechanism`, owns builder-style `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
 - `library/robot/drivetrain/MecanumDrive` is the reusable drive helper under the public mechanism layer; it owns both follower-backed drive behavior and the fallback manual-motor path used when `USE_FOLLOWER_DRIVE` is false.
 - `RobotDrive` is the profile-managed `Mechanism` that owns nested drive params, constructs the `MecanumDrive` helper from the active profile, and turns `GpBindings` into teleop drive behavior.
-- `Mechanisms` is the aggregate wrapper over every class in `bot.Mechanisms`; it instantiates the current profile-managed mechanism set, exposes typed lookup helpers, and fans out `periodic(GpBindings)` calls to the aggregated mechanisms.
+- `Robot` is the aggregate wrapper over every class in `bot.Mechanisms`; it instantiates the current profile-managed mechanism set, exposes typed lookup helpers, and fans out `periodic(GpBindings)` calls to the aggregated mechanisms.
 - `RobotConstants` now stores per-mechanism params overrides through `mechanismParams(...)` / `getMechanismParams(...)`, so builder-style nested params can vary by robot profile without moving all subsystem data into the robot profile class.
 - Profile params supplied through `mechanismParams(...)` do not make a class factory-eligible; the profile selected by `Constants.currentBot` must also register it with `addMechanism(...)`.
 

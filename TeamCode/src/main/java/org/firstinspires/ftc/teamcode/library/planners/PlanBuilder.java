@@ -4,25 +4,25 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 
 import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 import java.util.Objects;
 
 public class PlanBuilder {
     PathPlannerList list;
-    Mechanisms mechanisms;
+    Robot robot;
     Vision vision;
 
-    public PlanBuilder(Mechanisms mechanisms, Pose startPose) {
-        this(mechanisms, null, startPose);
+    public PlanBuilder(Robot robot, Pose startPose) {
+        this(robot, null, startPose);
     }
 
-    public PlanBuilder(Mechanisms mechanisms, Vision vision, Pose startPose) {
-        this.mechanisms = mechanisms;
+    public PlanBuilder(Robot robot, Vision vision, Pose startPose) {
+        this.robot = robot;
         this.vision = vision;
         list = new PathPlannerList();
-        list.add(0, new Utils.StartPose(mechanisms, startPose));
+        list.add(0, new Utils.StartPose(robot, startPose));
     }
 
     public PlanBuilder withVision(Vision vision) {
@@ -36,14 +36,14 @@ public class PlanBuilder {
 
     // Here we add methods like
     // public PlanBuilder my-plan()
-    // add(new MyPlan(mechanisms, lastPlanner(), ...));
+    // add(new MyPlan(robot, lastPlanner(), ...));
 
     public PlanBuilder followPath(PathChain path) {
-        add(new Utils.CustomPath(mechanisms, planner().last(), path));
+        add(new Utils.CustomPath(robot, planner().last(), path));
         return this;
     }
     public PlanBuilder linearPathTo(Pose endPose) {
-        add(new Utils.LinearPath(mechanisms, planner().last(), endPose));
+        add(new Utils.LinearPath(robot, planner().last(), endPose));
         return this;
     }
     public PlanBuilder waitMs(double ms) {
@@ -56,7 +56,7 @@ public class PlanBuilder {
                     "A Vision mechanism must be supplied through the constructor or withVision() before intakeWVision()."
             );
         }
-        add(new Utils.IntakeWVision(mechanisms, vision, planner().last(), numBalls, failSafePath));
+        add(new Utils.IntakeWVision(robot, vision, planner().last(), numBalls, failSafePath));
         return this;
     }
 

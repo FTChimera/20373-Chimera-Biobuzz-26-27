@@ -17,9 +17,9 @@ public class MyRedTeleOp extends TeleOp {
 <section id="linear"><h2>The shared LinearOpMode teleop pattern</h2><pre>public void runOpMode() {
     GamepadEx driver = new GamepadEx(gamepad1);
     GpBindings bindings = driver.result();
-    mechanisms = Constants.createMechanisms(hardwareMap);
-    drive = mechanisms.require(RobotDrive.class);
-    intake = mechanisms.get(Intake.class);
+    robot = Constants.createRobot(hardwareMap);
+    drive = robot.require(RobotDrive.class);
+    intake = robot.get(Intake.class);
 
     telemetry.addData("Status", "Initialized");
     telemetry.update();
@@ -27,7 +27,7 @@ public class MyRedTeleOp extends TeleOp {
 
     while (opModeIsActive()) {
         driver.update();
-        mechanisms.periodic(bindings);
+        robot.periodic(bindings);
         telemetry.addData("Pose", drive.getPose());
         telemetry.update();
     }
@@ -36,8 +36,8 @@ public class MyRedTeleOp extends TeleOp {
     Scheduler.reset();
     follower = Constants.createFollower(hardwareMap);
     follower.setStartingPose(paths.getStartingPose());
-    mechanisms = Constants.createMechanisms(hardwareMap);
-    intake = mechanisms.require(Intake.class);
+    robot = Constants.createRobot(hardwareMap);
+    intake = robot.require(Intake.class);
 }
 @Override public void loop() {
     Scheduler.execute();

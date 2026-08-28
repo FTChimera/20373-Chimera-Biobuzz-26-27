@@ -54,7 +54,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 
 Shared base op modes should initialize mechanisms through `Constants.create...(...)` so every variant uses the same profile-aware factories.
 
-Variant wrappers inherit whatever profile and aggregate assumptions their base class makes. For example, `TeleOp.java` currently calls `Constants.createMechanisms(hardwareMap)`, then `require(RobotDrive.class)` and optional `get(...)` lookups for `Intake` / `Limelight`; the selected profile must still register any class that the base treats as required.
+Variant wrappers inherit whatever profile and aggregate assumptions their base class makes. For example, `TeleOp.java` currently calls `Constants.createRobot(hardwareMap)`, then `require(RobotDrive.class)` and optional `get(...)` lookups for `Intake` / `Limelight`; the selected profile must still register any class that the base treats as required.
 
 If a new subsystem is introduced for a base op mode:
 

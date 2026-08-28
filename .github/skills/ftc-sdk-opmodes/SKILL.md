@@ -51,9 +51,9 @@ versions pinned in `build.dependencies.gradle`.
 
 When an op mode needs a subsystem:
 
-- prefer `Constants.createMechanisms(hardwareMap)` in shared op modes, then use `mechanisms.require(Intake.class)` or `mechanisms.get(...)` for profile-managed subsystems
+- prefer `Constants.createRobot(hardwareMap)` in shared op modes, then use `robot.require(Intake.class)` or `robot.get(...)` for profile-managed subsystems
 - call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
-- call `Constants.createMechanisms(hardwareMap)` when a shared op mode wants the whole registered mechanism set, then use `mechanisms.require(RobotDrive.class)` or optional `mechanisms.get(...)` lookups as needed
+- call `Constants.createRobot(hardwareMap)` when a shared op mode wants the whole registered mechanism set, then use `robot.require(RobotDrive.class)` or optional `robot.get(...)` lookups as needed
 - call `Constants.createDrive(hardwareMap)` when you intentionally want just the public drive mechanism
 - call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
 - call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
@@ -81,7 +81,7 @@ The important repo contract is that profile-managed subsystems can be created un
 - `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
 - `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory
-  pattern through `Constants.createMechanisms(hardwareMap)`. They require
+  pattern through `Constants.createRobot(hardwareMap)`. They require
   `RobotDrive` and `Vision`, while `Intake` remains optional.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.

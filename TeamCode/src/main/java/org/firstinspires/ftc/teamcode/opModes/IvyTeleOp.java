@@ -11,14 +11,14 @@ import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @TeleOp(name = "Red Ivy TeleOp", group = "0: TeleOp")
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public class IvyTeleOp extends LinearOpMode {
-    Mechanisms mechanisms;
+    Robot robot;
     Intake intake;
     RobotDrive drive;
     Vision vision;
@@ -36,19 +36,19 @@ public class IvyTeleOp extends LinearOpMode {
         Scheduler.reset();
         DualGamepad gamepads = new DualGamepad(gamepad1, gamepad2);
         GpBindings driverResult = gamepads.getGamepad1().result();
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        intake = mechanisms.get(Intake.class);
+        robot = Constants.createRobot(hardwareMap);
+        intake = robot.get(Intake.class);
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
-        drive = mechanisms.require(RobotDrive.class);
+        drive = robot.require(RobotDrive.class);
         drive.setStartingPose(startPose);
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
-        vision = mechanisms.get(Vision.class);
+        vision = robot.get(Vision.class);
         State robotState = new State();
         robotState.setGpBindings(driverResult);
         Scheduler.schedule(
                 gamepads.updateCommand(),
-                Commands.infinite(() -> mechanisms.periodic(robotState))
+                Commands.infinite(() -> robot.periodic(robotState))
         );
 
         telemetry.addData("Status", "Initialized");

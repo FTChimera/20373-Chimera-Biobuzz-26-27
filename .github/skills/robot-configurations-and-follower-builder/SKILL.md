@@ -38,7 +38,7 @@ from `build.dependencies.gradle`.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
 8. `Constants` now also exposes helper methods such as `createIMU(...)`,
    `createDrive(...)`, `createVision(...)`, `createRGB(...)`,
-   `createWebcam(...)`, aggregate `createMechanisms(...)`, generic
+   `createWebcam(...)`, aggregate `createRobot(...)`, generic
    `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and
    `assertHasMechanism(...)`.
 9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.

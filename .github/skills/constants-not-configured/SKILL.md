@@ -54,7 +54,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   - factory helpers like `createFollower(...)`, `createIMU(...)`,
     `createDrive(...)`, `createIntake(...)`, `createVision(...)`,
     `createRGB(...)`, `createWebcam(...)`, aggregate
-    `createMechanisms(...)`, and generic `createMechanism(...)`
+    `createRobot(...)`, and generic `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
@@ -65,7 +65,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   - path constraints and centripetal scaling
   - enabled mechanism registration via `configureDriveMechanisms()` and `.addMechanism(...)`
 - `library/robot/RobotConstants.java` is the base profile object consumed by the factory helpers. If a constant affects follower construction or drivetrain hardware wiring, it usually belongs here or in `RobotConfigurations`.
-- `library/hardware/hardwareDevice/` now contains custom FTC `HardwareDevice` definitions such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`; these are lower-level SDK types, not profile-managed mechanisms.
+- `library/hardware/hardwareDevice/` now contains custom FTC `HardwareDevice` definitions such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`; these are lower-level SDK types, not profile-managed robot.
 - Mechanism-specific placeholder values still live inside the owning classes as builder-style nested params:
   - `mechanisms/Intake.java` -> `INTAKE_PARAMS`
   - `mechanisms/Vision.java` -> `VISION_PARAMS` with nested
@@ -116,7 +116,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
 
 ## Op modes and tests that are especially affected by constant changes
 
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createMechanisms(hardwareMap)`, then require `RobotDrive.class` and treat `Intake` / `Limelight` as optional aggregate lookups. Preserve those nullable lookups so shared teleops remain valid across profile changes.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createRobot(hardwareMap)`, then require `RobotDrive.class` and treat `Intake` / `Limelight` as optional aggregate lookups. Preserve those nullable lookups so shared teleops remain valid across profile changes.
 - `opModes/IvyAuton.java` uses `Constants.createFollower(...)` and `Constants.createIntake(...)`, but its starting pose comes from the selected `IvyAuton_Paths.getStartingPose()` implementation, not from the default alliance poses in `Constants`.
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
 - `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring; it calls `Constants.createDrive(...)` and `Constants.createIntake(...)`, so it requires a profile that registers both `RobotDrive.class` and `Intake.class`.

@@ -927,7 +927,7 @@
                     <span class="card-icon">🧩</span>
                     <div class="card-title">Constants &amp; Robot Profiles</div>
                     <p class="card-text">
-                        Start an OpMode with <code>Constants.createMechanisms(hardwareMap)</code>, then use typed
+                        Start an OpMode with <code>Constants.createRobot(hardwareMap)</code>, then use typed
                         <code>require(...)</code> or optional <code>get(...)</code> calls.
                     </p>
                 </div>
@@ -1001,12 +1001,12 @@
                 <div class="code-panel">
 
                     <div class="code-pane active" id="tab-constants">
-<pre>Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
-RobotDrive drive = mechanisms.require(RobotDrive.class);
-Intake intake = mechanisms.get(Intake.class); // Optional by profile.
-Limelight limelight = mechanisms.get(Limelight.class);
+<pre>Robot robot = Constants.createRobot(hardwareMap);
+RobotDrive drive = robot.require(RobotDrive.class);
+Intake intake = robot.get(Intake.class); // Optional by profile.
+Limelight limelight = robot.get(Limelight.class);
 
-telemetry.addData("Registered", mechanisms.getConfiguredMechanismClasses());
+telemetry.addData("Registered", robot.getConfiguredMechanismClasses());
 telemetry.addData("Has intake", intake != null);
 telemetry.update();
 
@@ -1034,8 +1034,8 @@ if (saved.getX() != 0 || saved.getY() != 0 || saved.getHeading() != 0) {
                     <div class="code-pane" id="tab-teleop">
 <pre>GamepadEx driver = new GamepadEx(gamepad1);
 GpBindings bindings = driver.result();
-Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
-RobotDrive drive = mechanisms.require(RobotDrive.class);
+Robot robot = Constants.createRobot(hardwareMap);
+RobotDrive drive = robot.require(RobotDrive.class);
 
 drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
 drive.setStickCurve(x -> Math.signum(x) * x * x);
@@ -1044,7 +1044,7 @@ waitForStart();
 
 while (opModeIsActive()) {
     driver.update();
-    mechanisms.periodic(bindings);
+    robot.periodic(bindings);
     telemetry.addData("Pose", drive.getPose());
     telemetry.update();
 }
@@ -1489,10 +1489,10 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
 ═══════════════════════════════════════════ -->
 <script>
     const CODE = {
-        factoryUsage: `Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
-    RobotDrive drive = mechanisms.require(RobotDrive.class);
-    Intake intake = mechanisms.get(Intake.class); // May be null on another profile.
-    Limelight limelight = mechanisms.get(Limelight.class);`,
+        factoryUsage: `Robot robot = Constants.createRobot(hardwareMap);
+    RobotDrive drive = robot.require(RobotDrive.class);
+    Intake intake = robot.get(Intake.class); // May be null on another profile.
+    Limelight limelight = robot.get(Limelight.class);`,
         blackboardUsage: `// Write only where this lifecycle flow owns the state.
     Blackboard.put(Blackboard.Caption.ALLIANCE, AllianceColor.RED);
     Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy());
@@ -1503,11 +1503,11 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
         ? saved : Constants.RED_DEFAULT_START_POSE;`,
         aggregateUsage: `GamepadEx driver = new GamepadEx(gamepad1);
     GpBindings bindings = driver.result();
-    Mechanisms mechanisms = Constants.createMechanisms(hardwareMap);
+    Robot robot = Constants.createRobot(hardwareMap);
 
     while (opModeIsActive()) {
         driver.update();
-        mechanisms.periodic(bindings);
+        robot.periodic(bindings);
         telemetry.update();
     }`,
         timerUsage: `Timer loopTimer = new Timer(TimeUnit.MILLISECONDS);
@@ -1543,8 +1543,8 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
         assertHasMechanism(RobotDrive.class);
         return currentBot.createMechanism(hardwareMap, RobotDrive.class);
     }
-    public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
-        return new Mechanisms(hardwareMap, currentBot);
+    public static Robot createRobot(HardwareMap hardwareMap) {
+        return new Robot(hardwareMap, currentBot);
     }
 }`,
         robotConfig: `public static RobotConstants OldDECODERobotTesting() {
@@ -1622,7 +1622,7 @@ protected Pose getStartingPose() {
 }`,
         teleOpBase: `public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
-    Mechanisms mechanisms;
+    Robot robot;
     Intake intake;
     RobotDrive drive;
     Limelight limelight;
@@ -1633,13 +1633,13 @@ protected Pose getStartingPose() {
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
         GpBindings driverResult = driver.result();
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        intake = mechanisms.get(Intake.class);
-        drive = mechanisms.require(RobotDrive.class);
+        robot = Constants.createRobot(hardwareMap);
+        intake = robot.get(Intake.class);
+        drive = robot.require(RobotDrive.class);
         drive.setStartingPose(getStartingPose());
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive();
-        limelight = mechanisms.get(Limelight.class);
+        limelight = robot.get(Limelight.class);
     }
 }`,
         redTeleOpWrapper: `@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "RED TELEOP", group = "0: TeleOp")
@@ -1662,7 +1662,7 @@ public class Red_TeleOp extends TeleOp {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
     Follower follower;
-    Mechanisms mechanisms;
+    Robot robot;
     Intake intake;
 
     @Override
@@ -1670,8 +1670,8 @@ public class Red_TeleOp extends TeleOp {
         Scheduler.reset();
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        mechanisms = Constants.createMechanisms(hardwareMap);
-        intake = mechanisms.require(Intake.class);
+        robot = Constants.createRobot(hardwareMap);
+        intake = robot.require(Intake.class);
     }
 
     public void start() {
@@ -2303,11 +2303,11 @@ applyCodeHighlighting(document);
                         lead: 'In this repo, <strong>Constants.java</strong> is the convenience layer used by op modes. The heavy configuration lives below it in <strong>RobotConstants</strong> and <strong>RobotConfigurations</strong>.',
                         body: `
                         ${table(['File', 'Job'], [
-                            ['<code>Constants.java</code>', 'Top-level helpers like <code>createFollower()</code>, <code>createDrive()</code>, <code>createMechanisms()</code>, and the default start poses.'],
-                            ['<code>RobotConfigurations.java</code>', 'Builds named robot presets by chaining names, directions, follower constants, and enabled mechanisms.'],
+                            ['<code>Constants.java</code>', 'Top-level helpers like <code>createFollower()</code>, <code>createDrive()</code>, <code>createRobot()</code>, and the default start poses.'],
+                            ['<code>RobotConfigurations.java</code>', 'Builds named robot presets by chaining names, directions, follower constants, and enabled robot.'],
                             ['<code>RobotConstants.java</code>', 'Holds active profile data and knows how to build followers/mechanisms from it.']
                         ])}
-                        ${note('dnote', '<strong>Important:</strong> driver code should usually call <code>Constants.create...()</code> instead of directly constructing mechanisms.')}
+                        ${note('dnote', '<strong>Important:</strong> driver code should usually call <code>Constants.create...()</code> instead of directly constructing robot.')}
                         `
                     },
                     {
@@ -2357,7 +2357,7 @@ applyCodeHighlighting(document);
                         lead: 'Shared competition logic lives in <code>opModes/TeleOp.java</code>. Alliance-specific wrappers inherit it and only supply the starting pose.',
                         body: `
                         ${codeBlock('TeamCode/opModes/TeleOp.java', CODE.teleOpBase)}
-                        ${note('dnote', '<strong>Mechanism pattern:</strong> the shared teleop base now constructs a <code>Mechanisms</code> aggregate first, then requires <code>RobotDrive</code> and treats subsystems like <code>Intake</code> or <code>Limelight</code> as optional profile-managed lookups.')}
+                        ${note('dnote', '<strong>Mechanism pattern:</strong> the shared teleop base now constructs a <code>Robot</code> aggregate first, then requires <code>RobotDrive</code> and treats subsystems like <code>Intake</code> or <code>Limelight</code> as optional profile-managed lookups.')}
                         ${note('dnote', '<strong>Structure rule:</strong> reusable logic belongs in base classes under <code>opModes/</code>; driver-station-visible wrappers belong under <code>opModes/variants/</code>.')}
                         `
                     },
@@ -2401,7 +2401,7 @@ applyCodeHighlighting(document);
                         ${table(['Java pattern in this repo', 'Kotlin equivalent in this repo'], [
                             ['<code>new Pose()</code>', '<code>Pose()</code>'],
                             ['<code>while (opModeIsActive())</code>', '<code>while (opModeIsActive())</code>'],
-                            ['<code>mechanisms = Constants.createMechanisms(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
+                            ['<code>robot = Constants.createRobot(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
                             ['Explicit types everywhere', 'Type inference plus <code>lateinit var</code> for FTC objects initialized in <code>runOpMode()</code>.']
                         ])}
                         `

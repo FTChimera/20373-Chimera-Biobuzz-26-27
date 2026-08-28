@@ -36,7 +36,7 @@ the version pinned in `build.dependencies.gradle`.
 ## Existing abstraction
 
 - `Vision` is the profile-managed camera mechanism and is created with
-  `Constants.createVision(hardwareMap)` or obtained from `Mechanisms`.
+  `Constants.createVision(hardwareMap)` or obtained from `Robot`.
 - `Vision.VISION_PARAMS` owns the nested `Limelight.LIMELIGHT_PARAMS`, so
   hardware names, geometry, polling, and timeout settings remain configurable
   per profile.
@@ -49,7 +49,7 @@ the version pinned in `build.dependencies.gradle`.
 
 ## Repo conventions
 
-- The shared teleops create the `Mechanisms` aggregate, retrieve `Vision`, and
+- The shared teleops create the `Robot` aggregate, retrieve `Vision`, and
   start it in `APRIL_TAG` mode.
 - `tests/PreseasonWebcamAuto` starts the camera in `COLOR` mode as a proof-of-concept validation flow.
 - `tests/ftcSdk/VisionFactoryTest` is the current runtime smoke test for
@@ -60,7 +60,7 @@ the version pinned in `build.dependencies.gradle`.
   `pedroPathing/custom/LimelightPinpointLocalizer.java` is the remaining raw SDK
   exception.
 - Vision creation depends on profile registration; runtime tests should use
-  `Constants.createVision(...)` or obtain it from `Mechanisms`.
+  `Constants.createVision(...)` or obtain it from `Robot`.
 
 ## Params and creation pattern
 

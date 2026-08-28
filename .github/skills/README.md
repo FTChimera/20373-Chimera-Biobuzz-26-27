@@ -62,7 +62,7 @@ code, inspect the downloaded module under
 - `Constants.create...(...)` and `RobotConstants.createMechanism(...)` create
   only profile-managed mechanisms registered by the active profile. Camera
   behavior is exposed through the profile-managed `Vision` mechanism.
-- `Constants.createMechanisms(hardwareMap)` is the aggregate factory for every
+- `Constants.createRobot(hardwareMap)` is the aggregate factory for every
   profile-managed mechanism, including `Vision`. The aggregate updates Vision;
   its owning flow explicitly starts and stops the selected pipeline.
 - Profile-managed mechanisms now resolve nested builder-style params through

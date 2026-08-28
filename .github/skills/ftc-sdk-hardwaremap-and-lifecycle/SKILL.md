@@ -43,7 +43,7 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended aggregate factory style: they call `Constants.createMechanisms(hardwareMap)`, require `RobotDrive`, and treat `Intake` / `Limelight` as optional aggregate lookups.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended aggregate factory style: they call `Constants.createRobot(hardwareMap)`, require `RobotDrive`, and treat `Intake` / `Limelight` as optional aggregate lookups.
 
 ## HardwareMap rules in this repo
 

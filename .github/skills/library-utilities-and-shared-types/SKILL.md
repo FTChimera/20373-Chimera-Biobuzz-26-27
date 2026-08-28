@@ -84,7 +84,7 @@ version pinned in `build.dependencies.gradle`.
 
 - If a change adds robot behavior, it probably belongs in `mechanisms/`, not in `library/`.
 - If a wrapper in `library/hardware/...` participates in the robot-profile creation flow, it should usually extend `Mechanism` and accept `(HardwareMap, RobotConstants)`.
-- If a wrapper is a lower-level adapter like `Motor`, it can stay outside the `Mechanism` hierarchy and still be reused by mechanisms.
+- If a wrapper is a lower-level adapter like `Motor`, it can stay outside the `Mechanism` hierarchy and still be reused by robot.
 - If a class is a custom FTC `HardwareDevice` under `library/hardware/hardwareDevice/`, keep it focused on SDK device behavior rather than profile registration or mechanism orchestration.
 - Keep robot-profile state in `RobotConstants` / `RobotConfigurations`, not in generic utility classes.
 - Do not move mechanism behavior into `library/` just because it needs a helper type.
@@ -106,7 +106,7 @@ In other words: keep `library/` focused on small reusable types. Use `Mechanism`
 - Add math helpers such as interpolation, polynomial evaluation, or transformation logic that can be reused outside one op mode.
 - Add reusable control helpers that are still generic and not tied to one specific subsystem implementation.
 - Add reusable filtering helpers for noisy sensor or signal data.
-- Add a wrapper or adapter that makes raw FTC devices easier to use from mechanisms.
+- Add a wrapper or adapter that makes raw FTC devices easier to use from robot.
 - Add a reusable op-mode helper like `OpModeHelper` when the behavior is generic lifecycle plumbing rather than robot-specific control logic.
 - Add shared conversion helpers like the `Direction` bridge between repo-level configuration and FTC SDK device APIs.
 

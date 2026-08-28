@@ -54,7 +54,7 @@ Use this pattern:
 3. Use the `bot` profile passed into that constructor for shared robot-profile data and mechanism enablement checks.
 4. Register optional subsystems in each robot preset with `RobotConstants.configureDriveMechanisms()` and/or `RobotConstants.addMechanism(...)`.
 5. If the mechanism has local configuration, keep it in a nested builder-style params class that implements `Mechanism.Params<...>` and resolve it through `Mechanism.resolveParams(...)`.
-6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createMechanisms(hardwareMap)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
+6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createRobot(hardwareMap)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
 7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `RobotDrive.ROBOT_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, or `RGBIndicator.RGBIndicator_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
@@ -70,7 +70,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
 - Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
-- Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed mechanisms.
+- Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed robot.
 - Keep Pedro-specific curve integration such as `EquationCurve` in `pedroPathing/custom/`.
 - Do not turn `RobotConstants` into a catch-all for arbitrary per-mechanism tuning unless that data is truly robot-profile-wide.
 
@@ -96,10 +96,10 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `library.math.MathUtils`
 - `library.math.Polynomial`
 - `library.math.Term`
-- `mechanisms.Intake`
-- `mechanisms.RobotDrive`
-- `mechanisms.Mechanisms`
-- `mechanisms.Mechanism`
+- `robot.Intake`
+- `robot.RobotDrive`
+- `mechanisms.Robot`
+- `robot.Mechanism`
 - `library.robot.RobotConstants`
 - `library.robot.RobotConfigurations`
 - `configs.Blackboard`
@@ -140,7 +140,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
 - `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
 - Every concrete `Mechanism` subclass now implements `periodic(GpBindings GpBindings)`, so direct loop-driven and Ivy-scheduled updates share the same surface through explicit wrapper-result calls rather than subclass-owned periodic commands.
-- `Constants.createMechanisms(hardwareMap)` is the aggregate helper for constructing a `Mechanisms` object that instantiates every class registered in the active profile’s `Mechanisms` set.
+- `Constants.createRobot(hardwareMap)` is the aggregate helper for constructing a `Robot` object that instantiates every class registered in the active profile’s `Mechanisms` set.
 - `RobotDrive` is the public profile-managed drive mechanism. `library/robot/drivetrain/MecanumDrive` is the reusable helper underneath it, not a separately registered mechanism.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.

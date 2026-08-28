@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurations;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
-import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
@@ -70,8 +70,8 @@ public class Constants {
         return new LogitechWebcam(hardwareMap, params);
     }
 
-    public static Mechanisms createMechanisms(HardwareMap hardwareMap) {
-        return new Mechanisms(hardwareMap, currentBot);
+    public static Robot createRobot(HardwareMap hardwareMap) {
+        return new Robot(hardwareMap, currentBot);
     }
 
     public static <T> T createMechanism(HardwareMap hardwareMap, Class<T> mechClass) {

@@ -116,7 +116,7 @@ There is no current TeamCode example that implements `Command` directly, extends
 - Do not treat profile follower or localizer values as competition-tuned without verifying them on the configured robot.
 - `LimelightPinpointLocalizer` is `@Deprecated` and is not wired into `RobotConstants.createFollower(...)`.
 - `library/planners/paths/Utils.IntakeWVision` is the current dynamic-path example. It preserves a `resolvedEndPose`, can fall back to a fail-safe path, and chooses between Pedro curve-through and adaptive-handle Bezier generation based on waypoint geometry.
-- `tests/PlannerIntakeVisionAuto.java` is the current driver-station-visible planner integration test; it combines staging, detector-driven intake, and parking steps with the aggregate `Mechanisms` factory path.
+- `tests/PlannerIntakeVisionAuto.java` is the current driver-station-visible planner integration test; it combines staging, detector-driven intake, and parking steps with the aggregate `Robot` factory path.
 - `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that uses the standard follower plus raw Limelight color results.
 - `tests/PreseasonWebcamAuto.java` gets its Limelight hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
 - `learning/ExampleIvyWithSubsystems.java` is teaching code, not the profile-managed subsystem pattern: its `autoAlign()` step is commented out and its intake motor is resolved directly from `hardwareMap`.

@@ -40,7 +40,7 @@ from `build.dependencies.gradle`.
 1. The build includes FTC Vision `11.2.1` plus Pedro Pathing / Ivy dependencies.
 2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(GpBindings GpBindings)` hook.
 3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
-   `Mechanisms` aggregate, read `Limelight` through `mechanisms.get(...)`,
+   `Robot` aggregate, read `Limelight` through `robot.get(...)`,
    start it in `APRIL_TAG` mode when present, and refresh it every loop through
    aggregate mechanism updates.
 4. Vision wrapper availability is profile-driven. Verify the selected profile registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
