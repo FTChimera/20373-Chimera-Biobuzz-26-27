@@ -31,6 +31,8 @@ public class EquationCurve extends CustomCurve {
     public final Pose endPose;
     public final Equation equation;
     public final HeadingInterpolator interpolator;
+    private final Equation firstDerivative;
+    private final Equation secondDerivative;
 
     public EquationCurve(Pose startPose, Pose endPose, Equation equation, HeadingInterpolator interpolator) {
         super(() -> startPose, () -> endPose);
@@ -43,6 +45,8 @@ public class EquationCurve extends CustomCurve {
             throw new IllegalArgumentException(
                     "The given equation does not pass through the start and end poses: " + equation);
         }
+        this.firstDerivative = equation.derivative();
+        this.secondDerivative = firstDerivative.derivative();
         initialize();
     }
 
@@ -87,7 +91,7 @@ public class EquationCurve extends CustomCurve {
 
         double x = t * (endPose.getX() - startPose.getX()) + startPose.getX();
         double dxDt = endPose.getX() - startPose.getX();
-        double dyDt = equation.derivative().getY(x) * dxDt;
+        double dyDt = firstDerivative.getY(x) * dxDt;
 
         Vector derivative = new Vector();
         derivative.setOrthogonalComponents(dxDt, dyDt);
@@ -121,10 +125,10 @@ public class EquationCurve extends CustomCurve {
 
         double dxDt = endPose.getX() - startPose.getX();
         double x = t * dxDt + startPose.getX();
-        double d2yDt2 = equation.derivative().derivative().getY(x) * dxDt * dxDt;
+        double d2yDt2 = secondDerivative.getY(x) * dxDt * dxDt;
 
-        Vector secondDerivative = new Vector();
-        secondDerivative.setOrthogonalComponents(0, d2yDt2);
-        return secondDerivative;
+        Vector secondDerivativeVec = new Vector();
+        secondDerivativeVec.setOrthogonalComponents(0, d2yDt2);
+        return secondDerivativeVec;
     }
 }

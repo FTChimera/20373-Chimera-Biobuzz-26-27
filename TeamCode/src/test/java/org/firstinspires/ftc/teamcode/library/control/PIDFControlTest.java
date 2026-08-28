@@ -87,6 +87,28 @@ public class PIDFControlTest {
         assertEquals(0.0, controller.getOutput(), MathUtils.EPSILON);
     }
 
+    @Test
+    public void controllerThrowsClearlyWhenToleranceOrLimitIsNotConfigured() {
+        DoublePIDFCoeffs missingTolerance = new DoublePIDFCoeffs(1.0, 0.0, 0.0, 0.0);
+        missingTolerance.setIntegralLimit(1.0);
+        DoublePIDFController noTol = new DoublePIDFController(missingTolerance);
+        noTol.setTarget(1.0);
+        assertThrows(IllegalStateException.class, () -> noTol.update(0.0));
+
+        DoublePIDFCoeffs missingLimit = new DoublePIDFCoeffs(1.0, 0.0, 0.0, 0.0);
+        missingLimit.setTolerance(0.05);
+        DoublePIDFController noLimit = new DoublePIDFController(missingLimit);
+        noLimit.setTarget(1.0);
+        assertThrows(IllegalStateException.class, () -> noLimit.update(0.0));
+    }
+
+    @Test
+    public void lastErrorThrowsBeforeAnyUpdateHasBeenPerformed() {
+        DoublePIDFController controller = new DoublePIDFController(
+                new DoublePIDFCoeffs(1.0, 0.0, 0.0, 0.0));
+        assertThrows(IllegalStateException.class, controller::lastError);
+    }
+
     private org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<StateVector> twoStateCoefficients() {
         return new org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<>(
                 state -> state.values,

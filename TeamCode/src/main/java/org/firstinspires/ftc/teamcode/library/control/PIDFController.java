@@ -35,6 +35,9 @@ public class PIDFController<T> {
         return target;
     }
     public T lastError() {
+        if (lastError == null) {
+            throw new IllegalStateException("No update has been performed yet; call update() first.");
+        }
         return coefficients.inverseStateSupplier.apply(lastError);
     }
     public PIDFCoefficients<T> getCoefficients() {
@@ -67,6 +70,19 @@ public class PIDFController<T> {
     public void update(T state) {
         Objects.requireNonNull(state, "state");
         Objects.requireNonNull(target, "target");
+        if (coefficients.p == null || coefficients.i == null
+                || coefficients.d == null || coefficients.f == null) {
+            throw new IllegalStateException(
+                    "PIDF gains not configured; call coefficients.setPIDF(...) before update().");
+        }
+        if (coefficients.tolerance == null) {
+            throw new IllegalStateException(
+                    "Tolerance not configured; call coefficients.setTolerance(...) before update().");
+        }
+        if (coefficients.integralLimit == null) {
+            throw new IllegalStateException(
+                    "Integral limit not configured; call coefficients.setIntegralLimit(...) before update().");
+        }
         double[] currentStateArray = Objects.requireNonNull(coefficients.stateSupplier.apply(state), "stateSupplier result");
         double[] targetArray = Objects.requireNonNull(coefficients.stateSupplier.apply(target), "target state");
         if (currentStateArray.length != targetArray.length) {

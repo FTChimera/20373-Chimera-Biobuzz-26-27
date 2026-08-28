@@ -13,6 +13,10 @@ public class LagrangeInterp {
         return new LagrangeInterp(X, Y).buildPoly().poly;
     }
     public LagrangeInterp buildPoly() {
+        if (xs.length != ys.length) {
+            throw new IllegalArgumentException(
+                    "X and Y arrays must have the same length (got " + xs.length + " vs " + ys.length + ").");
+        }
         int degree = xs.length;
         double[][] deltas = new double[degree][degree];
         double [] result = new double[degree];

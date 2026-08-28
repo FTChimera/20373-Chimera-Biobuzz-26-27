@@ -9,6 +9,7 @@ import com.pedropathing.ivy.pedro.PedroCommands;
 import com.pedropathing.paths.HeadingInterpolator;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Ivy {
     public static void run(Command command) {
@@ -20,6 +21,11 @@ public class Ivy {
     }
 
     public static Command followPath(Follower follower, Pose... poses) {
+        Objects.requireNonNull(follower, "follower");
+        if (poses == null || poses.length < 2) {
+            throw new IllegalArgumentException(
+                    "followPath requires at least 2 poses, got " + (poses == null ? "null" : poses.length));
+        }
         return PedroCommands.follow(follower,
                 follower.pathBuilder()
                         .addPath(new BezierCurve(poses))

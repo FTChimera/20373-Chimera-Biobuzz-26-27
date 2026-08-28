@@ -79,7 +79,7 @@ class OpModeHelper {
         dtTimer.reset()
     }
     fun close() {
-        if (state != State.LOOP) {
+        if (state != State.LOOP && state != State.STARTED) {
             throw IllegalStateException("OpModeHelper is not in loop state, or is already closed")
         }
         allHubs = emptyList()

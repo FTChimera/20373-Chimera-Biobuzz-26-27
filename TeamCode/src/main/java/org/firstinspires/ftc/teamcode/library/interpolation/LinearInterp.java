@@ -46,7 +46,7 @@ public class LinearInterp {
         return this;
     }
     /**
-     * Output for higher edge case (x >= lowest key)
+     * Output for higher edge case (x >= highest key)
      */
     public LinearInterp max(double y) {
         this.max = y;
