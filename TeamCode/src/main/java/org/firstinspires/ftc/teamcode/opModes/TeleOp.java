@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -40,20 +41,20 @@ public abstract class TeleOp extends LinearOpMode {
     @Override
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
-        State robotState = new State();
-        robot = Constants.createRobot(hardwareMap);
-        intake = robot.get(Intake.class);
-        drive = robot.require(RobotDrive.class);
-        drive.setStartingPose(getStartingPose());
-        drive.setStickCurve((x -> Math.signum(x)*x*x));
-        drive.startTeleOpDrive(); // Stop all motors
-        vision = robot.require(Vision.class);
+        State robotState = new State(RobotMode.TELEOP);
+        robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+        intake = robot.getIntake();
+        drive = robot.requireDrive();
+        robot.setStartingPose(getStartingPose());
+        robot.setDriveStickCurve(x -> Math.signum(x) * x * x);
+        robot.startTeleOpDrive();
+        vision = robot.requireVision();
         robotState.setGpBindings(driver.result());
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
         robot.start();
-        vision.start(Vision.Pipeline.APRIL_TAG);
+        robot.startVision(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             driver.update();
             robot.periodic(robotState);
@@ -63,7 +64,7 @@ public abstract class TeleOp extends LinearOpMode {
             telemetry.addData("Intake Power", intake == null ? 0 : intake.getTargetPower());
             telemetry.update();
         }
-        vision.stop();
+        robot.stopVision();
 
     }
 

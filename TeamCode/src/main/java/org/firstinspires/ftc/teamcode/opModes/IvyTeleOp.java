@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
@@ -36,15 +37,15 @@ public class IvyTeleOp extends LinearOpMode {
         Scheduler.reset();
         DualGamepad gamepads = new DualGamepad(gamepad1, gamepad2);
         GpBindings driverResult = gamepads.getGamepad1().result();
-        robot = Constants.createRobot(hardwareMap);
-        intake = robot.get(Intake.class);
+        robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+        intake = robot.getIntake();
         Pose startPose = Constants.RED_DEFAULT_START_POSE;
-        drive = robot.require(RobotDrive.class);
-        drive.setStartingPose(startPose);
-        drive.setStickCurve((x -> Math.signum(x)*x*x));
-        drive.startTeleOpDrive(); // Stop all motors
-        vision = robot.get(Vision.class);
-        State robotState = new State();
+        drive = robot.requireDrive();
+        robot.setStartingPose(startPose);
+        robot.setDriveStickCurve(x -> Math.signum(x) * x * x);
+        robot.startTeleOpDrive();
+        vision = robot.getVision();
+        State robotState = new State(RobotMode.TELEOP);
         robotState.setGpBindings(driverResult);
         Scheduler.schedule(
                 gamepads.updateCommand(),
@@ -54,7 +55,7 @@ public class IvyTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
-        if (vision != null) vision.start(Vision.Pipeline.APRIL_TAG);
+        if (vision != null) robot.startVision(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             Scheduler.execute();
 
@@ -63,7 +64,7 @@ public class IvyTeleOp extends LinearOpMode {
             telemetry.addData("Intake Power", intake == null ? 0 : intake.getTargetPower());
             telemetry.update();
         }
-        vision.stop();
+        if (vision != null) robot.stopVision();
 
     }
 }

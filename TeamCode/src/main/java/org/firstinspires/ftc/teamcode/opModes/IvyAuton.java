@@ -2,10 +2,8 @@ package org.firstinspires.ftc.teamcode.opModes;
 
 import static com.pedropathing.ivy.commands.Commands.*;
 
-import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.groups.Groups;
-import com.pedropathing.ivy.pedro.PedroCommands;
 import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -13,18 +11,19 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
-import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.library.robot.RobotIvyBuilder;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 
 public abstract class IvyAuton extends OpMode {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
-    Follower follower;
     Robot robot;
-    Intake intake;
+    RobotIvyBuilder commands;
+    State autonomousState;
      // = new Path(new BezierLine(
     /*
             new Pose(36, 12, Math.toRadians(180)),
@@ -45,21 +44,22 @@ public abstract class IvyAuton extends OpMode {
     @Override
     public void init() {
         Scheduler.reset();
-        robot = Constants.createRobot(hardwareMap);
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(paths.getStartingPose());
-        intake = robot.require(Intake.class);
+        robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
+        commands = robot.build();
+        autonomousState = new State(RobotMode.AUTONOMOUS);
     }
 
     public void start() {
+        robot.start();
         Scheduler.schedule(
-                infinite(()->robot.periodic(new State())),
+                commands.periodic(autonomousState),
                 Groups.sequential(
-                    intake.halfPower(),
-                    PedroCommands.follow(follower, paths.getPath1(), true),
-                    intake.fullPower(),
+                    commands.setStartingPose(paths.getStartingPose()),
+                    commands.runIntakeHalfPower(),
+                    commands.followPath(paths.getPath1(), true),
+                    commands.startIntake(),
                     waitMs(1000),
-                    intake.stop(),
+                    commands.stopIntake(),
                     CommandConverter.toCommand(this::requestOpModeStop)
                 )
         );
@@ -73,12 +73,11 @@ public abstract class IvyAuton extends OpMode {
     @Override
     public void loop() {
         Scheduler.execute();
-        follower.update();
     }
 
     @Override
     public void stop() {
-        Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy()); // if 0,0,0 issue still persists put it in the scheduler loop and add a check for 0,0,0
+        robot.stop();
         Scheduler.reset();
     }
 

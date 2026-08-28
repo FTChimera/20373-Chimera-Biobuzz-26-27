@@ -4,7 +4,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.game.State;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -103,7 +104,7 @@ public class RobotConfigurationTest {
         }
 
         @Override
-        public void periodic(GpBindings GpBindings) {}
+        public void periodic(State state, RobotMode robotMode) {}
     }
 
     public static class FakeParams implements Mechanism.Params<FakeParams> {

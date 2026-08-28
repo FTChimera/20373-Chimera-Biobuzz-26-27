@@ -38,9 +38,9 @@ public class SlidesMotor extends DcMotorImplEx {
     }
 
     public void initialize(int min, int max) {
+        validateLimits(min, max);
         setMode(RunMode.STOP_AND_RESET_ENCODER);
         setMode(RunMode.RUN_WITHOUT_ENCODER);
-        //set min and max extension limits
         MAX_EXTENSION = max;
         MIN_RETRACTION = min;
     }
@@ -51,6 +51,7 @@ public class SlidesMotor extends DcMotorImplEx {
         super.setPower(power);
     }
     public void setPosition(int position, double MaxPower) {
+        validatePosition(position);
         setTargetPosition(position);
         setMode(RunMode.RUN_TO_POSITION);
         super.setPower(MaxPower);
@@ -60,15 +61,18 @@ public class SlidesMotor extends DcMotorImplEx {
     }
 
     public void setPositionPercentage(double percentage) {
+        validatePercentage(percentage);
         int position = (int) (MIN_RETRACTION + (MAX_EXTENSION - MIN_RETRACTION) * percentage);
         setPosition(position);
     }
 
     public void setPositionPercentage(double percentage, double MaxPower) {
+        validatePercentage(percentage);
         int position = (int) (MIN_RETRACTION + (MAX_EXTENSION - MIN_RETRACTION) * percentage);
         setPosition(position, MaxPower);
     }
     public double getPositionPercentage() {
+        validateLimits(MIN_RETRACTION, MAX_EXTENSION);
         return (double) (getCurrentPosition() - MIN_RETRACTION) / (MAX_EXTENSION - MIN_RETRACTION);
     }
 
@@ -85,5 +89,24 @@ public class SlidesMotor extends DcMotorImplEx {
 
     public void setPositionPIDFCoefficients(double p, double i, double d, double f) {
         setPIDFCoefficients(RunMode.RUN_TO_POSITION, new PIDFCoefficients(p, i, d, f, MotorControlAlgorithm.PIDF));
+    }
+
+    private static void validateLimits(int min, int max) {
+        if (min >= max) {
+            throw new IllegalArgumentException("min retraction must be less than max extension.");
+        }
+    }
+
+    private void validatePosition(int position) {
+        validateLimits(MIN_RETRACTION, MAX_EXTENSION);
+        if (position < MIN_RETRACTION || position > MAX_EXTENSION) {
+            throw new IllegalArgumentException("position must be within the configured slide limits.");
+        }
+    }
+
+    private static void validatePercentage(double percentage) {
+        if (!Double.isFinite(percentage) || percentage < 0 || percentage > 1) {
+            throw new IllegalArgumentException("percentage must be finite and between 0 and 1.");
+        }
     }
 }

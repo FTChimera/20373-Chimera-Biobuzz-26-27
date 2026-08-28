@@ -152,7 +152,11 @@ public class Limelight {
     }
 
     public int getPipelineIndex() {
-        return device.getLatestResult().getPipelineIndex();
+        LLResult latestResult = device.getLatestResult();
+        if (latestResult == null) {
+            throw new IllegalStateException("Limelight has not produced a result yet.");
+        }
+        return latestResult.getPipelineIndex();
     }
 
     public void start(int pipeline) {

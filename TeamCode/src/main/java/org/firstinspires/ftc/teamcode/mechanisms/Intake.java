@@ -4,6 +4,7 @@ import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.game.State;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
@@ -143,12 +144,18 @@ public class Intake extends Mechanism {
      }
 
     @Override
-    public void periodic(State state) {
+    public void periodic(State state, RobotMode robotMode) {
         if (!params.ISBEINGUSED) {
+            return;
+        }
+        if (robotMode == RobotMode.AUTONOMOUS) {
             return;
         }
         if (state == null) {
             Stop();
+            return;
+        }
+        if (state.getGpBindings() == null) {
             return;
         }
         GpCommand forwardCommand = state.gpBindings.getCommand(params.FORWARD_COMMAND);

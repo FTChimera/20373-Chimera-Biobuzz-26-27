@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlannerList;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -35,7 +36,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
     @Override
     public void runOpMode() {
         Scheduler.reset();
-        robot = Constants.createRobot(hardwareMap);
+        robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
         drive = robot.require(RobotDrive.class);
         intake = robot.get(Intake.class);
         vision = robot.require(Vision.class);
@@ -63,7 +64,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
 
         while (opModeIsActive()) {
             Scheduler.execute();
-            drive.periodic(null);
+            drive.periodic(null, RobotMode.AUTONOMOUS);
 
             telemetry.addData("Pose", drive.getPose());
             telemetry.addData("Plan Steps", plan.size());

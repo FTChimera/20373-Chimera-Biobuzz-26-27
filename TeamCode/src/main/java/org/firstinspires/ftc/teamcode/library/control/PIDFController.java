@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.control;
 
 import java.util.function.Function;
+import java.util.Objects;
 
 public class PIDFController<T> {
     private PIDFCoefficients<T> coefficients;
@@ -64,41 +65,47 @@ public class PIDFController<T> {
          * @param state the current reading from sensor or elsewhere
          * */
     public void update(T state) {
-        try {
-            if (!firstUpdate) {
-                lastError = new double[coefficients.stateSupplier.apply(state).length];
-                integral = new double[coefficients.stateSupplier.apply(state).length];
-                lastTime = System.nanoTime();
-                firstUpdate = true;
-            }
-            dt = (System.nanoTime() - lastTime) / 1e9;
-            lastTime = System.nanoTime();
-            double[] currentStateArray = coefficients.stateSupplier.apply(state);
-            double[] targetArray = coefficients.stateSupplier.apply(target);
-
-            double[] error = new double[currentStateArray.length];
-            for (int i = 0; i < currentStateArray.length; i++) {
-                error[i] = targetArray[i] - currentStateArray[i];
-            }
-            coefficients.update(error);
-            double[] outputArray = new double[error.length];
-            for (int i = 0; i < error.length; i++) {
-                integral[i] += error[i] * dt;
-                // Anti-windup: clamp integral
-                if (integral[i] > coefficients.integralLimit[i]) integral[i] = coefficients.integralLimit[i];
-                if (integral[i] < -coefficients.integralLimit[i]) integral[i] = -coefficients.integralLimit[i];
-
-                outputArray[i] = coefficients.p[i] * error[i];
-                outputArray[i] += coefficients.d[i] * (error[i] - lastError[i]) / dt;
-                outputArray[i] += coefficients.i[i] * integral[i];
-                outputArray[i] += coefficients.f[i] * Math.signum(error[i]);
-                if (atTarget(error)) outputArray[i] = 0;
-            }
-            this.output = coefficients.inverseStateSupplier.apply(outputArray);
-            lastError = error;
-        } catch (Exception e) {
-            e.printStackTrace();
+        Objects.requireNonNull(state, "state");
+        Objects.requireNonNull(target, "target");
+        double[] currentStateArray = Objects.requireNonNull(coefficients.stateSupplier.apply(state), "stateSupplier result");
+        double[] targetArray = Objects.requireNonNull(coefficients.stateSupplier.apply(target), "target state");
+        if (currentStateArray.length != targetArray.length) {
+            throw new IllegalArgumentException("Current and target state dimensions must match.");
         }
+
+        boolean isFirstUpdate = !firstUpdate;
+        long now = System.nanoTime();
+        if (isFirstUpdate) {
+            lastError = new double[currentStateArray.length];
+            integral = new double[currentStateArray.length];
+            dt = 0;
+            firstUpdate = true;
+        } else {
+            dt = Math.max(0, (now - lastTime) / 1e9);
+        }
+        lastTime = now;
+
+        double[] error = new double[currentStateArray.length];
+        for (int i = 0; i < currentStateArray.length; i++) {
+            error[i] = targetArray[i] - currentStateArray[i];
+        }
+        coefficients.update(error);
+        double[] outputArray = new double[error.length];
+        for (int i = 0; i < error.length; i++) {
+            integral[i] += error[i] * dt;
+            if (integral[i] > coefficients.integralLimit[i]) integral[i] = coefficients.integralLimit[i];
+            if (integral[i] < -coefficients.integralLimit[i]) integral[i] = -coefficients.integralLimit[i];
+
+            outputArray[i] = coefficients.p[i] * error[i];
+            if (!isFirstUpdate && dt > 0) {
+                outputArray[i] += coefficients.d[i] * (error[i] - lastError[i]) / dt;
+            }
+            outputArray[i] += coefficients.i[i] * integral[i];
+            outputArray[i] += coefficients.f[i] * Math.signum(error[i]);
+            if (atTarget(error)) outputArray[i] = 0;
+        }
+        this.output = coefficients.inverseStateSupplier.apply(outputArray);
+        lastError = error;
     }
 
     public T getOutput() {

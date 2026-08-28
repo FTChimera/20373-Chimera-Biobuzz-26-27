@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.leds;
 
 import org.firstinspires.ftc.teamcode.library.game.State;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
@@ -160,6 +161,6 @@ public class RGBIndicator extends Mechanism {
     }
 
     @Override
-    public void periodic(State state) {}
+    public void periodic(State state, RobotMode robotMode) {}
 
 }

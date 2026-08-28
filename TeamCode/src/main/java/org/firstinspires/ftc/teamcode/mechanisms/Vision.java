@@ -7,11 +7,13 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.library.game.State;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.List;
+import java.util.Objects;
 
 public class Vision extends Mechanism {
     private final Limelight camera;
@@ -85,6 +87,10 @@ public class Vision extends Mechanism {
         return camera.isDisconnected;
     }
 
+    public boolean isRunning() {
+        return camera.isRunning();
+    }
+
     public double getLastTagId() {
         return camera.tid;
     }
@@ -126,26 +132,34 @@ public class Vision extends Mechanism {
     }
 
     public Pose getCachedPose() {
-        return MathUtils.units.toPedroPathing(camera.botpose);
+        return getBotposeMT2();
     }
 
+    /**
+     * Updates the Limelight result and applies its MT2 pose only when that result is valid.
+     *
+     * @return whether a vision pose was applied to the drive localizer
+     */
+    public boolean forceRelocalize(RobotDrive drive) {
+        Objects.requireNonNull(drive, "drive");
+        if (!isRunning()) {
+            return false;
+        }
+        updateRobotOrientation(drive.getPose().getHeading());
+        update();
+        Pose visionPose = getBotposeMT2();
+        if (!hasValidResult() || visionPose == null) {
+            return false;
+        }
+        drive.setPose(visionPose);
+        return true;
+    }
 
     @Override
-    public void periodic(State state) {
-        int prevPipe = getLatestResult().getPipelineIndex();
-        setPipeline(Pipeline.APRIL_TAG);
-        update();
-        //now relocalize
-        if (!camera.isDisconnected) {
-            double CAMERA_CONFIDENCE = 0.3; // between 0 and 1
-            Pose camPose = getCachedPose();
-            Pose odomPose = state.robotDrive.getPose();
-            // We can apply the low pass filter easily using a linear combination
-            state.robotDrive.mecanumDrive.setPose(
-                    camPose.linearCombination(odomPose, CAMERA_CONFIDENCE, 1-CAMERA_CONFIDENCE)
-            );
+    public void periodic(State state, RobotMode robotMode) {
+        if (state != null && state.robotDrive != null) {
+            updateRobotOrientation(state.robotDrive.getPose().getHeading());
         }
-
-        setPipeline(prevPipe);
+        update();
     }
 }

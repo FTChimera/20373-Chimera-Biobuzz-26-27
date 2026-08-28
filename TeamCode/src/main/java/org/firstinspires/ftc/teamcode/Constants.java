@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurations;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -71,7 +72,11 @@ public class Constants {
     }
 
     public static Robot createRobot(HardwareMap hardwareMap) {
-        return new Robot(hardwareMap, currentBot);
+        return createRobot(hardwareMap, RobotMode.TELEOP);
+    }
+
+    public static Robot createRobot(HardwareMap hardwareMap, RobotMode robotMode) {
+        return new Robot(hardwareMap, currentBot, robotMode);
     }
 
     public static <T> T createMechanism(HardwareMap hardwareMap, Class<T> mechClass) {

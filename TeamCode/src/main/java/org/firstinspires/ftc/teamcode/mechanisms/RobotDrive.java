@@ -7,6 +7,7 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.drivetrain.MecanumDrive;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
@@ -106,6 +107,10 @@ public class RobotDrive extends Mechanism {
         mecanumDrive.setStartingPose(pose);
     }
 
+    public void setPose(Pose pose) {
+        mecanumDrive.setPose(pose);
+    }
+
     public void setTeleOpDrive(DriveVector vector) {
         mecanumDrive.setTeleOpDrive(vector);
     }
@@ -138,6 +143,10 @@ public class RobotDrive extends Mechanism {
         mecanumDrive.zeroHeadingOffset();
     }
 
+    public void resetHeading(double heading) {
+        mecanumDrive.resetHeading(heading);
+    }
+
     public void setStickCurve(DoubleUnaryOperator curve) {
         mecanumDrive.setStickCurve(curve);
     }
@@ -160,9 +169,9 @@ public class RobotDrive extends Mechanism {
     }
 
     @Override
-    public void periodic(State state) {
+    public void periodic(State state, RobotMode robotMode) {
         mecanumDrive.periodic();
-        if (state == null) {
+        if (robotMode == RobotMode.AUTONOMOUS || state == null || state.getGpBindings() == null) {
             return;
         }
         Button zeroHeadingButton = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);

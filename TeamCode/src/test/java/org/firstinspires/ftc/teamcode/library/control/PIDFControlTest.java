@@ -73,6 +73,20 @@ public class PIDFControlTest {
         assertEquals(0.0, controller.dt, MathUtils.EPSILON);
     }
 
+    @Test
+    public void controllerSkipsDerivativeOnItsFirstUpdate() {
+        DoublePIDFCoeffs coefficients = new DoublePIDFCoeffs(0.0, 0.0, 10.0, 0.0);
+        coefficients.setTolerance(0.0);
+        coefficients.setIntegralLimit(1.0);
+        DoublePIDFController controller = new DoublePIDFController(coefficients);
+        controller.setTarget(1.0);
+
+        controller.update(0.0);
+
+        assertEquals(0.0, controller.dt, MathUtils.EPSILON);
+        assertEquals(0.0, controller.getOutput(), MathUtils.EPSILON);
+    }
+
     private org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<StateVector> twoStateCoefficients() {
         return new org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<>(
                 state -> state.values,

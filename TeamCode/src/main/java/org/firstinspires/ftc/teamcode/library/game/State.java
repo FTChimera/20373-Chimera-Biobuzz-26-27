@@ -11,6 +11,7 @@ public class State {
     public OpModeHelper opModeHelper;
     public RobotDrive robotDrive;
     public AllianceColor allianceColor;
+    private RobotMode robotMode;
 
     public void setAllianceColor(AllianceColor allianceColor) {
         this.allianceColor = allianceColor;
@@ -36,7 +37,16 @@ public class State {
         return opModeHelper;
     }
     public State(GpBindings bindings) {
-        setGpBindings(gpBindings);
+        this(bindings, RobotMode.TELEOP);
+    }
+
+    public State(RobotMode robotMode) {
+        this(null, robotMode);
+    }
+
+    public State(GpBindings bindings, RobotMode robotMode) {
+        setGpBindings(bindings);
+        setRobotMode(robotMode);
     }
     public GpBindings getGpBindings() {
         return gpBindings;
@@ -47,11 +57,23 @@ public class State {
     }
 
     public State(GpBindings b, OpModeHelper helper, RobotDrive robotDrive) {
-        this.gpBindings = b;
+        this(b);
         this.opModeHelper = helper;
         this.robotDrive = robotDrive;
     }
-    public State() {
 
+    public RobotMode getRobotMode() {
+        return robotMode;
+    }
+
+    public void setRobotMode(RobotMode robotMode) {
+        if (robotMode == null) {
+            throw new IllegalArgumentException("robotMode must not be null.");
+        }
+        this.robotMode = robotMode;
+    }
+
+    public State() {
+        this(RobotMode.TELEOP);
     }
 }
