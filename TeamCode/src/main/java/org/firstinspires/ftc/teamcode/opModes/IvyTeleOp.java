@@ -55,6 +55,7 @@ public class IvyTeleOp extends LinearOpMode {
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
+        robot.start();
         if (vision != null) robot.startVision(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
             Scheduler.execute();

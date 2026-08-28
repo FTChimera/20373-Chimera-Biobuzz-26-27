@@ -36,6 +36,7 @@ public class TestPathPlanner extends LinearOpMode {
         telemetry.addLine("---MECHANISMS---");
         robot.all().forEach(mechanism -> telemetry.addLine(mechanism.getClass().getSimpleName()));
         waitForStart();
+        robot.start();
         while (opModeIsActive()) {
             Scheduler.execute();
             robot.periodic(autonomousState);

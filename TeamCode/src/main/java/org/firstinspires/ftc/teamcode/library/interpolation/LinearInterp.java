@@ -56,9 +56,9 @@ public class LinearInterp {
         if (Double.isNaN(min) || Double.isNaN(max) || keys.isEmpty()) {
             throw new IllegalStateException("Points not configured");
         }
-        List<Double> sortedVals = new ArrayList<>(values);
+        List<Double> sortedVals = new ArrayList<>(keys);
         sortedVals.sort(null);
-        if (!Arrays.equals(values.toArray(new Double[0]), sortedVals.toArray(new Double[0]))) {
+        if (!Arrays.equals(keys.toArray(new Double[0]), sortedVals.toArray(new Double[0]))) {
             throw new IllegalStateException("Inputs not sorted");
         }
         if (x <= this.keys.get(0)) {
