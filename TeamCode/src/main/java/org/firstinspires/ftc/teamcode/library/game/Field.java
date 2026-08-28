@@ -23,18 +23,24 @@ public class Field {
         public static final GeometryFactory INSTANCE = new GeometryFactory();
     }
     public static Polygon createPolygon(Pose... pts) {
+        Objects.requireNonNull(pts, "pts");
         Coordinate[] coords = new Coordinate[pts.length];
 
         for (int i = 0; i < pts.length; i++) {
-            coords[i] = new Coordinate(pts[i].getX(), pts[i].getY());
+            Pose pose = Objects.requireNonNull(pts[i], "pts[" + i + "]");
+            coords[i] = new Coordinate(pose.getX(), pose.getY());
         }
 
         return createOrderedPolygon(coords);
     }
-
     public static Polygon createOrderedPolygon(Coordinate[] unorderedCoords) {
         if (unorderedCoords == null || unorderedCoords.length < 3) {
             throw new IllegalArgumentException("At least 3 coordinates are required.");
+        }
+        for (int i = 0; i < unorderedCoords.length; i++) {
+            Coordinate coordinate = Objects.requireNonNull(unorderedCoords[i], "unorderedCoords[" + i + "]");
+            validateFinite("coordinate[" + i + "].x", coordinate.x);
+            validateFinite("coordinate[" + i + "].y", coordinate.y);
         }
 
         // 1. Calculate the center (mean) point of all coordinates
@@ -52,15 +58,29 @@ public class Field {
                 .distinct() // Remove duplicates to ensure clean calculation
                 .sorted(Comparator.comparingDouble(c -> Math.atan2(c.y - centerY, c.x - centerX)))
                 .toArray(Coordinate[]::new);
+        if (sorted.length < 3) {
+            throw new IllegalArgumentException("At least 3 distinct coordinates are required.");
+        }
 
         // 3. Create a new array that is 1 item larger to close the loop
         Coordinate[] closedCoords = new Coordinate[sorted.length + 1];
         System.arraycopy(sorted, 0, closedCoords, 0, sorted.length);
         closedCoords[closedCoords.length - 1] = new Coordinate(sorted[0]); // Duplicate first item at the end
 
-        return Factory.INSTANCE.createPolygon(closedCoords);
+        Polygon polygon = Factory.INSTANCE.createPolygon(closedCoords);
+        if (!polygon.isValid() || polygon.getArea() <= 0) {
+            throw new IllegalArgumentException("Coordinates must form a non-degenerate polygon.");
+        }
+        return polygon;
     }
     public static Polygon createCircle(Pose center, double radius) {
+        Objects.requireNonNull(center, "center");
+        validateFinite("center.x", center.getX());
+        validateFinite("center.y", center.getY());
+        validateFinite("radius", radius);
+        if (radius < 0) {
+            throw new IllegalArgumentException("radius cannot be negative.");
+        }
         GeometricShapeFactory sf = new GeometricShapeFactory(Factory.INSTANCE);
         sf.setCentre(new Coordinate(center.getX(), center.getY()));
         sf.setSize(radius * 2); // set diameter

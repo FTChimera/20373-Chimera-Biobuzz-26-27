@@ -38,7 +38,8 @@ from `build.dependencies.gradle`.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
 8. `Constants` now also exposes helper methods such as `createIMU(...)`,
    `createDrive(...)`, `createVision(...)`, `createRGB(...)`,
-   `createWebcam(...)`, aggregate `createRobot(...)`, generic
+   `createWebcam(...)`, aggregate `createRobot(...)` /
+   `createRobot(..., RobotMode)`, generic
    `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and
    `assertHasMechanism(...)`.
 9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.
@@ -90,6 +91,9 @@ That separation keeps the robot profile focused on what varies per bot while reu
 - Use `configureDriveMechanisms()` when you want the normal drive mechanism (`RobotDrive`) enabled by default.
 - When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)`, store profile-specific params with `.mechanismParams(...)` when needed, and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
 - Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
+- For a shared aggregate flow, choose the RobotMode at construction and create
+  a matching State. The no-mode `createRobot(...)` overload is teleop
+  compatibility; autonomous callers must use the explicit overload.
 - Do not move mechanism-specific params into `RobotConstants` unless they truly vary by robot profile.
 - Treat values as placeholders unless they were explicitly measured on the
   robot. FirstRobot's configured Pinpoint offsets and encoder directions are

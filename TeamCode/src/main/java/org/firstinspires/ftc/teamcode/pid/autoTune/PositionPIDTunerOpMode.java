@@ -12,11 +12,8 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
  * Auto-tunes PID gains for a run-to-position mechanism (arm, lift, turret,
  * etc.) using the relay-feedback method.
  *
- * <p>All of the actual logic (relay test, candidate computation, live test)
- * lives in {@link PIDMaster}, which comes from the {@code pidautotuner-ftc}
- * JitPack dependency. This OpMode and {@link TuningConstants} are the only two
- * files you need to copy into your own TeamCode -- everything else is
- * resolved via the library dependency.
+ * <p>The repo-local {@link PIDMaster} owns FTC motor access and delegates
+ * relay-feedback and gain calculation to {@code pidautotuner-core}.
  *
  * <h2>Setup</h2>
  * <ol>
@@ -60,7 +57,10 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
         panelsTelemetry.update();
 
         waitForStart();
-        if (isStopRequested()) return;
+        if (isStopRequested()) {
+            pid.stop();
+            return;
+        }
 
         // Phase 1: relay test (runs automatically)
         while (opModeIsActive() && !pid.isTuningComplete()) {
@@ -74,6 +74,7 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
                 for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
                 panelsTelemetry.update();
             }
+            pid.stop();
             return;
         }
 
@@ -91,5 +92,6 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
 
             panelsTelemetry.update();
         }
+        pid.stop();
     }
 }

@@ -13,10 +13,10 @@ public class PIDFController<T> {
     public double dt;
     private double lastTime;
     public void setStateSupplier(Function<T,double[]> stateSupplier) {
-        this.coefficients.stateSupplier = stateSupplier;
+        this.coefficients.stateSupplier = Objects.requireNonNull(stateSupplier, "stateSupplier");
     }
     public void setInverseStateSupplier(Function<double[],T> inverseStateSupplier) {
-        this.coefficients.inverseStateSupplier = inverseStateSupplier;
+        this.coefficients.inverseStateSupplier = Objects.requireNonNull(inverseStateSupplier, "inverseStateSupplier");
     }
     public PIDFController(PIDFCoefficients<T> coefficients) {
         setCoefficients(coefficients);
@@ -25,7 +25,7 @@ public class PIDFController<T> {
         setCoefficients(new PIDFCoefficients<>(null, null));
     }
     public void setCoefficients(PIDFCoefficients<T> coefficients) {
-        this.coefficients = coefficients;
+        this.coefficients = Objects.requireNonNull(coefficients, "coefficients");
     }
     public void setTarget(T target) {
         this.target = target;
@@ -82,6 +82,10 @@ public class PIDFController<T> {
         if (coefficients.integralLimit == null) {
             throw new IllegalStateException(
                     "Integral limit not configured; call coefficients.setIntegralLimit(...) before update().");
+        }
+        if (coefficients.stateSupplier == null || coefficients.inverseStateSupplier == null) {
+            throw new IllegalStateException(
+                    "State suppliers not configured; call setStateSupplier(...) and setInverseStateSupplier(...) before update().");
         }
         double[] currentStateArray = Objects.requireNonNull(coefficients.stateSupplier.apply(state), "stateSupplier result");
         double[] targetArray = Objects.requireNonNull(coefficients.stateSupplier.apply(target), "target state");

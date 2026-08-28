@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
+import java.util.Locale;
+
 /**
  * Auto-tunes PIDF gains for a dual-motor velocity-controlled mechanism
  * (e.g. a two-flywheel shooter) using the relay-feedback method.
@@ -68,7 +70,7 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
         panelsTelemetry.addData("Motor 2", TuningConstants.MOTOR_NAME_2 + (TuningConstants.REVERSED_2 ? " (reversed)" : ""));
         panelsTelemetry.addData("Encoder mode", TuningConstants.DUAL_ENCODERS ? "DUAL (both motors)" : "SINGLE (motor 1 only)");
         panelsTelemetry.addData("TICKS_PER_REV", TuningConstants.TICKS_PER_REV);
-        panelsTelemetry.addData("Target", String.format("%.1f RPM  (%.1f ticks/s)",
+        panelsTelemetry.addData("Target", String.format(Locale.US, "%.1f RPM  (%.1f ticks/s)",
                 TuningConstants.TARGET_RPM, targetTicksPerSec));
         panelsTelemetry.addLine("Press START. Both motors will oscillate automatically.");
         panelsTelemetry.update();

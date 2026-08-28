@@ -109,6 +109,18 @@ public class PIDFControlTest {
         assertThrows(IllegalStateException.class, controller::lastError);
     }
 
+    @Test
+    public void controllerRequiresConfiguredStateSuppliers() {
+        PIDFCoefficients<Double> coefficients = new PIDFCoefficients<Double>(null, null)
+                .setPIDF(new double[]{1.0}, new double[]{0.0}, new double[]{0.0}, new double[]{0.0})
+                .setTolerance(new double[]{0.01})
+                .setIntegralLimit(new double[]{1.0});
+        PIDFController<Double> controller = new PIDFController<>(coefficients);
+        controller.setTarget(1.0);
+
+        assertThrows(IllegalStateException.class, () -> controller.update(0.0));
+    }
+
     private org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<StateVector> twoStateCoefficients() {
         return new org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<>(
                 state -> state.values,

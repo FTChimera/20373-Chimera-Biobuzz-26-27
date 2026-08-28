@@ -75,7 +75,10 @@ When asked to create a new mechanism, follow this repo style:
 4. Use `bot` for robot-profile state such as hardware names, directions, feature enablement, or follower compatibility.
 5. Register the class in each relevant robot preset with `.addMechanism(NewMechanism.class)` or, for normal drive-stack behavior, through `configureDriveMechanisms()`.
 6. Give it a builder-style nested params type that implements `Mechanism.Params<...>` when the mechanism has local configuration, and resolve that config through `Mechanism.resolveParams(...)`.
-7. Implement the mechanism-wide `periodic(GpBindings GpBindings)` API required by `Mechanism`; use a real per-loop update when the mechanism has one, otherwise keep the no-op implementation explicit.
+7. Implement `periodic(State state, RobotMode robotMode)` required by
+   `Mechanism`; use a real per-loop update when the mechanism has one,
+   otherwise keep the no-op implementation explicit. Autonomous mechanisms
+   must not consume teleop bindings.
 8. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
 9. If the mechanism can be disabled by profile selection, determine that before touching hardware.
 10. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
@@ -85,20 +88,26 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 ## Existing patterns to reuse
 
 - `Intake` extends `Mechanism`, owns a builder-style `INTAKE_PARAMS` helper, wraps the intake `Motor`, and now also performs raw `SlidesMotor` setup from its nested slides params without turning the slides into a separate profile-managed mechanism.
-- `Mechanism` now requires every subclass to expose `periodic(GpBindings GpBindings)`, where `GpBindings` carries selected button readers plus the current stick/trigger/touchpad wrapper state.
+- `Mechanism` requires `periodic(State, RobotMode)`. `State` carries the
+  optional `GpBindings`, current drive, lifecycle helper, alliance, and mode;
+  its one-argument bridge remains only for callers that can derive the mode.
 - `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
 - `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
 - `Limelight` and `LogitechWebcam` are standalone camera controllers with
   builder-style params. They are created through their `Constants` helpers or
   directly with explicit params, not through the mechanism factory.
-- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or other raw-device flows, and it now exposes convenience helpers like `setUp()`, `setDown()`, `setPositionPercentage(...)`, and `DEFAULT_HARDWAREMAP_NAME` on that raw-device layer.
+- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or other raw-device flows. Its `initialize(min, max)`, absolute positions, and percentages validate finite/in-range requests before driving hardware.
 - `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
 - There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
 - `RGBIndicator` extends `Mechanism`, owns builder-style `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
 - `LogitechWebcam` extends `Mechanism`, owns builder-style `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
 - `library/robot/drivetrain/MecanumDrive` is the reusable drive helper under the public mechanism layer; it owns both follower-backed drive behavior and the fallback manual-motor path used when `USE_FOLLOWER_DRIVE` is false.
 - `RobotDrive` is the profile-managed `Mechanism` that owns nested drive params, constructs the `MecanumDrive` helper from the active profile, and turns `GpBindings` into teleop drive behavior.
-- `Robot` is the aggregate wrapper over every class in `bot.Mechanisms`; it instantiates the current profile-managed mechanism set, exposes typed lookup helpers, and fans out `periodic(GpBindings)` calls to the aggregated mechanisms.
+- `Robot` is the aggregate wrapper over every class in `bot.Mechanisms`; it
+  instantiates the current profile-managed mechanism set, exposes typed
+  lookup helpers, owns an immutable `RobotMode`, and fans out
+  `periodic(State, RobotMode)` calls. Call `start()` before periodic updates
+  and `stop()` when the lifecycle ends.
 - `RobotConstants` now stores per-mechanism params overrides through `mechanismParams(...)` / `getMechanismParams(...)`, so builder-style nested params can vary by robot profile without moving all subsystem data into the robot profile class.
 - Profile params supplied through `mechanismParams(...)` do not make a class factory-eligible; the profile selected by `Constants.currentBot` must also register it with `addMechanism(...)`.
 

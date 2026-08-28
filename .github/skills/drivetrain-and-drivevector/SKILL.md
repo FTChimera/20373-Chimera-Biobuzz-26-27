@@ -43,7 +43,11 @@ inspect the matching dependency under
 4. `library/robot/drivetrain/MecanumDrive` owns the actual teleop drive behavior: it copies the incoming vector, applies the configured stick curve, explicitly negates forward, and then either rotates for field-centric manual drive or forwards the shaped values to Pedro teleop drive.
 5. `MecanumDrive` creates its follower from the active `RobotConstants` profile and only constructs raw `Motor` wrappers when `USE_FOLLOWER_DRIVE` is false.
 6. `MecanumDrive.periodic()` currently snapshots `lastPose = follower.getPose()` and then calls `follower.update()`, so `lastPose` is the pre-update pose for that loop.
-7. `RobotDrive` is the profile-managed mechanism wrapper around `MecanumDrive`. Its `periodic(GpBindings)` path resolves `TRANSLATION_STICK`, `ROTATION_STICK`, and `ZERO_HEADING_BUTTON` through `GpBindings.getCommand(...)`, builds a `DriveVector`, and delegates movement to `MecanumDrive`.
+7. `RobotDrive` is the profile-managed mechanism wrapper around
+   `MecanumDrive`. Its `periodic(State, RobotMode)` always updates the
+   follower, then only resolves `TRANSLATION_STICK`, `ROTATION_STICK`, and
+   `ZERO_HEADING_BUTTON` through `State.getGpBindings()` in teleop mode.
+   Autonomous periodic updates never consume driver input.
 
 ## Repo-specific conventions
 
@@ -68,7 +72,10 @@ inspect the matching dependency under
 - Drive profile and follower configuration live in `RobotConstants` / `RobotConfigurations`.
 - `mechanisms/RobotDrive.java` is the profile-managed wrapper that participates in the shared `Mechanism` creation flow.
 - `Constants.createDrive(hardwareMap)` is the single-drive convenience wrapper around `currentBot.createMechanism(hardwareMap, RobotDrive.class)`.
-- Shared teleops currently prefer `Constants.createRobot(hardwareMap)` and then `robot.require(RobotDrive.class)` so optional subsystems can stay nullable while drive remains required.
+- Shared teleops currently prefer
+  `Constants.createRobot(hardwareMap, RobotMode.TELEOP)`, a matching
+  `State`, and `robot.requireDrive()` so optional subsystems can stay nullable
+  while drive remains required. Start the aggregate before periodic updates.
 - `RobotConstants.configureDriveMechanisms()` is the profile helper that enables the normal drive mechanism as `RobotDrive`.
 - Higher-level drive code should keep delegating to `RobotDrive` or the `Constants` helpers instead of rebuilding hardware inline.
 

@@ -226,6 +226,10 @@ public class Robot extends Mechanism {
 
     public void saveEndVals() {
         if (robotMode == RobotMode.AUTONOMOUS) {
+            if (lastState == null) {
+                // No periodic update ran, so there is no reliable autonomous state to hand off.
+                return;
+            }
             Pose estimatedEndPose = requireDrive().getPose().copy();
             Vector robotV = requireDrive().getVelocity().times(helper.getDt() / 1_000.0);
             estimatedEndPose = estimatedEndPose.plus(
@@ -235,7 +239,9 @@ public class Robot extends Mechanism {
                     )
             );
             Blackboard.put(Blackboard.Caption.POSE, estimatedEndPose);
-            Blackboard.put(Blackboard.Caption.ALLIANCE, lastState.getAllianceColor());
+            if (lastState.getAllianceColor() != null) {
+                Blackboard.put(Blackboard.Caption.ALLIANCE, lastState.getAllianceColor());
+            }
         } else {
             Blackboard.Item driver = Blackboard.get(Blackboard.Caption.DRIVER);
             Blackboard.resetAll();

@@ -1,7 +1,7 @@
 (function (root) {
     const defaultSettings = Object.freeze({
         packageName: "org.firstinspires.ftc.teamcode.pedroPathing",
-        constantsPackage: "org.firstinspires.ftc.teamcode.pedroPathing",
+        constantsPackage: "org.firstinspires.ftc.teamcode",
         className: "Autonomous",
         opModeName: "Auto",
         opModeGroup: "Pedro",
@@ -17,7 +17,7 @@
 
         return {
             packageName,
-            constantsPackage: normalizeText(settings.constantsPackage, packageName),
+            constantsPackage: normalizeText(settings.constantsPackage, defaultSettings.constantsPackage),
             className: normalizeText(settings.className, defaultSettings.className),
             opModeName: normalizeText(settings.opModeName, defaultSettings.opModeName),
             opModeGroup: normalizeText(settings.opModeGroup, defaultSettings.opModeGroup),

@@ -37,7 +37,8 @@ versions pinned in `build.dependencies.gradle`.
 - `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
 - `tests/`: driver-station validation and proof-of-concept op modes, including `PreseasonWebcamAuto` and `tests/ftcSdk` helpers.
 - `src/test/java/`: JVM unit tests for non-hardware TeamCode logic, with `UnitTestAll.java` as a single suite entry point.
-- `learning/`: teaching or scratch op modes, including the Kotlin teleop example.
+- `learning/`: teaching or scratch op modes, including the Kotlin Ivy autonomous
+  example.
 - `learning/flyset/`: an unannotated PIDF teaching sketch with placeholder
   `Sensor` methods; it is not hardware-ready robot code.
 - `java-autogen/`: browser-side HTML/JS generators for producing starter Java autonomous classes from Pedro/Turtle Tracer path data or manual path-builder drafts.
@@ -54,7 +55,7 @@ Use this pattern:
 3. Use the `bot` profile passed into that constructor for shared robot-profile data and mechanism enablement checks.
 4. Register optional subsystems in each robot preset with `RobotConstants.configureDriveMechanisms()` and/or `RobotConstants.addMechanism(...)`.
 5. If the mechanism has local configuration, keep it in a nested builder-style params class that implements `Mechanism.Params<...>` and resolve it through `Mechanism.resolveParams(...)`.
-6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createRobot(hardwareMap)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
+6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createRobot(hardwareMap, RobotMode...)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
 7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
 Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `RobotDrive.ROBOT_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, or `RGBIndicator.RGBIndicator_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
@@ -139,8 +140,17 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
 - `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
 - `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
-- Every concrete `Mechanism` subclass now implements `periodic(GpBindings GpBindings)`, so direct loop-driven and Ivy-scheduled updates share the same surface through explicit wrapper-result calls rather than subclass-owned periodic commands.
-- `Constants.createRobot(hardwareMap)` is the aggregate helper for constructing a `Robot` object that instantiates every class registered in the active profile’s `Mechanisms` set.
+- Every concrete `Mechanism` subclass implements `periodic(State, RobotMode)`.
+  The one-argument bridge derives the mode from `State` (or defaults to
+  teleop), while `Robot` enforces the immutable mode chosen at construction.
+- `Constants.createRobot(hardwareMap, RobotMode)` is the aggregate helper for
+  constructing a `Robot` object that instantiates every class registered in
+  the active profile’s `Mechanisms` set. Create the matching `State`, call
+  `robot.start()` before periodic updates, and use `robot.stop()` for cleanup
+  and autonomous pose/alliance handoff.
+- `Robot.build()` supplies a `RobotIvyBuilder` so command-driven code can use
+  the aggregate's lifecycle, periodic, follower, intake, drive, vision, and
+  explicit `forceRelocalize()` APIs without rebuilding them inline.
 - `RobotDrive` is the public profile-managed drive mechanism. `library/robot/drivetrain/MecanumDrive` is the reusable helper underneath it, not a separately registered mechanism.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.

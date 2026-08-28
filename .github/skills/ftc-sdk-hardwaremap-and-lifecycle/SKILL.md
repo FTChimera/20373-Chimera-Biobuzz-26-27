@@ -35,7 +35,9 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `opModes/TeleOp.java` uses `LinearOpMode` with `waitForStart()` and `while (opModeIsActive())`.
 - `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
 - `opModes/IvyAuton.java` uses iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
-- `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that mixes raw Limelight SDK access with a follower control loop.
+- `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that
+  constructs Vision directly through its factory and uses color results beside
+  a follower control loop.
 - `configs/ConfigOpMode.java` is an iterative pre-start configuration menu. `init()` builds the available blackboard mutations, `init_loop()` handles the D-pad selection UI, and `loop()` immediately requests stop after the driver starts the op mode.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted test, sleep briefly, and then request stop.
 - `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
@@ -43,7 +45,10 @@ under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
 - Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended aggregate factory style: they call `Constants.createRobot(hardwareMap)`, require `RobotDrive`, and treat `Intake` / `Limelight` as optional aggregate lookups.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended
+  aggregate factory style: they create a teleop `Robot` and matching `State`
+  with `RobotMode.TELEOP` and require `RobotDrive`. `TeleOp` requires Vision
+  while IvyTeleOp treats Vision and Intake as optional aggregate lookups.
 
 ## HardwareMap rules in this repo
 
@@ -76,6 +81,14 @@ If the task is instead about a custom SDK device type, put that class under `lib
 
 - In `LinearOpMode`, initialize first, then call `waitForStart()`, then loop while `opModeIsActive()`.
 - In iterative `OpMode`, put one-time setup in `init()`, one-time start actions in `start()`, repeated work in `loop()`, and cleanup/persistence in `stop()`.
+- For aggregate robots, call `robot.start()` after FTC start and before the
+  first `robot.periodic(...)`; call `robot.stop()` after the final periodic
+  update. Autonomous `Robot.stop()` persists the compensated end pose and
+  alliance through `Blackboard`.
+- Construct an aggregate with the intended mode and create a matching
+  `State`: `Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS)` with
+  `new State(RobotMode.AUTONOMOUS)`, or their teleop equivalents. `Robot`
+  rejects a periodic mode that differs from its construction mode.
 - Do not call `waitForStart()` from iterative `OpMode` classes.
 - Stop or persist important state in `stop()` when the repo already relies on that pattern, such as pose handoff.
 

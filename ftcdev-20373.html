@@ -927,7 +927,7 @@
                     <span class="card-icon">🧩</span>
                     <div class="card-title">Constants &amp; Robot Profiles</div>
                     <p class="card-text">
-                        Start an OpMode with <code>Constants.createRobot(hardwareMap)</code>, then use typed
+                        Start an OpMode with <code>Constants.createRobot(hardwareMap, RobotMode...)</code>, then use typed
                         <code>require(...)</code> or optional <code>get(...)</code> calls.
                     </p>
                 </div>
@@ -1001,10 +1001,10 @@
                 <div class="code-panel">
 
                     <div class="code-pane active" id="tab-constants">
-<pre>Robot robot = Constants.createRobot(hardwareMap);
-RobotDrive drive = robot.require(RobotDrive.class);
+<pre>Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+RobotDrive drive = robot.requireDrive();
 Intake intake = robot.get(Intake.class); // Optional by profile.
-Limelight limelight = robot.get(Limelight.class);
+Vision vision = robot.getVision();
 
 telemetry.addData("Registered", robot.getConfiguredMechanismClasses());
 telemetry.addData("Has intake", intake != null);
@@ -1033,44 +1033,40 @@ if (saved.getX() != 0 || saved.getY() != 0 || saved.getHeading() != 0) {
 
                     <div class="code-pane" id="tab-teleop">
 <pre>GamepadEx driver = new GamepadEx(gamepad1);
-GpBindings bindings = driver.result();
-Robot robot = Constants.createRobot(hardwareMap);
-RobotDrive drive = robot.require(RobotDrive.class);
+State state = new State(driver.result(), RobotMode.TELEOP);
+Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+RobotDrive drive = robot.requireDrive();
 
 drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
 drive.setStickCurve(x -> Math.signum(x) * x * x);
 drive.startTeleOpDrive();
 waitForStart();
+robot.start();
 
 while (opModeIsActive()) {
     driver.update();
-    robot.periodic(bindings);
+    robot.periodic(state);
     telemetry.addData("Pose", drive.getPose());
     telemetry.update();
 }
+robot.stop();
 }</pre>
                     </div>
 
                     <div class="code-pane" id="tab-kotlin">
-<pre>@TeleOp(name = "Kotlin TeleOp", group = "Kotlin")
-class KotlinTeleOpTest: LinearOpMode() {
+<pre>// KtExampleIvyAuto.kt is an unannotated teaching example.
+class KtExampleIvyAuto: OpMode() {
     lateinit var follower: Follower
-    override fun runOpMode() {
+    override fun init() {
         follower = Constants.createFollower(hardwareMap)
-        follower.setStartingPose(Pose())
-        waitForStart()
-        follower.startTeleOpDrive()
-        while (opModeIsActive()) {
-            follower.setTeleOpDrive(-gamepad1.left_stick_y.toDouble(), -gamepad1.left_stick_x.toDouble(), -gamepad1.right_stick_x.toDouble(), false)
-            follower.update()
-            if (gamepad1.back) {
-                follower.heading = 0.0;
-            }
-
-            telemetry.addLine("FIELD CENTRIC KOTLIN TELEOP")
-            telemetry.addData("Yaw", Math.toDegrees(follower.heading))
-            telemetry.update()
-        }
+        buildPaths()
+        follower.setStartingPose(startPose)
+    }
+    override fun start() {
+        Scheduler.schedule(
+            Commands.infinite(follower::update),
+            Groups.sequential(PedroCommands.follow(follower, launchPath))
+        )
     }
 }</pre>
                     </div>
@@ -1427,7 +1423,7 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
                 const raw = pre.textContent;
                 pre.textContent = '';
                 code = document.createElement('code');
-                code.className = /\\b(fun|val|var|lateinit)\\b|KotlinTeleOpTest/.test(raw) ? 'language-kotlin' : 'language-java';
+                code.className = /\\b(fun|val|var|lateinit)\\b|KtExampleIvyAuto/.test(raw) ? 'language-kotlin' : 'language-java';
                 code.textContent = raw;
                 pre.appendChild(code);
             }
@@ -1489,10 +1485,10 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
 ═══════════════════════════════════════════ -->
 <script>
     const CODE = {
-        factoryUsage: `Robot robot = Constants.createRobot(hardwareMap);
-    RobotDrive drive = robot.require(RobotDrive.class);
+        factoryUsage: `Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+    RobotDrive drive = robot.requireDrive();
     Intake intake = robot.get(Intake.class); // May be null on another profile.
-    Limelight limelight = robot.get(Limelight.class);`,
+    Vision vision = robot.getVision();`,
         blackboardUsage: `// Write only where this lifecycle flow owns the state.
     Blackboard.put(Blackboard.Caption.ALLIANCE, AllianceColor.RED);
     Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy());
@@ -1502,14 +1498,16 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
     return saved.getX() != 0 || saved.getY() != 0 || saved.getHeading() != 0
         ? saved : Constants.RED_DEFAULT_START_POSE;`,
         aggregateUsage: `GamepadEx driver = new GamepadEx(gamepad1);
-    GpBindings bindings = driver.result();
-    Robot robot = Constants.createRobot(hardwareMap);
+    State state = new State(driver.result(), RobotMode.TELEOP);
+    Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+    robot.start();
 
     while (opModeIsActive()) {
         driver.update();
-        robot.periodic(bindings);
+        robot.periodic(state);
         telemetry.update();
-    }`,
+    }
+    robot.stop();`,
         timerUsage: `Timer loopTimer = new Timer(TimeUnit.MILLISECONDS);
     LowPassFilter filtered = new LowPassFilter(0.2);
 
@@ -1543,8 +1541,8 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
         assertHasMechanism(RobotDrive.class);
         return currentBot.createMechanism(hardwareMap, RobotDrive.class);
     }
-    public static Robot createRobot(HardwareMap hardwareMap) {
-        return new Robot(hardwareMap, currentBot);
+    public static Robot createRobot(HardwareMap hardwareMap, RobotMode mode) {
+        return new Robot(hardwareMap, currentBot, mode);
     }
 }`,
         robotConfig: `public static RobotConstants OldDECODERobotTesting() {
@@ -1562,8 +1560,9 @@ protected void test(HardwareMap hardwareMap, GamepadEx gamepad1,
             .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
                     .hardwareMapName("intake")
                     .intakeMotorDirection(Direction.REVERSE))
-            .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
-                    .hardwareMapName("limelight"))
+            .addMechanism(Vision.class, new Vision.VISION_PARAMS()
+                    .limelightParams(new Limelight.LIMELIGHT_PARAMS()
+                            .hardwareMapName("limelight")))
             .useFollowerDrive(true);
 }`,
         robotConstantsFollower: `public Follower createFollower(HardwareMap map) {
@@ -1625,21 +1624,21 @@ protected Pose getStartingPose() {
     Robot robot;
     Intake intake;
     RobotDrive drive;
-    Limelight limelight;
+    Vision vision;
 
     @NonNull
     protected abstract Pose getStartingPose();
     @Override
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
-        GpBindings driverResult = driver.result();
-        robot = Constants.createRobot(hardwareMap);
+        State state = new State(driver.result(), RobotMode.TELEOP);
+        robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
         intake = robot.get(Intake.class);
-        drive = robot.require(RobotDrive.class);
-        drive.setStartingPose(getStartingPose());
-        drive.setStickCurve((x -> Math.signum(x)*x*x));
-        drive.startTeleOpDrive();
-        limelight = robot.get(Limelight.class);
+        drive = robot.requireDrive();
+        robot.setStartingPose(getStartingPose());
+        robot.setDriveStickCurve((x -> Math.signum(x)*x*x));
+        robot.startTeleOpDrive();
+        vision = robot.requireVision();
     }
 }`,
         redTeleOpWrapper: `@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "RED TELEOP", group = "0: TeleOp")
@@ -1661,26 +1660,29 @@ public class Red_TeleOp extends TeleOp {
         ivyAuton: `public abstract class IvyAuton extends OpMode {
     AllianceColor allianceColor;
     IvyAuton_Paths paths;
-    Follower follower;
     Robot robot;
-    Intake intake;
+    RobotIvyBuilder commands;
+    State autonomousState;
 
     @Override
     public void init() {
         Scheduler.reset();
-        follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(paths.getStartingPose());
-        robot = Constants.createRobot(hardwareMap);
-        intake = robot.require(Intake.class);
+        robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
+        commands = robot.build();
+        autonomousState = new State(RobotMode.AUTONOMOUS);
     }
 
     public void start() {
-        Scheduler.schedule(Groups.sequential(
-            intake.halfPower(),
-            PedroCommands.follow(follower, paths.getPath1(), true),
-            intake.fullPower(),
+        robot.start();
+        Scheduler.schedule(
+            commands.periodic(autonomousState),
+            Groups.sequential(
+            commands.setStartingPose(paths.getStartingPose()),
+            commands.runIntakeHalfPower(),
+            commands.followPath(paths.getPath1(), true),
+            commands.startIntake(),
             waitMs(1000),
-            intake.stop(),
+            commands.stopIntake(),
             CommandConverter.toCommand(this::requestOpModeStop)
         ));
     }
@@ -1710,21 +1712,19 @@ public class Test_IvyAuton extends IvyAuton {
             .setLinearHeadingInterpolation(launchPose.getHeading(), set_1Pose.getHeading())
             .build();
 }`,
-        kotlinTeleOp: `@TeleOp(name = "Kotlin TeleOp", group = "Kotlin")
-class KotlinTeleOpTest: LinearOpMode() {
+        kotlinTeleOp: `// KtExampleIvyAuto.kt is an unannotated teaching example.
+class KtExampleIvyAuto: OpMode() {
     lateinit var follower: Follower
-    override fun runOpMode() {
+    override fun init() {
         follower = Constants.createFollower(hardwareMap)
-        follower.setStartingPose(Pose())
-        waitForStart()
-        follower.startTeleOpDrive()
-        while (opModeIsActive()) {
-            follower.setTeleOpDrive(-gamepad1.left_stick_y.toDouble(), -gamepad1.left_stick_x.toDouble(), -gamepad1.right_stick_x.toDouble(), false)
-            follower.update()
-            if (gamepad1.back) {
-                follower.heading = 0.0
-            }
-        }
+        buildPaths()
+        follower.setStartingPose(startPose)
+    }
+    override fun start() {
+        Scheduler.schedule(
+            Commands.infinite(follower::update),
+            Groups.sequential(PedroCommands.follow(follower, launchPath))
+        )
     }
 }`,
         exampleIvyAuto: `public class ExampleIvyAuto extends OpMode {
@@ -1833,9 +1833,13 @@ class KotlinTeleOpTest: LinearOpMode() {
     }
 
     public void update(T state) {
-        double[] currentStateArray = coefficients.stateSupplier.apply(state);
-        double[] targetArray = coefficients.stateSupplier.apply(target);
-        // ... computes P, I, D, and F terms into outputArray
+        Objects.requireNonNull(state, "state");
+        Objects.requireNonNull(target, "target");
+        double[] currentStateArray = Objects.requireNonNull(
+            coefficients.stateSupplier.apply(state), "stateSupplier result");
+        double[] targetArray = Objects.requireNonNull(
+            coefficients.stateSupplier.apply(target), "target state");
+        // Reject mismatched dimensions; omit derivative output on first update.
     }
 }`,
         equation: `public interface Equation {
@@ -2207,7 +2211,7 @@ function applyCodeHighlighting(root=document){
             const raw = pre.textContent;
             pre.textContent = '';
             code = document.createElement('code');
-            code.className = /\\b(fun|val|var|lateinit)\\b|KotlinTeleOpTest/.test(raw) ? 'language-kotlin' : 'language-java';
+            code.className = /\\b(fun|val|var|lateinit)\\b|KtExampleIvyAuto/.test(raw) ? 'language-kotlin' : 'language-java';
             code.textContent = raw;
             pre.appendChild(code);
         }
@@ -2384,10 +2388,10 @@ applyCodeHighlighting(document);
                         nav: 'Overview',
                         eyebrow: '// Kotlin vs Java',
                         title: 'How Kotlin fits into the <span>same TeamCode patterns</span>',
-                        lead: 'The project already compiles Kotlin. `KotlinTeleOpTest.kt` and `KtExampleIvyAuto.kt` follow the same follower-first conventions used by the Java code.',
+                        lead: 'The project already compiles Kotlin. `KtExampleIvyAuto.kt` is the remaining unannotated teaching example and follows the follower-first convention used by the Java examples.',
                         body: `
                         ${note('dnote', '<strong>Current repo reality:</strong> Kotlin exists as a supported teaching/example path, but most shared match architecture still lives in Java.')}
-                        ${codeBlock('TeamCode/learning/kotlinTest/KotlinTeleOpTest.kt', CODE.kotlinTeleOp)}
+                        ${codeBlock('TeamCode/learning/kotlinTest/KtExampleIvyAuto.kt', CODE.kotlinTeleOp)}
                         `
                     },
                     {
@@ -2401,7 +2405,7 @@ applyCodeHighlighting(document);
                         ${table(['Java pattern in this repo', 'Kotlin equivalent in this repo'], [
                             ['<code>new Pose()</code>', '<code>Pose()</code>'],
                             ['<code>while (opModeIsActive())</code>', '<code>while (opModeIsActive())</code>'],
-                            ['<code>robot = Constants.createRobot(hardwareMap);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
+                            ['<code>robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);</code>', '<code>follower = Constants.createFollower(hardwareMap)</code>'],
                             ['Explicit types everywhere', 'Type inference plus <code>lateinit var</code> for FTC objects initialized in <code>runOpMode()</code>.']
                         ])}
                         `

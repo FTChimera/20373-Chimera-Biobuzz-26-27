@@ -38,20 +38,28 @@ from `build.dependencies.gradle`.
 ## Verified current state
 
 1. The build includes FTC Vision `11.2.1` plus Pedro Pathing / Ivy dependencies.
-2. `library/hardware/webcam/Limelight.java` extends `Mechanism`, wraps `Limelight3A`, supports `APRIL_TAG`, `COLOR`, and `NEURAL_DETECTOR` pipelines, and now updates through the mechanism-wide `periodic(GpBindings GpBindings)` hook.
-3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` are written to create a
-   `Robot` aggregate, read `Limelight` through `robot.get(...)`,
-   start it in `APRIL_TAG` mode when present, and refresh it every loop through
-   aggregate mechanism updates.
-4. Vision wrapper availability is profile-driven. Verify the selected profile registers `Limelight` or `LogitechWebcam` before calling its corresponding `Constants.create...(...)` helper.
-5. `tests/PreseasonWebcamAuto.java` bypasses the wrapper, reads raw `Limelight3A` color results, switches pipeline `1`, and gets the hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
+2. `mechanisms/Vision.java` extends `Mechanism`, owns the standalone
+   `Limelight` controller, supports `APRIL_TAG`, `COLOR`, and
+   `NEURAL_DETECTOR` pipelines, and updates through
+   `periodic(State, RobotMode)`.
+3. `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` create teleop `Robot`
+   aggregates, retrieve `Vision`, start its `APRIL_TAG` pipeline, and refresh
+   it through aggregate periodic updates.
+4. Vision wrapper availability is profile-driven. Verify the selected profile
+   registers `Vision` or `LogitechWebcam` before calling its corresponding
+   `Constants.create...(...)` helper.
+5. `tests/PreseasonWebcamAuto.java` is a proof-of-concept flow that creates
+   `Vision` directly through `Constants.createVision(...)`, selects `COLOR`,
+   updates Vision, and uses its color results beside a normal follower loop.
 6. `Limelight.updateRobotOrientation(...)` now takes a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM`, while `getBotposeMT2()` converts Limelight MT2 `Pose3D` results back into Pedro `Pose` through `MathUtils.units.toPedroPathing(...)`.
 7. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but vision-wrapper use still depends on profile registration.
 8. `tests/ftcSdk/VisionFactoryTest.java` is the current driver-station smoke
    test for Vision mechanism creation and AprilTag polling.
 9. `library/planners/paths/Utils.IntakeWVision` is the current vision-assisted pathing example: it reads detector results from the wrapper, preserves a fail-safe path, and can choose between Pedro curve-through and adaptive-handle Bezier generation.
 10. `pedroPathing/custom/LimelightPinpointLocalizer.java` is `@Deprecated` and is not the default follower-localizer path.
-11. `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible integration test for `IntakeWVision`; it uses the neural-detector pipeline for planning and stops the optional wrapper during cleanup.
+11. `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible
+    integration test for `IntakeWVision`; it requires Vision, uses the
+    neural-detector pipeline for planning, and stops it during cleanup.
 
 ## Wrapper configuration pattern that exists in code
 
@@ -69,11 +77,14 @@ even though the helper methods exist.
 
 ## Repo-specific constraints
 
-- `Limelight.LLUpdate()` must be called regularly to keep cached results and disconnected-state tracking meaningful.
+- `Vision.update()` must be called regularly to keep cached results and disconnected-state tracking meaningful.
 - Vision results can be missing or invalid; current code already checks for null/invalid Limelight results and empty AprilTag detections.
 - `Limelight.calculateDistance(...)` uses mount-angle, lens-height, and tag-height params that default to `0`, so those distance values are not trustworthy until real measurements are filled in.
 - `LogitechWebcam.update()` uses the first current AprilTag detection, converts FTC pose data into a `Pose3D`, then maps `x`, `z`, and yaw into `pedroPose`.
 - `LimelightPinpointLocalizer` updates Pinpoint first and then tries to override pose from Limelight MT2 botpose, so any fusion changes must keep coordinate conversions explicit.
+- `Vision.periodic(...)` only updates orientation/results. It never
+  automatically overwrites the drive pose; use `Vision.forceRelocalize(drive)`
+  or the Robot / RobotIvyBuilder convenience method deliberately.
 
 ## Rules
 

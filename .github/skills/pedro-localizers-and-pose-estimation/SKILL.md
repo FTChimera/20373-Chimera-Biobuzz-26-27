@@ -44,7 +44,11 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
    These Pinpoint values are covered; FirstRobot's drive-tuning values remain
    unconfigured.
 4. `library/robot/drivetrain/MecanumDrive` snapshots `follower.getPose()` into static `lastPose` and then calls `follower.update()` inside `periodic()`, while `RobotDrive` is the profile-managed mechanism that owns the public teleop-facing drive behavior.
-5. Shared autonomous-to-teleop pose handoff currently happens when `opModes/IvyAuton.java` writes `follower.getPose()` to `Blackboard.Caption.POSE` in `stop()`, and `variants/Red_TeleOp.java` / `Blue_TeleOp.java` read it back if it is not `(0,0,0)`.
+5. Shared autonomous-to-teleop pose handoff happens when
+   `opModes/IvyAuton.java` calls `Robot.stop()` in autonomous mode. Robot
+   stores a velocity-compensated end pose and the State alliance in
+   `Blackboard`; `variants/Red_TeleOp.java` / `Blue_TeleOp.java` read the pose
+   back if it is not `(0,0,0)`.
 6. `LimelightPinpointLocalizer` exists as a custom fusion localizer, is marked `@Deprecated`, and is not used by the default follower factory.
 7. `tests/PreseasonWebcamAuto.java` keeps the normal follower and consumes
    Vision color results separately; it does not replace the default localizer.
@@ -67,6 +71,9 @@ that `Vision` is registered in the selected profile before calling its helper.
 - Do not add multiple competing pose-update loops for the same follower.
 - If a task needs Limelight color detection at the same time as following, follow the current repo pattern: keep the follower on Pinpoint and consume Limelight results separately unless the fusion plan is intentionally revisited.
 - If you change auto-to-teleop pose handoff behavior, update both the writer (`IvyAuton.stop()`) and the readers (`Red_TeleOp` / `Blue_TeleOp`).
+- `Vision.periodic(...)` refreshes pose candidates but never applies them.
+  Call `Robot.forceRelocalize()` explicitly only when the valid MT2 pose should
+  replace the drive localizer.
 
 ## Things to watch
 

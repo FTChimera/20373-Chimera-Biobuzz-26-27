@@ -53,7 +53,9 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 
 - Test op modes live under `tests/` and are annotated for the driver station.
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted check, sleep briefly, and then request stop. It now also provides `skipIfMechanismMissing(...)` and `showStep(...)` helpers so factory tests can stay profile-aware and telemetry-friendly.
-- `tests/ftcSdk/` now includes factory-style runtime checks for `Follower`, `IMU`, `Intake`, `Limelight`, `RobotDrive`, `RGBIndicator`, and `LogitechWebcam`.
+- `tests/ftcSdk/` now includes factory-style runtime checks for `Follower`,
+  `IMU`, `Intake`, `Vision`, `RobotDrive`, `RGBIndicator`, and
+  `LogitechWebcam`.
 - `tests/ftcSdk/` now also includes custom-hardware checks for the device-level `RGBIndicator` and `SlidesMotor` classes under `library/hardware/hardwareDevice/`.
 - TeamCode now also has a JVM test layer under `TeamCode/src/test/java/`; use that for math, utility, blackboard, gamepad, robot-configuration, and `EquationCurve` behavior that does not need FTC runtime hardware.
 - `pid/autoTune/` now contains FTC AutoTune relay-feedback tuners built around repo-local `pid.autoTune.master.PIDMaster` / `DualMotorPIDMaster` FTC adapters, the external `pidautotuner-core` algorithms, and a repo-local `@Configurable` `TuningConstants` class.
@@ -70,8 +72,13 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `MotorDirectionTest` is a looping low-speed sanity check for the constants-driven drivetrain profile, and it also checks intake direction when the active profile registers `Intake.class`. It updates telemetry live while you flip directions.
 - `PedroPathingTeleOpTest` mixes manual drive with on-demand path following for follower behavior checks.
 - `TestPathPlanner` is the current planner-stack validation op mode; it builds a `PlanBuilder`, inserts a timed wait, and schedules the resulting `PathPlannerList`.
-- `PlannerIntakeVisionAuto` is the planner-stack integration op mode for staging, neural-detector intake collection, generated/fail-safe return behavior, and parking. It uses profile-created aggregate mechanisms and tolerates missing optional `Intake` / `Limelight` wrappers.
-- `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode` that uses a follower plus raw Limelight results.
+- `PlannerIntakeVisionAuto` is the planner-stack integration op mode for
+  staging, neural-detector intake collection, generated/fail-safe return
+  behavior, and parking. It uses an autonomous profile-created aggregate,
+  treats Intake as optional, and requires Vision for `intakeWVision(...)`.
+- `PreseasonWebcamAuto` is a proof-of-concept color-tracking `LinearOpMode`
+  that creates Vision directly through `Constants.createVision(...)` and uses
+  its color results beside a follower.
 - `MotorTest` is a small SDK-level wrapper check built on the custom `androidTest` base.
 - `FollowerFactoryTest`, `RobotDriveFactoryTest`, `IntakeFactoryTest`,
   `VisionFactoryTest`, `RGBFactoryTest`, and `WebcamFactoryTest` are short
@@ -81,7 +88,11 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `IMUTest` is the runtime check for `Constants.createIMU(...)`; it resets yaw once, reports before/after values, and leaves live heading movement confirmation to the driver.
 - `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `SlidesMotor.DEFAULT_HARDWAREMAP_NAME`.
-- `UnitTestAll` is the single JVM suite entry point for non-hardware TeamCode tests, currently covering `Blackboard`, `DriveVector`, `Timer`, field contact geometry, PIDF control, filters, gamepad input, interpolation, symbolic math, robot configuration, and `EquationCurve`.
+- `UnitTestAll` is the single JVM suite entry point for non-hardware TeamCode
+  tests, currently covering `Blackboard`, `DriveVector`, `Timer`, field
+  contact geometry, PIDF control, filters, gamepad input, interpolation,
+  symbolic math, robot configuration, `RobotMode`/`State`, and
+  `EquationCurve`.
 - `PositionPIDTunerOpMode`, `VelocityPIDFTunerOpMode`, and `DualVelocityPIDFTunerOpMode` are thin wrappers around the FTC AutoTune library that run relay-feedback calibration plus optional `gamepad1.a` live tests.
 - `TuningConstants` is the shared place for FTC AutoTune motor names, direction booleans, target RPM / ticks, relay amplitude, and feedforward sweep settings.
 - `Tuning.java` contains localization, velocity, braking, PIDF, centripetal, and path-shape tuners.
@@ -109,6 +120,10 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `build.dependencies.gradle` now resolves JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the removed FTC artifact is replaced by repo-local master adapters, so tuning/build work should keep both layers aligned.
 - Some tuner code comes from Pedro tooling and is intentionally verbose; keep repo-specific adjustments minimal and clear.
 - If a new mechanism is being validated, make sure it follows the same `Mechanism` + `RobotConstants.createMechanism(...)` pattern before adding the test.
+- For aggregate autonomous tests, create `RobotMode.AUTONOMOUS` explicitly and
+  call drive periodic updates with that mode or schedule
+  `RobotIvyBuilder.periodic(new State(RobotMode.AUTONOMOUS))`; this keeps
+  follower updates active without consuming teleop bindings.
 - `tests/PreseasonWebcamAuto.java` is intentionally not a shared match op mode; keep it documented as validation/proof-of-concept code.
 - `tests/PreseasonWebcamAuto.java` and `tests/ftcSdk/RGBIndicatorTest.java` still intentionally bypass the normal factory path for parts of their behavior. Check registration in the profile selected by `Constants.currentBot` before adding a factory-created wrapper to either test.
 - `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` were recently updated to centralize their hardware naming, so future test edits should preserve that alignment.

@@ -46,7 +46,9 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 - `IvyTeleOp` is currently a standalone annotated teleop, so not every teleop in the repo uses the thin-wrapper pattern.
 - `IvyAuton` is an abstract `OpMode` that accepts an `AllianceColor` plus an `IvyAuton_Paths` implementation, but the current base also stores rather than branches on the alliance value.
 - `Test_IvyAuton` provides a nested `Paths` implementation and currently passes `AllianceColor.RED` to the shared base.
-- `IvyAuton.stop()` writes `follower.getPose()` into `Blackboard.Caption.POSE` and then resets the Ivy `Scheduler`.
+- `IvyAuton.stop()` calls `Robot.stop()` before resetting the Ivy scheduler.
+  In autonomous mode, Robot stores a velocity-compensated end pose plus the
+  state alliance in `Blackboard`.
 - `ConfigOpMode` is the one iterative pre-start menu for `Blackboard` mutations. Its D-pad menus set `POSE`, `DRIVER`, or `ALLIANCE`, or reset every entry before the op mode is started.
 - `OpModeHelper.kt` is available as shared lifecycle plumbing if a future base op mode needs loop timing or manual bulk-cache handling, but it is not itself an annotated op mode base.
 
@@ -54,7 +56,11 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 
 Shared base op modes should initialize mechanisms through `Constants.create...(...)` so every variant uses the same profile-aware factories.
 
-Variant wrappers inherit whatever profile and aggregate assumptions their base class makes. For example, `TeleOp.java` currently calls `Constants.createRobot(hardwareMap)`, then `require(RobotDrive.class)` and optional `get(...)` lookups for `Intake` / `Limelight`; the selected profile must still register any class that the base treats as required.
+Variant wrappers inherit whatever profile and aggregate assumptions their base
+class makes. For example, `TeleOp.java` creates `RobotMode.TELEOP` Robot and
+State instances, then calls `requireDrive()` and optional `get(...)` lookups
+for `Intake`; it requires `Vision`. The selected profile must still register
+any class that the base treats as required.
 
 If a new subsystem is introduced for a base op mode:
 

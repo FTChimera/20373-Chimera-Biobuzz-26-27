@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 
+import java.util.Locale;
+
 /**
  * Auto-tunes PIDF gains for a velocity-controlled mechanism (flywheel,
  * intake, etc.) using the relay-feedback method.
@@ -48,13 +50,16 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
         panelsTelemetry.addLine("=== PIDF Auto Tuner (Velocity) ===");
         panelsTelemetry.addData("Motor", TuningConstants.MOTOR_NAME);
         panelsTelemetry.addData("TICKS_PER_REV", TuningConstants.TICKS_PER_REV);
-        panelsTelemetry.addData("Target", String.format("%.1f RPM  (%.1f ticks/s)",
+        panelsTelemetry.addData("Target", String.format(Locale.US, "%.1f RPM  (%.1f ticks/s)",
                 TuningConstants.TARGET_RPM, targetTicksPerSec));
         panelsTelemetry.addLine("Press START. Phase 1: relay test (automatic).");
         panelsTelemetry.update();
 
         waitForStart();
-        if (isStopRequested()) return;
+        if (isStopRequested()) {
+            pid.stop();
+            return;
+        }
 
         while (opModeIsActive() && !pid.isTuningComplete()) {
             pid.tuningStep(getRuntime());
@@ -67,6 +72,7 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
                 for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
                 panelsTelemetry.update();
             }
+            pid.stop();
             return;
         }
 
@@ -81,5 +87,6 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
             }
             panelsTelemetry.update();
         }
+        pid.stop();
     }
 }

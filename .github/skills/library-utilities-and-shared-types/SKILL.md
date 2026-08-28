@@ -59,14 +59,23 @@ version pinned in `build.dependencies.gradle`.
 ## Current examples
 
 - `AllianceColor` carries alliance-level intent for shared op mode bases.
+- `RobotMode` distinguishes `AUTONOMOUS` from `TELEOP`; `State` carries that
+  mode alongside optional bindings, drive, helper, and alliance data. A
+  no-argument State remains teleop by default.
 - `DriveVector` is a lightweight drive math object used by the drivetrain stack.
 - `DriveVector.applyStickCurve(...)` mutates the instance without changing axis signs; the drive stack's forward inversion happens later in `MecanumDrive`.
 - `GameElement` and `Pollen` are lightweight preseason game-piece marker types under `library/game/`.
 - `Tuple<A, B>` is a minimal shared pair type with `getA()` and `getB()` accessors; keep it value-focused rather than adding robot behavior to it.
 - `Field` is the JTS-backed preseason field-geometry utility. It creates polygons/circles, projects a robot footprint through a velocity sweep, and reports `OUTSIDE`, `PARTIAL`, or `OVERLAPPING` contact for its shapes and autonomous-midline boundaries.
-- `PIDFController<T>` and `DoublePIDFController` are generic control helpers used by proof-of-concept vision or tuning flows.
+- `PIDFController<T>` and `DoublePIDFController` are generic control helpers
+  used by proof-of-concept vision or tuning flows. PIDF rejects null state or
+  target data and mismatched dimensions; its first update initializes error
+  history and intentionally omits derivative output.
 - `NoiseFilter` and `LowPassFilter` are reusable signal-conditioning helpers.
-- `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can be reused outside one op mode.
+- `LinearInterp` and `LagrangeInterp` provide interpolation utilities that can
+  be reused outside one op mode. `LinearInterp.calculate(...)` requires
+  configured min/max edge outputs, at least one point, and points inserted in
+  ascending-key order.
 - `MathUtils.kt` is the shared home for unit conversion, heading normalization, FTC/Pedro pose-conversion helpers, and planner geometry helpers such as `adaptiveHandleLengths(...)`, `maxTurnAngle(...)`, and `maxSpacingRatio(...)`.
 - `Equation` is the shared math interface for reusable symbolic/value-returning curve expressions.
 - `Polynomial` now lives under `library/math/`, implements `Equation`, and still stores coefficients highest-degree first.

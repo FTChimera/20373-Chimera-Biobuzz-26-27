@@ -65,6 +65,16 @@ code, inspect the downloaded module under
 - `Constants.createRobot(hardwareMap)` is the aggregate factory for every
   profile-managed mechanism, including `Vision`. The aggregate updates Vision;
   its owning flow explicitly starts and stops the selected pipeline.
+- Use `Constants.createRobot(hardwareMap, RobotMode.TELEOP)` or
+  `Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS)` for new shared
+  flows, create the matching `State`, and call `robot.start()` before the first
+  `robot.periodic(...)`. `Robot.stop()` owns autonomous Blackboard handoff.
+- `Robot.build()` returns `RobotIvyBuilder`, whose commands cover robot
+  lifecycle, periodic updates, follower paths, intake, drive, vision, and
+  explicit `forceRelocalize()` actions.
+- `Vision.periodic(...)` refreshes orientation and cached results only. It does
+  not overwrite the drive pose; call `Robot.forceRelocalize()` or schedule the
+  builder equivalent when a valid MT2 pose should be applied.
 - Profile-managed mechanisms now resolve nested builder-style params through
   `Mechanism.Params`, `Mechanism.resolveParams(...)`, and
   `RobotConstants.getMechanismParams(...)`.
@@ -87,3 +97,8 @@ code, inspect the downloaded module under
   `library/math/MathUtils.kt` also owns adaptive path-smoothing helpers used by
   planner code in addition to unit conversion, heading normalization, and
   FTC/Pedro pose conversion.
+- `library/game/RobotMode` and `State` distinguish autonomous from teleop
+  behavior. `PIDFController` validates non-null, equal-dimension state/target
+  inputs and skips derivative output on its first update; `LinearInterp`
+  requires configured, ascending keys; and `SlidesMotor` rejects invalid
+  limits, positions, and percentages.

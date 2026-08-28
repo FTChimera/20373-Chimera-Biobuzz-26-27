@@ -4,8 +4,10 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 
 import org.junit.Test;
+import org.locationtech.jts.geom.Coordinate;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class FieldTest {
     @Test
@@ -38,5 +40,20 @@ public class FieldTest {
                 Field.ContactState.OUTSIDE,
                 Field.Boundaries.AUTO_MID_LINE_BLUE.getContactState(new Pose(-20, 72), new Vector(), 1.0, 6.0, 8.0)
         );
+    }
+
+    @Test
+    public void polygonFactoriesRejectInvalidGeometryInputs() {
+        assertThrows(IllegalArgumentException.class, () -> Field.createOrderedPolygon(new Coordinate[]{
+                new Coordinate(0, 0),
+                new Coordinate(0, 0),
+                new Coordinate(1, 1)
+        }));
+        assertThrows(IllegalArgumentException.class, () -> Field.createOrderedPolygon(new Coordinate[]{
+                new Coordinate(0, 0),
+                new Coordinate(1, 0),
+                new Coordinate(2, 0)
+        }));
+        assertThrows(IllegalArgumentException.class, () -> Field.createCircle(new Pose(), -1.0));
     }
 }

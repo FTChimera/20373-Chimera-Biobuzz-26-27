@@ -191,7 +191,6 @@ public class Utils {
                         if (returnPathStarted || shouldUseFailSafePath || vision == null) return;
 
                         Pose robotPose = drive.mecanumDrive.follower.getPose();
-                        vision.setPipeline(Vision.Pipeline.NEURAL_DETECTOR);
                         vision.updateRobotOrientation(robotPose.getHeading());
                         vision.update();
 

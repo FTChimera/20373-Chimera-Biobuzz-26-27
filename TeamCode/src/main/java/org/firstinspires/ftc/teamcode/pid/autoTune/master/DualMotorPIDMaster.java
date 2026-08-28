@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Orchestrates the relay-feedback velocity auto-tuning workflow for a
@@ -170,6 +171,10 @@ public class DualMotorPIDMaster {
         motor2.setPower(power);
     }
 
+    private static String formatTelemetry(String format, Object... arguments) {
+        return String.format(Locale.US, format, arguments);
+    }
+
     // -------------------------------------------------------------------------
     // State queries
     // -------------------------------------------------------------------------
@@ -279,28 +284,28 @@ public class DualMotorPIDMaster {
         switch (phase) {
             case RELAY_TEST:
                 lines.add("=== Phase 1: Relay Test (Dual Motor) ===");
-                lines.add(String.format("Encoder mode: %s", dualEncoders ? "DUAL (averaged)" : "SINGLE (motor 1 only)"));
-                lines.add(String.format("Measurement (ticks/s): %.1f", measure()));
-                lines.add(String.format("Motor 1 velocity:      %.1f", Math.abs(motor1.getVelocity())));
+                lines.add(formatTelemetry("Encoder mode: %s", dualEncoders ? "DUAL (averaged)" : "SINGLE (motor 1 only)"));
+                lines.add(formatTelemetry("Measurement (ticks/s): %.1f", measure()));
+                lines.add(formatTelemetry("Motor 1 velocity:      %.1f", Math.abs(motor1.getVelocity())));
                 if (dualEncoders) {
-                    lines.add(String.format("Motor 2 velocity:      %.1f", Math.abs(motor2.getVelocity())));
+                    lines.add(formatTelemetry("Motor 2 velocity:      %.1f", Math.abs(motor2.getVelocity())));
                 } else {
                     lines.add("Motor 2 velocity:      (encoder not connected)");
                 }
-                lines.add(String.format("Target (ticks/s): %.1f", targetVelocity));
-                lines.add(String.format("Cycles collected: %d / %d",
+                lines.add(formatTelemetry("Target (ticks/s): %.1f", targetVelocity));
+                lines.add(formatTelemetry("Cycles collected: %d / %d",
                         tuner.cyclesCollected(), cyclesToCollect + cyclesToIgnore));
                 break;
             case FEEDFORWARD_SWEEP:
                 lines.add("=== Phase 2: Feedforward Sweep (Dual Motor) ===");
-                lines.add(String.format("Encoder mode: %s", dualEncoders ? "DUAL" : "SINGLE (motor 1)"));
-                lines.add(String.format("Testing power: %.2f", feedforwardTestPowers[ffPowerIndex]));
-                lines.add(String.format("Measurement (ticks/s): %.1f", ffLastMeasurement));
+                lines.add(formatTelemetry("Encoder mode: %s", dualEncoders ? "DUAL" : "SINGLE (motor 1)"));
+                lines.add(formatTelemetry("Testing power: %.2f", feedforwardTestPowers[ffPowerIndex]));
+                lines.add(formatTelemetry("Measurement (ticks/s): %.1f", ffLastMeasurement));
                 if (dualEncoders) {
-                    lines.add(String.format("Motor 1: %.1f  Motor 2: %.1f",
+                    lines.add(formatTelemetry("Motor 1: %.1f  Motor 2: %.1f",
                             Math.abs(motor1.getVelocity()), Math.abs(motor2.getVelocity())));
                 } else {
-                    lines.add(String.format("Motor 1: %.1f  Motor 2: (no encoder)",
+                    lines.add(formatTelemetry("Motor 1: %.1f  Motor 2: (no encoder)",
                             Math.abs(motor1.getVelocity())));
                 }
                 break;
@@ -335,9 +340,9 @@ public class DualMotorPIDMaster {
         }
 
         lines.add("=== Relay Test Result (Dual Motor) ===");
-        lines.add(String.format("Encoder mode: %s", dualEncoders ? "DUAL" : "SINGLE (motor 1 only)"));
-        lines.add(String.format("Ku=%.6f  Tu=%.4fs", result.Ku, result.Tu));
-        lines.add(String.format("kF=%.6f (samples: %d)", kF, ff.sampleCount()));
+        lines.add(formatTelemetry("Encoder mode: %s", dualEncoders ? "DUAL" : "SINGLE (motor 1 only)"));
+        lines.add(formatTelemetry("Ku=%.6f  Tu=%.4fs", result.Ku, result.Tu));
+        lines.add(formatTelemetry("kF=%.6f (samples: %d)", kF, ff.sampleCount()));
         lines.add("");
         lines.add("=== Candidate Gains (apply identically to both motors) ===");
         for (PIDGains gains : candidates) {
@@ -377,16 +382,16 @@ public class DualMotorPIDMaster {
         setPower(output);
 
         lines.add("=== LIVE TEST ACTIVE (Dual Motor) ===");
-        lines.add(String.format("Measurement: %.1f  Target: %.1f  Error: %.1f",
+        lines.add(formatTelemetry("Measurement: %.1f  Target: %.1f  Error: %.1f",
                 measurement, targetVelocity, targetVelocity - measurement));
         if (dualEncoders) {
-            lines.add(String.format("Motor 1: %.1f  Motor 2: %.1f",
+            lines.add(formatTelemetry("Motor 1: %.1f  Motor 2: %.1f",
                     Math.abs(motor1.getVelocity()), Math.abs(motor2.getVelocity())));
         } else {
-            lines.add(String.format("Motor 1: %.1f  Motor 2: (no encoder)",
+            lines.add(formatTelemetry("Motor 1: %.1f  Motor 2: (no encoder)",
                     Math.abs(motor1.getVelocity())));
         }
-        lines.add(String.format("Output power: %.3f", output));
+        lines.add(formatTelemetry("Output power: %.3f", output));
         return lines;
     }
 

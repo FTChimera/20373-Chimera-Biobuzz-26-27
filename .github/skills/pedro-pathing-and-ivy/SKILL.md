@@ -32,6 +32,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/paths/Utils.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotIvyBuilder.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
@@ -67,6 +68,11 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
    mechanisms the selected profile actually registers with `.addMechanism(...)`.
 10. `library/planners/PlanBuilder` seeds a `PathPlannerList` with `Utils.StartPose`, and `PathPlannerList.schedule()` turns the accumulated planner steps into one sequential Ivy schedule.
 11. `PlanBuilder.intakeWVision(...)` adds `Utils.IntakeWVision`, which uses wrapper detector results to choose an outbound collection path or a fail-safe path, then returns to the planner step's start pose.
+12. `Robot.build()` produces `RobotIvyBuilder` for mode-bound periodic,
+    path-following, intake, drive, vision, and relocalization commands.
+    `IvyAuton` constructs a `RobotMode.AUTONOMOUS` aggregate and matching
+    `State`; its periodic command performs the follower update without reading
+    teleop bindings.
 
 ## Pathing conventions to follow
 
@@ -117,8 +123,9 @@ There is no current TeamCode example that implements `Command` directly, extends
 - `LimelightPinpointLocalizer` is `@Deprecated` and is not wired into `RobotConstants.createFollower(...)`.
 - `library/planners/paths/Utils.IntakeWVision` is the current dynamic-path example. It preserves a `resolvedEndPose`, can fall back to a fail-safe path, and chooses between Pedro curve-through and adaptive-handle Bezier generation based on waypoint geometry.
 - `tests/PlannerIntakeVisionAuto.java` is the current driver-station-visible planner integration test; it combines staging, detector-driven intake, and parking steps with the aggregate `Robot` factory path.
-- `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that uses the standard follower plus raw Limelight color results.
-- `tests/PreseasonWebcamAuto.java` gets its Limelight hardware name from `new Limelight.LIMELIGHT_PARAMS().HARDWAREMAP_NAME`.
+- `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that
+  uses the standard follower plus color results from a directly factory-created
+  `Vision` mechanism.
 - `learning/ExampleIvyWithSubsystems.java` is teaching code, not the profile-managed subsystem pattern: its `autoAlign()` step is commented out and its intake motor is resolved directly from `hardwareMap`.
 
 ## Rules
@@ -127,5 +134,7 @@ There is no current TeamCode example that implements `Command` directly, extends
 - Keep localization choices explicit: default code is Pinpoint-only, while Limelight fusion is opt-in and deprecated.
 - Do not add duplicate `follower.update()` loops.
 - Prefer the repo’s existing `Commands` / `Groups` / `PedroCommands` composition style in Ivy op modes.
+- Prefer `RobotIvyBuilder` for commands operating on an aggregate robot rather
+  than bypassing its mode, required-mechanism checks, or lifecycle.
 - Keep non-drive subsystem behavior out of `RobotConstants`; use `RobotConstants` for profile data and mechanism registration.
 - Reach for `EquationCurve` only when an equation-through-endpoints model is a better fit than Bezier geometry.

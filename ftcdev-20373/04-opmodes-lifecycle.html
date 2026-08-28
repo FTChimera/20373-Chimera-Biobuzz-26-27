@@ -16,35 +16,36 @@ public class MyRedTeleOp extends TeleOp {
 <section id="choose"><h2>Choose the lifecycle that matches the control flow</h2><table><tr><th>Use</th><th>When it fits</th><th>Current repository examples</th></tr><tr><td><code>LinearOpMode</code></td><td>A clear sequential setup, <code>waitForStart()</code>, and active loop fits naturally.</td><td><code>opModes/TeleOp.java</code>, <code>tests/PlannerIntakeVisionAuto.java</code>, factory-test base flows</td></tr><tr><td>Iterative <code>OpMode</code></td><td>The operation benefits from distinct <code>init()</code>, <code>start()</code>, <code>loop()</code>, and <code>stop()</code> hooks.</td><td><code>opModes/IvyAuton.java</code>, <code>configs/ConfigOpMode.java</code></td></tr></table><div class="warning"><span class="label">Lifecycle rule</span>Never use <code>waitForStart()</code> inside an iterative <code>OpMode</code>. Conversely, do not turn a LinearOpMode into an uncontrolled busy loop; use <code>opModeIsActive()</code> as the active condition.</div></section>
 <section id="linear"><h2>The shared LinearOpMode teleop pattern</h2><pre>public void runOpMode() {
     GamepadEx driver = new GamepadEx(gamepad1);
-    GpBindings bindings = driver.result();
-    robot = Constants.createRobot(hardwareMap);
-    drive = robot.require(RobotDrive.class);
+    State state = new State(driver.result(), RobotMode.TELEOP);
+    robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+    drive = robot.requireDrive();
     intake = robot.get(Intake.class);
 
     telemetry.addData("Status", "Initialized");
     telemetry.update();
     waitForStart();
 
+    robot.start();
     while (opModeIsActive()) {
         driver.update();
-        robot.periodic(bindings);
+        robot.periodic(state);
         telemetry.addData("Pose", drive.getPose());
         telemetry.update();
     }
+    robot.stop();
 }</pre><p>That sequence gives input edge detection a single update point, makes required/optional mechanism behavior explicit, and preserves telemetry ownership in the op mode.</p></section>
-<section id="iterative"><h2>The iterative autonomous pattern</h2><p><code>IvyAuton</code> resets the scheduler and builds shared resources in <code>init()</code>, schedules the sequence in <code>start()</code>, executes scheduler work and follower updates in <code>loop()</code>, then writes pose handoff and resets the scheduler in <code>stop()</code>.</p><pre>@Override public void init() {
+<section id="iterative"><h2>The iterative autonomous pattern</h2><p><code>IvyAuton</code> resets the scheduler and builds autonomous <code>Robot</code>, <code>State</code>, and <code>RobotIvyBuilder</code> resources in <code>init()</code>, starts the aggregate and schedules the sequence in <code>start()</code>, executes scheduler work in <code>loop()</code>, then lets <code>Robot.stop()</code> write pose handoff before resetting the scheduler.</p><pre>@Override public void init() {
     Scheduler.reset();
-    follower = Constants.createFollower(hardwareMap);
-    follower.setStartingPose(paths.getStartingPose());
-    robot = Constants.createRobot(hardwareMap);
-    intake = robot.require(Intake.class);
+    robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
+    commands = robot.build();
+    autonomousState = new State(RobotMode.AUTONOMOUS);
 }
-@Override public void loop() {
-    Scheduler.execute();
-    follower.update();
+@Override public void start() {
+    robot.start();
+    Scheduler.schedule(commands.periodic(autonomousState));
 }
 @Override public void stop() {
-    Blackboard.put(Blackboard.Caption.POSE, follower.getPose().copy());
+    robot.stop();
     Scheduler.reset();
 }</pre><p>Do not casually add another follower update loop around this base. The shared lifecycle already owns it.</p></section>
 <section id="variants"><h2>Keep shared behavior in bases and selection in variants</h2><p>Shared competition code belongs in a base class under <code>opModes/</code>. A Driver Station-visible variant under <code>opModes/variants/</code> should be small: it supplies the alliance or path implementation and carries the FTC annotation. This reduces duplicate mechanism construction and keeps pose handoff consistent.</p><div class="source"><span class="label">Existing pattern</span><code>TeleOp</code> is a shared abstract LinearOpMode. <code>Blue_TeleOp</code> and <code>Red_TeleOp</code> are concrete wrappers that select an alliance-specific starting pose. <code>IvyAuton</code> is an abstract iterative base paired with an <code>IvyAuton_Paths</code> implementation.</div></section>

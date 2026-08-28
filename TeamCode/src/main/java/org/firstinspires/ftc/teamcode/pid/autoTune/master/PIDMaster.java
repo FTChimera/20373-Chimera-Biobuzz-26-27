@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Orchestrates the full relay-feedback auto-tuning workflow for a single motor,
@@ -24,9 +25,8 @@ import java.util.List;
  * such as flywheels and intakes). The operating mode is selected via the
  * {@code positionMode} constructor argument.
  *
- * <p>This class resides in the {@code pidautotuner-ftc} library. It is pulled in
- * automatically via the JitPack dependency and does not need to be copied into
- * TeamCode. Only the OpMode wrappers and {@code TuningConfig} are user-editable.
+ * <p>This repo-local adapter owns FTC motor access while {@code pidautotuner-core}
+ * supplies the relay-feedback and gain-calculation primitives.
  *
  * <h2>Usage pattern</h2>
  * <pre>{@code
@@ -194,6 +194,10 @@ public class PIDMaster {
         return positionMode ? motor.getCurrentPosition() : Math.abs(motor.getVelocity());
     }
 
+    private static String formatTelemetry(String format, Object... arguments) {
+        return String.format(Locale.US, format, arguments);
+    }
+
     // -------------------------------------------------------------------------
     // State queries
     // -------------------------------------------------------------------------
@@ -319,7 +323,7 @@ public class PIDMaster {
     /** Returns an RPM annotation string if {@code ticksPerRev} is configured. */
     private String rpmString(double ticksPerSec) {
         if (ticksPerRev > 0) {
-            return String.format("  (%.1f RPM)", (ticksPerSec / ticksPerRev) * 60.0);
+            return formatTelemetry("  (%.1f RPM)", (ticksPerSec / ticksPerRev) * 60.0);
         }
         return "";
     }
@@ -337,18 +341,18 @@ public class PIDMaster {
             case RELAY_TEST:
                 lines.add("=== Phase 1: Relay Test ===");
                 if (positionMode) {
-                    lines.add(String.format("Position: %.0f", measure()));
-                    lines.add(String.format("Setpoint: %.1f", setpoint));
+                    lines.add(formatTelemetry("Position: %.0f", measure()));
+                    lines.add(formatTelemetry("Setpoint: %.1f", setpoint));
                 } else {
-                    lines.add(String.format("Velocity: %.1f ticks/s%s", measure(), rpmString(measure())));
-                    lines.add(String.format("Target:   %.1f ticks/s%s", setpoint, rpmString(setpoint)));
+                    lines.add(formatTelemetry("Velocity: %.1f ticks/s%s", measure(), rpmString(measure())));
+                    lines.add(formatTelemetry("Target:   %.1f ticks/s%s", setpoint, rpmString(setpoint)));
                 }
-                lines.add(String.format("Cycles collected: %d / %d", tuner.cyclesCollected(), cyclesToCollect + cyclesToIgnore));
+                lines.add(formatTelemetry("Cycles collected: %d / %d", tuner.cyclesCollected(), cyclesToCollect + cyclesToIgnore));
                 break;
             case FEEDFORWARD_SWEEP:
                 lines.add("=== Phase 2: Feedforward Sweep ===");
-                lines.add(String.format("Testing power: %.2f", feedforwardTestPowers[ffPowerIndex]));
-                lines.add(String.format("Velocity: %.1f ticks/s%s", ffLastMeasurement, rpmString(ffLastMeasurement)));
+                lines.add(formatTelemetry("Testing power: %.2f", feedforwardTestPowers[ffPowerIndex]));
+                lines.add(formatTelemetry("Velocity: %.1f ticks/s%s", ffLastMeasurement, rpmString(ffLastMeasurement)));
                 break;
             case TIMED_OUT:
                 lines.add("=== Tuning TIMED OUT ===");
@@ -382,9 +386,9 @@ public class PIDMaster {
         }
 
         lines.add("=== Relay Test Result ===");
-        lines.add(String.format("Ku=%.6f  Tu=%.4fs", result.Ku, result.Tu));
+        lines.add(formatTelemetry("Ku=%.6f  Tu=%.4fs", result.Ku, result.Tu));
         if (!positionMode) {
-            lines.add(String.format("kF=%.6f (samples: %d)", kF, ff.sampleCount()));
+            lines.add(formatTelemetry("kF=%.6f (samples: %d)", kF, ff.sampleCount()));
         }
         lines.add("");
         lines.add("=== Candidate Gains ===");
@@ -430,15 +434,15 @@ public class PIDMaster {
 
         lines.add("=== LIVE TEST ACTIVE ===");
         if (positionMode) {
-            lines.add(String.format("Position: %.0f  Setpoint: %.1f  Error: %.1f",
+            lines.add(formatTelemetry("Position: %.0f  Setpoint: %.1f  Error: %.1f",
                     measurement, setpoint, setpoint - measurement));
         } else {
-            lines.add(String.format("Velocity: %.1f ticks/s%s", measurement, rpmString(measurement)));
-            lines.add(String.format("Target:   %.1f ticks/s%s", setpoint, rpmString(setpoint)));
-            lines.add(String.format("Error:    %.1f ticks/s%s", setpoint - measurement,
+            lines.add(formatTelemetry("Velocity: %.1f ticks/s%s", measurement, rpmString(measurement)));
+            lines.add(formatTelemetry("Target:   %.1f ticks/s%s", setpoint, rpmString(setpoint)));
+            lines.add(formatTelemetry("Error:    %.1f ticks/s%s", setpoint - measurement,
                     rpmString(Math.abs(setpoint - measurement))));
         }
-        lines.add(String.format("Output power: %.3f", output));
+        lines.add(formatTelemetry("Output power: %.3f", output));
         return lines;
     }
 

@@ -110,6 +110,9 @@ Use as many of these checks as are relevant:
 - op modes should prefer `Constants.create...(...)`
 - profile-managed subsystems should extend `Mechanism`
 - constructors should match `(HardwareMap, RobotConstants)`
+- aggregate op modes should construct matching `RobotMode` / `State` values,
+  call `robot.start()` before periodic updates, and call `robot.stop()` during
+  lifecycle cleanup
 - optional mechanisms should check enablement before `hardwareMap.get(...)`
 - `RobotConfigurations` should register profile-managed mechanisms with `.addMechanism(...)` or `configureDriveMechanisms()`
 - direct `new Intake(...)`, `new RobotDrive(...)`, `new MecanumDrive(...)`, `new Limelight(...)`, etc. should be treated as suspicious unless intentionally internal
@@ -150,7 +153,10 @@ git --no-pager grep -nE 'hardwareMap\.get\(.*".+"' -- TeamCode/src/main/java/org
 #### 6. Vision and localization assumptions
 
 - Limelight pipeline choice should be explicit
-- raw Limelight proof-of-concept code under `tests/` should be recognized as test code, not the shared production wrapper pattern
+- `Vision.periodic(...)` must not be described as automatic localization;
+  MT2 pose application requires explicit `forceRelocalize()`
+- direct Vision-factory proof-of-concept code under `tests/` should be
+  recognized as test code, not the shared aggregate pattern
 - placeholder Limelight geometry or follower tuning should only be reported as “intentional placeholders” if the user confirmed that intent
 - `LimelightPinpointLocalizer` is deprecated and not the default follower path
 

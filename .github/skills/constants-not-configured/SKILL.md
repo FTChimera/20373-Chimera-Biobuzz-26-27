@@ -54,7 +54,8 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   - factory helpers like `createFollower(...)`, `createIMU(...)`,
     `createDrive(...)`, `createIntake(...)`, `createVision(...)`,
     `createRGB(...)`, `createWebcam(...)`, aggregate
-    `createRobot(...)`, and generic `createMechanism(...)`
+    `createRobot(...)` / `createRobot(..., RobotMode)`, and generic
+    `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
 - `library/robot/RobotConfigurations.java` is the main place for active robot-profile values such as:
   - drive motor names and directions
@@ -116,8 +117,15 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
 
 ## Op modes and tests that are especially affected by constant changes
 
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call `Constants.createRobot(hardwareMap)`, then require `RobotDrive.class` and treat `Intake` / `Limelight` as optional aggregate lookups. Preserve those nullable lookups so shared teleops remain valid across profile changes.
-- `opModes/IvyAuton.java` uses `Constants.createFollower(...)` and `Constants.createIntake(...)`, but its starting pose comes from the selected `IvyAuton_Paths.getStartingPose()` implementation, not from the default alliance poses in `Constants`.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` call
+  `Constants.createRobot(hardwareMap, RobotMode.TELEOP)`, create a matching
+  State and require drive. `TeleOp` requires Vision while `IvyTeleOp` treats
+  Vision and Intake as optional. Preserve those explicit availability
+  decisions across profile changes.
+- `opModes/IvyAuton.java` creates an autonomous `Robot` with its matching
+  `State` and builds `RobotIvyBuilder`; its starting pose still comes from the
+  selected `IvyAuton_Paths.getStartingPose()` implementation, not from the
+  default alliance poses in `Constants`.
 - `tests/PedroPathingTeleOpTest.java` depends directly on `Constants.RED_DEFAULT_START_POSE` and `Constants.BLUE_DEFAULT_START_POSE`.
 - `tests/MotorDirectionTest.java` depends on drivetrain motor directions and intake wiring; it calls `Constants.createDrive(...)` and `Constants.createIntake(...)`, so it requires a profile that registers both `RobotDrive.class` and `Intake.class`.
 - `opModes/variants/Red_TeleOp.java` and `Blue_TeleOp.java` first reuse `Blackboard.Caption.POSE` when it is non-zero, then fall back to the default alliance start poses.

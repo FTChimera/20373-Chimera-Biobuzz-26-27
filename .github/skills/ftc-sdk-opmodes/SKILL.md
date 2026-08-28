@@ -51,9 +51,14 @@ versions pinned in `build.dependencies.gradle`.
 
 When an op mode needs a subsystem:
 
-- prefer `Constants.createRobot(hardwareMap)` in shared op modes, then use `robot.require(Intake.class)` or `robot.get(...)` for profile-managed subsystems
-- call `Constants.createLimelight(hardwareMap)` instead of `new Limelight(...)`
-- call `Constants.createRobot(hardwareMap)` when a shared op mode wants the whole registered mechanism set, then use `robot.require(RobotDrive.class)` or optional `robot.get(...)` lookups as needed
+- prefer `Constants.createRobot(hardwareMap, RobotMode...)` in shared op
+  modes, create a matching `State`, then use `robot.requireIntake()` or
+  `robot.get(...)` for profile-managed subsystems
+- call `Constants.createVision(hardwareMap)` or retrieve `Vision` from
+  `Robot`; `Limelight` is the controller owned privately by `Vision`
+- call `Constants.createRobot(hardwareMap, RobotMode...)` when a shared op
+  mode wants the whole registered mechanism set, then use `robot.requireDrive()`
+  or optional `robot.get(...)` lookups as needed
 - call `Constants.createDrive(hardwareMap)` when you intentionally want just the public drive mechanism
 - call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
 - call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
@@ -73,16 +78,20 @@ The important repo contract is that profile-managed subsystems can be created un
 
 - Teleop drive is usually routed through `RobotDrive`, which wraps `MecanumDrive`.
 - Intake is wrapped by `mechanisms/Intake.java`, and `Constants.createIntake(...)` is the intended factory path when the active profile registers `Intake.class`.
-- Limelight usage is wrapped by `library/hardware/webcam/Limelight.java`, and `Constants.createLimelight(...)` is the intended factory path when the active profile registers `Limelight.class`.
+- Limelight usage is profile-managed by `mechanisms/Vision.java`, and
+  `Constants.createVision(...)` is the intended factory path when the active
+  profile registers `Vision.class`.
 - Logitech webcam has a `Constants` helper, but `Constants.currentBot` does not currently register that mechanism.
 - `library/hardware/hardwareDevice/SlidesMotor.java` is the current direct SDK-level slides device surface.
 - Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
 - `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
 - Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both follow the factory
-  pattern through `Constants.createRobot(hardwareMap)`. They require
-  `RobotDrive` and `Vision`, while `Intake` remains optional.
+- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both construct
+  `RobotMode.TELEOP` aggregates and matching `State` objects, then start the
+  robot after `waitForStart()`. `TeleOp` requires `RobotDrive` and `Vision`
+  while leaving `Intake` optional; `IvyTeleOp` treats both `Intake` and
+  `Vision` as optional.
 - `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
 - `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
 - `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.
@@ -101,6 +110,9 @@ The important repo contract is that profile-managed subsystems can be created un
 - The `pid/autoTune/` op modes are an intentional exception to the normal `Constants.create...(...)` factory rule: their direct motor-name configuration lives in `TuningConstants`, while the repo-local master adapters own the FTC relay-test integration.
 - Keep subsystem creation on the `Constants` / `RobotConstants.createMechanism(...)` path; keep drive/follower profile data in `library/robot/RobotConstants`.
 - Preserve FTC lifecycle expectations: initialize hardware before using it, update telemetry in the loop, and stop or persist state in `stop()` when needed.
+- With the aggregate path, invoke `robot.start()` before its first periodic
+  update and `robot.stop()` during cleanup. Use the autonomous mode explicitly
+  so drive and intake periodic code does not consume teleop inputs.
 
 ## Examples in this repo
 

@@ -44,20 +44,33 @@ When Ivy behavior is unclear, inspect the downloaded artifacts under
 1. The repo builds against `com.pedropathing:ivy:1.0.0`.
 2. Iterative Ivy flows reset the scheduler first, schedule work, and call `Scheduler.execute()` every loop.
 3. TeamCode currently composes commands with `Commands.instant(...)`, `Commands.infinite(...)`, `Commands.waitMs(...)`, `Groups.sequential(...)`, `Groups.loop(...)`, `PedroCommands.follow(...)`, and planner aggregates such as `PathPlannerList.schedule()`.
-4. Mechanisms and drive helpers expose small Ivy-friendly helpers such as `Intake.fullPower()`, `Intake.setPowerCommand(...)`, `library/robot/drivetrain/MecanumDrive.teleOp(...)`, and `mechanisms/RobotDrive.teleOp(...)`, while periodic mechanism updates now run through `Commands.infinite(() -> mechanism.periodic(GpBindings))`.
+4. Mechanisms and drive helpers expose small Ivy-friendly helpers such as
+   `Intake.fullPower()`, `Intake.setPowerCommand(...)`,
+   `library/robot/drivetrain/MecanumDrive.teleOp(...)`, and
+   `mechanisms/RobotDrive.teleOp(...)`. Aggregate periodic updates use
+   `RobotIvyBuilder.periodic(State)` so the selected `RobotMode` is preserved.
 5. `CommandConverter.toCommand(...)` wraps a `Runnable` as an instant command, while `CommandConverter.toRunnable(...)` runs a `Command` synchronously through `Ivy.run(...)`.
 6. There is no current TeamCode example that implements `Command` directly, extends `CommandBuilder`, or constructs `new CommandBuilder()`.
 
 ## Common repo examples
 
-- `opModes/IvyTeleOp.java` schedules `DualGamepad.updateCommand()`, then uses `Commands.infinite(() -> robot.periodic(driverResult))` for aggregate Limelight/drive/intake updates.
-- `mechanisms/Robot.java` exposes `schedule(Supplier<GpBindings>)`, which is the repo-local aggregate pattern when one scheduler command should update every currently registered mechanism from one wrapper result source.
-- `opModes/IvyAuton.java` schedules a `Groups.sequential(...)` routine with intake commands, `PedroCommands.follow(...)`, `Commands.waitMs(...)`, and `requestOpModeStop`.
+- `opModes/IvyTeleOp.java` schedules `DualGamepad.updateCommand()` and an
+  infinite aggregate `robot.periodic(teleopState)` update after constructing
+  matching teleop `Robot` / `State` objects.
+- `Robot.build()` returns `RobotIvyBuilder`, the primary aggregate command
+  surface: lifecycle, periodic updates, Pedro paths, intake, teleop drive,
+  vision pipeline, and explicit `forceRelocalize()` commands are bound to one
+  configured robot.
+- `opModes/IvyAuton.java` builds an autonomous `RobotIvyBuilder`, schedules
+  its periodic command plus a `Groups.sequential(...)` routine with builder
+  intake/path commands, waits, and `requestOpModeStop`.
 - `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` schedule `Commands.infinite(follower::update)` alongside a sequential follow-path chain.
 - `learning/ExampleIvyWithSubsystems.java` is a teaching scaffold that still resolves its intake motor directly from `hardwareMap`.
 - `tests/TestPathPlanner.java` is the repo-local planner example: it builds a `PathPlannerList` and then schedules the resulting command chain through `PathPlannerList.schedule()`.
 - `DualGamepad.updateCommand()` is now used directly by `opModes/IvyTeleOp.java`.
-- `Mechanism` now requires `periodic(GpBindings GpBindings)` for every concrete profile-managed mechanism, even when the periodic body is intentionally empty.
+- `Mechanism` requires `periodic(State, RobotMode)` for every concrete
+  profile-managed mechanism, even when the periodic body is intentionally
+  empty. Do not schedule a state whose mode differs from the aggregate mode.
 
 ## Profile / mechanism caveat
 

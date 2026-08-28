@@ -4,26 +4,27 @@
 <div class="layout"><nav class="toc"><h2>TeleOp</h2><a href="#input">Input update contract</a><a href="#bindings">GpBindings</a><a href="#drive">Drive pipeline</a><a href="#field">Field-centric behavior</a><a href="#validate">Drive validation</a></nav>
 <main class="article"><p class="eyebrow">05 / TeleOp</p><h1>Update input once, then let RobotDrive own driving.</h1><p class="lead">The TeamCode input path is <code>GamepadEx</code> → <code>GpBindings</code> → <code>Mechanism.periodic(...)</code>. Drive values become a <code>DriveVector</code>, and <code>RobotDrive</code> delegates motor/follower behavior to <code>MecanumDrive</code>. That separation prevents duplicated deadzones, sign flips, and field-centric math.</p>
 <section id="first-call"><h2>Call the normal teleop input path</h2><p>This loop is the preferred call-site example. It updates one wrapper, forwards its result to every registered mechanism, and lets <code>RobotDrive</code> read its configured sticks and heading-reset button.</p><pre>GamepadEx driver = new GamepadEx(gamepad1);
-GpBindings bindings = driver.result();
-Robot robot = Constants.createRobot(hardwareMap);
-RobotDrive drive = robot.require(RobotDrive.class);
+State state = new State(driver.result(), RobotMode.TELEOP);
+Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+RobotDrive drive = robot.requireDrive();
 
 waitForStart();
+robot.start();
 while (opModeIsActive()) {
     driver.update();
-    robot.periodic(bindings);
+    robot.periodic(state);
     telemetry.addData("Pose", drive.getPose());
     telemetry.update();
 }</pre></section>
 <section id="input"><h2>GamepadEx is stateful: update first</h2><p><code>GamepadEx</code> wraps FTC gamepad state with buttons, sticks, triggers, touchpad information, rumble, and LED support. Its readers implement edges and toggles, so the wrapper must receive exactly one <code>update()</code> each control loop before values are read.</p><pre>GamepadEx driver = new GamepadEx(gamepad1);
-GpBindings bindings = driver.result();
+State state = new State(driver.result(), RobotMode.TELEOP);
 
 while (opModeIsActive()) {
     driver.update();
     if (driver.wasJustPressed(Button.A)) {
         // Edge behavior is valid only after update().
     }
-    robot.periodic(bindings);
+    robot.periodic(state);
 }</pre><div class="warning"><span class="label">Do not double-shape input</span><code>GamepadEx</code> can apply a stick curve, while the normal drive path also has a <code>MecanumDrive</code> curve. Shared teleop keeps the wrapper near-neutral and applies its chosen curve through <code>RobotDrive.setStickCurve(...)</code>. Do not apply both unless that is explicitly the intended behavior.</div></section>
 <section id="bindings"><h2>GpBindings makes mechanisms input-agnostic</h2><p><code>GpBindings</code> exposes the current wrapper readers to a mechanism. <code>RobotDrive.ROBOT_DRIVE_PARAMS</code> stores the translation stick, rotation stick, and zero-heading button. <code>Intake.INTAKE_PARAMS</code> stores forward/reverse command descriptors. The mechanism resolves those descriptors on every periodic call instead of reaching directly for <code>gamepad1</code>.</p><pre>// RobotDrive turns its configured reader choices into one DriveVector.
 Stick translation = bindings.getCommand(params.TRANSLATION_STICK);
@@ -32,7 +33,7 @@ return new DriveVector(
     translation == null ? 0 : translation.getY(),
     translation == null ? 0 : translation.getX(),
     rotation == null ? 0 : rotation.getX()
-);</pre><ul><li>Add a reusable control mapping to the owning mechanism parameters.</li><li>Use <code>GpBindings.getCommand(...)</code> rather than a raw gamepad cast.</li><li>Keep one aggregate <code>robot.periodic(bindings)</code> call in shared teleop.</li></ul></section>
+);</pre><ul><li>Add a reusable control mapping to the owning mechanism parameters.</li><li>Use <code>GpBindings.getCommand(...)</code> rather than a raw gamepad cast.</li><li>Keep one aggregate <code>robot.periodic(state)</code> call in shared teleop.</li></ul></section>
 <section id="drive"><h2>Follow the drive pipeline</h2><ol><li><code>RobotDrive.periodic(...)</code> calls <code>MecanumDrive.periodic()</code>, which records the pre-update pose and updates the follower.</li><li>It reads configured sticks and produces a <code>DriveVector</code>.</li><li>It honors the configured zero-heading button and delegates to <code>setTeleOpDrive(...)</code>.</li><li><code>MecanumDrive</code> copies the vector, applies the selected stick curve, and chooses manual motor output or Pedro follower teleop based on the profile.</li></ol><pre>// Do not copy this math into an op mode; use the mechanism surface.
 drive.setStickCurve(x -> Math.signum(x) * x * x);
 drive.startTeleOpDrive();

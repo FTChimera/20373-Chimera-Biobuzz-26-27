@@ -46,6 +46,9 @@ the version pinned in `build.dependencies.gradle`.
   that mechanism.
 - `Vision.periodic(...)` refreshes cached results. Direct owners that do not
   call aggregate periodic must call `Vision.update()` regularly.
+- Periodic updates do not apply MT2 pose data to the drive. Call
+  `Robot.forceRelocalize()` or `RobotIvyBuilder.forceRelocalize()` explicitly
+  when a valid, running Vision pipeline should replace the drive pose.
 
 ## Repo conventions
 
@@ -55,7 +58,9 @@ the version pinned in `build.dependencies.gradle`.
 - `tests/ftcSdk/VisionFactoryTest` is the current runtime smoke test for
   profile-managed Vision creation and repeated updates on the AprilTag pipeline.
 - `library/planners/paths/Utils.IntakeWVision` is the current in-repo wrapper consumer that builds a vision-assisted path from detector results and falls back to a fail-safe path if detection/path generation does not succeed in time.
-- `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible integration test for that planner step. It starts the optional wrapper on `NEURAL_DETECTOR`, schedules the plan, and stops the wrapper during cleanup.
+- `tests/PlannerIntakeVisionAuto.java` is the driver-station-visible
+  integration test for that planner step. It requires Vision, starts it on
+  `NEURAL_DETECTOR`, schedules the plan, and stops it during cleanup.
 - Shared Limelight behavior must use Vision's cached result API. The deprecated
   `pedroPathing/custom/LimelightPinpointLocalizer.java` is the remaining raw SDK
   exception.
@@ -79,6 +84,8 @@ The important repo-level uniformity point is the shared `Mechanism` + `RobotCons
 - Keep pipeline selection explicit in the op mode or planner that owns the behavior.
 - Extend `Vision` when new shared camera behavior is needed rather than scattering `Limelight3A` calls across op modes.
 - Tolerate missing or invalid results; `Vision.update()` handles absent data as a normal runtime condition.
+- `Limelight.getPipelineIndex()` is not available until the device has
+  produced a result; it throws instead of returning a fabricated pipeline.
 - Keep coordinate-system conversion explicit when wiring pose/orientation data to Pedro consumers; the current repo path is `Constants.FTC_COORDINATE_SYSTEM` plus `MathUtils.units`.
 - If new vision tuning fields are added, keep them in `Vision.VISION_PARAMS`
   and its nested `LIMELIGHT_PARAMS` rather than scattering them through op modes.

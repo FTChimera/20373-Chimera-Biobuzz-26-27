@@ -4,8 +4,8 @@
 <div class="layout"><nav class="toc"><h2>Configuration</h2><a href="#layers">Configuration layers</a><a href="#registration">Mechanism registration</a><a href="#factories">Factory calls</a><a href="#parameters">Local parameters</a><a href="#profile-change">Change a profile</a></nav>
 <main class="article"><p class="eyebrow">02 / Configuration</p><h1>Profiles decide what the robot can construct.</h1><p class="lead">The configuration stack is intentionally layered. <code>Constants</code> is the op-mode-facing convenience surface; <code>RobotConfigurations</code> declares named robot presets; <code>RobotConstants</code> holds the builder data and constructs a follower or a registered mechanism.</p>
 <section id="first-call"><h2>Call factories from an OpMode</h2><p>Most op modes should call the profile-facing helpers, then use typed aggregate lookups. This is the usual caller-side code; profile builders stay out of the op mode.</p><pre>@Override public void runOpMode() {
-    Robot robot = Constants.createRobot(hardwareMap);
-    RobotDrive drive = robot.require(RobotDrive.class);
+    Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+    RobotDrive drive = robot.requireDrive();
     Intake intake = robot.get(Intake.class);
     IMU imu = Constants.createIMU(hardwareMap);
 
@@ -26,10 +26,11 @@ public static RobotDrive createDrive(HardwareMap hardwareMap) {
     .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
         .hardwareMapName("intake")
         .intakeMotorDirection(Direction.REVERSE))
-    .addMechanism(Limelight.class, new Limelight.LIMELIGHT_PARAMS()
-        .hardwareMapName("limelight"));</pre>
+    .addMechanism(Vision.class, new Vision.VISION_PARAMS()
+        .limelightParams(new Limelight.LIMELIGHT_PARAMS()
+            .hardwareMapName("limelight")));</pre>
 <div class="source"><span class="label">Source of truth</span>Inspect <code>RobotConfigurations.java</code> before assuming that an optional mechanism is available. Use <code>Constants.hasMechanism(SomeMechanism.class)</code> in cross-profile test code.</div></section>
-<section id="factories"><h2>Choose the correct factory</h2><div class="grid"><div class="card"><h3>Aggregate mechanism set</h3><p><code>Constants.createRobot(hardwareMap)</code> constructs every class registered on the active profile. Shared teleops use <code>require(RobotDrive.class)</code> and nullable <code>get(...)</code> calls.</p></div><div class="card"><h3>One profile mechanism</h3><p><code>Constants.createIntake(...)</code>, <code>createLimelight(...)</code>, or <code>createDrive(...)</code> assert registration first, then use <code>RobotConstants.createMechanism(...)</code>.</p></div><div class="card"><h3>Follower and IMU</h3><p><code>createFollower(...)</code> and <code>createIMU(...)</code> are profile-configured helpers, not mechanism factories. The IMU helper initializes REV Hub orientation but does not reset yaw.</p></div><div class="card"><h3>Direct custom device</h3><p>Use <code>hardwareMap.get(SlidesMotor.class, ...)</code> only for a custom SDK device/test flow, not for a profile-managed subsystem.</p></div></div>
+<section id="factories"><h2>Choose the correct factory</h2><div class="grid"><div class="card"><h3>Aggregate mechanism set</h3><p><code>Constants.createRobot(hardwareMap, RobotMode...)</code> constructs every class registered on the active profile. Match it with a <code>State</code> of the same mode; shared teleops use <code>requireDrive()</code> and nullable <code>get(...)</code> calls.</p></div><div class="card"><h3>One profile mechanism</h3><p><code>Constants.createIntake(...)</code>, <code>createVision(...)</code>, or <code>createDrive(...)</code> assert registration first, then use <code>RobotConstants.createMechanism(...)</code>.</p></div><div class="card"><h3>Follower and IMU</h3><p><code>createFollower(...)</code> and <code>createIMU(...)</code> are profile-configured helpers, not mechanism factories. The IMU helper initializes REV Hub orientation but does not reset yaw.</p></div><div class="card"><h3>Direct custom device</h3><p>Use <code>hardwareMap.get(SlidesMotor.class, ...)</code> only for a custom SDK device/test flow, not for a profile-managed subsystem.</p></div></div>
 <div class="warning"><span class="label">Failure mode</span><code>assertHasMechanism()</code> throws before a wrapper can quietly disable itself. This is useful: it tells you that profile registration, not a motor name, is the first bug to fix.</div></section>
 <section id="parameters"><h2>Local parameter overrides belong with the mechanism</h2><p>Mechanisms define nested builder-style parameter classes implementing <code>Mechanism.Params</code>. The base <code>Mechanism.resolveParams(...)</code> asks the active profile for an override, copies it, and invokes <code>updateFromBot(bot)</code>. This lets the same mechanism retain its own meaningful defaults while a robot profile can override hardware-dependent values.</p>
 <pre>params = resolveParams(Intake.class, new Intake.INTAKE_PARAMS());
