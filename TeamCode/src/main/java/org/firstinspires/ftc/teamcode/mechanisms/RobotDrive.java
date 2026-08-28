@@ -7,6 +7,7 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.drivetrain.MecanumDrive;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
@@ -159,20 +160,20 @@ public class RobotDrive extends Mechanism {
     }
 
     @Override
-    public void periodic(GpBindings GpBindings) {
+    public void periodic(State state) {
         mecanumDrive.periodic();
-        if (GpBindings == null) {
+        if (state == null) {
             return;
         }
-        Button zeroHeadingButton = GpBindings.getCommand(params.ZERO_HEADING_BUTTON);
-        DriveVector driveVector = getDriveVector(GpBindings);
+        Button zeroHeadingButton = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);
+        DriveVector driveVector = getDriveVector(state.gpBindings);
         if (zeroHeadingButton != null && zeroHeadingButton.isPressed()) {
             zeroHeadingOffset();
         }
         setTeleOpDrive(driveVector);
     }
 
-    public Command teleOp(Supplier<GpBindings> GpBindingsSupplier) {
-        return Commands.infinite(() -> periodic(GpBindingsSupplier.get()));
+    public Command teleOp(Supplier<State> stateSupplier) {
+        return Commands.infinite(() -> periodic(stateSupplier.get()));
     }
 }

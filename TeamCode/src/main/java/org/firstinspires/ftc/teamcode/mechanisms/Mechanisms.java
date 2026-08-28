@@ -4,7 +4,8 @@ import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.OpModeHelper;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.Collection;
@@ -21,16 +22,21 @@ import java.util.function.Supplier;
  */
 public class Mechanisms extends Mechanism {
     private final Map<Class<? extends Mechanism>, Mechanism> mechanisms = new LinkedHashMap<>();
-    private GpBindings lastGpBindings;
+    private State lastState;
+    OpModeHelper helper;
 
     public Mechanisms(HardwareMap map, RobotConstants bot) {
         super(map, bot);
+        helper = new OpModeHelper(hardwareMap);
         bot.Mechanisms.stream()
-                .filter(mechanismClass -> mechanismClass != Mechanisms.class)
+                .filter(mechanismClass -> mechanismClass == Mechanisms.class)
                 .sorted(Comparator.comparing(Class::getName))
                 .forEach(mechanismClass -> mechanisms.put(mechanismClass, bot.createMechanism(map, mechanismClass)));
     }
 
+    public void start() {
+        helper.start();
+    }
     public Set<Class<? extends Mechanism>> getConfiguredMechanismClasses() {
         return Collections.unmodifiableSet(mechanisms.keySet());
     }
@@ -56,21 +62,23 @@ public class Mechanisms extends Mechanism {
         return mechanism;
     }
 
-    public GpBindings getLastGpBindings() {
-        return lastGpBindings;
+    public State getLastState() {
+        return lastState;
     }
 
     @Override
-    public void periodic(GpBindings GpBindings) {
-        lastGpBindings = Objects.requireNonNull(GpBindings, "GpBindings");
+    public void periodic(State state) {
+        state.setOpModeHelper(helper);
+        state.setRobotDrive(require(RobotDrive.class));
+        lastState = Objects.requireNonNull(state, "state");
         for (Mechanism mechanism : mechanisms.values()) {
-            mechanism.periodic(GpBindings);
+            mechanism.periodic(state);
         }
     }
 
-    public void schedule(Supplier<GpBindings> GpBindingsSupplier) {
-        Objects.requireNonNull(GpBindingsSupplier, "GpBindingsSupplier");
-        Scheduler.schedule(Commands.infinite(() -> periodic(GpBindingsSupplier.get())));
+    public void schedule(Supplier<State> stateSupplier) {
+        Objects.requireNonNull(stateSupplier, "State Supplier");
+        Scheduler.schedule(Commands.infinite(() -> periodic(stateSupplier.get())));
     }
 
     // Now create wrapper methods on all the mechanisms

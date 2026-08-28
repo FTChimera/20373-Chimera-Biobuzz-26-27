@@ -151,6 +151,10 @@ public class Limelight {
         start(pipeline.getIndex());
     }
 
+    public int getPipelineIndex() {
+        return device.getLatestResult().getPipelineIndex();
+    }
+
     public void start(int pipeline) {
         setPipeline(pipeline);
         device.setPollRateHz(params.POLL_RATE_HZ);

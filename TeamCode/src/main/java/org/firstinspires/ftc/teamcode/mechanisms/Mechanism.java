@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 public abstract class Mechanism {
@@ -22,5 +22,5 @@ public abstract class Mechanism {
         return bot.getMechanismParams(mechanismClass, defaultParams).updateFromBot(bot);
     }
 
-    public abstract void periodic(GpBindings GpBindings);
+    public abstract void periodic(State robotState);
 }

@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanisms;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
@@ -44,21 +45,24 @@ public abstract class IvyAuton extends OpMode {
     @Override
     public void init() {
         Scheduler.reset();
+        mechanisms = Constants.createMechanisms(hardwareMap);
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(paths.getStartingPose());
-        mechanisms = Constants.createMechanisms(hardwareMap);
         intake = mechanisms.require(Intake.class);
     }
 
     public void start() {
-        Scheduler.schedule(Groups.sequential(
-            intake.halfPower(),
-            PedroCommands.follow(follower, paths.getPath1(), true),
-            intake.fullPower(),
-            waitMs(1000),
-            intake.stop(),
-            CommandConverter.toCommand(this::requestOpModeStop)
-        ));
+        Scheduler.schedule(
+                infinite(()->mechanisms.periodic(new State())),
+                Groups.sequential(
+                    intake.halfPower(),
+                    PedroCommands.follow(follower, paths.getPath1(), true),
+                    intake.fullPower(),
+                    waitMs(1000),
+                    intake.stop(),
+                    CommandConverter.toCommand(this::requestOpModeStop)
+                )
+        );
     }
     /**
      * User-defined loop method

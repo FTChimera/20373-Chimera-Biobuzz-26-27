@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
@@ -31,7 +31,6 @@ public class Vision extends Mechanism {
 
     public static class VISION_PARAMS implements Mechanism.Params<VISION_PARAMS> {
         public Limelight.LIMELIGHT_PARAMS LIMELIGHT_PARAMS = new Limelight.LIMELIGHT_PARAMS();
-
         public VISION_PARAMS limelightParams(Limelight.LIMELIGHT_PARAMS params) {
             LIMELIGHT_PARAMS = params.copy();
             return this;
@@ -64,6 +63,9 @@ public class Vision extends Mechanism {
 
     public void setPipeline(Pipeline pipeline) {
         camera.setPipeline(pipeline.cameraPipeline);
+    }
+    public void setPipeline(int pipeline) {
+        camera.setPipeline(pipeline);
     }
 
     public LLResult getLatestResult() {
@@ -129,7 +131,21 @@ public class Vision extends Mechanism {
 
 
     @Override
-    public void periodic(GpBindings GpBindings) {
+    public void periodic(State state) {
+        int prevPipe = getLatestResult().getPipelineIndex();
+        setPipeline(Pipeline.APRIL_TAG);
         update();
+        //now relocalize
+        if (!camera.isDisconnected) {
+            double CAMERA_CONFIDENCE = 0.3; // between 0 and 1
+            Pose camPose = getCachedPose();
+            Pose odomPose = state.robotDrive.getPose();
+            // We can apply the low pass filter easily using a linear combination
+            state.robotDrive.mecanumDrive.setPose(
+                    camPose.linearCombination(odomPose, CAMERA_CONFIDENCE, 1-CAMERA_CONFIDENCE)
+            );
+        }
+
+        setPipeline(prevPipe);
     }
 }

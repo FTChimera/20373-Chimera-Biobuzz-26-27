@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -43,10 +44,11 @@ public class IvyTeleOp extends LinearOpMode {
         drive.setStickCurve((x -> Math.signum(x)*x*x));
         drive.startTeleOpDrive(); // Stop all motors
         vision = mechanisms.get(Vision.class);
-
+        State robotState = new State();
+        robotState.setGpBindings(driverResult);
         Scheduler.schedule(
                 gamepads.updateCommand(),
-                Commands.infinite(() -> mechanisms.periodic(driverResult))
+                Commands.infinite(() -> mechanisms.periodic(robotState))
         );
 
         telemetry.addData("Status", "Initialized");

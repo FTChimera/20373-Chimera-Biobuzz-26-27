@@ -1,18 +1,12 @@
 package org.firstinspires.ftc.teamcode.library.hardware.leds;
 
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
 import com.bylazar.lights.PanelsLights;
-import com.qualcomm.robotcore.hardware.ControlSystem;
-import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.ServoControllerEx;
-import com.qualcomm.robotcore.hardware.configuration.ServoFlavor;
-import com.qualcomm.robotcore.hardware.configuration.annotations.DeviceProperties;
-import com.qualcomm.robotcore.hardware.configuration.annotations.ServoType;
 
 @SuppressWarnings("SpellCheckingInspection")
 /*
@@ -166,6 +160,6 @@ public class RGBIndicator extends Mechanism {
     }
 
     @Override
-    public void periodic(GpBindings GpBindings) {}
+    public void periodic(State state) {}
 
 }

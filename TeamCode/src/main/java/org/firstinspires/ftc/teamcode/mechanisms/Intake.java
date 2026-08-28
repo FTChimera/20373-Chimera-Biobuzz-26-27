@@ -3,11 +3,10 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
-import org.firstinspires.ftc.teamcode.library.hardware.hardwareDevice.SlidesMotor;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Trigger;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
@@ -144,16 +143,16 @@ public class Intake extends Mechanism {
      }
 
     @Override
-    public void periodic(GpBindings GpBindings) {
+    public void periodic(State state) {
         if (!params.ISBEINGUSED) {
             return;
         }
-        if (GpBindings == null) {
+        if (state == null) {
             Stop();
             return;
         }
-        GpCommand forwardCommand = GpBindings.getCommand(params.FORWARD_COMMAND);
-        GpCommand reverseCommand = GpBindings.getCommand(params.REVERSE_COMMAND);
+        GpCommand forwardCommand = state.gpBindings.getCommand(params.FORWARD_COMMAND);
+        GpCommand reverseCommand = state.gpBindings.getCommand(params.REVERSE_COMMAND);
         double power = params.STOP_POWER;
         if (forwardCommand != null) {
             power += forwardCommand.getValue() * params.FULL_POWER;

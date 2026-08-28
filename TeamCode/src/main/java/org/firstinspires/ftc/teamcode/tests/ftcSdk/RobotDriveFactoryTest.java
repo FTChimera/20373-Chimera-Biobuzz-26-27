@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
@@ -14,7 +15,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 public class RobotDriveFactoryTest extends androidTest {
     @Override
     protected void test(HardwareMap hardwareMap, GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
-        GpBindings GpBindings = gamepad1.result();
+        State GpBindings = new State(gamepad1.result());
         RobotDrive drive = Constants.createDrive(hardwareMap);
         drive.setStartingPose(Constants.RED_DEFAULT_START_POSE);
         drive.startTeleOpDrive();
