@@ -1,15 +1,18 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
+import org.firstinspires.ftc.teamcode.library.IntakePallPath;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
-import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.List;
@@ -33,14 +36,19 @@ public class Vision extends Mechanism {
 
     public static class VISION_PARAMS implements Mechanism.Params<VISION_PARAMS> {
         public Limelight.LIMELIGHT_PARAMS LIMELIGHT_PARAMS = new Limelight.LIMELIGHT_PARAMS();
+        public Button AUTO_INTAKE_BUTTON = Button.DPAD_DOWN;
         public VISION_PARAMS limelightParams(Limelight.LIMELIGHT_PARAMS params) {
             LIMELIGHT_PARAMS = params.copy();
+            return this;
+        }
+        public VISION_PARAMS autoIntakeButton(Button button) {
+            AUTO_INTAKE_BUTTON = button.copy();
             return this;
         }
 
         @Override
         public VISION_PARAMS copy() {
-            return new VISION_PARAMS().limelightParams(LIMELIGHT_PARAMS);
+            return new VISION_PARAMS().limelightParams(LIMELIGHT_PARAMS).autoIntakeButton(AUTO_INTAKE_BUTTON);
         }
 
         @Override
@@ -141,25 +149,43 @@ public class Vision extends Mechanism {
      * @return whether a vision pose was applied to the drive localizer
      */
     public boolean forceRelocalize(RobotDrive drive) {
+        double CAMERA_CONFIDENCE = 0.3;//0 to 1
         Objects.requireNonNull(drive, "drive");
         if (!isRunning()) {
             return false;
         }
-        updateRobotOrientation(drive.getPose().getHeading());
-        update();
-        Pose visionPose = getBotposeMT2();
-        if (!hasValidResult() || visionPose == null) {
+        if (!hasValidResult()) {
             return false;
         }
-        drive.setPose(visionPose);
+        int pipeline = getLatestResult().getPipelineIndex();
+        setPipeline(Pipeline.APRIL_TAG);
+        updateRobotOrientation(drive.getPose().getHeading());
+        update();
+        Pose visionPose = getCachedPose();
+        // A simple low-pass filter
+        drive.setPose(visionPose.linearCombination(
+                drive.getPose(),
+                CAMERA_CONFIDENCE,1-CAMERA_CONFIDENCE
+        ));
+        setPipeline(pipeline);
         return true;
     }
 
     @Override
     public void periodic(State state, RobotMode robotMode) {
-        if (state != null && state.robotDrive != null) {
-            updateRobotOrientation(state.robotDrive.getPose().getHeading());
-        }
+        forceRelocalize(state.getRobotDrive());
+        updateRobotOrientation(state.getRobotDrive().getPose().getHeading());
         update();
+
+        if (robotMode==RobotMode.TELEOP) {
+            // now some gamepad commands
+            // some command to follow the generated path to pick up balls
+            // this is if the driver needs to focus on something else
+            // todo move that away from Utils in pathplanner to here so that we can call it in teleop
+            if (state.getGpBindings().getCommand(params.AUTO_INTAKE_BUTTON).wasJustPressed()) {
+                PathChain intakeChain = IntakePallPath.generateIntakePathFromCam();
+                state.getRobotDrive().followIntakePath(intakeChain);
+            }
+        }
     }
 }

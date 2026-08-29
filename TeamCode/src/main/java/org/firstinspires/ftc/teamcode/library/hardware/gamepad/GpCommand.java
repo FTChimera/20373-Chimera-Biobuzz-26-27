@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.library.hardware.gamepad;
 import java.util.Objects;
 
 public abstract class GpCommand {
+    public abstract GpCommand copy();
+
     public enum TYPE {
         ANALOG,
         HYBRID,

@@ -1,9 +1,8 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.pedropathing.geometry.Pose;
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.math.Vector;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
@@ -17,7 +16,6 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Stick;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
-import java.util.function.Supplier;
 
 public class RobotDrive extends Mechanism {
     public static class ROBOT_DRIVE_PARAMS implements Mechanism.Params<ROBOT_DRIVE_PARAMS> {
@@ -155,6 +153,9 @@ public class RobotDrive extends Mechanism {
         return mecanumDrive.getDriveMotors();
     }
 
+    public void followIntakePath(PathChain intakePath) {
+        
+    }
     public boolean isUsingManualDrive() {
         return mecanumDrive.useManualDrive;
     }
@@ -180,9 +181,8 @@ public class RobotDrive extends Mechanism {
             zeroHeadingOffset();
         }
         setTeleOpDrive(driveVector);
+
+        // Relocalization already done each loop
     }
 
-    public Command teleOp(Supplier<State> stateSupplier) {
-        return Commands.infinite(() -> periodic(stateSupplier.get()));
-    }
 }

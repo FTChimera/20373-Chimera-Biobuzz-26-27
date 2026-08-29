@@ -10,18 +10,13 @@ import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
-import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
 public abstract class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
     Robot robot;
-    Intake intake;
-    RobotDrive drive;
-    Vision vision;
 
     // Constructor for TeleOp, takes in the alliance color.
     public TeleOp(AllianceColor col) {
@@ -43,12 +38,9 @@ public abstract class TeleOp extends LinearOpMode {
         GamepadEx driver = new GamepadEx(gamepad1);
         State robotState = new State(RobotMode.TELEOP);
         robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
-        intake = robot.getIntake();
-        drive = robot.requireDrive();
         robot.setStartingPose(getStartingPose());
         robot.setDriveStickCurve(x -> Math.signum(x) * x * x);
         robot.startTeleOpDrive();
-        vision = robot.requireVision();
         robotState.setGpBindings(driver.result());
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -60,8 +52,8 @@ public abstract class TeleOp extends LinearOpMode {
             robot.periodic(robotState);
 
             // Telemetry
-            telemetry.addData("Pose", drive.getPose());
-            telemetry.addData("Intake Power", intake == null ? 0 : intake.getTargetPower());
+            telemetry.addData("Pose", robot.getPose());
+            telemetry.addData("Intake Power", robot.getIntakePower());
             telemetry.update();
         }
         robot.stopVision();

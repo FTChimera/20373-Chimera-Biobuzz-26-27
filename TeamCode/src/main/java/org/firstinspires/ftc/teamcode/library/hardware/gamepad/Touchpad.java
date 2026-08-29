@@ -83,7 +83,6 @@ public class Touchpad extends GpCommand {
     /**
      * Snapshots all touchpad state from the gamepad.
      * Must be called once per loop iteration.
-     * @param gamepad The raw FTC Gamepad
      */
     public Touchpad() {
         super(TYPE.HYBRID, "TOUCHPAD");
@@ -161,6 +160,11 @@ public class Touchpad extends GpCommand {
 
     /** @return The number of fingers currently on the touchpad (0, 1, or 2) */
     public int getFingerCount() { return (curFinger1 ? 1 : 0) + (curFinger2 ? 1 : 0); }
+
+    @Override
+    public GpCommand copy() {
+        return new Touchpad();
+    }
 
     @Override
     public double getValue() {

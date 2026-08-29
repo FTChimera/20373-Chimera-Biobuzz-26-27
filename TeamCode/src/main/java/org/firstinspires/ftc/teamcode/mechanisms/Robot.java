@@ -117,23 +117,27 @@ public class Robot extends Mechanism {
     }
 
     public void startIntake() {
-        requireIntake().FullPower();
+        if (all().contains(Intake.class)) requireIntake().FullPower();
     }
 
     public void startIntakeHalfPower() {
-        requireIntake().HalfPower();
+        if (all().contains(Intake.class)) requireIntake().HalfPower();
     }
 
     public void reverseIntake() {
-        requireIntake().ReverseFullPower();
+        if (all().contains(Intake.class)) requireIntake().ReverseFullPower();
     }
 
     public void stopIntake() {
-        requireIntake().Stop();
+        if (all().contains(Intake.class)) requireIntake().Stop();
+    }
+
+    public double getIntakePower() {
+        return all().contains(Intake.class)? getIntake().getTargetPower(): 0;
     }
 
     public void setIntakePower(double power) {
-        requireIntake().setPower(power);
+        if (all().contains(Intake.class)) requireIntake().setPower(power);
     }
 
     public void setStartingPose(Pose pose) {
@@ -169,15 +173,15 @@ public class Robot extends Mechanism {
     }
 
     public void startVision(Vision.Pipeline pipeline) {
-        requireVision().start(pipeline);
+        if (all().contains(Vision.class)) requireVision().start(pipeline);
     }
 
     public void stopVision() {
-        requireVision().stop();
+        if (all().contains(Vision.class)) requireVision().stop();
     }
 
     public void setVisionPipeline(Vision.Pipeline pipeline) {
-        requireVision().setPipeline(pipeline);
+        if (all().contains(Vision.class)) requireVision().setPipeline(pipeline);
     }
 
     /**

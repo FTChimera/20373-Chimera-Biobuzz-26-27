@@ -72,6 +72,11 @@ public class Trigger extends GpCommand {
     /** @return Which physical trigger this is */
     public Side getSide() { return side; }
 
+    @Override
+    public GpCommand copy() {
+        return new Trigger(side, threshold);
+    }
+
     /** @return Raw analog value [0, 1] */
     public double getValue() { return value; }
 

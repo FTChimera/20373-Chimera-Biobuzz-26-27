@@ -116,6 +116,11 @@ public class Stick extends GpCommand {
     }
 
     @Override
+    public GpCommand copy() {
+        return new Stick(this.side, this.deadzone, this.curve);
+    }
+
+    @Override
     public double getValue() {
         return getMagnitude();
     }
