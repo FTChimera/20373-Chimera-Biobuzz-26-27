@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.opModes.variants;
+package org.firstinspires.ftc.teamcode.tele.variants;
 
 import androidx.annotation.NonNull;
 
@@ -7,12 +7,12 @@ import com.pedropathing.geometry.Pose;
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
-import org.firstinspires.ftc.teamcode.opModes.TeleOp;
+import org.firstinspires.ftc.teamcode.tele.TeleOp;
 
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "BLUE TELEOP", group = "0: TeleOp")
-public class Blue_TeleOp extends TeleOp {
-    public Blue_TeleOp() {
-        super(AllianceColor.BLUE);
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "RED TELEOP", group = "0: TeleOp")
+public class Red_TeleOp extends TeleOp {
+    public Red_TeleOp() {
+        super(AllianceColor.RED);
     }
 
     /**
@@ -30,6 +30,6 @@ public class Blue_TeleOp extends TeleOp {
         if (pose != null && (pose.getX() != 0 || pose.getY() != 0 || pose.getHeading() != 0)) {
             return pose; // If it is not null or 0,0,0 (bug: given by follower at end of auto)
         }
-        return Constants.BLUE_DEFAULT_START_POSE;
+        return Constants.RED_DEFAULT_START_POSE;
     }
 }
