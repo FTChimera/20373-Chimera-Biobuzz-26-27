@@ -101,6 +101,12 @@ public class RobotDrive extends Mechanism {
         mecanumDrive = new MecanumDrive(map, bot, params);
     }
 
+    @Override
+    public void stop() {
+        mecanumDrive.follower.breakFollowing();
+        mecanumDrive.setTeleOpDrive(DriveVector.IDLE);
+    }
+
     public void setStartingPose(Pose pose) {
         mecanumDrive.setStartingPose(pose);
     }
@@ -154,7 +160,7 @@ public class RobotDrive extends Mechanism {
     }
 
     public void followIntakePath(PathChain intakePath) {
-        
+
     }
     public boolean isUsingManualDrive() {
         return mecanumDrive.useManualDrive;

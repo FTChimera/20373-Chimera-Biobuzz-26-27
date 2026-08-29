@@ -56,7 +56,7 @@ public class PlanBuilder {
                     "A Vision mechanism must be supplied through the constructor or withVision() before intakeWVision()."
             );
         }
-        add(new Utils.IntakeWVision(robot, vision, planner().last(), numBalls, failSafePath));
+        add(new Utils.IntakeWVision(robot, planner().last(), numBalls, failSafePath));
         return this;
     }
 

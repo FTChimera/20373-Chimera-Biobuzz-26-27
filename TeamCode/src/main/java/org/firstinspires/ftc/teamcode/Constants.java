@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
+import org.firstinspires.ftc.teamcode.library.planners.Common;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConfigurations;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -29,6 +30,7 @@ public class Constants {
     public static final CoordinateSystem FTC_COORDINATE_SYSTEM = InvertedFTCCoordinates.INSTANCE;
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
+    public static Common common;
     public static final RobotConstants currentBot = RobotConfigurations.FirstRobot();
 
     public static Follower createFollower(HardwareMap hardwareMap) {

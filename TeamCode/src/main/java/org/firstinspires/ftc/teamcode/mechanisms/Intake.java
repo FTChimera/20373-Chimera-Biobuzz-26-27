@@ -98,6 +98,11 @@ public class Intake extends Mechanism {
         Stop();
     }
 
+    @Override
+    public void stop() {
+        Stop();
+    }
+
     public void setPower(double power) {
         if (!params.ISBEINGUSED) return;
         Intake_Motor.setPower(power);
@@ -134,7 +139,7 @@ public class Intake extends Mechanism {
         return setPowerCommand(() -> params.HALF_POWER);
     }
     /** set stop as an ivy command*/
-     public Command stop() {
+     public Command stopCmd() {
          return setPowerCommand(() -> params.STOP_POWER);
      }
         /** set custom power as an ivy command*/

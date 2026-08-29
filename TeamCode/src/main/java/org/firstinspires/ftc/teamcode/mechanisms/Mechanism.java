@@ -27,5 +27,6 @@ public abstract class Mechanism {
         periodic(robotState, robotState == null ? RobotMode.TELEOP : robotState.getRobotMode());
     }
 
+    public abstract void stop();
     public abstract void periodic(State robotState, RobotMode robotMode);
 }

@@ -67,6 +67,7 @@ public class Vision extends Mechanism {
         camera.start(pipeline.cameraPipeline);
     }
 
+    @Override
     public void stop() {
         camera.stop();
     }

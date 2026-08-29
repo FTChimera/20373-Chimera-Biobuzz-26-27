@@ -131,12 +131,11 @@ public class Utils {
             }
         }
 //todo add boundaries class and pass it here, add checks
-        public IntakeWVision(Robot robot, Vision vision, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
+        public IntakeWVision(Robot robot, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
             this.robot = robot;
-            this.vision = vision;
+            this.vision = robot.requireVision();
             this.numBalls = numBalls;
             this.failSafePath = failSafePath;
-            setUpMechanisms();
             fromPrev(prevPlanner);
         }
 

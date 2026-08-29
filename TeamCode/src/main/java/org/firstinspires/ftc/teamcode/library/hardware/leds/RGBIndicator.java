@@ -125,6 +125,12 @@ public class RGBIndicator extends Mechanism {
             PanelsLights.INSTANCE.getLights().initLights(panelsRGB);
         }
     }
+
+    @Override
+    public void stop() {
+        setColor(Color.BLACK);
+    }
+
     public void setCustomPWM(double val) {
         if (!isBeingUsed) return;
         internalSetPwm(val);

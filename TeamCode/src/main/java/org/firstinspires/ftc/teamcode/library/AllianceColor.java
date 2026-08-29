@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.ExportEnumToBlocks;
 @ExportEnumToBlocks(color = 124)
 public enum AllianceColor {
     RED, BLUE;
+    public boolean isRed() {return this==RED;}
     public AllianceColor opposite() {
         return this == RED ? BLUE : RED;
     }

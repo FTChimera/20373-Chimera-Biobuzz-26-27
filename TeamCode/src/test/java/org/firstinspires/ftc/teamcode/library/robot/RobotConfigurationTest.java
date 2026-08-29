@@ -138,6 +138,11 @@ public class RobotConfigurationTest {
         }
 
         @Override
+        public void stop() {
+
+        }
+
+        @Override
         public void periodic(State state, RobotMode robotMode) {}
     }
 

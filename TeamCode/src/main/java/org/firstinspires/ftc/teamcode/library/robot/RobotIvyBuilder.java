@@ -100,7 +100,7 @@ public final class RobotIvyBuilder {
     }
 
     public Command stopIntake() {
-        return robot.requireIntake().stop();
+        return robot.requireIntake().stopCmd();
     }
 
     public Command setStartingPose(Pose pose) {
