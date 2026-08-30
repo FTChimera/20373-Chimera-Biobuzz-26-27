@@ -28,6 +28,7 @@ public class Blackboard {
             new Item(Caption.ALLIANCE, AllianceColor.RED)
     ));
 
+    public static List<Item> getAll() {return items;}
     public static Item get(Caption cap) {
         for (Item item : items) {
             if (item.cap == cap) {

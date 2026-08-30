@@ -75,8 +75,7 @@ class OpModeHelper {
         for (hub in allHubs) {
             hub.clearBulkCache()
         }
-        dt = dtTimer.get()
-        dtTimer.reset()
+        dt = dtTimer.dt()
     }
     fun close() {
         if (state != State.INITIALIZED && state != State.STARTED && state != State.LOOP) {
@@ -85,5 +84,8 @@ class OpModeHelper {
         allHubs = emptyList()
         dtTimer.reset()
         state = State.STOPPED
+    }
+    fun getOpModeTime(): Double {
+        return dtTimer.get(TimeUnit.SECONDS)
     }
 }

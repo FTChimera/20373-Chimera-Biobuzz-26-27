@@ -5,7 +5,6 @@ import com.pedropathing.paths.PathChain;
 
 
 public class IntakePallPath {
-    public static final double DETECTOR_TARGET_HEIGHT_INCHES = 1.5;
     public static final double AREA_DISTANCE_SCALE = 18.0;//tune - move to ll
     public static final double MIN_CONFIDENCE = 0.35;
     public static final double MIN_TARGET_AREA = 0.15;

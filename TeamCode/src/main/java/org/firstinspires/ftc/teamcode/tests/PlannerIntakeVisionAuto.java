@@ -30,7 +30,6 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
     private Robot robot;
     private RobotDrive drive;
     private Intake intake;
-    private Vision vision;
     private PathPlannerList plan;
 
     @Override
@@ -39,8 +38,7 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
         robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
         drive = robot.require(RobotDrive.class);
         intake = robot.get(Intake.class);
-        vision = robot.require(Vision.class);
-        plan = new PlanBuilder(robot, vision, START_POSE)
+        plan = new PlanBuilder(robot, START_POSE)
                 .linearPathTo(STAGING_POSE)
                 .followPath(createApproachPath())
                 .waitMs(250)
@@ -58,7 +56,8 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
             return;
         }
 
-        vision.start(Vision.Pipeline.NEURAL_DETECTOR);
+        robot.start();
+        robot.startVision(Vision.Pipeline.NEURAL_DETECTOR);
 
         plan.schedule();
 
@@ -72,7 +71,6 @@ public class PlannerIntakeVisionAuto extends LinearOpMode {
             telemetry.update();
         }
 
-        vision.stop();
         Scheduler.reset();
     }
 

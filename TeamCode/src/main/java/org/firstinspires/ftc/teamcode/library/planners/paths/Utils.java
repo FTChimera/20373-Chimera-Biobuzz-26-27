@@ -13,6 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.Constants;
 import org.firstinspires.ftc.teamcode.library.Timer;
+import org.firstinspires.ftc.teamcode.library.game.Pollen;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.library.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -85,7 +86,6 @@ public class Utils {
         }
     }
     public static class IntakeWVision implements PathPlanner {
-        private static final double DETECTOR_TARGET_HEIGHT_INCHES = 1.5;
         private static final double AREA_DISTANCE_SCALE = 18.0;//tune - move to ll
         private static final double MIN_CONFIDENCE = 0.35;
         private static final double MIN_TARGET_AREA = 0.15;
@@ -343,7 +343,7 @@ public class Utils {
         }
 
         private double estimateForwardDistanceInches(LLResultTypes.DetectorResult detector, double normalizedArea) {
-            double heightDelta = DETECTOR_TARGET_HEIGHT_INCHES - vision.getLensHeightInches();
+            double heightDelta = Pollen.RADIUS - vision.getLensHeightInches();
             double angleRadians = MathUtils.units.toRadians(vision.getMountAngleDegrees() + detector.getTargetYDegrees());
             double tangent = Math.tan(angleRadians);
 

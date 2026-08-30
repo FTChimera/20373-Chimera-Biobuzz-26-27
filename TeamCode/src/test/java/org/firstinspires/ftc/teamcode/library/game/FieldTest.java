@@ -13,7 +13,7 @@ public class FieldTest {
     @Test
     public void shapeContactStateDistinguishesContainedPartialAndOutsideRobotSweeps() {
         assertEquals(
-                Field.ContactState.OVERLAPPING,
+                Field.ContactState.CONTAINED,
                 Field.Shapes.SOME_CIRCLE.getContactState(new Pose(30, 40), new Pose(), 0.0, 4.0, 4.0)
         );
         assertEquals(
@@ -29,7 +29,7 @@ public class FieldTest {
     @Test
     public void boundaryContactStateUsesVelocitySweepToCatchCrossings() {
         assertEquals(
-                Field.ContactState.OVERLAPPING,
+                Field.ContactState.CONTAINED,
                 Field.Boundaries.AUTO_MID_LINE_BLUE.getContactState(new Pose(30, 72), new Vector(), 0.25)
         );
         assertEquals(

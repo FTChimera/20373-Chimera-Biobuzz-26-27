@@ -49,6 +49,7 @@ public class Robot extends Mechanism {
 
     public void start() {
         helper.start();
+        startVision(Vision.Pipeline.APRIL_TAG);
     }
     public Set<Class<? extends Mechanism>> getConfiguredMechanismClasses() {
         return Collections.unmodifiableSet(mechanisms.keySet());
@@ -223,8 +224,14 @@ public class Robot extends Mechanism {
 
     @Override
     public void stop() {
+        stop(true);
+    }
+    public void stop(boolean saveEndVals) {
+        for (Mechanism m: all()) {
+            m.stop();
+        }
         helper.close();
-        saveEndVals();
+        if (saveEndVals) saveEndVals();
     }
 
     public void saveEndVals() {
@@ -246,9 +253,15 @@ public class Robot extends Mechanism {
                 Blackboard.put(Blackboard.Caption.ALLIANCE, lastState.getAllianceColor());
             }
         } else {
-            Blackboard.Item driver = Blackboard.get(Blackboard.Caption.DRIVER);
-            Blackboard.resetAll();
-            Blackboard.put(driver); // Put back driver
+            for (Blackboard.Item i: Blackboard.getAll()) {
+                if (i.getCaption()!= Blackboard.Caption.DRIVER) {
+                    i.reset();
+                }
+            }
         }
+    }
+
+    public double getOpModeTimeSeconds() {
+        return helper.getOpModeTime();
     }
 }

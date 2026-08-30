@@ -201,7 +201,7 @@ public class Field {
 
         Geometry robotSweep = createRobotSweep(position, velocity, deltaTime, robotWidth, robotLength);
         if (polygon.covers(robotSweep)) {
-            return ContactState.OVERLAPPING;
+            return ContactState.CONTAINED;
         }
         if (polygon.intersects(robotSweep)) {
             return ContactState.PARTIAL;
@@ -290,6 +290,6 @@ public class Field {
     public enum ContactState {
         OUTSIDE,
         PARTIAL,
-        OVERLAPPING
+        CONTAINED
     }
 }

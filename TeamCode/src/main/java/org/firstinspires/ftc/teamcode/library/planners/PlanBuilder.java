@@ -14,21 +14,14 @@ public class PlanBuilder {
     Robot robot;
     Vision vision;
 
-    public PlanBuilder(Robot robot, Pose startPose) {
-        this(robot, null, startPose);
-    }
 
-    public PlanBuilder(Robot robot, Vision vision, Pose startPose) {
+    public PlanBuilder(Robot robot, Pose startPose) {
         this.robot = robot;
-        this.vision = vision;
+        this.vision = robot.getVision();
         list = new PathPlannerList();
         list.add(0, new Utils.StartPose(robot, startPose));
     }
 
-    public PlanBuilder withVision(Vision vision) {
-        this.vision = Objects.requireNonNull(vision, "vision");
-        return this;
-    }
     public PlanBuilder add(PathPlanner pathPlanner) {
         list.add(pathPlanner);
         return this;
