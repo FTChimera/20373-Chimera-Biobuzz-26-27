@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.library.math;
 import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -144,9 +145,7 @@ final class SumEquation implements Equation {
                     ? term.derivative()
                     : term.indefiniteIntegral();
             Term[] resultTerms = result.getTerms();
-            for (Term resultTerm : resultTerms) {
-                mapped.add(resultTerm);
-            }
+            mapped.addAll(Arrays.asList(resultTerms));
         }
         return of(mapped.toArray(new Term[0]));
     }
