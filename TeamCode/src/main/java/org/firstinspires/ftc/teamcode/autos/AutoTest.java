@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.autos;
 
+import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -17,6 +18,7 @@ public class AutoTest extends OpMode {
     Robot robot;
     boolean isStopped=false;
 
+    Command plan;
     /**
      * User-defined init method
      * <p>
@@ -30,7 +32,7 @@ public class AutoTest extends OpMode {
         planBuilder.add(new FromTestPose.ToIntakeThreeTest(robot, planBuilder.planner().last()));
         planBuilder.add(new Utils.Wait(planBuilder.build().last(), 1000));
         planBuilder.add(new FromTestPose.ToIntakeThreeTest(robot, planBuilder.planner().last()));
-        planBuilder.schedule();
+        plan = planBuilder.schedule();
     }
     @Override public void start() {robot.start();}
     /**
@@ -50,7 +52,7 @@ public class AutoTest extends OpMode {
             }
         }
 
-        if (robot.getOpModeTimeSeconds() >= RobotMode.AUTONOMOUS.timeLimit() - 1) {
+        if (robot.getOpModeTimeSeconds() >= RobotMode.AUTONOMOUS.timeLimit() - 1 || Scheduler.isRunning(plan)) {
             //todo follow path to park
         }
     }

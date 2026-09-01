@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.planners;
 
 import com.pedropathing.geometry.Pose;
+import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.PathChain;
 
 import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
@@ -62,7 +63,7 @@ public class PlanBuilder {
         return list;
     }
 
-    public void schedule() {
-        list.schedule();
+    public Command schedule() {
+        return list.schedule();
     }
 }

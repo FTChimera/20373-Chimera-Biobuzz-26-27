@@ -89,8 +89,8 @@ public class RobotConfigurations {
                 .frontRightMotorDirection(Direction.FORWARD)
                 .backLeftMotorDirection(Direction.REVERSE)
                 .backRightMotorDirection(Direction.FORWARD)
-                .botWidth(18.0)
-                .botLength(18)
+                .botWidth(17.008)
+                .botLength(14.1)
                 .xVelocity(0)
                 .yVelocity(0)
                 // IMU CONSTANTS

@@ -34,9 +34,11 @@ public class PathPlannerList extends ArrayList<PathPlanner> implements List<Path
         return get(0);
     }
 
-    public void schedule() {
+    public Command schedule() {
         List<Command> commands = new ArrayList<>();
         forEach(pathPlanner -> commands.add(pathPlanner.asCommand()));
-        Scheduler.schedule(sequential(commands.toArray(new Command[0])));
+        Command cmd = sequential(commands.toArray(new Command[0]));
+        Scheduler.schedule(cmd);
+        return cmd;
     }
 }
