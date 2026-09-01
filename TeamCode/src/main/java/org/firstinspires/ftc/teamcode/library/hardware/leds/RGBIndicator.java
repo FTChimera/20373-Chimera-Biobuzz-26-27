@@ -5,7 +5,7 @@ import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
 
-import com.bylazar.lights.PanelsLights;
+//import com.bylazar.lights.PanelsLights;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -112,7 +112,7 @@ public class RGBIndicator extends Mechanism {
     private Servo rgb;
     public RGBIndicator_PARAMS params;
     private final boolean isBeingUsed;
-    com.bylazar.lights.RGBIndicator panelsRGB;
+//    com.bylazar.lights.RGBIndicator panelsRGB;
     public RGBIndicator(HardwareMap hardwareMap, RobotConstants bot) {
         super(hardwareMap, bot);
         this.params = resolveParams(RGBIndicator.class, new RGBIndicator_PARAMS());
@@ -121,8 +121,8 @@ public class RGBIndicator extends Mechanism {
         this.rgb = hardwareMap.get(Servo.class, params.HARDWAREMAP_NAME);
         rgb.setPosition(BLACK_PWM);
         if (params.type.panels()) {
-            panelsRGB = new com.bylazar.lights.RGBIndicator(params.PANELS_NAME);
-            PanelsLights.INSTANCE.getLights().initLights(panelsRGB);
+//            panelsRGB = new com.bylazar.lights.RGBIndicator(params.PANELS_NAME);
+//            PanelsLights.INSTANCE.getLights().initLights(panelsRGB);
         }
     }
 
@@ -142,7 +142,7 @@ public class RGBIndicator extends Mechanism {
     public double getPWM() {
         if (!isBeingUsed) return 0.0;
         if (params.type.hardware()) return rgb.getPosition();
-        if (params.type.panels()) return panelsRGB.getValue();
+        //if (params.type.panels()) return panelsRGB.getValue();
         return 0.0;
     }
 
@@ -162,8 +162,8 @@ public class RGBIndicator extends Mechanism {
                 rgb.setPosition(pwm);
         }
         if (params.type.panels()) {
-            panelsRGB.update(pwm);
-            PanelsLights.INSTANCE.getLights().update();
+//            panelsRGB.update(pwm);
+//            PanelsLights.INSTANCE.getLights().update();
         }
     }
 

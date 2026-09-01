@@ -50,8 +50,8 @@ dependencies {
     testImplementation "io.mockk:mockk:1.14.5"
     testImplementation "io.mockk:mockk-android:1.14.5"
     testImplementation "io.mockk:mockk-agent:1.14.5"
-    implementation 'org.psilynx.psikit:core:0.2.0'
-    implementation 'org.psilynx.psikit:ftc:0.2.0'
+    //implementation 'org.psilynx.psikit:core:0.2.0'
+   // implementation 'org.psilynx.psikit:ftc:0.2.0'
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     androidTestImplementation 'junit:junit:4.13.2'
