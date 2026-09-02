@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
-import org.firstinspires.ftc.teamcode.library.IntakePallPath;
+import org.firstinspires.ftc.teamcode.library.IntakeBallPath;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
@@ -184,7 +184,7 @@ public class Vision extends Mechanism {
             // this is if the driver needs to focus on something else
             // todo move that away from Utils in pathplanner to here so that we can call it in teleop
             if (state.getGpBindings().getCommand(params.AUTO_INTAKE_BUTTON).wasJustPressed()) {
-                PathChain intakeChain = IntakePallPath.generateIntakePathFromCam();
+                PathChain intakeChain = IntakeBallPath.generateIntakePathFromCam();
                 state.getRobotDrive().followIntakePath(intakeChain);
             }
         }
