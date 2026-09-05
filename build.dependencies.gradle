@@ -2,7 +2,6 @@ repositories {
     mavenCentral()
     google() // Needed for androidx
     maven { url = 'https://jitpack.io' } // auto tune
-    maven { url = "https://mymaven.bylazar.com/releases" }
 }
 
 dependencies {
