@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.library
 
 import com.qualcomm.hardware.lynx.LynxModule
 import com.qualcomm.robotcore.hardware.HardwareMap
+import com.qualcomm.robotcore.hardware.VoltageSensor
 import java.util.concurrent.TimeUnit
 
 /**
@@ -42,6 +43,10 @@ class OpModeHelper {
     lateinit var hardwareMap: HardwareMap
     lateinit var dtTimer: Timer
     var dt: Double = 0.0
+    lateinit var voltageTimer: Timer
+    var batteryVoltage: Double = 0.0
+        get() {return getVoltage()}
+    lateinit var voltageSensors: HardwareMap.DeviceMapping<VoltageSensor>
     lateinit var allHubs: List<LynxModule>
 
     fun init(hardwareMap: HardwareMap) {
@@ -49,6 +54,8 @@ class OpModeHelper {
             throw IllegalStateException("OpModeHelper is already initialized")
         }
         this.hardwareMap = hardwareMap
+        voltageSensors = hardwareMap.voltageSensor
+        voltageTimer = Timer(TimeUnit.MILLISECONDS)
         dtTimer = Timer(TimeUnit.MILLISECONDS)
         allHubs = hardwareMap.getAll(LynxModule::class.java)
         for (hub in allHubs) {
@@ -62,6 +69,7 @@ class OpModeHelper {
             throw IllegalStateException("OpModeHelper is not initialized or is already started")
         }
         dtTimer.reset()
+        voltageTimer.reset()
         state = state.next()
     }
 
@@ -76,6 +84,21 @@ class OpModeHelper {
             hub.clearBulkCache()
         }
         dt = dtTimer.dt()
+    }
+
+    private fun getVoltage(): Double {
+        return getBatteryVoltage(false)
+    }
+
+    fun getBatteryVoltage(force: Boolean): Double {
+        if (voltageTimer.get()<300 && !force) return batteryVoltage
+        var result = Double.MAX_VALUE
+        for (sensor in voltageSensors) {
+            result = result.coerceAtMost(sensor.voltage)
+        }
+        batteryVoltage = result
+        voltageTimer.reset()
+        return result
     }
     fun close() {
         if (state != State.INITIALIZED && state != State.STARTED && state != State.LOOP) {

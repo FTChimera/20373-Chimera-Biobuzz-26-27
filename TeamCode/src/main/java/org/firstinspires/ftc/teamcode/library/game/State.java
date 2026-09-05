@@ -4,12 +4,12 @@ package org.firstinspires.ftc.teamcode.library.game;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.OpModeHelper;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
-import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
+import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 
 public class State {
     public GpBindings gpBindings;
     public OpModeHelper opModeHelper;
-    public RobotDrive robotDrive;
+    public Robot robot;
     public AllianceColor allianceColor;
     private RobotMode robotMode;
 
@@ -21,12 +21,12 @@ public class State {
         return allianceColor;
     }
 
-    public void setRobotDrive(RobotDrive robotDrive) {
-        this.robotDrive = robotDrive;
+    public void setRobot(Robot robot) {
+        this.robot = robot;
     }
 
-    public RobotDrive getRobotDrive() {
-        return robotDrive;
+    public Robot getRobot() {
+        return robot;
     }
 
     public void setOpModeHelper(OpModeHelper opModeHelper) {
@@ -56,10 +56,10 @@ public class State {
         this.gpBindings = gpBindings;
     }
 
-    public State(GpBindings b, OpModeHelper helper, RobotDrive robotDrive) {
+    public State(GpBindings b, OpModeHelper helper, Robot robot) {
         this(b);
         this.opModeHelper = helper;
-        this.robotDrive = robotDrive;
+        this.robot = robot;
     }
 
     public RobotMode getRobotMode() {

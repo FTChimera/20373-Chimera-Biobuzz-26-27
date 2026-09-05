@@ -55,6 +55,8 @@ public class Robot extends Mechanism {
         return Collections.unmodifiableSet(mechanisms.keySet());
     }
 
+    public double getVoltage() {return helper.getBatteryVoltage();}
+    public double getVoltage(boolean force) {return helper.getBatteryVoltage(force);}
     public RobotMode getRobotMode() {
         return robotMode;
     }
@@ -210,7 +212,7 @@ public class Robot extends Mechanism {
         helper.update();
         state.setRobotMode(robotMode);
         state.setOpModeHelper(helper);
-        state.setRobotDrive(getDrive());
+        state.setRobot(this);
         lastState = state;
         for (Mechanism mechanism : mechanisms.values()) {
             mechanism.periodic(state, robotMode);

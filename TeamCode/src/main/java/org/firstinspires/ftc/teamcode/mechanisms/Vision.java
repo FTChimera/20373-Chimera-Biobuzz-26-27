@@ -174,8 +174,8 @@ public class Vision extends Mechanism {
 
     @Override
     public void periodic(State state, RobotMode robotMode) {
-        forceRelocalize(state.getRobotDrive());
-        updateRobotOrientation(state.getRobotDrive().getPose().getHeading());
+        forceRelocalize(state.getRobot().getDrive());
+        updateRobotOrientation(state.getRobot().getPose().getHeading());
         update();
 
         if (robotMode==RobotMode.TELEOP) {
@@ -185,7 +185,7 @@ public class Vision extends Mechanism {
             // todo move that away from Utils in pathplanner to here so that we can call it in teleop
             if (state.getGpBindings().getCommand(params.AUTO_INTAKE_BUTTON).wasJustPressed()) {
                 PathChain intakeChain = IntakeBallPath.generateIntakePathFromCam();
-                state.getRobotDrive().followIntakePath(intakeChain);
+                state.getRobot().getDrive().followIntakePath(intakeChain);
             }
         }
     }

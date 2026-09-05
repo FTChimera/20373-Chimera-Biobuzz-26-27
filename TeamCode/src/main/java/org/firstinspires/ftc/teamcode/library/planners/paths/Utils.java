@@ -23,6 +23,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
+    public static class NullPlanner extends StartPose {
+
+        public NullPlanner(Robot robot, Pose pose) {
+            super(robot, pose);
+        }
+    }
     public static class StartPose implements PathPlanner {
         Pose pose;
         Robot robot;
