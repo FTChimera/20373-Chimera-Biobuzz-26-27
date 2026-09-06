@@ -22,7 +22,7 @@ import java.util.function.Supplier;
 @Utility(name = "Pedro Pathing TeleOp Test")
 public class PedroPathingTeleOpTest extends OpMode {
     private Follower follower;
-    public static Pose startingPose; //See ExampleAuto to understand how to use this
+    public static Pose startingPose = new Pose(); //See ExampleAuto to understand how to use this
     private boolean automatedDrive;
     boolean isRobotCentric = false;
     private Supplier<PathChain> pathChain;
