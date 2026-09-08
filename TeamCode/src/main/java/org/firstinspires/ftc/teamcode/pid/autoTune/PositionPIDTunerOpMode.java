@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
 
 import org.firstinspires.ftc.teamcode.pid.autoTune.master.PIDMaster;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
@@ -25,7 +23,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
  *         range repeatedly.</li>
  *     <li>Run this OpMode. Press start, then stand back -- the mechanism will
  *         oscillate on its own for a few seconds.</li>
- *     <li>Read the candidate gain sets off the Driver Station panelsTelemetry.</li>
+ *     <li>Read the candidate gain sets off the Driver Station telemetry.</li>
  *     <li>Optional: hold gamepad1.a to live-test the "no overshoot" candidate
  *         by holding the mechanism at the target position with a real PID loop.</li>
  * </ol>
@@ -41,7 +39,6 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
         GamepadEx driver = new GamepadEx(gamepad1);
         
         PIDMaster pid = new PIDMaster(
@@ -50,11 +47,11 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
                 TuningConstants.RELAY_AMPLITUDE, TuningConstants.CYCLES_TO_COLLECT, TuningConstants.CYCLES_TO_IGNORE,
                 TuningConstants.RELAY_TEST_TIMEOUT_S, null, 0, TuningConstants.TUNE_INTEGRAL_TERM, 0, TuningConstants.POSITION_LIVE_TEST_GAIN);
 
-        panelsTelemetry.addLine("=== PID Auto Tuner (Position) ===");
-        panelsTelemetry.addData("Motor", TuningConstants.MOTOR_NAME);
-        panelsTelemetry.addData("Target offset (ticks)", TuningConstants.POSITION_TARGET_TICKS);
-        panelsTelemetry.addLine("Press START. The mechanism will oscillate on its own.");
-        panelsTelemetry.update();
+        telemetry.addLine("=== PID Auto Tuner (Position) ===");
+        telemetry.addData("Motor", TuningConstants.MOTOR_NAME);
+        telemetry.addData("Target offset (ticks)", TuningConstants.POSITION_TARGET_TICKS);
+        telemetry.addLine("Press START. The mechanism will oscillate on its own.");
+        telemetry.update();
 
         waitForStart();
         if (isStopRequested()) {
@@ -65,14 +62,14 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
         // Phase 1: relay test (runs automatically)
         while (opModeIsActive() && !pid.isTuningComplete()) {
             pid.tuningStep(getRuntime());
-            for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-            panelsTelemetry.update();
+            for (String line : pid.getTelemetryLines()) telemetry.addLine(line);
+            telemetry.update();
         }
 
         if (pid.timedOut() || !pid.isTuningSuccessful()) {
             while (opModeIsActive()) {
-                for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-                panelsTelemetry.update();
+                for (String line : pid.getTelemetryLines()) telemetry.addLine(line);
+                telemetry.update();
             }
             pid.stop();
             return;
@@ -81,16 +78,16 @@ public class PositionPIDTunerOpMode extends LinearOpMode {
         // Phase 2: show results, optionally live-test
         while (opModeIsActive()) {
             driver.update();
-            for (String line : pid.getResultTelemetryLines()) panelsTelemetry.addLine(line);
+            for (String line : pid.getResultTelemetryLines()) telemetry.addLine(line);
 
             if (driver.isPressed(Button.A)) {
-                panelsTelemetry.addLine("");
-                for (String line : pid.liveTestStep(getRuntime())) panelsTelemetry.addLine(line);
+                telemetry.addLine("");
+                for (String line : pid.liveTestStep(getRuntime())) telemetry.addLine(line);
             } else {
                 pid.stopLiveTest();
             }
 
-            panelsTelemetry.update();
+            telemetry.update();
         }
         pid.stop();
     }

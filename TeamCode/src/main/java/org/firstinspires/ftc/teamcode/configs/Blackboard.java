@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.configs;
 
-import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.geometry.Pose;
 
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
@@ -20,7 +19,6 @@ import java.util.List;
  * - Configurable fields for tuning parameters at runtime
  *
  */
-@Configurable
 public class Blackboard {
     private static final List<Item> items = new ArrayList<>(List.of(
             new Item(Caption.POSE, new Pose()),

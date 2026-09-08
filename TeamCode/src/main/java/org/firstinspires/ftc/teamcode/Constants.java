@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.ftc.InvertedFTCCoordinates;
 import com.pedropathing.geometry.CoordinateSystem;
@@ -23,7 +22,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 import java.util.Set;
 
-@Configurable
 public class Constants {
     /** https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html#coordinate-system
      * Look when game is released and change the constant */

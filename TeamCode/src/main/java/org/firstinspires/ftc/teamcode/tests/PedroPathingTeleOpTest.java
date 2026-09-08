@@ -1,7 +1,4 @@
 package org.firstinspires.ftc.teamcode.tests;
-import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -18,7 +15,6 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
 import java.util.function.Supplier;
 
 @SuppressWarnings("SpellCheckingInspection")
-@Configurable
 @Utility(name = "Pedro Pathing TeleOp Test")
 public class PedroPathingTeleOpTest extends OpMode {
     private Follower follower;
@@ -26,7 +22,6 @@ public class PedroPathingTeleOpTest extends OpMode {
     private boolean automatedDrive;
     boolean isRobotCentric = false;
     private Supplier<PathChain> pathChain;
-    private TelemetryManager telemetryM;
     public static double DegreesOffset = 90;
     private GamepadEx driver;
 
@@ -36,7 +31,6 @@ public class PedroPathingTeleOpTest extends OpMode {
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? Constants.RED_DEFAULT_START_POSE: startingPose);
         follower.update();
-        telemetryM = PanelsTelemetry.INSTANCE.getTelemetry();
 
         pathChain = () -> follower.pathBuilder() //Lazy Curve Generation
                 .addPath(new Path(new BezierLine(follower::getPose, Constants.BLUE_DEFAULT_START_POSE)))
@@ -86,11 +80,11 @@ public class PedroPathingTeleOpTest extends OpMode {
 
         // Call this once per loop after any teleop/path command updates.
         follower.update();
-        telemetryM.update();
+        telemetry.update();
 
-        telemetryM.debug("position", follower.getPose());
-        telemetryM.debug("velocity", follower.getVelocity());
-        telemetryM.debug("automatedDrive", automatedDrive);
-        telemetryM.debug("Drive Mode", isRobotCentric?"Robot Centric":"Field Centric");
+        telemetry.addData("position", follower.getPose());
+        telemetry.addData("velocity", follower.getVelocity());
+        telemetry.addData("automatedDrive", automatedDrive);
+        telemetry.addData("Drive Mode", isRobotCentric?"Robot Centric":"Field Centric");
     }
 }

@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.library.robot;
 
-import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.localization.constants.PinpointConstants;
@@ -17,7 +16,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Vision;
  * A utility class to hold all the robot constants for each bot
  * Not to be confused with RobotConstants, which is a base class for all constants
  */
-@Configurable
 public class RobotConfigurations {
 
     public static RobotConstants OldDECODERobotTesting() {

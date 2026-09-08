@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
 
-import com.bylazar.configurables.annotations.Configurable;
 
-@Configurable
 public class TuningConstants {
     private TuningConstants() {}
 

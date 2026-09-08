@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
 
 import org.firstinspires.ftc.teamcode.pid.autoTune.master.PIDMaster;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
@@ -25,7 +23,7 @@ import java.util.Locale;
  *     <li>Run this OpMode and press Start.</li>
  *     <li><b>Phase 1 (relay test):</b> motor oscillates around TARGET_RPM automatically.</li>
  *     <li><b>Phase 2 (feedforward sweep):</b> motor ramps through power levels to compute kF.</li>
- *     <li>Read the candidate gain sets from panelsTelemetry.</li>
+ *     <li>Read the candidate gain sets from telemetry.</li>
  *     <li>Hold gamepad1.A to live-test the classic ZN candidate.</li>
  * </ol>
  */
@@ -34,7 +32,6 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
         GamepadEx driver = new GamepadEx(gamepad1);
         // Convert RPM target to ticks/sec using: ticks/sec = (RPM * TICKS_PER_REV) / 60.0
         double targetTicksPerSec = TuningConstants.targetTicksPerSec();
@@ -47,13 +44,13 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
                 TuningConstants.FEEDFORWARD_SETTLE_TIME_S, TuningConstants.TUNE_INTEGRAL_TERM,
                 TuningConstants.TICKS_PER_REV, TuningConstants.VELOCITY_LIVE_TEST_GAIN);
 
-        panelsTelemetry.addLine("=== PIDF Auto Tuner (Velocity) ===");
-        panelsTelemetry.addData("Motor", TuningConstants.MOTOR_NAME);
-        panelsTelemetry.addData("TICKS_PER_REV", TuningConstants.TICKS_PER_REV);
-        panelsTelemetry.addData("Target", String.format(Locale.US, "%.1f RPM  (%.1f ticks/s)",
+        telemetry.addLine("=== PIDF Auto Tuner (Velocity) ===");
+        telemetry.addData("Motor", TuningConstants.MOTOR_NAME);
+        telemetry.addData("TICKS_PER_REV", TuningConstants.TICKS_PER_REV);
+        telemetry.addData("Target", String.format(Locale.US, "%.1f RPM  (%.1f ticks/s)",
                 TuningConstants.TARGET_RPM, targetTicksPerSec));
-        panelsTelemetry.addLine("Press START. Phase 1: relay test (automatic).");
-        panelsTelemetry.update();
+        telemetry.addLine("Press START. Phase 1: relay test (automatic).");
+        telemetry.update();
 
         waitForStart();
         if (isStopRequested()) {
@@ -63,14 +60,14 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 
         while (opModeIsActive() && !pid.isTuningComplete()) {
             pid.tuningStep(getRuntime());
-            for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-            panelsTelemetry.update();
+            for (String line : pid.getTelemetryLines()) telemetry.addLine(line);
+            telemetry.update();
         }
 
         if (pid.timedOut() || !pid.isTuningSuccessful()) {
             while (opModeIsActive()) {
-                for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-                panelsTelemetry.update();
+                for (String line : pid.getTelemetryLines()) telemetry.addLine(line);
+                telemetry.update();
             }
             pid.stop();
             return;
@@ -78,14 +75,14 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 
         while (opModeIsActive()) {
             driver.update();
-            for (String line : pid.getResultTelemetryLines()) panelsTelemetry.addLine(line);
+            for (String line : pid.getResultTelemetryLines()) telemetry.addLine(line);
             if (driver.isPressed(Button.A)) {
-                panelsTelemetry.addLine("");
-                for (String line : pid.liveTestStep(getRuntime())) panelsTelemetry.addLine(line);
+                telemetry.addLine("");
+                for (String line : pid.liveTestStep(getRuntime())) telemetry.addLine(line);
             } else {
                 pid.stopLiveTest();
             }
-            panelsTelemetry.update();
+            telemetry.update();
         }
         pid.stop();
     }

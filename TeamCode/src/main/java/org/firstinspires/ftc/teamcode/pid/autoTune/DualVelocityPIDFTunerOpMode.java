@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.pid.autoTune;
 
 import org.firstinspires.ftc.teamcode.pid.autoTune.master.DualMotorPIDMaster;
-import com.bylazar.telemetry.PanelsTelemetry;
-import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
@@ -43,7 +41,6 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        TelemetryManager panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
         GamepadEx driver = new GamepadEx(gamepad1);
         
         // Convert RPM target to ticks/sec using: ticks/sec = (RPM * TICKS_PER_REV) / 60.0
@@ -65,29 +62,29 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
                 TuningConstants.DUAL_ENCODERS,
                 TuningConstants.VELOCITY_LIVE_TEST_GAIN);
 
-        panelsTelemetry.addLine("=== PIDF Auto Tuner (Dual Velocity) ===");
-        panelsTelemetry.addData("Motor 1", TuningConstants.MOTOR_NAME + (TuningConstants.REVERSED ? " (reversed)" : ""));
-        panelsTelemetry.addData("Motor 2", TuningConstants.MOTOR_NAME_2 + (TuningConstants.REVERSED_2 ? " (reversed)" : ""));
-        panelsTelemetry.addData("Encoder mode", TuningConstants.DUAL_ENCODERS ? "DUAL (both motors)" : "SINGLE (motor 1 only)");
-        panelsTelemetry.addData("TICKS_PER_REV", TuningConstants.TICKS_PER_REV);
-        panelsTelemetry.addData("Target", String.format(Locale.US, "%.1f RPM  (%.1f ticks/s)",
+        telemetry.addLine("=== PIDF Auto Tuner (Dual Velocity) ===");
+        telemetry.addData("Motor 1", TuningConstants.MOTOR_NAME + (TuningConstants.REVERSED ? " (reversed)" : ""));
+        telemetry.addData("Motor 2", TuningConstants.MOTOR_NAME_2 + (TuningConstants.REVERSED_2 ? " (reversed)" : ""));
+        telemetry.addData("Encoder mode", TuningConstants.DUAL_ENCODERS ? "DUAL (both motors)" : "SINGLE (motor 1 only)");
+        telemetry.addData("TICKS_PER_REV", TuningConstants.TICKS_PER_REV);
+        telemetry.addData("Target", String.format(Locale.US, "%.1f RPM  (%.1f ticks/s)",
                 TuningConstants.TARGET_RPM, targetTicksPerSec));
-        panelsTelemetry.addLine("Press START. Both motors will oscillate automatically.");
-        panelsTelemetry.update();
+        telemetry.addLine("Press START. Both motors will oscillate automatically.");
+        telemetry.update();
 
         waitForStart();
         if (isStopRequested()) return;
 
         while (opModeIsActive() && !pid.isTuningComplete()) {
             pid.tuningStep(getRuntime());
-            for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-            panelsTelemetry.update();
+            for (String line : pid.getTelemetryLines()) telemetry.addLine(line);
+            telemetry.update();
         }
 
         if (pid.timedOut() || !pid.isTuningSuccessful()) {
             while (opModeIsActive()) {
-                for (String line : pid.getTelemetryLines()) panelsTelemetry.addLine(line);
-                panelsTelemetry.update();
+                for (String line : pid.getTelemetryLines()) telemetry.addLine(line);
+                telemetry.update();
             }
             pid.stop();
             return;
@@ -95,14 +92,14 @@ public class DualVelocityPIDFTunerOpMode extends LinearOpMode {
 
         while (opModeIsActive()) {
             driver.update();
-            for (String line : pid.getResultTelemetryLines()) panelsTelemetry.addLine(line);
+            for (String line : pid.getResultTelemetryLines()) telemetry.addLine(line);
             if (driver.isPressed(Button.A)) {
-                panelsTelemetry.addLine("");
-                for (String line : pid.liveTestStep(getRuntime())) panelsTelemetry.addLine(line);
+                telemetry.addLine("");
+                for (String line : pid.liveTestStep(getRuntime())) telemetry.addLine(line);
             } else {
                 pid.stopLiveTest();
             }
-            panelsTelemetry.update();
+            telemetry.update();
         }
 
         pid.stop();
