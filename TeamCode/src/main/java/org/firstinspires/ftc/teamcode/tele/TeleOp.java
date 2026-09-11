@@ -6,6 +6,7 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
@@ -14,14 +15,10 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
-public abstract class TeleOp extends LinearOpMode {
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp
+public class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
     Robot robot;
-
-    // Constructor for TeleOp, takes in the alliance color.
-    public TeleOp(AllianceColor col) {
-      this.allianceColor = col;
-    }
 
     /**
      * Override this method and place your code here.
@@ -32,13 +29,27 @@ public abstract class TeleOp extends LinearOpMode {
      * control hardware will be limited.
      */
     @NonNull
-    protected abstract Pose getStartingPose();
+    public Pose getStartingPoseAndSetAlliance() {
+        if (allianceColor == null && Blackboard.get(Blackboard.Caption.ALLIANCE) != null) {
+            allianceColor = Blackboard.get(Blackboard.Caption.ALLIANCE).getValue();
+        }
+        if (Blackboard.get(Blackboard.Caption.POSE) != null && Blackboard.get(Blackboard.Caption.POSE).getValue() != null) {
+            return Blackboard.get(Blackboard.Caption.POSE).getValue();
+        }
+        if (allianceColor != null) {
+            return allianceColor.isRed()? Constants.RED_DEFAULT_START_POSE : Constants.BLUE_DEFAULT_START_POSE;
+        } else {
+            allianceColor = AllianceColor.RED;
+        }
+        return Constants.RED_DEFAULT_START_POSE;
+    }
     @Override
     public void runOpMode() {
         GamepadEx driver = new GamepadEx(gamepad1);
         State robotState = new State(RobotMode.TELEOP);
         robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
-        robot.setStartingPose(getStartingPose());
+        robot.setStartingPose(getStartingPoseAndSetAlliance());
+        robot.setAllianceColor(allianceColor);
         robot.setDriveStickCurve(x -> Math.signum(x) * x * x);
         robot.startTeleOpDrive();
         robotState.setGpBindings(driver.result());
@@ -56,7 +67,7 @@ public abstract class TeleOp extends LinearOpMode {
             telemetry.addData("Intake Power", robot.getIntakePower());
             telemetry.update();
         }
-        robot.stopVision();
+        robot.stop();
 
     }
 

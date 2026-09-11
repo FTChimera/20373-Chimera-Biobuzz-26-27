@@ -6,13 +6,13 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.behaviors.EndCondition;
 import com.pedropathing.ivy.pedro.PedroCommands;
-import com.pedropathing.paths.HeadingInterpolator;
+import com.pedropathing.paths.Path;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-public class Ivy {
-    public static void run(Command command) {
+public class Pedro {
+    public static void runIvy(Command command) {
         command.start();
         while (!command.done()) {
             command.execute();
@@ -20,7 +20,7 @@ public class Ivy {
         command.end(EndCondition.NATURALLY);
     }
 
-    public static Command followPath(Follower follower, Pose... poses) {
+    public static Command ivyFollowPath(Follower follower, Pose... poses) {
         Objects.requireNonNull(follower, "follower");
         if (poses == null || poses.length < 2) {
             throw new IllegalArgumentException(
@@ -32,5 +32,12 @@ public class Ivy {
                         .setGlobalLinearHeadingInterpolation(poses[0].getHeading(), poses[poses.length-1].getHeading())
                         .build()
                 );
+    }
+
+    public static Path linear(Pose... poses) {
+        if (poses.length <=1) {throw new IllegalArgumentException("Pedro Linear Path builder had 0 or 1 arguments");}
+        Path result = new Path(new BezierCurve(poses));
+        result.setLinearHeadingInterpolation(poses[0].getHeading(), poses[poses.length-1].getHeading());
+        return result;
     }
 }

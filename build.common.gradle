@@ -15,6 +15,9 @@
  * updates to the FTC SDK into your code.
  */
 
+
+import org.gradle.plugins.ide.eclipse.model.SourceFolder
+
 import java.util.regex.Pattern
 
 apply plugin: 'com.android.application'
@@ -27,7 +30,7 @@ eclipse {
         file {
             whenMerged { classpath ->
                 classpath.entries.removeAll { it.kind == 'src' && it.path == 'src/main/java' }
-                classpath.entries.add(new org.gradle.plugins.ide.eclipse.model.SourceFolder('src/main/java', 'bin/main'))
+                classpath.entries.add(new SourceFolder('src/main/java', 'bin/main'))
             }
         }
     }

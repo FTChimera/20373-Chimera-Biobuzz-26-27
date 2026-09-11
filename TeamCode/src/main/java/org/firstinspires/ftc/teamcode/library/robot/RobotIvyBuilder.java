@@ -146,6 +146,13 @@ public final class RobotIvyBuilder {
         return Commands.instant(() -> robot.setVisionPipeline(Objects.requireNonNull(pipeline, "pipeline")));
     }
 
+    public Command stop() {
+        return Commands.instant(robot::stop);
+    }
+
+    public Command stop(boolean saveEndVals) {
+        return Commands.instant(() -> robot.stop(saveEndVals));
+    }
     public Command forceRelocalize() {
         return Commands.instant(robot::forceRelocalize);
     }

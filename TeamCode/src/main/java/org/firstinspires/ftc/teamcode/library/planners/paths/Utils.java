@@ -23,17 +23,19 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
-    public static class NullPlanner extends StartPose {
-
-        public NullPlanner(Robot robot, Pose pose) {
+    public static class StartPose extends NullPlanner {
+        public StartPose(Robot robot, Pose pose) {
             super(robot, pose);
         }
+        @Override public Command run() {
+            return Commands.instant(() -> robot.require(RobotDrive.class).mecanumDrive.setStartingPose(pose));
+        }
     }
-    public static class StartPose implements PathPlanner {
+    public static class NullPlanner implements PathPlanner {
         Pose pose;
-        Robot robot;
+        volatile Robot robot;
 
-        public StartPose(Robot robot, Pose pose) {
+        public NullPlanner(Robot robot, Pose pose) {
             this.robot = robot;
             this.pose = pose;
         }
@@ -45,7 +47,7 @@ public class Utils {
 
         @Override
         public Command run() {
-            return Commands.instant(() -> robot.require(RobotDrive.class).mecanumDrive.setStartingPose(pose));
+            return Command.NOOP;
         }
 
         @Override
@@ -60,7 +62,7 @@ public class Utils {
     }
 
     public static class CustomPath implements PathPlanner {
-        Robot robot;
+        volatile Robot robot;
         PathChain pathChain;
 
         public CustomPath(Robot robot, PathPlanner prevPlanner, PathChain pathChain) {
@@ -90,10 +92,10 @@ public class Utils {
     public static class IntakeWVision implements PathPlanner {
         private static final double DETECTOR_RETRY_SECONDS = 0.7;
 
-        Robot robot;
-        Vision vision;
-        RobotDrive drive;
-        Intake intake;
+        volatile Robot robot;
+        volatile Vision vision;
+        volatile RobotDrive drive;
+        volatile Intake intake;
         boolean shouldUseFailSafePath = false;
         PathChain failSafePath;
         int numBalls;

@@ -6,8 +6,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.configs.Blackboard;
+import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.Timer;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
+import org.firstinspires.ftc.teamcode.library.planners.Common;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.library.planners.paths.FromTestPose;
 import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
@@ -31,7 +34,7 @@ public class AutoTest extends OpMode {
     public void init() {
         Scheduler.reset();
         robot = Constants.createRobot(hardwareMap);
-        PlanBuilder planBuilder = new PlanBuilder(robot, Constants.common.score1red);
+        PlanBuilder planBuilder = new PlanBuilder(robot, Common.start.pose());
         planBuilder.add(new FromTestPose.ToIntakeThreeTest(robot, planBuilder.planner().last()));
         planBuilder.add(new Utils.Wait(planBuilder.planner().last(), 1000));
         planBuilder.add(new FromTestPose.ToIntakeThreeTest(robot, planBuilder.planner().last()));
@@ -70,6 +73,10 @@ public class AutoTest extends OpMode {
     public void stop() {
         if (!isStopped) robot.stop(true);
         Scheduler.reset();
+    }
+
+    private void setAllianceColor(AllianceColor color) {
+        Blackboard.put(new Blackboard.Item(Blackboard.Caption.ALLIANCE, color));
     }
 
 }

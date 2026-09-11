@@ -7,10 +7,12 @@ import com.pedropathing.math.Vector;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
+import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.OpModeHelper;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
+import org.firstinspires.ftc.teamcode.library.planners.Common;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.library.robot.RobotIvyBuilder;
 
@@ -31,6 +33,7 @@ public class Robot extends Mechanism {
     private final Map<Class<? extends Mechanism>, Mechanism> mechanisms = new LinkedHashMap<>();
     private final RobotMode robotMode;
     private State lastState;
+    private AllianceColor color = AllianceColor.RED;
     OpModeHelper helper;
 
     public Robot(HardwareMap map, RobotConstants bot) {
@@ -41,6 +44,10 @@ public class Robot extends Mechanism {
         super(map, bot);
         this.robotMode = Objects.requireNonNull(robotMode, "robotMode");
         helper = new OpModeHelper(hardwareMap);
+        if (Blackboard.get(Blackboard.Caption.ALLIANCE) != null) {
+            color = Blackboard.get(Blackboard.Caption.ALLIANCE).getValue();
+        }
+        Common.init(color);
         bot.Mechanisms.stream()
                 .filter(mechanismClass -> mechanismClass != Robot.class)
                 .sorted(Comparator.comparing(Class::getName))
@@ -212,6 +219,7 @@ public class Robot extends Mechanism {
         helper.update();
         state.setRobotMode(robotMode);
         state.setOpModeHelper(helper);
+        state.setAllianceColor(color);
         state.setRobot(this);
         lastState = state;
         for (Mechanism mechanism : mechanisms.values()) {
@@ -265,5 +273,9 @@ public class Robot extends Mechanism {
 
     public double getOpModeTimeSeconds() {
         return helper.getOpModeTime();
+    }
+
+    public void setAllianceColor(AllianceColor color) {
+        this.color = color;
     }
 }

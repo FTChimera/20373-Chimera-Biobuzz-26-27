@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
 import com.pedropathing.paths.PathChain;
@@ -160,8 +161,9 @@ public class RobotDrive extends Mechanism {
     }
 
     public void followIntakePath(PathChain intakePath) {
-
+//todo unimplemented
     }
+    public Follower getFollower() {return mecanumDrive.follower;}
     public boolean isUsingManualDrive() {
         return mecanumDrive.useManualDrive;
     }
