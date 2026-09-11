@@ -1,3 +1,4 @@
+/*
 package org.firstinspires.ftc.teamcode.simulation;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -14,3 +15,4 @@ public class RobotSimulator {
         return null;
     }
 }
+*/
