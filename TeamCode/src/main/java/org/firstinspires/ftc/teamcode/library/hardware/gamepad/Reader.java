@@ -16,8 +16,9 @@ import com.qualcomm.robotcore.hardware.Gamepad;
  * if (aReader.wasJustPressed()) { ... }
  * </pre>
  */
-public class Reader {
 
+/*This class is unused, except for a gamepad input test */
+public class Reader {
     private final Button button;
     private boolean current;
     private boolean previous;

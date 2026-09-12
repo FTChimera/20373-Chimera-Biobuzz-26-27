@@ -251,7 +251,7 @@ public class Robot extends Mechanism {
                 return;
             }
             Pose estimatedEndPose = requireDrive().getPose().copy();
-            Vector robotV = requireDrive().getVelocity().times(helper.getDt() / 1_000.0);
+            Vector robotV = requireDrive().getVelocity().times(helper.getDt() / 1_000.0);// Could do a geometric sequence of all of these (what is r).
             estimatedEndPose = estimatedEndPose.plus(
                     new Pose(
                             robotV.getXComponent(),

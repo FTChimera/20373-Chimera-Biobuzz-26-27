@@ -54,6 +54,7 @@ public class Timer {
 
     private double convertFromNanoseconds(double nanoseconds, TimeUnit timeUnit) {
         switch (timeUnit) {
+            // Replace with TimeUnit scale (if you cmd click and scroll u will see)
             case NANOSECONDS:
                 return nanoseconds;
             case MICROSECONDS:

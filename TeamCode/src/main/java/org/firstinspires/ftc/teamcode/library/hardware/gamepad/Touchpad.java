@@ -25,7 +25,7 @@ import java.util.Locale;
  * </pre>
  */
 public class Touchpad extends GpCommand {
-    public static final Touchpad MAIN = new Touchpad();
+    //public static final Touchpad MAIN = new Touchpad();
 
     // ==================== TOUCHPOINT ====================
 

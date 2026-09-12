@@ -8,7 +8,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.LogitechWebcam;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.planners.Common;
@@ -56,11 +55,6 @@ public class Constants {
         return currentBot.createMechanism(hardwareMap, Vision.class);
     }
 
-
-    public static RGBIndicator createRGB(HardwareMap hardwareMap) {
-        assertHasMechanism(RGBIndicator.class);
-        return currentBot.createMechanism(hardwareMap, RGBIndicator.class);
-    }
 
     public static LogitechWebcam createWebcam(HardwareMap hardwareMap) {
         return new LogitechWebcam(hardwareMap);

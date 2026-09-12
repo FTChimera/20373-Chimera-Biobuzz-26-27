@@ -8,6 +8,7 @@ import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.PathPoint;
 
 import org.firstinspires.ftc.teamcode.library.math.Equation;
+import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 
 import java.util.Objects;
 
@@ -25,7 +26,6 @@ import java.util.Objects;
  * @author Team
  */
 public class EquationCurve extends CustomCurve {
-    private static final double ENDPOINT_TOLERANCE = 1e-3;
 
     public final Pose startPose;
     public final Pose endPose;
@@ -52,9 +52,9 @@ public class EquationCurve extends CustomCurve {
 
     private boolean functionPassesThroughStartEnd() {
         boolean startMatches = MathFunctions.roughlyEquals(
-                equation.getY(startPose.getX()), startPose.getY(), ENDPOINT_TOLERANCE);
+                equation.getY(startPose.getX()), startPose.getY(), MathUtils.EPSILON);
         boolean endMatches = MathFunctions.roughlyEquals(
-                equation.getY(endPose.getX()), endPose.getY(), ENDPOINT_TOLERANCE);
+                equation.getY(endPose.getX()), endPose.getY(), MathUtils.EPSILON);
         return startMatches && endMatches;
     }
 

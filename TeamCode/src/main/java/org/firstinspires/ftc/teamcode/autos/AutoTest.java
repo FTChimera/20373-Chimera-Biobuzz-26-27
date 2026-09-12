@@ -33,6 +33,7 @@ public class AutoTest extends OpMode {
     @Override
     public void init() {
         Scheduler.reset();
+        setAllianceColor(AllianceColor.RED);
         robot = Constants.createRobot(hardwareMap);
         PlanBuilder planBuilder = new PlanBuilder(robot, Common.start.pose());
         planBuilder.add(new FromTestPose.ToIntakeThreeTest(robot, planBuilder.planner().last()));

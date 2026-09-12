@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Main TeleOp", group = "0: Competition")
 public class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
     Robot robot;
@@ -50,7 +50,7 @@ public class TeleOp extends LinearOpMode {
         robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
         robot.setStartingPose(getStartingPoseAndSetAlliance());
         robot.setAllianceColor(allianceColor);
-        robot.setDriveStickCurve(x -> Math.signum(x) * x * x);
+        robot.setDriveStickCurve(x -> Math.signum(x) * x*1.1);
         robot.startTeleOpDrive();
         robotState.setGpBindings(driver.result());
         telemetry.addData("Status", "Initialized");
@@ -70,5 +70,9 @@ public class TeleOp extends LinearOpMode {
         robot.stop();
 
     }
-
+    protected void setAllianceColor(AllianceColor color) {
+        Blackboard.put(new Blackboard.Item(Blackboard.Caption.ALLIANCE, color));
+    }
+    @com.qualcomm.robotcore.eventloop.opmode.TeleOp() public static class Red_Tele extends TeleOp {@Override public void runOpMode() {setAllianceColor(AllianceColor.RED); super.runOpMode();}}
+    @com.qualcomm.robotcore.eventloop.opmode.TeleOp() public static class Blue_Tele extends TeleOp {@Override public void runOpMode() {setAllianceColor(AllianceColor.BLUE); super.runOpMode();}}
 }

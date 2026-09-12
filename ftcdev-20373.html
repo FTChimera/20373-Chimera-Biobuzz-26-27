@@ -825,7 +825,7 @@
         <div class="hero-inner">
             <!--✏️ EDIT: Change the target date in the JS below (search "COUNTDOWN TARGET") -->
             <div class="countdown-wrap" id="heroCountdown">
-                <div class="countdown-label">BioBuzz Season Game Reveal</div>
+                <div class="countdown-label" id="countdownLabel">BioBuzz Season Game Reveal</div>
                 <div class="countdown-timer">
                     <div class="countdown-unit">
                         <span class="countdown-num" id="cd-days">--</span>
@@ -2730,26 +2730,26 @@ applyCodeHighlighting(document);
     (function () {
         const TARGET = new Date('2026-09-12T10:00:00'); // ✏️ EDIT: next reveal date
 
-        const cdDays  = document.getElementById('cd-days');
-        const cdHours = document.getElementById('cd-hours');
-        const cdMins  = document.getElementById('cd-mins');
-        const cdSecs  = document.getElementById('cd-secs');
-        const wrap    = document.getElementById('heroCountdown');
+        const cdDays          = document.getElementById('cd-days');
+        const cdHours         = document.getElementById('cd-hours');
+        const cdMins          = document.getElementById('cd-mins');
+        const cdSecs          = document.getElementById('cd-secs');
+        const countdownLabel  = document.getElementById('countdownLabel');
 
         function pad(n) { return String(n).padStart(2, '0'); }
 
         function tick() {
             const diff = TARGET.getTime() - Date.now();
-            if (diff <= 0) {
-                wrap.innerHTML = '<p class="countdown-done">&#127881; The New Season Is Here!</p>';
-                return;
-            }
-            const totalSec = Math.floor(diff / 1000);
+            const afterReveal = diff <= 0;
+            const totalSec = Math.floor(Math.abs(diff) / 1000);
             const days  = Math.floor(totalSec / 86400);
             const hours = Math.floor((totalSec % 86400) / 3600);
             const mins  = Math.floor((totalSec % 3600) / 60);
             const secs  = totalSec % 60;
 
+            countdownLabel.textContent = afterReveal
+                ? 'Time Since BioBuzz Season Game Reveal'
+                : 'BioBuzz Season Game Reveal';
             cdDays.textContent  = days;
             cdHours.textContent = pad(hours);
             cdMins.textContent  = pad(mins);

@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpBindings;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 
 public class State {
+    public HiveState state;
     public GpBindings gpBindings;
     public OpModeHelper opModeHelper;
     public Robot robot;

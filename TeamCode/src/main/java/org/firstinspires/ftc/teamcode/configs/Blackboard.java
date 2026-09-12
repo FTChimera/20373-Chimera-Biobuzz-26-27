@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.configs;
 
+import android.graphics.Paint;
+
 import com.pedropathing.geometry.Pose;
 
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
@@ -21,9 +23,9 @@ import java.util.List;
  */
 public class Blackboard {
     private static final List<Item> items = new ArrayList<>(List.of(
-            new Item(Caption.POSE, new Pose()),
-            new Item(Caption.DRIVER, Driver.DEFAULT),
-            new Item(Caption.ALLIANCE, AllianceColor.RED)
+            new Item(Caption.POSE),
+            new Item(Caption.DRIVER),
+            new Item(Caption.ALLIANCE)
     ));
 
     public static List<Item> getAll() {return items;}
@@ -68,7 +70,8 @@ public class Blackboard {
     public static class Item {
         protected Object val;
         protected Caption cap;
-        protected final Object defaultV;
+        protected Object defaultV;
+        public Item(Caption cap) {this.cap = cap;}
         public Item(Caption caption, Object value) {
             if (caption.clazz != value.getClass()) {
                 throw new IllegalArgumentException("The value class does not match the caption");
@@ -89,6 +92,7 @@ public class Blackboard {
                 throw new IllegalArgumentException("The value class does not match the caption");
             }
             val = value;
+            if (defaultV == null) defaultV = value;
         }
         public void reset() {
             val = defaultV;
