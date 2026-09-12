@@ -174,7 +174,7 @@ public class Vision extends Mechanism {
 
     @Override
     public void periodic(State state, RobotMode robotMode) {
-        forceRelocalize(state.getRobot().getDrive());
+        //forceRelocalize(state.getRobot().getDrive());
         updateRobotOrientation(state.getRobot().getPose().getHeading());
         update();
 

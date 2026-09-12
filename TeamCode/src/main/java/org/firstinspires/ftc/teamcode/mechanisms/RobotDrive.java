@@ -190,7 +190,7 @@ public class RobotDrive extends Mechanism {
         }
         setTeleOpDrive(driveVector);
 
-        // Relocalization already done each loop
+        // relocalize button
     }
 
 }
