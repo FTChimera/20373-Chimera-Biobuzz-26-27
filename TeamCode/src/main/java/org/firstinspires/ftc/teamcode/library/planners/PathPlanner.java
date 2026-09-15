@@ -16,7 +16,7 @@ public interface PathPlanner {
     void setStartPose(Pose pose);
     void buildPaths();
     default void fromPrev(PathPlanner prev) {
-        setStartPose(prev.getEndPose());
+        setStartPose(prev.getEndPose().copy());
     }
     @NonNull String toString();
     default Command asCommand() {

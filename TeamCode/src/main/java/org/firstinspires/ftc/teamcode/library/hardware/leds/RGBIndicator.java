@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 /*
  * GOBILDA PRODUCT INSIGHT: https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2275/15126/3118-0808-0002-Product-Insight-4__88285.1757516465.png?c=1
  */
+@Deprecated
 public class RGBIndicator extends Mechanism {
     /**
      * Returns an indication of the manufacturer of this device.

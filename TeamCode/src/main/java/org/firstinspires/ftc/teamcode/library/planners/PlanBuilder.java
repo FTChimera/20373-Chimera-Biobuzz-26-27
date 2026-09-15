@@ -4,23 +4,38 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.PathChain;
 
+import org.firstinspires.ftc.teamcode.Constants;
+import org.firstinspires.ftc.teamcode.library.planners.paths.FromStartGardenPose;
 import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.mechanisms.Vision;
-
-import java.util.Objects;
 
 public class PlanBuilder {
+    public static PlanBuilder startGardenPose(Robot robot) {
+        return new PlanBuilder(robot, Positions.GARDEN);
+    }
+
+    public static PlanBuilder nullPlan(Robot robot) {
+        return new PlanBuilder(robot, Positions.NULL);
+    }
+    enum Positions {GARDEN, LOADING_ZONE, NULL, GARDEN_VISION_SEARCH, LOADING_VISION_SEARCH}
     PathPlannerList list;
     Robot robot;
-    Vision vision;
+    Positions position;
 
-
-    public PlanBuilder(Robot robot, Pose startPose) {
+    private PlanBuilder(Robot robot, Positions startPosition) {
         this.robot = robot;
-        this.vision = robot.getVision();
         list = new PathPlannerList();
-        list.add(0, new Utils.StartPose(robot, startPose));
+        position = startPosition;
+        list.add(0, getPlannerFromPositionStart(startPosition, robot));
+    }
+
+    private PathPlanner getPlannerFromPositionStart(Positions startPosition, Robot robot) {
+        if (startPosition==Positions.GARDEN) {
+            return new FromStartGardenPose(robot);
+        } else if (startPosition==Positions.LOADING_ZONE) {
+            return null;
+        }
+        return new Utils.StartPose(robot, Constants.RED_DEFAULT_START_POSE);
     }
 
     public PlanBuilder add(PathPlanner pathPlanner) {
@@ -44,12 +59,8 @@ public class PlanBuilder {
         add(new Utils.Wait(planner().last(), ms));
         return this;
     }
+    @Deprecated
     public PlanBuilder intakeWVision(int numBalls, PathChain failSafePath) {
-        if (vision == null) {
-            throw new IllegalStateException(
-                    "A Vision mechanism must be supplied through the constructor or withVision() before intakeWVision()."
-            );
-        }
         add(new Utils.IntakeWVision(robot, planner().last(), numBalls, failSafePath));
         return this;
     }

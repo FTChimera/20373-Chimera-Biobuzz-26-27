@@ -11,7 +11,6 @@ import org.firstinspires.ftc.teamcode.library.IntakeBallPath;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
@@ -185,7 +184,7 @@ public class Vision extends Mechanism {
             // todo move that away from Utils in pathplanner to here so that we can call it in teleop
             if (state.getGpBindings().getCommand(params.AUTO_INTAKE_BUTTON).wasJustPressed()) {
                 PathChain intakeChain = IntakeBallPath.generateIntakePathFromCam();
-                state.getRobot().getDrive().followIntakePath(intakeChain);
+                state.getRobot().getDrive().followPath(intakeChain);
             }
         }
     }

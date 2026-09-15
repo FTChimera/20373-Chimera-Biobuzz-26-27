@@ -6,14 +6,11 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+
 /**
  * Custom Motor class that wraps around the DcMotorEx class and provides additional functionality for easier motor control.
  * <pre>
- * Not callable with hardwareMap.get() for now
  *
- * TODO Add a constructor Motor(DcMotorControllerEx controller, int port) to allow hardware Map get from SDK
- * Then use the controller Ex instead of the DcMotorEx
- * Uncomment the below
  */
 
 /*@MotorType(ticksPerRev = 28, gearing = 3, maxRPM = 2000) // random default values
@@ -55,7 +52,7 @@ public class Motor implements HardwareDevice {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public Motor PIDFControl(PIDFCoefficients coefficients) {
+    public Motor PIDFControl(PIDFCoefficients coefficients) { // TODO Set up Controller interface here and integrate it
         setPIDFCoefficients(coefficients);
         return this;
     }
@@ -99,6 +96,9 @@ public class Motor implements HardwareDevice {
     public void setVelocity(double velocity) {
         targetVelocity = velocity;
         motor.setVelocity(targetVelocity);
+    }
+    public double getVelocity() {
+        return motor.getVelocity();
     }
     public void stopPower() {
         motor.setPower(0);

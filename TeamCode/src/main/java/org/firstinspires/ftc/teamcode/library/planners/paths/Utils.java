@@ -18,12 +18,14 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
+import org.firstinspires.ftc.teamcode.pedroPathing.AlliancePoses;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Utils {
     public static class StartPose extends NullPlanner {
+        public StartPose(Robot robot, AlliancePoses poses) {this(robot, poses.pose());}
         public StartPose(Robot robot, Pose pose) {
             super(robot, pose);
         }
@@ -89,6 +91,8 @@ public class Utils {
         public void buildPaths() {
         }
     }
+
+    @Deprecated
     public static class IntakeWVision implements PathPlanner {
         private static final double DETECTOR_RETRY_SECONDS = 0.7;
 

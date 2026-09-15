@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
@@ -20,5 +21,9 @@ public class FieldUpdates extends Mechanism {
     @Override
     public void periodic(State robotState, RobotMode robotMode) {
 
+    }
+
+    public Pose getGoalPose() {
+        return null;
     }
 }

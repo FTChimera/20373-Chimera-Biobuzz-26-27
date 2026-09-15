@@ -160,8 +160,8 @@ public class RobotDrive extends Mechanism {
         return mecanumDrive.getDriveMotors();
     }
 
-    public void followIntakePath(PathChain intakePath) {
-//todo unimplemented
+    public void followPath(PathChain pathChain) {
+
     }
     public Follower getFollower() {return mecanumDrive.follower;}
     public boolean isUsingManualDrive() {

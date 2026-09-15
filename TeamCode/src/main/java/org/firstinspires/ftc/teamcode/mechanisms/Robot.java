@@ -4,17 +4,20 @@ import com.pedropathing.ivy.Scheduler;
 import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
+import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.OpModeHelper;
+import org.firstinspires.ftc.teamcode.library.game.Field;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.planners.Common;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.library.robot.RobotIvyBuilder;
+import org.firstinspires.ftc.teamcode.pedroPathing.Pedro;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -227,6 +230,18 @@ public class Robot extends Mechanism {
         }
     }
 
+    public Pose getPoseCompensatedForVelocity() {
+        Pose robotPose = requireDrive().getPose().copy();
+        Vector robotV = requireDrive().getVelocity();//.times(helper.getDt() / 1_000.0);// Could do a geometric sequence of all of these (what is r).
+        robotPose = robotPose.plus(
+                new Pose(
+                        robotV.getXComponent(),
+                        robotV.getYComponent()
+                )
+        );
+        return robotPose.copy();
+    }
+
     public void schedule(Supplier<State> stateSupplier) {
         Objects.requireNonNull(stateSupplier, "State Supplier");
         Scheduler.schedule(Commands.infinite(() -> periodic(stateSupplier.get())));
@@ -250,14 +265,7 @@ public class Robot extends Mechanism {
                 // No periodic update ran, so there is no reliable autonomous state to hand off.
                 return;
             }
-            Pose estimatedEndPose = requireDrive().getPose().copy();
-            Vector robotV = requireDrive().getVelocity().times(helper.getDt() / 1_000.0);// Could do a geometric sequence of all of these (what is r).
-            estimatedEndPose = estimatedEndPose.plus(
-                    new Pose(
-                            robotV.getXComponent(),
-                            robotV.getYComponent()
-                    )
-            );
+            Pose estimatedEndPose = getPoseCompensatedForVelocity();
             Blackboard.put(Blackboard.Caption.POSE, estimatedEndPose);
             if (lastState.getAllianceColor() != null) {
                 Blackboard.put(Blackboard.Caption.ALLIANCE, lastState.getAllianceColor());
@@ -277,5 +285,29 @@ public class Robot extends Mechanism {
 
     public void setAllianceColor(AllianceColor color) {
         this.color = color;
+    }
+    /** Stops all subsystems except for RobotDrive, does not save values*/
+    public void stopAllSubsystems() {
+        for (Mechanism mechanism : all()) {
+            if (mechanism.getClass() != RobotDrive.class) {
+                mechanism.stop();
+            }
+        }
+    }
+
+    public boolean shouldPark() {
+        Pose pose = getPoseCompensatedForVelocity();
+        double timeToGetToParkPoseInSeconds = calculateTimeToPark(pose);
+        return (getOpModeTimeSeconds() + timeToGetToParkPoseInSeconds >= RobotMode.AUTONOMOUS.timeLimit() -0.5);
+    }
+
+    private double calculateTimeToPark(Pose robotPoseCompensatedForVelocity) {
+        double distance = robotPoseCompensatedForVelocity.distanceFrom(Common.park.pose()); // Replace with Field
+        double maxRobotSpeed = 3; // TODO MEASURE THIS
+        return 1.1*distance/maxRobotSpeed;
+    }
+
+    public void moveToPark() {
+        requireDrive().followPath(new PathChain(Pedro.linear(getPose(), Common.park.pose())));
     }
 }
