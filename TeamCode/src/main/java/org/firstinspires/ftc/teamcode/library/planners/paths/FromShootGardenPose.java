@@ -22,9 +22,8 @@ public class FromShootGardenPose {
         Pose startPose;
         PathChain to;
         PathChain from;
-        public ToIntakeGardenPollen(Robot robot, PathPlanner prevPlanner) {
+        public ToIntakeGardenPollen(Robot robot) {
             this.robot = robot;
-            fromPrev(prevPlanner);
         }
 
         @Override
@@ -58,8 +57,8 @@ public class FromShootGardenPose {
 
     public static class ToIntakeGardenPollenToVision extends ToIntakeGardenPollen {
         PathChain toVision;
-        public ToIntakeGardenPollenToVision(Robot robot, PathPlanner prevPlanner) {
-            super(robot, prevPlanner);
+        public ToIntakeGardenPollenToVision(Robot robot) {
+            super(robot);
         }
         @Override
         public Pose getEndPose() {
@@ -80,4 +79,32 @@ public class FromShootGardenPose {
             toVision = new PathChain(Pedro.linear(super.getEndPose(), StartPoses.visionAnchorGarden.pose()));
         }
     }
+
+    public static class ToIntakeClosestFlower implements PathPlanner {
+        volatile Robot robot;
+        Pose startPose;
+        public ToIntakeClosestFlower(Robot robot) {
+            this.robot = robot;
+        }
+        @Override
+        public Pose getEndPose() {
+            return null;
+        }
+
+        @Override
+        public Command run() {
+            return null;
+        }
+
+        @Override
+        public void setStartPose(Pose pose) {
+            startPose = pose;
+        }
+
+        @Override
+        public void buildPaths() {
+
+        }
+    }
+
 }

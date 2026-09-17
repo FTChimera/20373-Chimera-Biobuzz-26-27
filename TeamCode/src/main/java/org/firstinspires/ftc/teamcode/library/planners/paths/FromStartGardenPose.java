@@ -22,9 +22,8 @@ public class FromStartGardenPose extends Utils.StartPose {
         volatile Robot robot;
         Path[] paths = new Path[2];
         Pose startingPose;
-        public ShootPreloads(Robot robot, PathPlanner prevPlanner) {
+        public ShootPreloads(Robot robot) {
             this.robot = robot;
-            fromPrev(prevPlanner);
         }
 
         @Override
@@ -55,8 +54,8 @@ public class FromStartGardenPose extends Utils.StartPose {
     }
 
     public static class ShootPreloadsToVisionSearch extends ShootPreloads {
-        public ShootPreloadsToVisionSearch(Robot robot, PathPlanner prevPlanner) {
-            super(robot, prevPlanner);
+        public ShootPreloadsToVisionSearch(Robot robot) {
+            super(robot);
         }
         @Override
         public Pose getEndPose() {

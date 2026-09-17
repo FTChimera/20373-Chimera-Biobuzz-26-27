@@ -6,7 +6,11 @@ import static com.pedropathing.ivy.groups.Groups.sequential;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.Scheduler;
+import com.pedropathing.ivy.commands.Commands;
+import com.pedropathing.ivy.groups.Groups;
 
+
+import org.firstinspires.ftc.teamcode.library.planners.paths.Utils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,10 +39,20 @@ public class PathPlannerList extends ArrayList<PathPlanner> implements List<Path
     }
 
     public Command schedule() {
+        Command command = asCommand();
+        command.schedule();
+        return command;
+    }
+    public Command asCommand() {
         List<Command> commands = new ArrayList<>();
-        forEach(pathPlanner -> commands.add(pathPlanner.asCommand()));
-        Command cmd = sequential(commands.toArray(new Command[0]));
-        Scheduler.schedule(cmd);
-        return cmd;
+        PathPlanner prevPlanner = new Utils.NullPlanner();
+        for (PathPlanner pathPlanner : this) {
+            PathPlanner finalPrevPlanner = prevPlanner;
+            Command fromPrev = Commands.instant(() ->pathPlanner.fromPrev(finalPrevPlanner));
+            prevPlanner = pathPlanner;
+            commands.add(fromPrev);
+            commands.add(pathPlanner.asCommand());
+        }
+        return Groups.sequential(commands.toArray(new Command[0]));
     }
 }

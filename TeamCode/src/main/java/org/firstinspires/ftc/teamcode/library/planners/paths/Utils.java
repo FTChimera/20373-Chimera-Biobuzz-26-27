@@ -37,6 +37,8 @@ public class Utils {
         Pose pose;
         volatile Robot robot;
 
+        public NullPlanner(){}
+
         public NullPlanner(Robot robot, Pose pose) {
             this.robot = robot;
             this.pose = pose;
@@ -54,7 +56,7 @@ public class Utils {
 
         @Override
         public void setStartPose(Pose pose) {
-            this.pose = pose;
+            //this.pose = pose;
         }
 
         @Override
@@ -70,7 +72,6 @@ public class Utils {
         public CustomPath(Robot robot, PathPlanner prevPlanner, PathChain pathChain) {
             this.robot = robot;
             this.pathChain = pathChain;
-            fromPrev(prevPlanner);
         }
 
         @Override
@@ -115,7 +116,6 @@ public class Utils {
             this.vision = robot.requireVision();
             this.numBalls = numBalls;
             this.failSafePath = failSafePath;
-            fromPrev(prevPlanner);
         }
 
         public void setUpMechanisms() {
@@ -266,7 +266,6 @@ public class Utils {
         double timeMs;
 
         public Wait(PathPlanner prevPlanner, double timeMs) {
-            fromPrev(prevPlanner);
             this.timeMs = timeMs;
         }
 
