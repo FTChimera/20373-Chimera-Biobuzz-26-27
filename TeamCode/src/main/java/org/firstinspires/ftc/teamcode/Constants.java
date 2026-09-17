@@ -28,6 +28,8 @@ public class Constants {
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final Pose BLUE_DEFAULT_START_POSE = new Pose(0, 0, 0);
     public static final RobotConstants currentBot = RobotConfigurations.FirstRobot();
+    public static final String TELEOP_NAME = "Main TeleOp";
+    public static final String COMPETITION_GROUP = "0: Comp";
 
     public static Follower createFollower(HardwareMap hardwareMap) {
         return currentBot.createFollower(hardwareMap);

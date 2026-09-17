@@ -69,7 +69,7 @@ public class Utils {
         volatile Robot robot;
         PathChain pathChain;
 
-        public CustomPath(Robot robot, PathPlanner prevPlanner, PathChain pathChain) {
+        public CustomPath(Robot robot, PathChain pathChain) {
             this.robot = robot;
             this.pathChain = pathChain;
         }
@@ -111,7 +111,7 @@ public class Utils {
         Timer retryTimer;
 
 //todo add boundaries class and pass it here, add checks
-        public IntakeWVision(Robot robot, PathPlanner prevPlanner, int numBalls, PathChain failSafePath) {
+        public IntakeWVision(Robot robot, int numBalls, PathChain failSafePath) {
             this.robot = robot;
             this.vision = robot.requireVision();
             this.numBalls = numBalls;
@@ -253,7 +253,7 @@ public class Utils {
 
     public static class LinearPath extends CustomPath {
         public LinearPath(Robot robot, PathPlanner prevPlanner, Pose endPose) {
-            super(robot, prevPlanner,
+            super(robot,
                     new PathChain(new Path(new BezierLine(
                             prevPlanner.getEndPose(), endPose
                     )
@@ -265,7 +265,7 @@ public class Utils {
         Pose startPose;
         double timeMs;
 
-        public Wait(PathPlanner prevPlanner, double timeMs) {
+        public Wait(double timeMs) {
             this.timeMs = timeMs;
         }
 

@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 @SuppressWarnings({"FieldCanBeLocal", "SpellCheckingInspection"})
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Main TeleOp", group = "0: Competition")
+@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = Constants.TELEOP_NAME, group = Constants.COMPETITION_GROUP)
 public class TeleOp extends LinearOpMode {
     AllianceColor allianceColor;
     Robot robot;
