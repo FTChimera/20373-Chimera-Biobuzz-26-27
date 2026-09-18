@@ -165,14 +165,37 @@ public class GamepadInputTest {
     public void GpBindingsReusesUpdatedReadersFromWrapper() {
         Gamepad gamepad = GamepadTestUtils.newGamepad(Gamepad.Type.SONY_PS4);
         GamepadEx extended = new GamepadEx(gamepad);
-        GpBindings GpBindings = extended.result(Button.A, Button.BACK);
+        GpBindings bindings = extended.result(Button.A, Button.BACK);
 
         gamepad.a = true;
         extended.update();
 
-        assertTrue(GpBindings.contains(Button.A));
-        assertTrue(GpBindings.isPressed(Button.A));
-        assertTrue(GpBindings.wasJustPressed(Button.A));
-        assertFalse(GpBindings.contains(Button.Y));
+        assertTrue(bindings.contains(Button.A));
+        assertTrue(bindings.isPressed(Button.A));
+        assertTrue(bindings.wasJustPressed(Button.A));
+        assertFalse(bindings.contains(Button.Y));
+    }
+
+    @Test
+    public void dualGpBindingsResolveCommandsFromTheirSelectedGamepad() {
+        Gamepad gamepad1 = GamepadTestUtils.newGamepad(Gamepad.Type.SONY_PS4);
+        Gamepad gamepad2 = GamepadTestUtils.newGamepad(Gamepad.Type.XBOX_360);
+        DualGamepad gamepads = new DualGamepad(gamepad1, gamepad2);
+        GpBindings bindings = gamepads.result(Button.A, Button.B);
+
+        gamepad1.a = true;
+        gamepad1.left_stick_x = 0.25f;
+        gamepad2.b = true;
+        gamepad2.right_trigger = 1.0f;
+        gamepads.update();
+
+        assertTrue(bindings.isPressed(GpBindings.GamepadId.ONE, Button.A));
+        assertFalse(bindings.isPressed(GpBindings.GamepadId.TWO, Button.A));
+        assertTrue(bindings.wasJustPressed(GpBindings.GamepadId.TWO, Button.B));
+        assertSame(gamepads.leftStick1(), bindings.getCommand(GpBindings.GamepadId.ONE, Stick.LEFT));
+        assertSame(gamepads.rightTrigger2(), bindings.getCommand(GpBindings.GamepadId.TWO, Trigger.RIGHT));
+        assertTrue(bindings.contains(GpBindings.GamepadId.TWO, Button.A));
+        assertSame(gamepads.gamepad2.buttons.getReader(Button.B),
+                bindings.getCommand(GpBindings.GamepadId.TWO, Button.B));
     }
 }

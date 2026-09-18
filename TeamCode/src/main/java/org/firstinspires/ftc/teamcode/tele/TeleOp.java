@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
-import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GamepadEx;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.DualGamepad;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
@@ -45,21 +45,21 @@ public class TeleOp extends LinearOpMode {
     }
     @Override
     public void runOpMode() {
-        GamepadEx driver = new GamepadEx(gamepad1);
+        DualGamepad drivers = new DualGamepad(gamepad1, gamepad2);
         State robotState = new State(RobotMode.TELEOP);
         robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
         robot.setStartingPose(getStartingPoseAndSetAlliance());
         robot.setAllianceColor(allianceColor);
         robot.setDriveStickCurve(x -> Math.signum(x) * x*1.1);
         robot.startTeleOpDrive();
-        robotState.setGpBindings(driver.result());
+        robotState.setGpBindings(drivers.result());
         telemetry.addData("Status", "Initialized");
         telemetry.update();
         waitForStart();
         robot.start();
         robot.startVision(Vision.Pipeline.APRIL_TAG);
         while (opModeIsActive()) {
-            driver.update();
+            drivers.update();
             robot.periodic(robotState);
 
             // Telemetry

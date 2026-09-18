@@ -47,6 +47,21 @@ public class DualGamepad {
 		return Commands.infinite(this::update);
 	}
 
+	/** Creates a binding view over both wrapped gamepads' current input surfaces. */
+	public GpBindings result() {
+		return new GpBindings(this);
+	}
+
+	/** Creates a binding view that eagerly exposes the requested commands on both gamepads. */
+	public GpBindings result(GpCommand... commands) {
+		return new GpBindings(this, commands);
+	}
+
+	/** Compatibility overload for button-only bindings. */
+	public GpBindings result(Button... buttons) {
+		return new GpBindings(this, buttons);
+	}
+
 	// ==================== DIRECT ACCESS ====================
 
 	public GamepadEx getGamepad1() { return gamepad1; }

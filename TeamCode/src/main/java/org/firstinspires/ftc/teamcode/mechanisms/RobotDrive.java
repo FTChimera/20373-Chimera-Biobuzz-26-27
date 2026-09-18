@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierPoint;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.math.Vector;
+import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -17,8 +19,16 @@ import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Stick;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.function.DoubleUnaryOperator;
+import java.util.Objects;
 
 public class RobotDrive extends Mechanism {
+    public enum FollowerMode {
+        MANUAL,
+        FOLLOWING,
+        HOLDING,
+        TURNING
+    }
+
     public static class ROBOT_DRIVE_PARAMS implements Mechanism.Params<ROBOT_DRIVE_PARAMS> {
         public DoubleUnaryOperator DEFAULT_STICK_CURVE = DoubleUnaryOperator.identity();
         public boolean START_TELEOP_DRIVE_ON_INIT = true;
@@ -95,6 +105,8 @@ public class RobotDrive extends Mechanism {
 
     public final ROBOT_DRIVE_PARAMS params;
     public final MecanumDrive mecanumDrive;
+    private FollowerMode followerMode = FollowerMode.MANUAL;
+    private boolean holdAtPathEnd;
 
     public RobotDrive(HardwareMap map, RobotConstants bot) {
         super(map, bot);
@@ -104,8 +116,7 @@ public class RobotDrive extends Mechanism {
 
     @Override
     public void stop() {
-        mecanumDrive.follower.breakFollowing();
-        mecanumDrive.setTeleOpDrive(DriveVector.IDLE);
+        breakFollowing();
     }
 
     public void setStartingPose(Pose pose) {
@@ -117,15 +128,33 @@ public class RobotDrive extends Mechanism {
     }
 
     public void setTeleOpDrive(DriveVector vector) {
+        enterManualMode();
         mecanumDrive.setTeleOpDrive(vector);
     }
 
     public void setTeleOpDrive(DriveVector vector, boolean fieldCentric) {
+        enterManualMode();
         mecanumDrive.setTeleOpDrive(vector, fieldCentric);
     }
 
     public void startTeleOpDrive() {
-        mecanumDrive.startTeleOpDrive();
+        Follower follower = mecanumDrive.follower;
+        follower.setTeleOpDrive(0, 0, 0, false);
+        follower.startTeleOpDrive();
+        if (mecanumDrive.useManualDrive) {
+            mecanumDrive.startTeleOpDrive();
+        }
+        setManualMode();
+    }
+
+    public void startTeleOpDrive(boolean useBrakeMode) {
+        Follower follower = mecanumDrive.follower;
+        follower.setTeleOpDrive(0, 0, 0, false);
+        follower.startTeleOpDrive(useBrakeMode);
+        if (mecanumDrive.useManualDrive) {
+            mecanumDrive.startTeleOpDrive();
+        }
+        setManualMode();
     }
 
     public Pose getPose() {
@@ -160,10 +189,114 @@ public class RobotDrive extends Mechanism {
         return mecanumDrive.getDriveMotors();
     }
 
-    public void followPath(PathChain pathChain) {
-
+    public void followPath(Path path) {
+        mecanumDrive.follower.followPath(Objects.requireNonNull(path, "path"));
+        startFollowing(mecanumDrive.follower.getConstants().isAutomaticHoldEnd());
     }
-    public Follower getFollower() {return mecanumDrive.follower;}
+
+    public void followPath(Path path, boolean holdEnd) {
+        mecanumDrive.follower.followPath(Objects.requireNonNull(path, "path"), holdEnd);
+        startFollowing(holdEnd);
+    }
+
+    public void followPath(PathChain pathChain) {
+        mecanumDrive.follower.followPath(Objects.requireNonNull(pathChain, "pathChain"));
+        startFollowing(mecanumDrive.follower.getConstants().isAutomaticHoldEnd());
+    }
+
+    public void followPath(PathChain pathChain, boolean holdEnd) {
+        mecanumDrive.follower.followPath(Objects.requireNonNull(pathChain, "pathChain"), holdEnd);
+        startFollowing(holdEnd);
+    }
+
+    public void followPath(PathChain pathChain, double maxPower, boolean holdEnd) {
+        mecanumDrive.follower.followPath(Objects.requireNonNull(pathChain, "pathChain"), maxPower, holdEnd);
+        startFollowing(holdEnd);
+    }
+
+    public void holdPoint(BezierPoint point, double heading) {
+        mecanumDrive.follower.holdPoint(Objects.requireNonNull(point, "point"), heading);
+        followerMode = FollowerMode.HOLDING;
+        holdAtPathEnd = false;
+    }
+
+    public void holdPoint(BezierPoint point, double heading, boolean useHoldScaling) {
+        mecanumDrive.follower.holdPoint(Objects.requireNonNull(point, "point"), heading, useHoldScaling);
+        followerMode = FollowerMode.HOLDING;
+        holdAtPathEnd = false;
+    }
+
+    public void holdPoint(Pose pose) {
+        mecanumDrive.follower.holdPoint(Objects.requireNonNull(pose, "pose"));
+        followerMode = FollowerMode.HOLDING;
+        holdAtPathEnd = false;
+    }
+
+    public void holdPoint(Pose pose, boolean useHoldScaling) {
+        mecanumDrive.follower.holdPoint(Objects.requireNonNull(pose, "pose"), useHoldScaling);
+        followerMode = FollowerMode.HOLDING;
+        holdAtPathEnd = false;
+    }
+
+    public void turn(double radians) {
+        mecanumDrive.follower.turn(radians);
+        followerMode = FollowerMode.TURNING;
+        holdAtPathEnd = false;
+    }
+
+    public void turn(double radians, boolean counterClockwise) {
+        mecanumDrive.follower.turn(radians, counterClockwise);
+        followerMode = FollowerMode.TURNING;
+        holdAtPathEnd = false;
+    }
+
+    public void turnTo(double headingRadians) {
+        mecanumDrive.follower.turnTo(headingRadians);
+        followerMode = FollowerMode.TURNING;
+        holdAtPathEnd = false;
+    }
+
+    @Deprecated
+    public void turnToDegrees(double headingDegrees) {
+        mecanumDrive.follower.turnToDegrees(headingDegrees);
+        followerMode = FollowerMode.TURNING;
+        holdAtPathEnd = false;
+    }
+
+    @Deprecated
+    public void turnDegrees(double degrees, boolean isLeft) {
+        mecanumDrive.follower.turnDegrees(degrees, isLeft);
+        followerMode = FollowerMode.TURNING;
+        holdAtPathEnd = false;
+    }
+
+    public void breakFollowing() {
+        mecanumDrive.follower.breakFollowing();
+        if (mecanumDrive.useManualDrive) {
+            mecanumDrive.startTeleOpDrive();
+        }
+        setManualMode();
+    }
+
+    public FollowerMode getFollowerMode() {
+        return followerMode;
+    }
+
+    public boolean isBusy() {
+        return mecanumDrive.follower.isBusy();
+    }
+
+    public boolean isIdle() {
+        return !isBusy();
+    }
+
+    public boolean isTurning() {
+        return mecanumDrive.follower.isTurning();
+    }
+
+    public Follower getFollower() {
+        return mecanumDrive.follower;
+    }
     public boolean isUsingManualDrive() {
         return mecanumDrive.useManualDrive;
     }
@@ -178,19 +311,55 @@ public class RobotDrive extends Mechanism {
     }
 
     @Override
-    public void periodic(State state, RobotMode robotMode) {
+    public void periodic(State state) {
         mecanumDrive.periodic();
-        if (robotMode == RobotMode.AUTONOMOUS || state == null || state.getGpBindings() == null) {
+        updateFollowerMode();
+        if (state == null || state.getRobotMode() == RobotMode.TELEOP&&state.getGpBindings() == null) {
             return;
         }
-        Button zeroHeadingButton = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);
-        DriveVector driveVector = getDriveVector(state.getGpBindings());
-        if (zeroHeadingButton != null && zeroHeadingButton.isPressed()) {
-            zeroHeadingOffset();
-        }
-        setTeleOpDrive(driveVector);
+        if (state.getRobotMode() == RobotMode.TELEOP) {
+            Button zeroHeadingButton = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);
+            Button cameraRelocalization;
+            DriveVector driveVector = getDriveVector(state.getGpBindings());
+            if (followerMode != FollowerMode.MANUAL && isBusy()) {
+                return;
+            } else if (followerMode != FollowerMode.MANUAL && isIdle()) {
+                startTeleOpDrive();
+            }
+            if (zeroHeadingButton != null && zeroHeadingButton.isPressed()) {
+                zeroHeadingOffset();
+            }
+            if (followerMode==FollowerMode.MANUAL) setTeleOpDrive(driveVector);
 
-        // relocalize button
+            if (state.getRobot().getVision().getLatestResult().getFiducialResults() != null) {
+
+            }
+        }
+    }
+
+    private void enterManualMode() {
+        if (followerMode != FollowerMode.MANUAL || !mecanumDrive.follower.isTeleopDrive()) {
+            startTeleOpDrive();
+        }
+    }
+
+    private void startFollowing(boolean holdEnd) {
+        followerMode = FollowerMode.FOLLOWING;
+        holdAtPathEnd = holdEnd;
+    }
+
+    private void setManualMode() {
+        followerMode = FollowerMode.MANUAL;
+        holdAtPathEnd = false;
+    }
+
+    private void updateFollowerMode() {
+        if (followerMode == FollowerMode.FOLLOWING && !mecanumDrive.follower.isBusy()) {
+            followerMode = holdAtPathEnd ? FollowerMode.HOLDING : FollowerMode.MANUAL;
+            holdAtPathEnd = false;
+        } else if (followerMode == FollowerMode.TURNING && !mecanumDrive.follower.isTurning()) {
+            followerMode = FollowerMode.HOLDING;
+        }
     }
 
 }
