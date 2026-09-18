@@ -1,0 +1,250 @@
+[
+  {
+    "File": "AutoTest",
+    "File Package": "autos",
+    "Line Number": "69",
+    "Todo Item": "Todo Follow Path to Park (at end of auto)",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "PIDFCoefficients",
+    "File Package": "library.control",
+    "Line Number": "96",
+    "Todo Item": "Update method is blank, add switching between coeffs, dynamic tuning, etc",
+    "Type": "Complex",
+    "Notes": ""
+  },
+  {
+    "File": "Controller",
+    "File Package": "library.control",
+    "Line Number": "4",
+    "Todo Item": "Make all controllers implement this, add generic methods, add more controllers",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "NoiseFilter",
+    "File Package": "library.filters",
+    "Line Number": "-1",
+    "Todo Item": "Add a Kalman Filter",
+    "Type": "Low Priority",
+    "Notes": "learn how it all works is the more important thing"
+  },
+  {
+    "File": "Field",
+    "File Package": "library.game",
+    "Line Number": "213",
+    "Todo Item": "Configure all Field elements and boundaries",
+    "Type": "HIGH PRIORITY",
+    "Notes": ""
+  },
+  {
+    "File": "GameElement",
+    "File Package": "library.game",
+    "Line Number": "-1",
+    "Todo Item": "Add more generic parts of a game element",
+    "Type": "Unsure",
+    "Notes": "maybe like shape, type? no need useful parts"
+  },
+  {
+    "File": "Motor",
+    "File Package": "library.hardware.actuators",
+    "Line Number": "-1",
+    "Todo Item": "Add custom control using Controller interface and not built-in PIDF",
+    "Type": "waiting on another task",
+    "Notes": "Add a periodic function too."
+  },
+  {
+    "File": "Buttons",
+    "File Package": "library.hardware.gamepad",
+    "Line Number": "24",
+    "Todo Item": "Why is it a map of Button to Button, but keys never get called?",
+    "Type": "Unsure",
+    "Notes": "see if there is a reason, there might be. ohh the first is used like enum (if equal to Button.A). Should convert to array Button[] and compare by list order (values.ordinal)"
+  },
+  {
+    "File": "Trigger",
+    "File Package": "library.hardware.gamepad",
+    "Line Number": "81",
+    "Todo Item": "Replace with a linear function of getValue()",
+    "Type": "Can be done now",
+    "Notes": "If used currently, then robot intake full power will never be achieved, so add linear function"
+  },
+  {
+    "File": "SlidesMotor",
+    "File Package": "library.hardware.hardwareDevice",
+    "Line Number": "15",
+    "Todo Item": "Double check Motor type (used for ultraplanetary system). Make multiple for different types?",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "RGBIndicator",
+    "File Package": "library.hardware.leds",
+    "Line Number": "8",
+    "Todo Item": "delete panels code. Wait why not just delete this entire class, no use delete test cases",
+    "Type": "waiting on another task",
+    "Notes": ""
+  },
+  {
+    "File": "Limelight",
+    "File Package": "library.hardware.webcam",
+    "Line Number": "22",
+    "Todo Item": "Configure all Constants, double check coordinate convention",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "LogitechWebcam",
+    "File Package": "library.hardware.webcam",
+    "Line Number": "-1",
+    "Todo Item": "Archive",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "MathUtils",
+    "File Package": "library.math",
+    "Line Number": "-1",
+    "Todo Item": "Complete with trig, math features, Equation/Polynomial",
+    "Type": "Complex",
+    "Notes": ""
+  },
+  {
+    "File": "FromTestPose",
+    "File Package": "library.planners.paths",
+    "Line Number": "-1",
+    "Todo Item": "Archive, replace with actual planners, add vision",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "Common",
+    "File Package": "library.planners",
+    "Line Number": "10",
+    "Todo Item": "Replace w actual values",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "PlanBuilder",
+    "File Package": "library.planners",
+    "Line Number": "31",
+    "Todo Item": "Add the methods for adding diffferent paths",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "Driver",
+    "File Package": "library.robot",
+    "Line Number": "13",
+    "Todo Item": "Add other Chimera drivers if wish, add more driver prefs",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "RobotConfigurations",
+    "File Package": "library.robot",
+    "Line Number": "78",
+    "Todo Item": "Tune Pedro Pathing, add mechanisms",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  },
+  {
+    "File": "RobotConstants",
+    "File Package": "library.robot",
+    "Line Number": "183",
+    "Todo Item": "Add custom Drive mechanism params",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "RobotIvyBuilder",
+    "File Package": "library.robot",
+    "Line Number": "-1",
+    "Todo Item": "Archive; path planners is the way to go",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "AllianceColor",
+    "File Package": "library",
+    "Line Number": "-1",
+    "Todo Item": "Add a Tuple<AllianceColor, RobotMode> to use",
+    "Type": "Low Priority",
+    "Notes": ""
+  },
+  {
+    "File": "IntakeBallPath",
+    "File Package": "library",
+    "Line Number": "-1",
+    "Todo Item": "Test this on the robot, after pedro tuning and limelight attachment, add a unit test for logic of IntakeBallPath",
+    "Type": "Game Release/Robot",
+    "Notes": "Test as early as you can, make all private package-private (remove the private symbols) then test all core logic"
+  },
+  {
+    "File": "Timer",
+    "File Package": "library",
+    "Line Number": "57",
+    "Todo Item": "Replace the method convert using the TimeUnit internal conversion values",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "Intake",
+    "File Package": "mechanisms",
+    "Line Number": "25",
+    "Todo Item": "Add a linear function to triggers to make full power easy",
+    "Type": "waiting on another task",
+    "Notes": ""
+  },
+  {
+    "File": "RobotDrive",
+    "File Package": "mechanisms",
+    "Line Number": "163",
+    "Todo Item": "Implement Path Following, holding, or turning alongside mecanum movement",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "CommandConverter",
+    "File Package": "pedroPathing",
+    "Line Number": "-1",
+    "Todo Item": "Delete/archive it",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "DualMotorPIDMaster",
+    "File Package": "pid.autotune.master",
+    "Line Number": "-1",
+    "Todo Item": "Update it based on updates from mainstream",
+    "Type": "Low Priority",
+    "Notes": ""
+  },
+  {
+    "File": "RGBIndicatorTest",
+    "File Package": "tests.ftcSdk",
+    "Line Number": "17",
+    "Todo Item": "Remove the RGB Mechanism usages",
+    "Type": "Low Priority",
+    "Notes": ""
+  },
+  {
+    "File": "MTeleWIntakeTest",
+    "File Package": "tests",
+    "Line Number": "280",
+    "Todo Item": "Add Intake motor usages",
+    "Type": "Can be done now",
+    "Notes": ""
+  },
+  {
+    "File": "",
+    "File Package": ".",
+    "Line Number": "27",
+    "Todo Item": "Configure BioBuzz Constants",
+    "Type": "Game Release/Robot",
+    "Notes": ""
+  }
+]
