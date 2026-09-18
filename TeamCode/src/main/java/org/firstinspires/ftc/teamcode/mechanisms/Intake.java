@@ -1,20 +1,23 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.game.State;
-import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.GpCommand;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Trigger;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
-import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.Supplier;
+import java.util.function.DoubleUnaryOperator;
 
 public class Intake extends Mechanism {
+    private static final DoubleUnaryOperator INTAKE_TRIGGER_OUTPUT_TRANSFORM =
+            value -> Math.min(1.0, Math.max(0.0, value * 2.0));
+
     public static class INTAKE_PARAMS implements Mechanism.Params<INTAKE_PARAMS> {
         public double FULL_POWER = 1.0;
         public double HALF_POWER = 0.5;
@@ -144,20 +147,20 @@ public class Intake extends Mechanism {
      }
         /** set custom power as an ivy command*/
      public Command setPowerCommand(Supplier<Double> power) {
-         if (!params.ISBEINGUSED) return CommandConverter.toCommand(() -> {});
-         return CommandConverter.toCommand(() -> this.setPower(power.get()));
+         if (!params.ISBEINGUSED) return Commands.instant(() -> {});
+         return Commands.instant(() -> this.setPower(power.get()));
      }
 
     @Override
-    public void periodic(State state, RobotMode robotMode) {
+    public void periodic(State state) {
         if (!params.ISBEINGUSED) {
-            return;
-        }
-        if (robotMode == RobotMode.AUTONOMOUS) {
             return;
         }
         if (state == null) {
             Stop();
+            return;
+        }
+        if (state.getRobotMode() == org.firstinspires.ftc.teamcode.library.game.RobotMode.AUTONOMOUS) {
             return;
         }
         if (state.getGpBindings() == null) {
@@ -165,6 +168,8 @@ public class Intake extends Mechanism {
         }
         GpCommand forwardCommand = state.gpBindings.getCommand(params.FORWARD_COMMAND);
         GpCommand reverseCommand = state.gpBindings.getCommand(params.REVERSE_COMMAND);
+        configureTriggerOutput(forwardCommand);
+        configureTriggerOutput(reverseCommand);
         double power = params.STOP_POWER;
         if (forwardCommand != null) {
             power += forwardCommand.getValue() * params.FULL_POWER;
@@ -173,6 +178,12 @@ public class Intake extends Mechanism {
             power += reverseCommand.getValue() * params.REVERSE_FULL_POWER;
         }
         setPower(power);
+    }
+
+    private static void configureTriggerOutput(GpCommand command) {
+        if (command instanceof Trigger) {
+            ((Trigger) command).setOutputTransform(INTAKE_TRIGGER_OUTPUT_TRANSFORM);
+        }
     }
 
 }

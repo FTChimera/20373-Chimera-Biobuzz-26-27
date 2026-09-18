@@ -53,7 +53,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   - `currentBot`, which selects the active robot profile (assigned in `Constants.java`)
   - factory helpers like `createFollower(...)`, `createIMU(...)`,
     `createDrive(...)`, `createIntake(...)`, `createVision(...)`,
-    `createRGB(...)`, `createWebcam(...)`, aggregate
+    aggregate
     `createRobot(...)` / `createRobot(..., RobotMode)`, and generic
     `createMechanism(...)`
   - mechanism-check helpers like `getMechanisms()`, `hasMechanism(...)`, and `assertHasMechanism(...)`
@@ -72,7 +72,6 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
   - `mechanisms/Vision.java` -> `VISION_PARAMS` with nested
     `LIMELIGHT_PARAMS`
   - `library/hardware/webcam/LogitechWebcam.java` -> `LOGITECH_WEBCAM_PARAMS`
-  - `library/hardware/leds/RGBIndicator.java` -> `RGBIndicator_PARAMS`
 - FTC AutoTune calibration values now also live in `pid/autoTune/TuningConstants.java`; those constants are for tuning op modes only and are not robot-profile-wide production defaults.
 - Some preseason tuning constants still live directly inside op modes, especially `tests/PreseasonWebcamAuto.java`.
 
@@ -82,7 +81,6 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
 - Robot profiles contain follower-drive, localizer, and mechanism-registration configuration. FirstRobot's Pinpoint geometry is configured, but its follower-drive tuning remains a calibration target; inspect the selected profile before relying on a `Constants.create...(...)` helper as available.
 - `Limelight.LIMELIGHT_PARAMS` still has `LIMELIGHT_MOUNT_ANGLE_DEGREES`, `LIMELIGHT_LENS_HEIGHT_INCHES`, and `TAG_HEIGHT_INCHES` at `0`.
 - `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` contains the default hardware name, overlay toggles, output units, and resolution that may need real robot-specific values.
-- `RGBIndicator.RGBIndicator_PARAMS` contains the LED hardware name, panels name, indicator type (`ONLY_HARDWARE`/`ONLY_VIRTUAL`/`BOTH`/`NAN`), and enablement gate.
 - `SlidesMotor.DEFAULT_HARDWAREMAP_NAME` contains the default hardware-map name used by the current direct SDK-level slides test.
 - `Intake.INTAKE_PARAMS` contains intake power presets, motor direction, intake motor hardware name, and forward/reverse gamepad command bindings.
 - `tests/PreseasonWebcamAuto` contains local PIDF constants that are not sourced from `Constants` or `RobotConfigurations`.
@@ -132,7 +130,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
 - `tests/FieldCentricMecanumTeleOp.java` gets its IMU through `Constants.createIMU(hardwareMap)`, but its right-side motor directions are still hardcoded to `DcMotorSimple.Direction.REVERSE` rather than read from `Constants.currentBot`.
 - `tests/PreseasonWebcamAuto.java` bypasses the Limelight wrapper for behavior, but now still sources the camera name from `Limelight.LIMELIGHT_PARAMS`; camera-name or vision-tuning updates may still need to touch it explicitly.
 - `tests/MecanumTeleOp.java` now pulls drivetrain motor names and default directions from `Constants.currentBot`, so drive-profile renames should stay aligned automatically.
-- `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` now source hardware names from the owning wrapper/device definitions instead of stale standalone literals.
+- `tests/ftcSdk/RGBIndicatorTest.java` and `tests/ftcSdk/SlidesMotorTest.java` source hardware names from their owning device definitions instead of stale standalone literals.
 - `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` depend directly on `pid/autoTune/TuningConstants.java` for motor names, reversal booleans, target speed/position, and relay-test settings.
 
 ## Repo-specific warning signs
@@ -143,8 +141,7 @@ version pinned in `build.dependencies.gradle` before assuming the external API.
 - `Constants.assertHasMechanism(...)` now also fails early on the convenience-factory path, so mechanism registration issues may surface before reflection-based construction.
 - `RobotDrive` is the normal drive mechanism enabled through `configureDriveMechanisms()`, so drive constants and drive-stack registration need to stay coherent.
 - A `Constants.create...(...)` helper can throw before a wrapper’s local `ISBEINGUSED` gate ever runs. Check registration with `Constants.hasMechanism(...)` when code needs to work across profiles.
-- `Limelight`, `LogitechWebcam`, and `RGBIndicator` do still toggle themselves off when constructed with a profile that omits their class, but the normal convenience-factory path now usually hits `assertHasMechanism(...)` first.
-- `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`.
+- `LogitechWebcam` settings are mostly owned by its local params class, not by `RobotConstants`; the standalone wrapper is deprecated in favor of `Vision`.
 - `pid/autoTune/` is intentionally not on the normal `Constants.create...(...)` mechanism-factory path; if the task is about those tuner op modes, update `TuningConstants` instead of trying to thread the values through `RobotConfigurations`.
 - This codebase is still preseason-oriented, so some autonomous constants genuinely cannot be inferred until game rules, field layout, and the final robot hardware are known.
 

@@ -18,7 +18,11 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 import java.util.Objects;
 
-/** Standalone AprilTag controller for a Logitech or other FTC USB webcam. */
+/**
+ * @deprecated Use the profile-managed {@link org.firstinspires.ftc.teamcode.mechanisms.Vision}
+ * mechanism for new code. This standalone wrapper remains for existing callers.
+ */
+@Deprecated
 @SuppressWarnings("SpellCheckingInspection")
 public class LogitechWebcam implements AutoCloseable {
     public static class LOGITECH_WEBCAM_PARAMS {

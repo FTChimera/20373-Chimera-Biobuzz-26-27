@@ -40,7 +40,6 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/leds/RGBIndicator.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
 
@@ -50,7 +49,7 @@ If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
 2. Reusable subsystems and high-level wrappers share the `Mechanism` base class so they all receive `HardwareMap` and the active `RobotConstants` profile the same way.
 3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
 4. `Constants` exposes dedicated helpers for common mechanisms/wrappers
-   (`createDrive`, `createIntake`, `createVision`, `createRGB`, `createWebcam`)
+   (`createDrive`, `createIntake`, `createVision`, `createWebcam`)
    plus the aggregate `createRobot(...)` helper and a generic
    `createMechanism(...)` fallback.
 5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
@@ -98,9 +97,8 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
   directly with explicit params, not through the mechanism factory.
 - `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or other raw-device flows. Its `initialize(min, max)`, absolute positions, and percentages validate finite/in-range requests before driving hardware.
 - `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
-- There are now two RGB-indicator layers: `library.hardware.hardwareDevice.RGBIndicator` is the custom FTC device type, while `library.hardware.leds.RGBIndicator` is the profile-managed wrapper/mechanism used by the rest of TeamCode.
-- `RGBIndicator` extends `Mechanism`, owns builder-style `RGBIndicator_PARAMS`, now checks its enabled state before looking up the servo, and currently defaults to `Type.ONLY_HARDWARE` unless the params are explicitly changed.
-- `LogitechWebcam` extends `Mechanism`, owns builder-style `LOGITECH_WEBCAM_PARAMS`, and now reads params before building `AprilTagProcessor` / `VisionPortal` hardware.
+- `library.hardware.hardwareDevice.RGBIndicator` is the SDK-registerable RGB indicator; fetch it directly from `HardwareMap` in SDK-device validation code.
+- `LogitechWebcam` is a deprecated standalone controller retained only for existing callers. New code should use the profile-managed `Vision` mechanism.
 - `library/robot/drivetrain/MecanumDrive` is the reusable drive helper under the public mechanism layer; it owns both follower-backed drive behavior and the fallback manual-motor path used when `USE_FOLLOWER_DRIVE` is false.
 - `RobotDrive` is the profile-managed `Mechanism` that owns nested drive params, constructs the `MecanumDrive` helper from the active profile, and turns `GpBindings` into teleop drive behavior.
 - `Robot` is the aggregate wrapper over every class in `bot.Mechanisms`; it
@@ -129,7 +127,7 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - New intake-level operation or params field: `Intake.java`
 - New robot-profile registration or creation eligibility: `RobotConfigurations.java` / `RobotConstants.java`
 - New top-level subsystem convenience helper: `Constants.java`
-- New LED indicator behavior or params: `RGBIndicator.java`
+- New device-level LED indicator behavior: `hardwareDevice/RGBIndicator.java`
 - New custom FTC device registration or controller/port behavior: `library/hardware/hardwareDevice/...`
 - New slides raw-device behavior: `SlidesMotor.java`
 - New drive behavior or teleop helper: `library/robot/drivetrain/MecanumDrive.java` or `mechanisms/RobotDrive.java`
@@ -142,5 +140,5 @@ Why: the repo’s uniformity now comes from the shared `Mechanism` base class, p
 - Instantiating the same mechanism differently in every op mode.
 - Forgetting to add a new mechanism class to `RobotConfigurations`; `RobotConstants.createMechanism(...)` intentionally refuses to create classes that are not registered in the active profile.
 - Forgetting that `Constants.assertHasMechanism(...)` now enforces profile registration on the convenience-factory path too.
-- Confusing the device-level `library.hardware.hardwareDevice.RGBIndicator` with the profile-managed `library.hardware.leds.RGBIndicator` wrapper.
+- Treating the device-level `library.hardware.hardwareDevice.RGBIndicator` as a profile-managed mechanism instead of fetching it directly from `HardwareMap`.
 - Putting a custom FTC device in the `Mechanism` factory flow when it is really meant to be used directly through `hardwareMap.get(...)`.

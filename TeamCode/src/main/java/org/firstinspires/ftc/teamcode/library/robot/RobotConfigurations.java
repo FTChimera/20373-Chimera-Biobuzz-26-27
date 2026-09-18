@@ -8,7 +8,6 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
-import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
@@ -68,9 +67,6 @@ public class RobotConfigurations {
                         .hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))
                 .addMechanism(Vision.class, new Vision.VISION_PARAMS())
-                .addMechanism(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS()
-                        .hardwareMapName("rgb")
-                        .panelsName("RGB INDICATOR"))
                 // COMPATIBILITY
                 .useFollowerDrive(true);
     }

@@ -39,21 +39,23 @@ public class Button extends GpCommand {
     public static final Button TOUCHPAD = register("TOUCHPAD", g -> g.touchpad);
 
     private final Function<Gamepad, Boolean> reader;
+    private final int ordinal;
     private boolean current;
     private boolean previous;
     private boolean toggleState;
 
-    private Button(String name, Function<Gamepad, Boolean> reader) {
+    private Button(String name, Function<Gamepad, Boolean> reader, int ordinal) {
         super(TYPE.BUTTON, name);
         this.reader = reader;
+        this.ordinal = ordinal;
     }
 
     private Button(Button other) {
-        this(other.getName(), other.reader);
+        this(other.getName(), other.reader, other.ordinal);
     }
 
     private static Button register(String name, Function<Gamepad, Boolean> reader) {
-        Button button = new Button(name, reader);
+        Button button = new Button(name, reader, VALUES.size());
         VALUES.add(button);
         return button;
     }
@@ -68,6 +70,10 @@ public class Button extends GpCommand {
 
     public Button copy() {
         return new Button(this);
+    }
+
+    int ordinal() {
+        return ordinal;
     }
 
     public void update(Gamepad gamepad) {

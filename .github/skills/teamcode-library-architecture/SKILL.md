@@ -58,7 +58,7 @@ Use this pattern:
 6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createRobot(hardwareMap, RobotMode...)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
 7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
 
-Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `RobotDrive.ROBOT_DRIVE_PARAMS`, `Limelight.LIMELIGHT_PARAMS`, `LogitechWebcam.LOGITECH_WEBCAM_PARAMS`, or `RGBIndicator.RGBIndicator_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`.
+Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `RobotDrive.ROBOT_DRIVE_PARAMS`, and `Vision.VISION_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`. `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` remains only for the deprecated standalone wrapper.
 
 A helper existing in `Constants` does **not** mean the profile selected by
 `Constants.currentBot` registers that class; check the selected profile's
@@ -68,7 +68,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 ## Where configuration belongs
 
 - Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
-- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers like `createRGB(...)` and `createWebcam(...)`.
+- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers such as `createVision(...)`. `createWebcam(...)` is retained only as a deprecated compatibility helper.
 - Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
 - Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
 - Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed robot.
@@ -83,9 +83,8 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `library.hardware.hardwareDevice.RevPotentiometer`
 - `library.hardware.hardwareDevice.SlidesMotor`
 - `library.hardware.hardwareDevice.RGBIndicator`
-- `library.hardware.leds.RGBIndicator`
 - `library.hardware.webcam.Limelight`
-- `library.hardware.webcam.LogitechWebcam`
+- `library.hardware.webcam.LogitechWebcam` (deprecated)
 - `library.DriveVector`
 - `library.Tuple`
 - `library.game.Field`
@@ -154,7 +153,7 @@ helper, and prefer runtime-test guards for optional subsystems.
 - `RobotDrive` is the public profile-managed drive mechanism. `library/robot/drivetrain/MecanumDrive` is the reusable helper underneath it, not a separately registered mechanism.
 - `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
 - `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
-- The repo now has both a device-level `library.hardware.hardwareDevice.RGBIndicator` and a profile-managed wrapper `library.hardware.leds.RGBIndicator`; use the former for SDK registration tests and the latter for normal mechanism/factory-driven robot code.
+- `library.hardware.hardwareDevice.RGBIndicator` is an SDK-registerable device for direct `hardwareMap.get(...)` use and SDK registration tests; it is not a profile-managed mechanism.
 
 ## Current build-tooling note
 

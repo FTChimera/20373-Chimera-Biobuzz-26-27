@@ -140,7 +140,6 @@ git --no-pager grep -nE 'hardwareMap\.get\(.*".+"' -- TeamCode/src/main/java/org
 #### 4. Custom FTC `HardwareDevice` versus profile-managed wrapper confusion
 
 - `library/hardware/hardwareDevice/` classes like `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator` are direct FTC devices
-- `library/hardware/leds/RGBIndicator` is a separate profile-managed wrapper/mechanism layer
 - do not confuse direct `hardwareMap.get(CustomType.class, ...)` code with the `Mechanism` factory path
 
 #### 5. Drive and Pedro behavior
@@ -217,7 +216,7 @@ git --no-pager grep -nE 'TODO|FIXME|printStackTrace|catch \(Exception|while \(op
 - Mechanism constructors matching the expected `(HardwareMap, RobotConstants)` signature
 - `RobotConfigurations` registration through `.addMechanism(...)`
 - Vision or LED wrappers that should skip hardware lookup when the mechanism is disabled
-- Distinguishing profile-managed wrappers like `library.hardware.leds.RGBIndicator` from custom SDK hardware devices like `library.hardware.hardwareDevice.RGBIndicator`
+- Distinguishing SDK-registerable devices like `library.hardware.hardwareDevice.RGBIndicator` from profile-managed mechanisms
 - Pedro follower and localizer wiring
 - `OpModeHelper.kt` lifecycle state handling and manual Lynx bulk-caching usage when that utility is touched
 - `EquationCurve` / `Polynomial` contracts if custom path geometry changed

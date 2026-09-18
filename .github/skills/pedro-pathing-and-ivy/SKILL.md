@@ -39,7 +39,6 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/CommandConverter.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Ivy.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
@@ -103,7 +102,6 @@ TeamCode currently composes Ivy behavior with:
 - `Groups.sequential(...)`
 - `Groups.loop(...)`
 - `PedroCommands.follow(...)`
-- `CommandConverter.toCommand(...)`
 - `PathPlannerList.schedule()`
 
 `PlanBuilder.waitMs(double)` and `learning/ExampleIvyWithSubsystems.waitMs(double)` both round to Ivy's long-millisecond API before delegating to `Commands.waitMs(...)`.

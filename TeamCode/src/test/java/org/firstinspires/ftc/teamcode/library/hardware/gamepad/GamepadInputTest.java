@@ -38,6 +38,10 @@ public class GamepadInputTest {
         assertTrue(buttons.wasJustPressed(Button.X));
         assertTrue(buttons.anyPressed());
         assertTrue(buttons.anyJustPressed());
+        for (Button button : Button.values()) {
+            assertSame(buttons.getReader(button), buttons.getReaders().get(button));
+        }
+        assertSame(buttons.getReader(Button.A), buttons.getReader(Button.A.copy()));
 
         gamepad.a = false;
         gamepad.x = false;
@@ -84,6 +88,18 @@ public class GamepadInputTest {
         assertTrue(trigger.isPressed());
         assertTrue(trigger.wasJustPressed());
         assertTrue(trigger.getToggle());
+
+        trigger.setOutputTransform(value -> Math.min(1.0, value * 2.0));
+        gamepad.right_trigger = 0.4f;
+        trigger.update(gamepad);
+        assertEquals(0.4, trigger.getRawValue(), MathUtils.EPSILON);
+        assertEquals(0.8, trigger.getValue(), MathUtils.EPSILON);
+        assertFalse(trigger.isPressed());
+
+        gamepad.right_trigger = 0.6f;
+        trigger.update(gamepad);
+        assertEquals(1.0, trigger.getValue(), MathUtils.EPSILON);
+        assertFalse(trigger.wasJustPressed());
     }
 
     @Test
@@ -122,7 +138,8 @@ public class GamepadInputTest {
         GamepadEx extended = new GamepadEx(gamepad1);
         DualGamepad dual = new DualGamepad(gamepad1, gamepad2);
 
-        assertSame(extended, extended.setJoystickDeadzone(0.2).setStickCurve(x -> x).setTriggerThreshold(0.7));
+        assertSame(extended, extended.setJoystickDeadzone(0.2).setStickCurve(x -> x)
+                .setTriggerOutputTransform(x -> Math.min(1.0, x * 2.0)).setTriggerThreshold(0.7));
 
         gamepad1.a = true;
         gamepad1.left_stick_y = -1.0f;

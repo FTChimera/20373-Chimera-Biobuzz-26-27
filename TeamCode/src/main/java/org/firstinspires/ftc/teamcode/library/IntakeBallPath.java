@@ -4,6 +4,7 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.Path;
+import com.pedropathing.paths.PathBuilder;
 import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
@@ -15,6 +16,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 public final class IntakeBallPath {
     public static final double AREA_DISTANCE_SCALE = 18.0;//tune - move to ll
@@ -48,7 +50,12 @@ public final class IntakeBallPath {
         if (detectors == null || detectors.isEmpty()) return null;
 
         detectors.sort(Comparator.comparingDouble(IntakeBallPath::getScorePass1).reversed());
-        List<DetectionCandidate> candidates = buildCandidates(robotPose, detectors, vision);
+        List<DetectionCandidate> candidates = buildCandidates(
+                robotPose,
+                buildReadings(detectors),
+                vision.getLensHeightInches(),
+                vision.getMountAngleDegrees()
+        );
         if (candidates.isEmpty()) return null;
 
         List<DetectionCandidate> selected = selectBestSequence(candidates, Math.min(numBalls, candidates.size()));
@@ -69,15 +76,29 @@ public final class IntakeBallPath {
         return 0.8 * tA * tAScalar + 0.2 * confidence * confidenceScalar;
     }
 
-    private static List<DetectionCandidate> buildCandidates(
+    private static List<DetectionReading> buildReadings(List<LLResultTypes.DetectorResult> detectors) {
+        List<DetectionReading> readings = new ArrayList<>(detectors.size());
+        for (LLResultTypes.DetectorResult detector : detectors) {
+            readings.add(new DetectionReading(
+                    detector.getConfidence(),
+                    detector.getTargetArea(),
+                    detector.getTargetXDegrees(),
+                    detector.getTargetYDegrees()
+            ));
+        }
+        return readings;
+    }
+
+    static List<DetectionCandidate> buildCandidates(
             Pose robotPose,
-            List<LLResultTypes.DetectorResult> detectors,
-            Vision vision
+            List<DetectionReading> detections,
+            double lensHeightInches,
+            double mountAngleDegrees
     ) {
         List<DetectionCandidate> candidates = new ArrayList<>();
 
-        for (LLResultTypes.DetectorResult detector : detectors) {
-            DetectionCandidate candidate = toCandidate(robotPose, detector, vision);
+        for (DetectionReading detection : detections) {
+            DetectionCandidate candidate = toCandidate(robotPose, detection, lensHeightInches, mountAngleDegrees);
             if (candidate != null) {
                 candidates.add(candidate);
             }
@@ -106,21 +127,22 @@ public final class IntakeBallPath {
 
     private static DetectionCandidate toCandidate(
             Pose robotPose,
-            LLResultTypes.DetectorResult detector,
-            Vision vision
+            DetectionReading detection,
+            double lensHeightInches,
+            double mountAngleDegrees
     ) {
-        double confidence = detector.getConfidence() / 100.0;
-        double area = detector.getTargetArea() / 100.0;
+        double confidence = detection.confidencePercent / 100.0;
+        double area = detection.targetAreaPercent / 100.0;
         if (confidence < MIN_CONFIDENCE || area < MIN_TARGET_AREA) return null;
 
-        double forwardDistance = estimateForwardDistanceInches(detector, area, vision);
+        double forwardDistance = estimateForwardDistanceInches(detection.targetYDegrees, area, lensHeightInches, mountAngleDegrees);
         if (!Double.isFinite(forwardDistance)
                 || forwardDistance < MIN_FORWARD_DISTANCE_INCHES
                 || forwardDistance > MAX_FORWARD_DISTANCE_INCHES) {
             return null;
         }
 
-        double lateralOffset = forwardDistance * Math.tan(MathUtils.units.toRadians(detector.getTargetXDegrees()));
+        double lateralOffset = forwardDistance * Math.tan(MathUtils.units.toRadians(detection.targetXDegrees));
         if (!Double.isFinite(lateralOffset) || Math.abs(lateralOffset) > MAX_LATERAL_OFFSET_INCHES) return null;
 
         Pose fieldPose = robotRelativeToField(robotPose, forwardDistance, lateralOffset);
@@ -128,13 +150,14 @@ public final class IntakeBallPath {
                 scoreCandidate(confidence, area, lateralOffset));
     }
 
-    private static double estimateForwardDistanceInches(
-            LLResultTypes.DetectorResult detector,
+    static double estimateForwardDistanceInches(
+            double targetYDegrees,
             double normalizedArea,
-            Vision vision
+            double lensHeightInches,
+            double mountAngleDegrees
     ) {
-        double heightDelta = Pollen.RADIUS - vision.getLensHeightInches();
-        double angleRadians = MathUtils.units.toRadians(vision.getMountAngleDegrees() + detector.getTargetYDegrees());
+        double heightDelta = Pollen.RADIUS - lensHeightInches;
+        double angleRadians = MathUtils.units.toRadians(mountAngleDegrees + targetYDegrees);
         double tangent = Math.tan(angleRadians);
 
         if (Math.abs(heightDelta) > MathUtils.EPSILON && Math.abs(tangent) > MathUtils.EPSILON) {
@@ -163,10 +186,14 @@ public final class IntakeBallPath {
                 - SCORE_LATERAL_WEIGHT * lateralPenalty;
     }
 
-    private static List<DetectionCandidate> selectBestSequence(
+    static List<DetectionCandidate> selectBestSequence(
             List<DetectionCandidate> candidates,
             int desiredCount
     ) {
+        if (desiredCount <= 0 || candidates.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         int candidateCount = candidates.size();
         double[][] bestScores = new double[desiredCount + 1][candidateCount];
         double[][] arrivalHeadings = new double[desiredCount + 1][candidateCount];
@@ -181,7 +208,7 @@ public final class IntakeBallPath {
 
         for (int i = 0; i < candidateCount; i++) {
             DetectionCandidate candidate = candidates.get(i);
-            double headingFromRobot = Math.atan2(candidate.lateralOffset, candidate.forwardDistance);
+            double headingFromRobot = MathUtils.headingBetween(0.0, 0.0, candidate.forwardDistance, candidate.lateralOffset);
             bestScores[1][i] = candidate.qualityScore - SCORE_TURN_WEIGHT * Math.abs(headingFromRobot);
             arrivalHeadings[1][i] = headingFromRobot;
         }
@@ -195,12 +222,14 @@ public final class IntakeBallPath {
                     DetectionCandidate previousCandidate = candidates.get(previous);
                     if (currentCandidate.forwardDistance <= previousCandidate.forwardDistance) continue;
 
-                    double segmentHeading = Math.atan2(
-                            currentCandidate.lateralOffset - previousCandidate.lateralOffset,
-                            currentCandidate.forwardDistance - previousCandidate.forwardDistance
+                    double segmentHeading = MathUtils.headingBetween(
+                            previousCandidate.forwardDistance,
+                            previousCandidate.lateralOffset,
+                            currentCandidate.forwardDistance,
+                            currentCandidate.lateralOffset
                     );
                     double turnPenalty = SCORE_TURN_WEIGHT * Math.abs(
-                            MathUtils.wrapAngle(segmentHeading - arrivalHeadings[sequenceLength - 1][previous])
+                            MathUtils.headingDelta(arrivalHeadings[sequenceLength - 1][previous], segmentHeading)
                     );
                     double gapPenalty = SCORE_GAP_WEIGHT * MathUtils.distance(
                             currentCandidate.forwardDistance,
@@ -271,23 +300,24 @@ public final class IntakeBallPath {
         if (waypoints.size() == 2) return buildAdaptiveHandlePathChain(waypoints);
 
         if (shouldUsePedroCurveThrough(waypoints)) {
-            return buildPedroCurveThroughPathChain(follower, waypoints);
+            return buildPedroCurveThroughPathChain(follower.pathBuilder(), waypoints);
         }
 
         return buildAdaptiveHandlePathChain(waypoints);
     }
 
-    private static boolean shouldUsePedroCurveThrough(List<Pose> waypoints) {
+    static boolean shouldUsePedroCurveThrough(List<Pose> waypoints) {
         return MathUtils.maxTurnAngle(waypoints) <= CURVE_THROUGH_MAX_TURN_RADIANS
                 && MathUtils.maxSpacingRatio(waypoints) <= CURVE_THROUGH_MAX_SPACING_RATIO;
     }
 
-    private static PathChain buildPedroCurveThroughPathChain(Follower follower, List<Pose> waypoints) {
+    static PathChain buildPedroCurveThroughPathChain(PathBuilder pathBuilder, List<Pose> waypoints) {
+        Objects.requireNonNull(pathBuilder, "pathBuilder");
         Pose start = waypoints.get(0);
         Pose mirroredPreviousPoint = start.minus(waypoints.get(1).minus(start));
         Pose[] followPoints = waypoints.subList(1, waypoints.size()).toArray(new Pose[0]);
 
-        PathChain pathChain = follower.pathBuilder()
+        PathChain pathChain = pathBuilder
                 .curveThrough(mirroredPreviousPoint, start, PEDRO_CURVE_THROUGH_TENSION, followPoints)
                 .build();
 
@@ -298,7 +328,7 @@ public final class IntakeBallPath {
         return pathChain;
     }
 
-    private static PathChain buildAdaptiveHandlePathChain(List<Pose> waypoints) {
+    static PathChain buildAdaptiveHandlePathChain(List<Pose> waypoints) {
         Pose[] tangents = MathUtils.smoothTangents(waypoints);
         double[] handleLengths = MathUtils.adaptiveHandleLengths(waypoints, ADAPTIVE_HANDLE_FRACTION);
         List<Path> segments = new ArrayList<>();
@@ -322,17 +352,31 @@ public final class IntakeBallPath {
         return pathChain;
     }
 
-    private static class DetectionCandidate {
+    static final class DetectionCandidate {
         final Pose fieldPose;
         final double forwardDistance;
         final double lateralOffset;
         final double qualityScore;
 
-        private DetectionCandidate(Pose fieldPose, double forwardDistance, double lateralOffset, double qualityScore) {
+        DetectionCandidate(Pose fieldPose, double forwardDistance, double lateralOffset, double qualityScore) {
             this.fieldPose = fieldPose;
             this.forwardDistance = forwardDistance;
             this.lateralOffset = lateralOffset;
             this.qualityScore = qualityScore;
+        }
+    }
+
+    static final class DetectionReading {
+        final double confidencePercent;
+        final double targetAreaPercent;
+        final double targetXDegrees;
+        final double targetYDegrees;
+
+        DetectionReading(double confidencePercent, double targetAreaPercent, double targetXDegrees, double targetYDegrees) {
+            this.confidencePercent = confidencePercent;
+            this.targetAreaPercent = targetAreaPercent;
+            this.targetXDegrees = targetXDegrees;
+            this.targetYDegrees = targetYDegrees;
         }
     }
 }

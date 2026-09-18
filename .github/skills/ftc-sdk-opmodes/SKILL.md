@@ -61,7 +61,7 @@ When an op mode needs a subsystem:
   or optional `robot.get(...)` lookups as needed
 - call `Constants.createDrive(hardwareMap)` when you intentionally want just the public drive mechanism
 - call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
-- call `Constants.createRGB(hardwareMap)` or `Constants.createWebcam(hardwareMap)` when those profile-managed wrappers are needed
+- call `Constants.createVision(hardwareMap)` for profile-managed vision; `Constants.createWebcam(hardwareMap)` is deprecated compatibility only
 
 Every profile-managed `Constants.create...(...)` helper first calls `Constants.assertHasMechanism(...)`, so the profile selected by `Constants.currentBot` must register the requested mechanism class before the helper will run successfully. `createFollower(...)` and `createIMU(...)` are profile-configured helpers, not mechanism factories.
 

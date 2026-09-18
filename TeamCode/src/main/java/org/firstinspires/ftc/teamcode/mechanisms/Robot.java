@@ -11,6 +11,7 @@ import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.DriveVector;
 import org.firstinspires.ftc.teamcode.library.OpModeHelper;
+import org.firstinspires.ftc.teamcode.library.Tuple;
 import org.firstinspires.ftc.teamcode.library.game.Field;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
@@ -34,9 +35,8 @@ import java.util.function.Supplier;
  */
 public class Robot extends Mechanism {
     private final Map<Class<? extends Mechanism>, Mechanism> mechanisms = new LinkedHashMap<>();
-    private final RobotMode robotMode;
+    private Tuple<AllianceColor, RobotMode> allianceColorAndRobotMode;
     private State lastState;
-    private AllianceColor color = AllianceColor.RED;
     OpModeHelper helper;
 
     public Robot(HardwareMap map, RobotConstants bot) {
@@ -45,11 +45,12 @@ public class Robot extends Mechanism {
 
     public Robot(HardwareMap map, RobotConstants bot, RobotMode robotMode) {
         super(map, bot);
-        this.robotMode = Objects.requireNonNull(robotMode, "robotMode");
+        AllianceColor color = AllianceColor.RED;
         helper = new OpModeHelper(hardwareMap);
         if (Blackboard.get(Blackboard.Caption.ALLIANCE) != null) {
             color = Blackboard.get(Blackboard.Caption.ALLIANCE).getValue();
         }
+        allianceColorAndRobotMode = new Tuple<>(color, Objects.requireNonNull(robotMode, "robotMode"));
         Common.init(color);
         bot.Mechanisms.stream()
                 .filter(mechanismClass -> mechanismClass != Robot.class)
@@ -68,7 +69,15 @@ public class Robot extends Mechanism {
     public double getVoltage() {return helper.getBatteryVoltage();}
     public double getVoltage(boolean force) {return helper.getBatteryVoltage(force);}
     public RobotMode getRobotMode() {
-        return robotMode;
+        return allianceColorAndRobotMode.getB();
+    }
+
+    public AllianceColor getAllianceColor() {
+        return allianceColorAndRobotMode.getA();
+    }
+
+    public Tuple<AllianceColor, RobotMode> getAllianceColorAndRobotMode() {
+        return new Tuple<>(allianceColorAndRobotMode.getA(), allianceColorAndRobotMode.getB());
     }
 
     /** Creates Ivy commands bound to this robot's configured mechanisms. */
@@ -210,23 +219,17 @@ public class Robot extends Mechanism {
 
     @Override
     public void periodic(State state) {
-        periodic(state, robotMode);
-    }
-
-    @Override
-    public void periodic(State state, RobotMode periodicMode) {
         Objects.requireNonNull(state, "state");
-        if (periodicMode != robotMode) {
+        if (state.getRobotMode() != getRobotMode()) {
             throw new IllegalArgumentException("Robot mode does not match the configured robot mode.");
         }
         helper.update();
-        state.setRobotMode(robotMode);
+        state.setAllianceColorAndRobotMode(allianceColorAndRobotMode);
         state.setOpModeHelper(helper);
-        state.setAllianceColor(color);
         state.setRobot(this);
         lastState = state;
         for (Mechanism mechanism : mechanisms.values()) {
-            mechanism.periodic(state, robotMode);
+            mechanism.periodic(state);
         }
     }
 
@@ -260,7 +263,7 @@ public class Robot extends Mechanism {
     }
 
     public void saveEndVals() {
-        if (robotMode == RobotMode.AUTONOMOUS) {
+        if (getRobotMode() == RobotMode.AUTONOMOUS) {
             if (lastState == null) {
                 // No periodic update ran, so there is no reliable autonomous state to hand off.
                 return;
@@ -284,7 +287,7 @@ public class Robot extends Mechanism {
     }
 
     public void setAllianceColor(AllianceColor color) {
-        this.color = color;
+        allianceColorAndRobotMode = new Tuple<>(color, getRobotMode());
     }
     /** Stops all subsystems except for RobotDrive, does not save values*/
     public void stopAllSubsystems() {

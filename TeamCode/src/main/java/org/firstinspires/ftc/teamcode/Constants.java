@@ -58,10 +58,18 @@ public class Constants {
     }
 
 
+    /**
+     * @deprecated Use {@link #createVision(HardwareMap)} for new code.
+     */
+    @Deprecated
     public static LogitechWebcam createWebcam(HardwareMap hardwareMap) {
         return new LogitechWebcam(hardwareMap);
     }
 
+    /**
+     * @deprecated Use {@link #createVision(HardwareMap)} for new code.
+     */
+    @Deprecated
     public static LogitechWebcam createWebcam(HardwareMap hardwareMap, LogitechWebcam.LOGITECH_WEBCAM_PARAMS params) {
         return new LogitechWebcam(hardwareMap, params);
     }

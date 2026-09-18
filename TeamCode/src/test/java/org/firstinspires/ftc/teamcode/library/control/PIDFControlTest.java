@@ -121,6 +121,17 @@ public class PIDFControlTest {
         assertThrows(IllegalStateException.class, () -> controller.update(0.0));
     }
 
+    @Test
+    public void controllerInterfaceSupportsPidfController() {
+        DoublePIDFCoeffs coefficients = new DoublePIDFCoeffs(1.0, 0.0, 0.0, 0.0);
+        coefficients.setTolerance(0.0);
+        coefficients.setIntegralLimit(1.0);
+        Controller<Double, Double, Double> pidf = new DoublePIDFController(coefficients);
+        pidf.setTarget(2.0);
+
+        assertEquals(2.0, pidf.calculate(0.0), MathUtils.EPSILON);
+    }
+
     private org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<StateVector> twoStateCoefficients() {
         return new org.firstinspires.ftc.teamcode.library.control.PIDFCoefficients<>(
                 state -> state.values,

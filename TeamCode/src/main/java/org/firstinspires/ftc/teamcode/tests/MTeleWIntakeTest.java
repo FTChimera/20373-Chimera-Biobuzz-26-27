@@ -77,8 +77,7 @@ public class MTeleWIntakeTest extends OpMode {
     private DcMotor leftBack = null;
     private DcMotor rightBack = null;
 
-    private DcMotor intake = null;
-    private Intake.INTAKE_PARAMS intakeParams = null;
+    private Intake intake = null;
     private IMU imu = null;
     private GamepadEx driver;
     Mode teleopMode = Mode.ROBOT_CENTRIC_TELEOP;
@@ -123,11 +122,8 @@ public class MTeleWIntakeTest extends OpMode {
         imu.resetYaw();
         driver = new GamepadEx(gamepad1, 0.0, x -> x, TRIGGER_THRESHOLD);
 
-        // Initialize intake motor directly from currentBot mechanism params (no full Mechanism)
-        intakeParams = Constants.currentBot.getMechanismParams(Intake.class, new Intake.INTAKE_PARAMS());
-        if (intakeParams != null && intakeParams.ISBEINGUSED && intakeParams.HARDWAREMAP_NAME != null && !intakeParams.HARDWAREMAP_NAME.isEmpty()) {
-            intake = hardwareMap.get(DcMotor.class, intakeParams.HARDWAREMAP_NAME);
-            intake.setDirection(intakeParams.INTAKE_MOTOR_DIRECTION.toFtcSdk());
+        if (Constants.hasMechanism(Intake.class)) {
+            intake = Constants.createIntake(hardwareMap);
         }
 
         /*
@@ -297,17 +293,15 @@ public class MTeleWIntakeTest extends OpMode {
             teleopMode = teleopMode.next(-1);
         }
 
-        // Intake control (direct DcMotor using currentBot params)
-        double intakePower = 0;
-        if (driver.rightTrigger.isPressed()) {
-            intakePower = intakeParams != null ? intakeParams.FULL_POWER : 1.0;
-        } else if (driver.leftTrigger.isPressed()) {
-            intakePower = intakeParams != null ? intakeParams.REVERSE_FULL_POWER : -1.0;
-        } else {
-            intakePower = intakeParams != null ? intakeParams.STOP_POWER : 0.0;
-        }
+        // Intake control through the active profile-managed mechanism.
         if (intake != null) {
-            intake.setPower(intakePower);
+            if (driver.rightTrigger.isPressed()) {
+                intake.FullPower();
+            } else if (driver.leftTrigger.isPressed()) {
+                intake.ReverseFullPower();
+            } else {
+                intake.Stop();
+            }
         }
 
         /*
@@ -331,7 +325,7 @@ public class MTeleWIntakeTest extends OpMode {
         rightFront.setPower(0);
         leftBack.setPower(0);
         rightBack.setPower(0);
-        if (intake != null) intake.setPower(0);
+        if (intake != null) intake.Stop();
     }
 
     String getMotorDirectionsString() {

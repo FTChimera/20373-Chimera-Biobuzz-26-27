@@ -55,7 +55,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
 - `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted check, sleep briefly, and then request stop. It now also provides `skipIfMechanismMissing(...)` and `showStep(...)` helpers so factory tests can stay profile-aware and telemetry-friendly.
 - `tests/ftcSdk/` now includes factory-style runtime checks for `Follower`,
   `IMU`, `Intake`, `Vision`, `RobotDrive`, `RGBIndicator`, and
-  `LogitechWebcam`.
+  the deprecated `LogitechWebcam` compatibility wrapper.
 - `tests/ftcSdk/` now also includes custom-hardware checks for the device-level `RGBIndicator` and `SlidesMotor` classes under `library/hardware/hardwareDevice/`.
 - TeamCode now also has a JVM test layer under `TeamCode/src/test/java/`; use that for math, utility, blackboard, gamepad, robot-configuration, and `EquationCurve` behavior that does not need FTC runtime hardware.
 - `pid/autoTune/` now contains FTC AutoTune relay-feedback tuners built around repo-local `pid.autoTune.master.PIDMaster` / `DualMotorPIDMaster` FTC adapters, the external `pidautotuner-core` algorithms, and a repo-local `@Configurable` `TuningConstants` class.
@@ -86,7 +86,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
   `RobotDriveFactoryTest` validates the public `Constants.createDrive(...)`
   path and reports whether the active profile is using manual or follower drive.
 - `IMUTest` is the runtime check for `Constants.createIMU(...)`; it resets yaw once, reports before/after values, and leaves live heading movement confirmation to the driver.
-- `RGBIndicatorTest` validates both the device-level `library.hardware.hardwareDevice.RGBIndicator` and the profile-style `library.hardware.leds.RGBIndicator` wrapper, but its wrapper half is constructed with a temporary `new RobotConstants().addMechanism(...)` rather than `Constants.createRGB(...)`.
+- `RGBIndicatorTest` validates the device-level `library.hardware.hardwareDevice.RGBIndicator` through direct `hardwareMap.get(...)`.
 - `SlidesMotorTest` is a direct SDK-level validation flow for the custom `SlidesMotor` hardware device, and its hardware name now comes from `SlidesMotor.DEFAULT_HARDWAREMAP_NAME`.
 - `UnitTestAll` is the single JVM suite entry point for non-hardware TeamCode
   tests, currently covering `Blackboard`, `DriveVector`, `Timer`, field
@@ -125,7 +125,7 @@ inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
   `RobotIvyBuilder.periodic(new State(RobotMode.AUTONOMOUS))`; this keeps
   follower updates active without consuming teleop bindings.
 - `tests/PreseasonWebcamAuto.java` is intentionally not a shared match op mode; keep it documented as validation/proof-of-concept code.
-- `tests/PreseasonWebcamAuto.java` and `tests/ftcSdk/RGBIndicatorTest.java` still intentionally bypass the normal factory path for parts of their behavior. Check registration in the profile selected by `Constants.currentBot` before adding a factory-created wrapper to either test.
+- `tests/PreseasonWebcamAuto.java` intentionally bypasses the normal factory path for part of its behavior. `tests/ftcSdk/RGBIndicatorTest.java` intentionally fetches its SDK-registerable device directly.
 - `tests/MecanumTeleOp.java`, `tests/PreseasonWebcamAuto.java`, `tests/ftcSdk/RGBIndicatorTest.java`, and `tests/ftcSdk/SlidesMotorTest.java` were recently updated to centralize their hardware naming, so future test edits should preserve that alignment.
 
 ## Validation expectations

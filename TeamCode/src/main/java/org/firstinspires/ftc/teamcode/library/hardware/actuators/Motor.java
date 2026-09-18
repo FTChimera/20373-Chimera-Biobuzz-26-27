@@ -4,9 +4,10 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.library.control.Controller;
 
+import java.util.Objects;
 /**
  * Custom Motor class that wraps around the DcMotorEx class and provides additional functionality for easier motor control.
  * <pre>
@@ -22,6 +23,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 public class Motor implements HardwareDevice {
     double targetPower, targetVelocity;
     DcMotorEx motor;
+    private Controller<Double, Double, Double> velocityController;
 
     public Motor(HardwareMap hwMap, String name) {
         motor = hwMap.get(DcMotorEx.class, name);
@@ -52,24 +54,6 @@ public class Motor implements HardwareDevice {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public Motor PIDFControl(PIDFCoefficients coefficients) { // TODO Set up Controller interface here and integrate it
-        setPIDFCoefficients(coefficients);
-        return this;
-    }
-    public Motor PIDFControl(double P, double I, double D, double F) {
-        return PIDFControl(new PIDFCoefficients(P, I, D, F));
-    }
-
-    public void setPIDFCoefficients(double P, double I, double D, double F) {
-        setPIDFCoefficients(new PIDFCoefficients(P, I, D, F));
-    }
-    public void setPIDFCoefficients(PIDFCoefficients coefficients) {
-        motor.setPIDFCoefficients(
-                DcMotor.RunMode.RUN_USING_ENCODER,
-                coefficients
-        );
-    }
-
     public DcMotorEx getMotor() {
         return motor;
     }
@@ -95,7 +79,39 @@ public class Motor implements HardwareDevice {
     }
     public void setVelocity(double velocity) {
         targetVelocity = velocity;
-        motor.setVelocity(targetVelocity);
+        if (velocityController == null) {
+            motor.setVelocity(targetVelocity);
+        } else {
+            velocityController.setTarget(targetVelocity);
+        }
+    }
+
+    /**
+     * Uses the supplied controller to regulate measured motor velocity through motor power.
+     * The controller output is passed directly to {@link DcMotorEx#setPower(double)}.
+     */
+    public Motor setVelocityController(Controller<Double, Double, Double> velocityController) {
+        this.velocityController = Objects.requireNonNull(velocityController, "velocityController");
+        velocityController.setTarget(targetVelocity);
+        return this;
+    }
+
+    public void clearVelocityController() {
+        velocityController = null;
+    }
+
+    public Controller<Double, Double, Double> getVelocityController() {
+        return velocityController;
+    }
+
+    /** Updates custom velocity control or reapplies the requested SDK velocity. */
+    public void periodic() {
+        if (velocityController == null) {
+            motor.setPower(targetPower);
+            return;
+        }
+        velocityController.update(motor.getVelocity());
+        motor.setPower(velocityController.getOutput());
     }
     public double getVelocity() {
         return motor.getVelocity();

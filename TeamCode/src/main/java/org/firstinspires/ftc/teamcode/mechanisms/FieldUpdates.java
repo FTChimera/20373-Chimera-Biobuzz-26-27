@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.game.Field;
 import org.firstinspires.ftc.teamcode.library.game.HiveState;
-import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
@@ -23,7 +22,7 @@ public class FieldUpdates extends Mechanism {
     }
 
     @Override
-    public void periodic(State robotState, RobotMode robotMode) {
+    public void periodic(State robotState) {
 
     }
 

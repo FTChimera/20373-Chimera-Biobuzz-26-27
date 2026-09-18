@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.library.control;
 import java.util.function.Function;
 import java.util.Objects;
 
-public class PIDFController<T> {
+public class PIDFController<T> implements Controller<T, T, T> {
     private PIDFCoefficients<T> coefficients;
     private T target;
     private T output;
@@ -27,10 +27,12 @@ public class PIDFController<T> {
     public void setCoefficients(PIDFCoefficients<T> coefficients) {
         this.coefficients = Objects.requireNonNull(coefficients, "coefficients");
     }
+    @Override
     public void setTarget(T target) {
         this.target = target;
     }
 
+    @Override
     public T getTarget() {
         return target;
     }
@@ -43,6 +45,7 @@ public class PIDFController<T> {
     public PIDFCoefficients<T> getCoefficients() {
         return coefficients;
     }
+    @Override
     public void reset() {
         firstUpdate = false;
         integral = null;
@@ -51,6 +54,7 @@ public class PIDFController<T> {
         lastTime = 0;
     }
 
+    @Override
     public boolean atTarget() {
         return atTarget(lastError);
     }
@@ -128,6 +132,7 @@ public class PIDFController<T> {
         lastError = error;
     }
 
+    @Override
     public T getOutput() {
         return output;
     }

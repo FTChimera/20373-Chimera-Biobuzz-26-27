@@ -116,6 +116,6 @@ If the task is instead about a custom SDK device type, put that class under `lib
 - Writing FTC annotations on abstract base classes.
 - Mixing `LinearOpMode` flow control into iterative `OpMode` subclasses.
 - Bypassing the `Mechanism` / `RobotConstants.createMechanism(...)` pattern for profile-managed subsystems.
-- Confusing the device-level `library.hardware.hardwareDevice.RGBIndicator` with the profile-managed `library.hardware.leds.RGBIndicator` wrapper.
+- Treating the device-level `library.hardware.hardwareDevice.RGBIndicator` as a profile-managed mechanism instead of fetching it from `HardwareMap`.
 - Forgetting that many runtime issues are hardware-config dependent even when the project builds.
 - Forgetting that `tests/` may intentionally contain proof-of-concept code that uses more direct SDK access than shared match op modes.

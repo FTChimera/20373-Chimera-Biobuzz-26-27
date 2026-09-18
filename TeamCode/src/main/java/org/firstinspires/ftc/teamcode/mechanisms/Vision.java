@@ -9,7 +9,6 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.library.IntakeBallPath;
 import org.firstinspires.ftc.teamcode.library.game.State;
-import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
 import org.firstinspires.ftc.teamcode.library.hardware.webcam.Limelight;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
@@ -172,17 +171,22 @@ public class Vision extends Mechanism {
     }
 
     @Override
-    public void periodic(State state, RobotMode robotMode) {
+    public void periodic(State state) {
+        if (state == null || state.getRobot() == null) {
+            return;
+        }
         //forceRelocalize(state.getRobot().getDrive());
         updateRobotOrientation(state.getRobot().getPose().getHeading());
         update();
 
-        if (robotMode==RobotMode.TELEOP) {
+        if (state.getRobotMode() == org.firstinspires.ftc.teamcode.library.game.RobotMode.TELEOP
+                && state.getGpBindings() != null) {
             // now some gamepad commands
             // some command to follow the generated path to pick up balls
             // this is if the driver needs to focus on something else
             // todo move that away from Utils in pathplanner to here so that we can call it in teleop
-            if (state.getGpBindings().getCommand(params.AUTO_INTAKE_BUTTON).wasJustPressed()) {
+            Button autoIntakeButton = state.getGpBindings().getCommand(params.AUTO_INTAKE_BUTTON);
+            if (autoIntakeButton != null && autoIntakeButton.wasJustPressed()) {
                 PathChain intakeChain = IntakeBallPath.generateIntakePathFromCam();
                 state.getRobot().getDrive().followPath(intakeChain);
             }

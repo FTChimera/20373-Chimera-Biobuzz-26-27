@@ -192,6 +192,17 @@ public class GamepadEx {
     }
 
     /**
+     * Sets the analog-output transform for both triggers.
+     * @param outputTransform Function applied to raw trigger inputs
+     * @return this for chaining
+     */
+    public GamepadEx setTriggerOutputTransform(DoubleUnaryOperator outputTransform) {
+        leftTrigger.setOutputTransform(outputTransform);
+        rightTrigger.setOutputTransform(outputTransform);
+        return this;
+    }
+
+    /**
      * Sets the trigger digital threshold for both triggers.
      * @param threshold Value in (0, 1]. Default 0.5.
      * @return this for chaining

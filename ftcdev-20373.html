@@ -1683,7 +1683,7 @@ public class Red_TeleOp extends TeleOp {
             commands.startIntake(),
             waitMs(1000),
             commands.stopIntake(),
-            CommandConverter.toCommand(this::requestOpModeStop)
+            Commands.instant(this::requestOpModeStop)
         ));
     }
 }`,

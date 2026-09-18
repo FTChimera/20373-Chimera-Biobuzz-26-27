@@ -14,7 +14,6 @@ import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.robot.Driver;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
-import org.firstinspires.ftc.teamcode.pedroPathing.CommandConverter;
 
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Supplier;
@@ -166,14 +165,14 @@ public class MecanumDrive {
 
     public Command teleOp(Supplier<DriveVector> vector, boolean fieldCentric) {
         return Groups.sequential(
-                CommandConverter.toCommand(this::startTeleOpDrive),
+                Commands.instant(this::startTeleOpDrive),
                 Commands.infinite(() -> this.setTeleOpDrive(vector.get(), fieldCentric))
         );
     }
 
     public Command teleOp(Supplier<DriveVector> vector) {
         return Groups.sequential(
-                CommandConverter.toCommand(this::startTeleOpDrive),
+                Commands.instant(this::startTeleOpDrive),
                 Commands.infinite(() -> setTeleOpDrive(vector.get()))
         );
     }

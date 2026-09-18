@@ -53,25 +53,11 @@ public class Timer {
     }
 
     private double convertFromNanoseconds(double nanoseconds, TimeUnit timeUnit) {
-        switch (timeUnit) {
-            // Replace with TimeUnit scale (if you cmd click and scroll u will see)
-            case NANOSECONDS:
-                return nanoseconds;
-            case MICROSECONDS:
-                return nanoseconds / 1_000.0;
-            case MILLISECONDS:
-                return nanoseconds / 1_000_000.0;
-            case SECONDS:
-                return nanoseconds / 1_000_000_000.0;
-            case MINUTES:
-                return nanoseconds / (60.0 * 1_000_000_000.0);
-            case HOURS:
-                return nanoseconds / (60.0 * 60.0 * 1_000_000_000.0);
-            case DAYS:
-                return nanoseconds / (24.0 * 60.0 * 60.0 * 1_000_000_000.0);
-            default:
-                throw new IllegalArgumentException("Unsupported TimeUnit: " + timeUnit);
-        }
+        return convert(nanoseconds, TimeUnit.NANOSECONDS, timeUnit);
+    }
+
+    private double convert(double value, TimeUnit fromUnit, TimeUnit toUnit) {
+        return value * fromUnit.toNanos(1) / toUnit.toNanos(1);
     }
 
 }

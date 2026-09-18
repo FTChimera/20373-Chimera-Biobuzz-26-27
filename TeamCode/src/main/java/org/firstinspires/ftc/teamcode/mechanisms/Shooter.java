@@ -4,7 +4,6 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.ShotSolver;
-import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
@@ -63,7 +62,7 @@ public class Shooter extends Mechanism {
     }
 
     @Override
-    public void periodic(State robotState, RobotMode robotMode) {
+    public void periodic(State robotState) {
         switch (mode) {
             case CRUISING:
                 flywheel.setVelocity(computeVelocity());

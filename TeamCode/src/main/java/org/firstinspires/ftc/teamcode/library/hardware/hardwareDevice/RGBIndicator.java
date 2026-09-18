@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.configuration.annotations.ServoType;
         xmlTag = "RGBIndicator",
         compatibleControlSystems = {ControlSystem.REV_HUB})
 public class RGBIndicator implements HardwareDevice {
+    public static final String DEFAULT_HARDWAREMAP_NAME = "rgb";
     private ServoControllerEx controller;
     private int port;
     /**

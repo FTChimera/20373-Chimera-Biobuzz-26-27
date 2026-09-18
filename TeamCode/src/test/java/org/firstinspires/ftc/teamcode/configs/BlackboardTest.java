@@ -14,6 +14,12 @@ import static org.junit.Assert.assertThrows;
 
 public class BlackboardTest {
     @Before
+    public void configureInitialValues() {
+        Blackboard.resetAll();
+        Blackboard.put(Blackboard.Caption.POSE, new Pose());
+        Blackboard.put(Blackboard.Caption.DRIVER, Driver.DEFAULT);
+    }
+
     @After
     public void resetBlackboard() {
         Blackboard.resetAll();

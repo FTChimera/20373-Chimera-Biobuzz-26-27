@@ -27,7 +27,7 @@ from `build.dependencies.gradle`.
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/MathUtils.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
+- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java` (deprecated)
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
@@ -46,13 +46,13 @@ from `build.dependencies.gradle`.
    aggregates, retrieve `Vision`, start its `APRIL_TAG` pipeline, and refresh
    it through aggregate periodic updates.
 4. Vision wrapper availability is profile-driven. Verify the selected profile
-   registers `Vision` or `LogitechWebcam` before calling its corresponding
+   registers `Vision` before calling its corresponding
    `Constants.create...(...)` helper.
 5. `tests/PreseasonWebcamAuto.java` is a proof-of-concept flow that creates
    `Vision` directly through `Constants.createVision(...)`, selects `COLOR`,
    updates Vision, and uses its color results beside a normal follower loop.
 6. `Limelight.updateRobotOrientation(...)` now takes a Pedro heading in radians and converts it into the FTC/Limelight frame through `Constants.FTC_COORDINATE_SYSTEM`, while `getBotposeMT2()` converts Limelight MT2 `Pose3D` results back into Pedro `Pose` through `MathUtils.units.toPedroPathing(...)`.
-7. `library/hardware/webcam/LogitechWebcam.java` is a separate `Mechanism` wrapper around `VisionPortal` + `AprilTagProcessor`. `Constants.createWebcam(...)` exists, but vision-wrapper use still depends on profile registration.
+7. `library/hardware/webcam/LogitechWebcam.java` is a deprecated standalone `VisionPortal` + `AprilTagProcessor` wrapper. `Constants.createWebcam(...)` remains only for compatibility; new code should use the profile-managed `Vision` mechanism.
 8. `tests/ftcSdk/VisionFactoryTest.java` is the current driver-station smoke
    test for Vision mechanism creation and AprilTag polling.
 9. `library/planners/paths/Utils.IntakeWVision` is the current vision-assisted pathing example: it reads detector results from the wrapper, preserves a fail-safe path, and can choose between Pedro curve-through and adaptive-handle Bezier generation.
@@ -80,7 +80,7 @@ even though the helper methods exist.
 - `Vision.update()` must be called regularly to keep cached results and disconnected-state tracking meaningful.
 - Vision results can be missing or invalid; current code already checks for null/invalid Limelight results and empty AprilTag detections.
 - `Limelight.calculateDistance(...)` uses mount-angle, lens-height, and tag-height params that default to `0`, so those distance values are not trustworthy until real measurements are filled in.
-- `LogitechWebcam.update()` uses the first current AprilTag detection, converts FTC pose data into a `Pose3D`, then maps `x`, `z`, and yaw into `pedroPose`.
+- The deprecated `LogitechWebcam.update()` uses the first current AprilTag detection, converts FTC pose data into a `Pose3D`, then maps `x`, `z`, and yaw into `pedroPose`.
 - `LimelightPinpointLocalizer` updates Pinpoint first and then tries to override pose from Limelight MT2 botpose, so any fusion changes must keep coordinate conversions explicit.
 - `Vision.periodic(...)` only updates orientation/results. It never
   automatically overwrites the drive pose; use `Vision.forceRelocalize(drive)`
@@ -98,5 +98,5 @@ even though the helper methods exist.
 
 - Need AprilTag botpose from Limelight without changing default localization: extend `Limelight` and keep the follower on `Constants.createFollower(...)`.
 - Need color detection in a test or proof-of-concept op mode: copy the `PreseasonWebcamAuto` pattern of separate Limelight color reads plus normal follower updates.
-- Need VisionPortal AprilTag detections: use `LogitechWebcam`, but also update the selected robot profile by calling `.addMechanism(LogitechWebcam.class, ...)` because neither current profile registers it.
+- Need AprilTag detections in new code: use the profile-managed `Vision` mechanism.
 - Need vision-assisted localization fusion: start by auditing `LimelightPinpointLocalizer.java` and `RobotConstants.createFollower(...)` together, because the fusion helper is not wired into the default follower path.

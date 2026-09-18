@@ -21,13 +21,13 @@ import java.util.Objects;
  */
 public class Buttons {
 
-    private final Map<Button, Button> readers;
+    private final Button[] readers;
 
     /** Creates a Buttons tracker with a live copy for every {@link Button}. */
     public Buttons() {
-        readers = new LinkedHashMap<>();
+        readers = new Button[Button.values().length];
         for (Button b : Button.values()) {
-            readers.put(b, b.copy());
+            readers[b.ordinal()] = b.copy();
         }
     }
 
@@ -37,7 +37,7 @@ public class Buttons {
      * @param gamepad The raw FTC Gamepad
      */
     public void update(Gamepad gamepad) {
-        for (Button r : readers.values()) {
+        for (Button r : readers) {
             r.update(gamepad);
         }
     }
@@ -48,31 +48,39 @@ public class Buttons {
      * @return The tracked button state for that button
      */
     public Button getReader(Button button) {
-        return readers.get(button);
+        if (button == null) {
+            return null;
+        }
+        int ordinal = button.ordinal();
+        return ordinal >= 0 && ordinal < readers.length ? readers[ordinal] : null;
     }
 
     /**
      * @return Unmodifiable map of all tracked button states (Button → Button)
      */
     public Map<Button, Button> getReaders() {
-        return Collections.unmodifiableMap(readers);
+        Map<Button, Button> readerMap = new LinkedHashMap<>();
+        for (Button button : Button.values()) {
+            readerMap.put(button, readers[button.ordinal()]);
+        }
+        return Collections.unmodifiableMap(readerMap);
     }
 
     // ==================== DELEGATED QUERIES ====================
 
     /** @return true if the button is currently held down */
     public boolean isPressed(Button button) {
-        return Objects.requireNonNull(readers.get(button)).isPressed();
+        return Objects.requireNonNull(getReader(button)).isPressed();
     }
 
     /** @return true on the frame the button was first pressed (rising edge) */
     public boolean wasJustPressed(Button button) {
-        return Objects.requireNonNull(readers.get(button)).wasJustPressed();
+        return Objects.requireNonNull(getReader(button)).wasJustPressed();
     }
 
     /** @return true on the frame the button was released (falling edge) */
     public boolean wasJustReleased(Button button) {
-        return Objects.requireNonNull(readers.get(button)).wasJustReleased();
+        return Objects.requireNonNull(getReader(button)).wasJustReleased();
     }
 
     /**
@@ -80,7 +88,7 @@ public class Buttons {
      * @return current toggle state for the button
      */
     public boolean getToggle(Button button) {
-        return Objects.requireNonNull(readers.get(button)).getToggle();
+        return Objects.requireNonNull(getReader(button)).getToggle();
     }
 
     /**
@@ -89,14 +97,14 @@ public class Buttons {
      * @param state  desired toggle value
      */
     public void setToggle(Button button, boolean state) {
-        Objects.requireNonNull(readers.get(button)).setToggle(state);
+        Objects.requireNonNull(getReader(button)).setToggle(state);
     }
 
     /**
      * @return true if <b>any</b> button is currently held down
      */
     public boolean anyPressed() {
-        for (Button r : readers.values()) {
+        for (Button r : readers) {
             if (r.isPressed()) return true;
         }
         return false;
@@ -106,7 +114,7 @@ public class Buttons {
      * @return true if <b>any</b> button was just pressed this frame
      */
     public boolean anyJustPressed() {
-        for (Button r : readers.values()) {
+        for (Button r : readers) {
             if (r.wasJustPressed()) return true;
         }
         return false;

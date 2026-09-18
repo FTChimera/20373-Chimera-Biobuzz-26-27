@@ -4,9 +4,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Button;
+import org.firstinspires.ftc.teamcode.library.hardware.gamepad.Stick;
 import org.firstinspires.ftc.teamcode.library.game.State;
-import org.firstinspires.ftc.teamcode.library.game.RobotMode;
-import org.firstinspires.ftc.teamcode.library.hardware.leds.RGBIndicator;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Mechanism;
@@ -51,6 +50,22 @@ public class RobotConfigurationTest {
     }
 
     @Test
+    public void configureDriveMechanismsRetainsCustomDriveParams() {
+        RobotDrive.ROBOT_DRIVE_PARAMS source = new RobotDrive.ROBOT_DRIVE_PARAMS()
+                .initialHeadingOffset(0.25)
+                .translationStick(Stick.RIGHT)
+                .startTeleOpDriveOnInit(false);
+        RobotConstants configured = new RobotConstants().configureDriveMechanisms(source);
+        source.initialHeadingOffset(1.0).translationStick(Stick.LEFT).startTeleOpDriveOnInit(true);
+
+        RobotDrive.ROBOT_DRIVE_PARAMS params =
+                configured.getMechanismParams(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
+        assertEquals(0.25, params.INITIAL_HEADING_OFFSET, MathUtils.EPSILON);
+        assertEquals(Stick.RIGHT, params.TRANSLATION_STICK);
+        assertFalse(params.START_TELEOP_DRIVE_ON_INIT);
+    }
+
+    @Test
     public void robotConstantsExposeStableDefaultsAndLocallyConfiguredMechanisms() {
         RobotConstants defaults = new RobotConstants();
         assertEquals("frontLeft", defaults.FRONT_LEFT_MOTOR_NAME);
@@ -74,7 +89,6 @@ public class RobotConfigurationTest {
                         .hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))
                 .addMechanism(Vision.class, new Vision.VISION_PARAMS())
-                .addMechanism(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS())
                 .useFollowerDrive(false);
 
         assertEquals("frontLeftMotor", configured.FRONT_LEFT_MOTOR_NAME);
@@ -84,7 +98,6 @@ public class RobotConfigurationTest {
         assertTrue(configured.Mechanisms.contains(RobotDrive.class));
         assertTrue(configured.Mechanisms.contains(Intake.class));
         assertTrue(configured.Mechanisms.contains(Vision.class));
-        assertTrue(configured.Mechanisms.contains(RGBIndicator.class));
         assertFalse(configured.USE_FOLLOWER_DRIVE);
 
         Intake.INTAKE_PARAMS intakeParams = configured.getMechanismParams(Intake.class, new Intake.INTAKE_PARAMS());
@@ -94,40 +107,6 @@ public class RobotConfigurationTest {
         RobotDrive.ROBOT_DRIVE_PARAMS robotDriveParams = configured.getMechanismParams(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
         assertEquals(Button.BACK, robotDriveParams.ZERO_HEADING_BUTTON);
     }
-
-    @Test
-    public void rgbIndicatorParamsUpdateFromBotRespectsExplicitFalse() {
-        // When ISBEINGUSED is explicitly set false, updateFromBot must NOT override it
-        // even though the class is registered in the profile.
-        RobotConstants botWithRGB = new RobotConstants()
-                .addMechanism(RGBIndicator.class,
-                        new RGBIndicator.RGBIndicator_PARAMS().isBeingUsed(false));
-
-        RGBIndicator.RGBIndicator_PARAMS params =
-                botWithRGB.getMechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS());
-        params = params.updateFromBot(botWithRGB);
-
-        assertFalse("updateFromBot must not override an explicit isBeingUsed(false)", params.ISBEINGUSED);
-    }
-
-    @Test
-    public void rgbIndicatorParamsUpdateFromBotEnablesWhenRegistered() {
-        RobotConstants botWithRGB = new RobotConstants().addMechanism(RGBIndicator.class);
-        RGBIndicator.RGBIndicator_PARAMS params =
-                botWithRGB.getMechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS());
-        params = params.updateFromBot(botWithRGB);
-        assertTrue(params.ISBEINGUSED);
-    }
-
-    @Test
-    public void rgbIndicatorParamsUpdateFromBotDisablesWhenNotRegistered() {
-        RobotConstants botWithoutRGB = new RobotConstants();
-        RGBIndicator.RGBIndicator_PARAMS params =
-                botWithoutRGB.getMechanismParams(RGBIndicator.class, new RGBIndicator.RGBIndicator_PARAMS());
-        params = params.updateFromBot(botWithoutRGB);
-        assertFalse(params.ISBEINGUSED);
-    }
-
 
     public static class FakeMechanism extends Mechanism {
         public final FakeParams params;
@@ -143,7 +122,7 @@ public class RobotConfigurationTest {
         }
 
         @Override
-        public void periodic(State state, RobotMode robotMode) {}
+        public void periodic(State state) {}
     }
 
     public static class FakeParams implements Mechanism.Params<FakeParams> {

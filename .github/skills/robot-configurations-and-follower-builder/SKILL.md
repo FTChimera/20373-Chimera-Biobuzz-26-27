@@ -37,8 +37,8 @@ from `build.dependencies.gradle`.
 6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
 7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
 8. `Constants` now also exposes helper methods such as `createIMU(...)`,
-   `createDrive(...)`, `createVision(...)`, `createRGB(...)`,
-   `createWebcam(...)`, aggregate `createRobot(...)` /
+   `createDrive(...)`, `createVision(...)`,
+   deprecated `createWebcam(...)`, aggregate `createRobot(...)` /
    `createRobot(..., RobotMode)`, generic
    `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and
    `assertHasMechanism(...)`.
@@ -49,8 +49,8 @@ from `build.dependencies.gradle`.
 - Put drive motor names, drive directions, IMU hardware/orientation settings, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
 - Put concrete robot presets in `RobotConfigurations`.
 - Put top-level convenience helpers such as `createIMU(...)`,
-  `createIntake(...)`, `createVision(...)`, `createRGB(...)`, and
-  `createWebcam(...)` in `Constants` when they make op-mode code cleaner.
+  `createIntake(...)`, `createVision(...)`, and
+  deprecated `createWebcam(...)` in `Constants` only when preserving an existing caller.
 - Keep mechanism-specific behavior and optional nested params types in the owning mechanism or wrapper class.
 - Prefer selecting a profile through `Constants.currentBot` instead of scattering conditionals throughout mechanisms or op modes.
 - Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles.

@@ -181,7 +181,11 @@ public class RobotConstants {
     }
 
     public RobotConstants configureDriveMechanisms() {
-        addMechanism(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());
+        return configureDriveMechanisms(new RobotDrive.ROBOT_DRIVE_PARAMS());
+    }
+
+    public RobotConstants configureDriveMechanisms(RobotDrive.ROBOT_DRIVE_PARAMS params) {
+        addMechanism(RobotDrive.class, params);
         return this;
     }
 

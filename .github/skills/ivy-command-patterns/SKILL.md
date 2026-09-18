@@ -31,7 +31,6 @@ When Ivy behavior is unclear, inspect the downloaded artifacts under
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/CommandConverter.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Ivy.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/IvyAuto.java`
 - `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
@@ -49,7 +48,7 @@ When Ivy behavior is unclear, inspect the downloaded artifacts under
    `library/robot/drivetrain/MecanumDrive.teleOp(...)`, and
    `mechanisms/RobotDrive.teleOp(...)`. Aggregate periodic updates use
    `RobotIvyBuilder.periodic(State)` so the selected `RobotMode` is preserved.
-5. `CommandConverter.toCommand(...)` wraps a `Runnable` as an instant command, while `CommandConverter.toRunnable(...)` runs a `Command` synchronously through `Ivy.run(...)`.
+5. `Commands.instant(...)` wraps a `Runnable` as an instant command.
 6. There is no current TeamCode example that implements `Command` directly, extends `CommandBuilder`, or constructs `new CommandBuilder()`.
 
 ## Common repo examples
@@ -93,7 +92,7 @@ If an input wrapper already exposes a repo-local update command, prefer it over 
 
 ## `Ivy.run(...)`
 
-`pedroPathing/Ivy.java` is a blocking helper that calls `start()`, loops on `execute()` until `done()`, then ends with `EndCondition.NATURALLY`. In current TeamCode, it is only used indirectly by `CommandConverter.toRunnable(...)`; it is not the main pattern for FTC loop-driven op modes.
+`pedroPathing/Ivy.java` is a blocking helper that calls `start()`, loops on `execute()` until `done()`, then ends with `EndCondition.NATURALLY`; it is not the main pattern for FTC loop-driven op modes.
 
 ## Generated Ivy skeletons
 
@@ -106,7 +105,7 @@ If an input wrapper already exposes a repo-local update command, prefer it over 
 - Keep one clear execution loop for scheduled commands.
 - Prefer mechanism-level command helpers for reusable actions instead of rebuilding the same command inline everywhere.
 - Use the repo’s existing `Commands` / `Groups` / `PedroCommands` composition style before adding a new command abstraction.
-- Use `CommandConverter.toCommand(...)` for simple instant actions.
+- Use `Commands.instant(...)` for simple instant actions.
 - If a task adds a new commandable mechanism, also add its profile registration and `Constants.create...(...)` helper when needed.
 - If you introduce `CommandBuilder` or direct `Command` implementations, validate them against the pinned Ivy dependency because TeamCode itself does not currently demonstrate those patterns.
 
