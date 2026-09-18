@@ -73,6 +73,8 @@ public class TeleOp extends LinearOpMode {
     protected void setAllianceColor(AllianceColor color) {
         Blackboard.put(new Blackboard.Item(Blackboard.Caption.ALLIANCE, color));
     }
-    @com.qualcomm.robotcore.eventloop.opmode.TeleOp() public static class Red_Tele extends TeleOp {@Override public void runOpMode() {setAllianceColor(AllianceColor.RED); super.runOpMode();}}
-    @com.qualcomm.robotcore.eventloop.opmode.TeleOp() public static class Blue_Tele extends TeleOp {@Override public void runOpMode() {setAllianceColor(AllianceColor.BLUE); super.runOpMode();}}
+
+    //These are optional; use the main one instead. This one is for if alliance is broken.
+    @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Red TeleOp") public static class Red_Tele extends TeleOp {@Override public void runOpMode() {setAllianceColor(AllianceColor.RED); super.runOpMode();}}
+    @com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "Blue TeleOp") public static class Blue_Tele extends TeleOp {@Override public void runOpMode() {setAllianceColor(AllianceColor.BLUE); super.runOpMode();}}
 }

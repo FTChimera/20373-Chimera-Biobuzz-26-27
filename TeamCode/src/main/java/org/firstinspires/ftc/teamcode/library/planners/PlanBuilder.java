@@ -61,10 +61,34 @@ public class PlanBuilder {
         return this;
     }
 
+    public PlanBuilder shootPreloadsToVision() {
+        if (position == Positions.GARDEN_START) {
+            list.add(new FromStartGardenPose.ShootPreloadsToVisionSearch(robot));
+            position = Positions.GARDEN_VISION_SEARCH;
+        } else if (position == Positions.LOADING_START) {
+            // Todo implement module
+            position = Positions.LOADING_SHOOT;
+        } else {
+            throw new IllegalStateException("Cannot shoot Preloads at position " + position);
+        }
+        return this;
+    }
+
     public PlanBuilder intakeGarden() {
         if (position == Positions.GARDEN_SHOOT) {
-            // todo Implement
+            list.add(new FromShootGardenPose.ToIntakeGardenPollen(robot));
         } // todo implement a loading to garden thing too
+        else {
+            throw new IllegalStateException("Cannot intake from the garden at position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakeGardenToVision() {
+        if (position == Positions.GARDEN_SHOOT) {
+            list.add(new FromShootGardenPose.ToIntakeGardenPollenToVision(robot));
+            position = Positions.GARDEN_VISION_SEARCH;
+        }// todo implement a loading to garden thing too
         else {
             throw new IllegalStateException("Cannot intake from the garden at position " + position);
         }
