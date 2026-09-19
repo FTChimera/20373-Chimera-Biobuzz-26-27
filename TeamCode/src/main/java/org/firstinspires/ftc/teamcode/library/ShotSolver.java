@@ -13,8 +13,22 @@ public class ShotSolver {
             compensatedPose = pose;
             hiveState = state;
         }
+
+        public static class Builder {
+            public ShotContext c;
+            public static Builder create() {return new Builder();}
+            public Builder() {c=new ShotContext(null,null);}
+            public Builder pose(Pose pose) {c.compensatedPose=pose.copy();return this;}
+            public Builder state(HiveState state) {c.hiveState=state;return this;}
+        }
     }
 
+    public ShotSolver() {
+    }
 
+    // returns angle to face, and velocity inches per second
+    public Tuple<Double, Double> calculateShot(ShotContext context) {
+        return new Tuple<>(0.0,0.0);
+    }
 
 }

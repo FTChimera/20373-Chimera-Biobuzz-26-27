@@ -5,6 +5,7 @@ import org.firstinspires.ftc.teamcode.library.DriveVectorTest;
 import org.firstinspires.ftc.teamcode.library.TimerTest;
 import org.firstinspires.ftc.teamcode.library.IntakeBallPathTest;
 import org.firstinspires.ftc.teamcode.library.control.BangBangControllerTest;
+import org.firstinspires.ftc.teamcode.library.control.CompositeControllerTest;
 import org.firstinspires.ftc.teamcode.library.control.PIDFControlTest;
 import org.firstinspires.ftc.teamcode.library.filters.LowPassFilterTest;
 import org.firstinspires.ftc.teamcode.library.game.FieldTest;
@@ -32,6 +33,7 @@ import org.junit.runners.Suite;
         TimerTest.class,
         IntakeBallPathTest.class,
         BangBangControllerTest.class,
+        CompositeControllerTest.class,
         PIDFControlTest.class,
         LowPassFilterTest.class,
         FieldTest.class,

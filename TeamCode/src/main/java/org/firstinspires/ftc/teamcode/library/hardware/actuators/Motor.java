@@ -22,6 +22,7 @@ import java.util.Objects;
 )*/
 public class Motor implements HardwareDevice {
     double targetPower, targetVelocity;
+    boolean velocity = false;
     DcMotorEx motor;
     private Controller<Double, Double, Double> velocityController;
 
@@ -58,8 +59,18 @@ public class Motor implements HardwareDevice {
         return motor;
     }
 
+    public void setMode(boolean velocity) {
+        if(this.velocity==velocity) return;
+        this.velocity = velocity;
+        if (velocity) {
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        } else {
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+    }
 
     public void setPower(double power) {
+        setMode(false);
         targetPower = power;
         motor.setPower(targetPower);
     }
@@ -74,10 +85,13 @@ public class Motor implements HardwareDevice {
         return targetVelocity;
     }
     public void stopVelocity() {
+        setMode(true);
         motor.setVelocity(0);
         targetVelocity = 0;
+        velocityController.setTarget(0.0);
     }
     public void setVelocity(double velocity) {
+        setMode(true);
         targetVelocity = velocity;
         if (velocityController == null) {
             motor.setVelocity(targetVelocity);
@@ -107,11 +121,18 @@ public class Motor implements HardwareDevice {
     /** Updates custom velocity control or reapplies the requested SDK velocity. */
     public void periodic() {
         if (velocityController == null) {
-            motor.setPower(targetPower);
+            if (velocity) motor.setVelocity(targetVelocity);
+            else motor.setPower(targetPower);
             return;
         }
-        velocityController.update(motor.getVelocity());
-        motor.setPower(velocityController.getOutput());
+        double power;
+        if (velocity) {
+            velocityController.update(motor.getVelocity());
+            power = velocityController.getOutput();
+        }
+        else power = targetPower;
+
+        motor.setPower(power);
     }
     public double getVelocity() {
         return motor.getVelocity();

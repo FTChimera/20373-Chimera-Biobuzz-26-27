@@ -4,20 +4,35 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.ShotSolver;
+import org.firstinspires.ftc.teamcode.library.control.BangBangController;
+import org.firstinspires.ftc.teamcode.library.control.DoubleBangBangConstants;
+import org.firstinspires.ftc.teamcode.library.control.DoubleBangBangController;
+import org.firstinspires.ftc.teamcode.library.control.DoubleCompositeConstants;
+import org.firstinspires.ftc.teamcode.library.control.DoubleCompositeController;
+import org.firstinspires.ftc.teamcode.library.control.DoublePIDFCoeffs;
+import org.firstinspires.ftc.teamcode.library.control.DoublePIDFController;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Motor;
 import org.firstinspires.ftc.teamcode.library.robot.RobotConstants;
 
 import java.util.Objects;
+import java.util.function.DoubleUnaryOperator;
 
 public class Shooter extends Mechanism {
     public static class SHOOTER_PARAMS implements Params<SHOOTER_PARAMS> {
         public String HARDWAREMAP_NAME = "shooter";
         public Direction MOTOR_DIRECTION = Direction.REVERSE;
+        public DoubleCompositeConstants CONTROLLER_CONSTANTS = null;
+        public Boolean usingVelocityController = Boolean.FALSE;
+        public DoubleUnaryOperator inpsToRPM = DoubleUnaryOperator.identity();
         public SHOOTER_PARAMS() {}
         private SHOOTER_PARAMS(SHOOTER_PARAMS other) {
             this.HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            this.MOTOR_DIRECTION = other.MOTOR_DIRECTION;
+            this.CONTROLLER_CONSTANTS = other.CONTROLLER_CONSTANTS;
+            this.inpsToRPM = other.inpsToRPM;
+            this.usingVelocityController = other.usingVelocityController;
         }
 
         public SHOOTER_PARAMS hardwareMapName(String name) {
@@ -27,6 +42,20 @@ public class Shooter extends Mechanism {
 
         public SHOOTER_PARAMS motorDirection(Direction dir) {
             MOTOR_DIRECTION = dir;
+            return this;
+        }
+
+        public SHOOTER_PARAMS controllerConsts(DoubleBangBangConstants bangBangConstants, DoublePIDFCoeffs pidfCoeffs, double switchs) {
+            CONTROLLER_CONSTANTS = new DoubleCompositeConstants(
+                    new DoubleBangBangController(bangBangConstants),
+                    new DoublePIDFController(pidfCoeffs),
+                    switchs
+            );
+            usingVelocityController = Boolean.TRUE;
+            return this;
+        }
+        public SHOOTER_PARAMS inpsToRPM(DoubleUnaryOperator u) {
+            inpsToRPM = u;
             return this;
         }
 
@@ -54,6 +83,8 @@ public class Shooter extends Mechanism {
         solver = new ShotSolver();
         shooterParams = bot.getMechanismParams(Shooter.class, new SHOOTER_PARAMS());
         flywheel = new Motor(hardwareMap, shooterParams.HARDWAREMAP_NAME).Float().setDirection(shooterParams.MOTOR_DIRECTION);
+        flywheel.setMode(true);
+        if (shooterParams.usingVelocityController) flywheel.setVelocityController(new DoubleCompositeController(shooterParams.CONTROLLER_CONSTANTS));
     }
 
     @Override
@@ -63,15 +94,24 @@ public class Shooter extends Mechanism {
 
     @Override
     public void periodic(State robotState) {
+        updateFlywheel(robotState);
+    }
+
+    public void updateFlywheel(State robotState) {
+        ShotSolver.ShotContext.Builder context = ShotSolver.ShotContext.Builder.create()
+                .pose(robotState.getRobot().getPoseCompensatedForVelocity())
+                .state(robotState.getRobot().get(FieldUpdates.class).hiveState);
         switch (mode) {
             case CRUISING:
-                flywheel.setVelocity(computeVelocity());
+                flywheel.setVelocity(computeVelocity(context.c));
             case SPINNING_UP:
-                double computedVelocity = computeVelocity();
+                /*
+                double computedVelocity = computeVelocity(context.c);
                 // this is a linear function: 0 maps to 6000, target velocity maps to itself
-                // replace with a quadratic prob
+                // todo replace with a quadratic prob
                 double m = -6000/computedVelocity + 1;
-                flywheel.setVelocity(m*flywheel.getVelocity() + 6000);
+                flywheel.setVelocity(m*flywheel.getVelocity() + 6000);*/
+                flywheel.setVelocity(computeVelocity(context.c));
                 if (Math.abs(flywheel.getVelocity()-flywheel.getTargetVelocity()) <= 20) { // TODO ADD THIS TOLERANCE CONSTANT TO PARAMS
                     setMode(ShooterMode.CRUISING);
                 }
@@ -88,5 +128,7 @@ public class Shooter extends Mechanism {
         }
     }
 
-    public double computeVelocity() {return 0;} // replace with direct call to shotsolver
+    public double computeVelocity(ShotSolver.ShotContext shotContext) {
+        return shooterParams.inpsToRPM.applyAsDouble(solver.calculateShot(shotContext).getB());
+    }
 }
