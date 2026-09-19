@@ -235,3 +235,19 @@ Search all guide files for deleted paths and removed symbols before finishing.
 Do not use `TeamCode/bin/` as a source of API truth.
 
 Run `git diff --check` and a focused stale-reference search after editing.
+
+## Planning references
+
+`.github/misc/` stores team planning and game-reference material that is not a
+Copilot skill or runtime source:
+
+- `Auto_Plan.md` records the autonomous plan.
+- `Ranking_Points.md` records ranking-point reference material.
+- `BIOBUZZ_Competition_Manual_V1.pdf` is the BioBuzz competition manual.
+- `Robot.md` records the current robot-mechanism design plan and unresolved
+  engineering decisions.
+
+Use these files as planning inputs, not as a substitute for current TeamCode
+source or measured robot configuration. Update a plan when a design decision is
+made; move resulting hardware names, calibration values, and mechanism behavior
+into their proper source owners before claiming the plan is implemented.
