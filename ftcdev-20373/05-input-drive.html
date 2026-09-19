@@ -1,44 +1,103 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Input & Drive | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>TeleOp</h2><a href="#input">Input update contract</a><a href="#bindings">GpBindings</a><a href="#drive">Drive pipeline</a><a href="#field">Field-centric behavior</a><a href="#validate">Drive validation</a></nav>
-<main class="article"><p class="eyebrow">05 / TeleOp</p><h1>Update input once, then let RobotDrive own driving.</h1><p class="lead">The TeamCode input path is <code>GamepadEx</code> → <code>GpBindings</code> → <code>Mechanism.periodic(...)</code>. Drive values become a <code>DriveVector</code>, and <code>RobotDrive</code> delegates motor/follower behavior to <code>MecanumDrive</code>. That separation prevents duplicated deadzones, sign flips, and field-centric math.</p>
-<section id="first-call"><h2>Call the normal teleop input path</h2><p>This loop is the preferred call-site example. It updates one wrapper, forwards its result to every registered mechanism, and lets <code>RobotDrive</code> read its configured sticks and heading-reset button.</p><pre>GamepadEx driver = new GamepadEx(gamepad1);
-State state = new State(driver.result(), RobotMode.TELEOP);
-Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
-RobotDrive drive = robot.requireDrive();
-
-waitForStart();
-robot.start();
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Input & Drive | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">05 / TeleOp</p>
+        <h1>Update both controllers once per loop and let RobotDrive own drive dispatch.</h1>
+        <p class="lead"><code>DualGamepad</code> is the competition input wrapper. It exposes two <code>GamepadEx</code> objects, updates both together, and returns a <code>GpBindings</code> view that match code passes into <code>State</code>. Drive math and follower/manual switching stay inside <code>RobotDrive</code> and <code>MecanumDrive</code>.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>DualGamepad.update()</code> must run before reading edge-triggered buttons, sticks, triggers, or touchpad state.</li>
+                <li><code>DualGamepad.result()</code> creates the binding view consumed by TeleOp and other driver-facing loops.</li>
+                <li><code>RobotDrive.periodic(State)</code> reads the configured translation and rotation sticks from bindings during teleop.</li>
+                <li><code>MecanumDrive.setTeleOpDrive(DriveVector)</code> chooses field-centric mode from the Blackboard driver preference when the overload without an explicit boolean is used.</li>
+                <li><code>Driver.DEFAULT</code>, <code>ATHARVA</code>, <code>SHLOK</code>, and <code>EASON</code> currently enable field-centric drive; <code>SIMPLE</code> disables it.</li>
+                <li><code>ConfigOpMode</code> is where driver preference is selected at runtime.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Competition input snapshot</h2>
+            <p>This pattern matches the current teleop entry and keeps controller state synchronized.</p>
+            <pre>
+DualGamepad drivers = new DualGamepad(gamepad1, gamepad2);
+State state = new State(RobotMode.TELEOP);
+state.setGpBindings(drivers.result());
 while (opModeIsActive()) {
-    driver.update();
+    drivers.update();
     robot.periodic(state);
-    telemetry.addData("Pose", drive.getPose());
-    telemetry.update();
-}</pre></section>
-<section id="input"><h2>GamepadEx is stateful: update first</h2><p><code>GamepadEx</code> wraps FTC gamepad state with buttons, sticks, triggers, touchpad information, rumble, and LED support. Its readers implement edges and toggles, so the wrapper must receive exactly one <code>update()</code> each control loop before values are read.</p><pre>GamepadEx driver = new GamepadEx(gamepad1);
-State state = new State(driver.result(), RobotMode.TELEOP);
-
-while (opModeIsActive()) {
-    driver.update();
-    if (driver.wasJustPressed(Button.A)) {
-        // Edge behavior is valid only after update().
-    }
-    robot.periodic(state);
-}</pre><div class="warning"><span class="label">Do not double-shape input</span><code>GamepadEx</code> can apply a stick curve, while the normal drive path also has a <code>MecanumDrive</code> curve. Shared teleop keeps the wrapper near-neutral and applies its chosen curve through <code>RobotDrive.setStickCurve(...)</code>. Do not apply both unless that is explicitly the intended behavior.</div></section>
-<section id="bindings"><h2>GpBindings makes mechanisms input-agnostic</h2><p><code>GpBindings</code> exposes the current wrapper readers to a mechanism. <code>RobotDrive.ROBOT_DRIVE_PARAMS</code> stores the translation stick, rotation stick, and zero-heading button. <code>Intake.INTAKE_PARAMS</code> stores forward/reverse command descriptors. The mechanism resolves those descriptors on every periodic call instead of reaching directly for <code>gamepad1</code>.</p><pre>// RobotDrive turns its configured reader choices into one DriveVector.
-Stick translation = bindings.getCommand(params.TRANSLATION_STICK);
-Stick rotation = bindings.getCommand(params.ROTATION_STICK);
-return new DriveVector(
-    translation == null ? 0 : translation.getY(),
-    translation == null ? 0 : translation.getX(),
-    rotation == null ? 0 : rotation.getX()
-);</pre><ul><li>Add a reusable control mapping to the owning mechanism parameters.</li><li>Use <code>GpBindings.getCommand(...)</code> rather than a raw gamepad cast.</li><li>Keep one aggregate <code>robot.periodic(state)</code> call in shared teleop.</li></ul></section>
-<section id="drive"><h2>Follow the drive pipeline</h2><ol><li><code>RobotDrive.periodic(...)</code> calls <code>MecanumDrive.periodic()</code>, which records the pre-update pose and updates the follower.</li><li>It reads configured sticks and produces a <code>DriveVector</code>.</li><li>It honors the configured zero-heading button and delegates to <code>setTeleOpDrive(...)</code>.</li><li><code>MecanumDrive</code> copies the vector, applies the selected stick curve, and chooses manual motor output or Pedro follower teleop based on the profile.</li></ol><pre>// Do not copy this math into an op mode; use the mechanism surface.
-drive.setStickCurve(x -> Math.signum(x) * x * x);
-drive.startTeleOpDrive();
-// Later: aggregate periodic input updates drive behavior.</pre>
-<table><tr><th>Layer</th><th>Owns</th></tr><tr><td><code>DriveVector</code></td><td>Forward/strafe/rotate values, stick curve application, field-centric vector rotation, normalized mecanum power calculation.</td></tr><tr><td><code>RobotDrive</code></td><td>Profile-managed public drive mechanism and configured input mapping.</td></tr><tr><td><code>MecanumDrive</code></td><td>Follower, manual motor wrappers when applicable, heading offset, and the final manual/follower teleop call.</td></tr></table></section>
-<section id="field"><h2>Field-centric behavior is a preference, not another teleop mode</h2><p>The selected <code>Blackboard.Caption.DRIVER</code> value controls <code>Driver.USE_FIELD_CENTRIC</code>. <code>MecanumDrive</code> uses that preference when a caller uses the normal <code>setTeleOpDrive(vector)</code> surface. For manual drive, the shaped vector applies a forward inversion and uses <code>DriveVector.rotateFieldCentric()</code> with the pose heading minus the heading offset. For follower drive, Pedro receives the shaped values and field-centric flag.</p><div class="source"><span class="label">Heading reset</span><code>RobotDrive</code> maps its zero-heading action through <code>ROBOT_DRIVE_PARAMS.ZERO_HEADING_BUTTON</code>, defaulting to <code>Button.BACK</code>. It records the current follower heading as the offset; it is not the same as changing the global pose heading.</div></section>
-<section id="validate"><h2>Validate controls without guessing</h2><div class="checklist"><span class="label">Driver-control checklist</span><ul><li>Confirm raw stick orientation and curve once, then retain one shaping owner.</li><li>Run <code>tests/MecanumTeleOp.java</code> for direct drivetrain/IMU checks.</li><li>Run <code>tests/MotorDirectionTest.java</code> at low power when validating profile directions and optional intake direction.</li><li>Verify field-centric direction after an explicit heading reset.</li><li>Confirm the selected Blackboard driver preference is what you expect before attributing a behavior change to drive math.</li></ul></div></section>
-<nav class="pager"><a href="04-opmodes-lifecycle.html">← OpModes & lifecycle</a><a href="06-autonomous-ivy.html">Pedro & Ivy →</a></nav></main></div><footer class="footer">Input and drive guide · Keep drive math and input shaping centralized.</footer></body></html>
+}
+            </pre>
+        </section>
+        <section>
+            <h2>DualGamepad surface area</h2>
+            <p>The wrapper is broader than just two stick getters.</p>
+            <ul>
+                <li>There are constructors for raw FTC gamepads, custom deadzone and curve settings, or two already-built <code>GamepadEx</code> instances.</li>
+                <li>The class forwards button, toggle, trigger, stick, touchpad, LED, and rumble helpers to both controllers.</li>
+                <li><code>updateCommand()</code> returns an Ivy command that continuously refreshes both wrapped controllers.</li>
+                <li><code>setStickCurve(...)</code>, <code>setJoystickDeadzone(...)</code>, and <code>setTriggerThreshold(...)</code> apply shared settings to both pads.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>RobotDrive responsibilities</h2>
+            <p>The teleop drive mechanism owns more than raw power calculation.</p>
+            <ul>
+                <li>It starts manual teleop drive through the follower and, when enabled, through the manual drivetrain path too.</li>
+                <li>It tracks follower mode as <code>MANUAL</code>, <code>FOLLOWING</code>, <code>HOLDING</code>, or <code>TURNING</code>.</li>
+                <li>It zeroes heading when the configured zero-heading button is pressed.</li>
+                <li>It returns to manual mode after follower actions finish unless hold-end behavior keeps the robot holding position.</li>
+                <li>Its teleop periodic path does not duplicate path-following math in the op mode.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>MecanumDrive responsibilities</h2>
+            <p>Field-centric and stick shaping live one layer lower in the drivetrain implementation.</p>
+            <ul>
+                <li>Manual vectors are copied, stick-curved, and optionally rotated field-centrically using the robot heading minus the heading offset.</li>
+                <li>Follower-drive teleop vectors are also stick-shaped before being passed to Pedro follower teleop control.</li>
+                <li>The no-boolean <code>setTeleOpDrive</code> overload reads <code>Blackboard.Caption.DRIVER</code> and uses the chosen driver preference.</li>
+                <li><code>zeroHeadingOffset()</code> snapshots the current follower heading so later field-centric calculations use that as zero.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Validation boundary</h2>
+            <p>When you need to check motor directions, field-centric response, or manual driving, use the focused Driver Station programs under <code>tests/</code> rather than changing match teleop first. Current examples include drivetrain-specific teleops and Pedro pathing tests.</p>
+            <p>Keep new driver-facing math in the drive stack, not in a second copy of joystick math inside an op mode. That keeps competition behavior and validation behavior aligned.</p>
+        </section>
+        <section>
+            <h2>Blackboard driver preference</h2>
+            <p>The active driver profile is intentionally lightweight: it only carries the field-centric preference that <code>MecanumDrive</code> reads when no explicit boolean override is supplied.</p>
+        </section>
+        <nav class="pager">
+            <a href="04-opmodes-lifecycle.html">← Lifecycle</a>
+            <a href="06-autonomous-ivy.html">Autonomous →</a>
+        </nav>
+    </main>
+</body>
+</html>

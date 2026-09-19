@@ -1,138 +1,100 @@
 ---
 name: pedro-pathing-and-ivy
-description: Use this skill when asked to add or tune Pedro Pathing followers, paths, localizers, or Ivy scheduler commands in this FTC repository.
+description: Use this skill for Pedro followers, paths, planner modules, and Ivy scheduling in TeamCode.
 ---
 
-# Pedro Pathing and Ivy in This Repository
+# Pedro Pathing and Ivy
 
-This repo currently builds against `com.pedropathing:ftc:2.1.2`, `com.pedropathing:telemetry:1.0.0`, and `com.pedropathing:ivy:1.0.0` (`build.dependencies.gradle`).
+The current robot pathing flow is:
 
-## Upstream `~/.gradle` lookup
+`Constants.createRobot(...)` -> `RobotDrive` -> `MecanumDrive.follower` ->
+`PlanBuilder` / `PathPlannerList` -> Ivy `Command` scheduled via
+`com.pedropathing.ivy.Scheduler`.
 
-When TeamCode behavior depends on Pedro artifacts instead of repo-local code,
-inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
-`build.dependencies.gradle`.
+## `PlanBuilder`: a stateful route composer
 
-- `com.pedropathing/core` and `com.pedropathing/ftc` for the motion, path,
-  follower, and geometry library
-- `com.pedropathing/ivy` for Ivy scheduler, command, and grouping behavior
-- `com.pedropathing/telemetry` for Pedro telemetry wiring and
-  `pedroPathing/Tuning.java` op-mode selection issues
+`PlanBuilder` tracks a `Positions` enum position (`GARDEN_START`,
+`LOADING_START`, `GARDEN_SHOOT`, `LOADING_SHOOT`, `NULL`,
+`GARDEN_VISION_SEARCH`, `LOADING_VISION_SEARCH`) and a `PathPlannerList`.
+Start it with the static factories `PlanBuilder.startGardenPose(robot)`
+(seeds a `FromStartGardenPose` planner at index 0) or `PlanBuilder.nullPlan(robot)`
+(seeds a `Utils.StartPose` at `Constants.RED_DEFAULT_START_POSE`). Route
+transition methods each assert the current `position` and throw
+`IllegalStateException` on an invalid transition:
 
-## Key files
+- `shootPreloads()` — from `GARDEN_START` adds
+  `FromStartGardenPose.ShootPreloads`, moves to `GARDEN_SHOOT`; the
+  `LOADING_START` branch is a `// Todo implement module` stub that still
+  advances state without adding a planner.
+- `shootPreloadsToVision()` — from `GARDEN_START` adds
+  `FromStartGardenPose.ShootPreloadsToVisionSearch`, moves to
+  `GARDEN_VISION_SEARCH`.
+- `intakeGarden()` — from `GARDEN_SHOOT` adds
+  `FromShootGardenPose.ToIntakeGardenPollen`.
+- `intakeGardenToVision()` — from `GARDEN_SHOOT` adds
+  `FromShootGardenPose.ToIntakeGardenPollenToVision`, moves to
+  `GARDEN_VISION_SEARCH`.
 
-- `build.dependencies.gradle`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Equation.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/math/Polynomial.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlanner.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PathPlannerList.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/PlanBuilder.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/planners/paths/Utils.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotIvyBuilder.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/Ivy.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/EquationCurve.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyAuto.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/ExampleIvyWithSubsystems.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/learning/kotlinTest/KtExampleIvyAuto.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/TestPathPlanner.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PlannerIntakeVisionAuto.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
-- `java-autogen/Ftc-PP-toJavaAuto-Ivy.html`
-- `java-autogen/Ftc-PedroPathing-PathBuilder-toJavaAuto.html`
-- `java-autogen/Ftc-PP-toJavaAuto-Ivy.js`
+Utility methods `followPath(PathChain)`, `linearPathTo(Pose)`, `waitMs(double)`
+wrap `Utils.CustomPath`/`Utils.LinearPath`/`Utils.Wait`.
+`intakeWVision(int, PathChain)` is `@Deprecated`. `build()`/`planner()` both
+return the underlying `PathPlannerList`; `schedule()` calls
+`list.schedule()`.
 
-## Verified repo wiring
+## `PathPlanner` / `PathPlannerList` contract
 
-1. `Constants.createFollower(...)` delegates to `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that drives the follower.
-2. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder(...).pathConstraints(...).mecanumDrivetrain(...).pinpointLocalizer(...).build()`.
-3. `library/robot/drivetrain/MecanumDrive` is now the plain follower-backed drive helper, while `mechanisms/RobotDrive` is the profile-managed mechanism that uses `GpBindings` to drive it from TeamCode op modes.
-4. The match-style iterative autonomous path pattern is `opModes/IvyAuton.java` plus a variant-local `IvyAuton_Paths` implementation such as `opModes/variants/Test_IvyAuton.java`.
-5. `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are standalone iterative `OpMode` examples that compose `Scheduler`, `Commands.infinite(...)`, `Groups.sequential(...)`, and `PedroCommands.follow(...)` directly.
-6. `EquationCurve` adapts `Equation` into a Pedro `CustomCurve`, but no current TeamCode op mode instantiates it.
-7. The standard robot-subsystem construction path is `Mechanism` + `(HardwareMap, RobotConstants)` + `RobotConstants.createMechanism(...)` + `Constants.create...(...)`.
-8. Profile-managed factory helpers work only for classes registered through `.addMechanism(...)` in the profile selected by `Constants.currentBot`.
-9. When planning which factory calls (`Constants.createIntake(...)`,
-   `Constants.createVision(...)`, etc.) succeed at runtime, verify which
-   mechanisms the selected profile actually registers with `.addMechanism(...)`.
-10. `library/planners/PlanBuilder` seeds a `PathPlannerList` with `Utils.StartPose`, and `PathPlannerList.schedule()` turns the accumulated planner steps into one sequential Ivy schedule.
-11. `PlanBuilder.intakeWVision(...)` adds `Utils.IntakeWVision`, which uses wrapper detector results to choose an outbound collection path or a fail-safe path, then returns to the planner step's start pose.
-12. `Robot.build()` produces `RobotIvyBuilder` for mode-bound periodic,
-    path-following, intake, drive, vision, and relocalization commands.
-    `IvyAuton` constructs a `RobotMode.AUTONOMOUS` aggregate and matching
-    `State`; its periodic command performs the follower update without reading
-    teleop bindings.
+`PathPlanner` is a small interface: `getEndPose()`, `run()` (returns a
+`Command`), `setStartPose(Pose)`, `buildPaths()`, a default `fromPrev(prev)`
+that calls `setStartPose(prev.getEndPose().copy())`, and a default
+`asCommand()` that sequences `instant(this::buildPaths)` then `run()` — so
+path geometry is always rebuilt immediately before the module runs.
+`PathPlannerList extends ArrayList<PathPlanner>`; its `asCommand()` walks the
+list, inserting an `instant(() -> pathPlanner.fromPrev(prevPlanner))` before
+each module's own `asCommand()` (starting from a `Utils.NullPlanner` sentinel),
+which is how each module picks up the previous module's end pose without every
+module needing manual wiring. `schedule()` builds that combined command and
+calls `command.schedule()` on it directly.
 
-## Pathing conventions to follow
+Route modules belong in `library/planners/paths/`. Only `FromStartGardenPose`
+and `FromShootGardenPose` are implemented today (they back the `PlanBuilder`
+transitions above, plus an unused `ToIntakeClosestFlower` stub with a `null`
+`run()`/`getEndPose()`). `FromVisionGardenPose`, `FromStartLoadingPose`,
+`FromShootLoadingPose`, and `FromVisionLoadingPose` are empty placeholder
+classes with no `PathPlanner` implementations yet — do not assume a loading-
+side or vision-anchor route module exists until one of these is filled in.
+`autos/Garden8` is the current annotated planner consumer — the earlier
+`IvyAuton` / path-provider pattern was deleted from source.
 
-1. Put follower, drivetrain, and localizer configuration changes in `Constants.java` and `library/robot/...`, not in individual op modes.
-2. For shared match-style autonomous code, keep geometry in an `IvyAuton_Paths` subclass and keep orchestration in `opModes/IvyAuton.java`.
-3. Return a `PathChain` from autonomous builders, even when there is only one `Path`; `Test_IvyAuton.Paths#getPath1()` is the current example.
-4. Set heading interpolation explicitly near the geometry.
-5. In non-Ivy code, call `follower.update()` exactly once per loop after teleop or path-following commands are issued.
-6. In planner-style code, let `PathPlanner.asCommand()` own the `buildPaths()` + `run()` pairing instead of duplicating that sequencing in the op mode.
+## Ivy command helpers
 
-## `EquationCurve` / math-layer facts
+- `library/robot/RobotIvyBuilder` (`Robot.build()`) wraps common robot actions
+  as `Command`s: `followPath(...)`, `turnTo(...)`, `hold(...)` (all via
+  `PedroCommands` against `robot.requireDrive().mecanumDrive.follower`),
+  `startIntake()`/`runIntake(...)`/`stopIntake()`, `setTeleOpDrive(...)`,
+  vision pipeline commands, and `forceRelocalize()`.
+- `pedroPathing/Pedro.java` provides `runIvy(Command)` (a blocking
+  start/execute-loop/end helper for contexts without a scheduler loop),
+  `ivyFollowPath(follower, poses...)` (builds and follows a `BezierCurve`
+  path with global linear heading interpolation), and `linear(poses...)` (a
+  plain `Path` with linear heading interpolation, used throughout
+  `library/planners/paths` to build inter-pose segments).
 
-- `EquationCurve` extends Pedro `CustomCurve`.
-- Its constructor takes `startPose`, `endPose`, an `Equation`, and a `HeadingInterpolator`.
-- It validates the endpoints with `MathFunctions.roughlyEquals(..., 1e-3)`.
-- `t` is mapped linearly across the start and end `x` positions.
-- Derivatives come from `equation.derivative()`.
-- `Polynomial` is the only concrete `Equation` implementation currently present in TeamCode.
-- `Polynomial.toString()` formats coefficients directly and is reasonable for telemetry/debug output.
+## Path and command rules
 
-## Current Ivy composition patterns in TeamCode
+- Obtain followers through the active profile
+  (`RobotConstants.createFollower(...)`); do not make independent
+  `FollowerBuilder` instances in op modes.
+- Put geometry and heading interpolation in the route module that owns it
+  (e.g. `FromStartGardenPose.ShootPreloads.buildPaths()`), not in `PlanBuilder`.
+- Use `RobotIvyBuilder` for aggregate follower/intake/vision commands rather
+  than reaching into `Robot` mechanisms directly from planner code.
+- Schedule exactly one follower update path — `Robot.periodic(state)` already
+  drives `RobotDrive.periodic(state)` -> `MecanumDrive.periodic()` ->
+  `follower.update()` once per loop.
+- Treat `Common` and its `AlliancePoses` fields (`StartPoses`, `IntakePoses`,
+  `ShootPoses`, `intake`, `park`, `intakeTest`) as uncalibrated placeholder
+  `Pose()` values until final field measurements are entered.
 
-TeamCode currently composes Ivy behavior with:
-
-- `Commands.instant(...)`
-- `Commands.infinite(...)`
-- `Commands.waitMs(...)`
-- `Groups.sequential(...)`
-- `Groups.loop(...)`
-- `PedroCommands.follow(...)`
-- `PathPlannerList.schedule()`
-
-`PlanBuilder.waitMs(double)` and `learning/ExampleIvyWithSubsystems.waitMs(double)` both round to Ivy's long-millisecond API before delegating to `Commands.waitMs(...)`.
-
-There is no current TeamCode example that implements `Command` directly, extends `CommandBuilder`, or constructs `new CommandBuilder()`. If you introduce those patterns, validate them against the `com.pedropathing:ivy:1.0.0` dependency instead of assuming a repo-local precedent exists.
-
-## `java-autogen/` workflow
-
-- `java-autogen/Ftc-PP-toJavaAuto-Ivy.html` accepts `.pp`, `.turt`, and `.json` inputs.
-- `java-autogen/Ftc-PedroPathing-PathBuilder-toJavaAuto.html` is the browser-side builder/importer companion.
-- The shared generator exposes a `useIvyCommandBase` setting and emits starter code that includes `reset()`, `schedule(...)`, and `Scheduler.execute()` scaffolding.
-- Treat generated output as a scaffold: move it into the right TeamCode package, review headings/path names, and align it with the repo’s active `Constants.createFollower(...)` flow before relying on it.
-
-## Repo-specific constraints
-
-- Do not treat profile follower or localizer values as competition-tuned without verifying them on the configured robot.
-- `LimelightPinpointLocalizer` is `@Deprecated` and is not wired into `RobotConstants.createFollower(...)`.
-- `library/planners/paths/Utils.IntakeWVision` is the current dynamic-path example. It preserves a `resolvedEndPose`, can fall back to a fail-safe path, and chooses between Pedro curve-through and adaptive-handle Bezier generation based on waypoint geometry.
-- `tests/PlannerIntakeVisionAuto.java` is the current driver-station-visible planner integration test; it combines staging, detector-driven intake, and parking steps with the aggregate `Robot` factory path.
-- `tests/PreseasonWebcamAuto.java` is a proof-of-concept test op mode that
-  uses the standard follower plus color results from a directly factory-created
-  `Vision` mechanism.
-- `learning/ExampleIvyWithSubsystems.java` is teaching code, not the profile-managed subsystem pattern: its `autoAlign()` step is commented out and its intake motor is resolved directly from `hardwareMap`.
-
-## Rules
-
-- Reuse the existing `Constants.createFollower(...)` → `RobotConstants.createFollower(...)` flow instead of constructing ad hoc followers elsewhere.
-- Keep localization choices explicit: default code is Pinpoint-only, while Limelight fusion is opt-in and deprecated.
-- Do not add duplicate `follower.update()` loops.
-- Prefer the repo’s existing `Commands` / `Groups` / `PedroCommands` composition style in Ivy op modes.
-- Prefer `RobotIvyBuilder` for commands operating on an aggregate robot rather
-  than bypassing its mode, required-mechanism checks, or lifecycle.
-- Keep non-drive subsystem behavior out of `RobotConstants`; use `RobotConstants` for profile data and mechanism registration.
-- Reach for `EquationCurve` only when an equation-through-endpoints model is a better fit than Bezier geometry.
+Normal FTC op modes use `Scheduler.execute()` in their own loop (see
+`Garden8.loop()`) rather than `Pedro.runIvy(...)`, which is intended for
+one-off blocking sequences outside the main scheduler loop.

@@ -1,194 +1,111 @@
 ---
 name: skill-updates
-description: Use this skill when asked to update `.github/skills/README.md` and one or more `SKILL.md` files so they reflect the latest repository changes/commit history or the current codebase state.
+description: Use this skill to maintain the repository-specific skill guides and companion FTC development documentation.
 ---
 
-# Skill Updates
+# Skill Documentation Maintenance
 
-Use this skill when the user asks for documentation maintenance work on the repo-specific Copilot skills under `.github/skills/`.
+When asked to update all skills, update:
 
-## Upstream `~/.gradle` lookup
+1. `.github/skills/README.md`;
+2. every relevant `.github/skills/*/SKILL.md`;
+3. `ftcdev-20373.html`; and
+4. every chapter under `ftcdev-20373/`.
 
-If the docs need to describe behavior owned by a dependency rather than repo
-code, inspect `~/.gradle/caches/modules-2/files-2.1/` using the versions pinned
-in `build.dependencies.gradle` before documenting the API from memory.
+## Required workflow
 
-- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro motion/pathing
-  library details
-- `com.pedropathing/ivy` for Ivy command and scheduler details
-- `com.pedropathing/telemetry` for Pedro telemetry and
-  `pedroPathing/Tuning.java` op-mode selection issues
-- `com.bylazar/fullpanels` and related `com.bylazar/...` modules for
-  panels-related docs
-- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
-  `org.firstinspires.ftc/Vision` for FTC SDK-backed behavior
+1. Read `.github/copilot-instructions.md` and this skills index.
+2. Find the most recent requested history boundary and inspect both commit
+   messages (`git log --oneline`) and changed paths (`git diff --stat`,
+   `git show --stat`).
+3. Verify every documentation assertion against the current source under
+   `TeamCode/src/main/java` and `TeamCode/src/test/java`; commit messages
+   summarize intent but do not replace source inspection, and neither does the
+   stale, no-longer-authoritative `TeamCode/bin/` compiled-classes output.
+4. Search for deleted paths and symbols (`grep`/`glob` across `TeamCode/src`)
+   before editing. A rename, deletion, or dependency removal must remove stale
+   documentation references everywhere they appear, not just in the file that
+   triggered the update.
+5. Refresh the narrow guides (single mechanism/package focus) as well as the
+   cross-cutting architecture/index pages (`teamcode-library-architecture`,
+   `.github/skills/README.md`) so both layers describe the same reality.
+6. Review the final diff (`git diff`), re-search for obsolete symbols, and run
+   the relevant existing validation (see `build-and-validation`) before
+   finishing.
 
-Typical prompts include requests like:
+## Source paths to check per topic
 
-- “Update all the `SKILL.md` files, and the `.github/skills/README.md` on all the latest changes.”
-- “Refresh the skills docs based on recent commits.”
-- “Make the skills match the current TeamCode architecture.”
-- “Refresh the repo-specific programming guide in `ftcdev-20373.html` so its docs cards, snippets, and branding still match TeamCode.”
+When a change touches one of the following areas, re-verify the matching
+skill guide(s) against these specific files rather than relying on memory of a
+previous pass:
 
-## Default contract for skill-update requests
+- Mechanisms/lifecycle: `mechanisms/Mechanism.java`, `mechanisms/Robot.java`,
+  `mechanisms/RobotDrive.java`, `mechanisms/Intake.java`,
+  `mechanisms/Vision.java`, `mechanisms/Shooter.java`,
+  `mechanisms/FieldUpdates.java`.
+- Vision/localization: `library/hardware/webcam/Limelight.java`,
+  `library/IntakeBallPath.java`, `pedroPathing/custom/LimelightPinpointLocalizer.java`.
+- Robot profiles/follower: `library/robot/RobotConstants.java`,
+  `library/robot/RobotConfigurations.java`,
+  `library/robot/drivetrain/MecanumDrive.java`, `Constants.java`.
+- Autonomous/planning: `library/planners/PlanBuilder.java`,
+  `library/planners/PathPlanner.java`, `library/planners/PathPlannerList.java`,
+  `library/planners/paths/*.java`, `library/planners/Common.java`,
+  `pedroPathing/Pedro.java`, `pedroPathing/AlliancePoses.java`,
+  `library/robot/RobotIvyBuilder.java`.
+- Op mode entries/handoff: `tele/TeleOp.java`, `autos/Garden8.java`,
+  `configs/Blackboard.java`, `configs/ConfigOpMode.java`.
+- Tests/tuning: `tests/ftcSdk/*.java`, `pid/autoTune/*.java`,
+  `pedroPathing/Tuning.java`, `src/test/java/.../UnitTestAll.java`.
 
-- Start by checking what the user actually wants updated.
-- In this repo, a request like “update all the skill files” means “update every
-  document that serves as reference material for anyone or anything modifying
-  the codebase,” not just the `SKILL.md` files. That includes
-  `.github/skills/README.md`, the relevant skill guides, the
-  `ftcdev-20373.html` landing hub, and its long-form static chapters under
-  `ftcdev-20373/`.
-- Unless the user explicitly insists on updating **all** skill files, only update the files that are actually necessary.
-- If the user says “update all,” you should still determine whether some files truly need no changes; if so, tell the user that those files were reviewed and left unchanged.
-- If the update scope or history boundary is ambiguous, state the assumption you used and proceed.
-- Prefer direct verification against the current tree, and use commit history only when the user allows it and the request actually depends on recent-change boundaries.
+## Current baseline facts
 
-## Important repo-specific rule about history range
+The current code uses `tele/TeleOp` (with nested `Red_Tele`/`Blue_Tele`) and
+`autos/Garden8` (with nested `redalliance`/`bluealliance`) as the concrete
+match entries; every profile-managed mechanism extends `Mechanism` and
+implements both `periodic(State)` and `stop()`; the aggregate `Robot` owns
+mechanism construction, periodic dispatch, and shutdown/handoff via
+`saveEndVals()`; autonomous composition goes through `PlanBuilder` and
+`PathPlannerList`; `IntakeBallPath` is the vision-driven intake path
+generator; `DualGamepad`/`GpBindings` are the two-controller input path; and
+the math/control library is plain Java (`library/math/MathUtils`,
+`library/control/*`), not Kotlin.
 
-This repo already uses commits that explicitly mention skills updates.
+The deleted baseline includes `opModes/` (and its variants pattern),
+`IvyAuton`, `IvyTeleOp`, `IvyAuto`, `CommandConverter`, `MathUtils.kt`,
+`TestPathPlanner`, `PlannerIntakeVisionAuto`, and the old
+`library/hardware/leds/RGBIndicator` location (the directory is now empty; the
+class lives under `library/hardware/hardwareDevice/` only).
 
-When the user wants a history-bounded refresh and allows git-history inspection, that means:
+Never state that `Constants.currentBot` has a permanently or freely selected
+profile — it is a compile-time field assignment
+(`RobotConstants currentBot = RobotConfigurations.FirstRobot();`) that changes
+only when `Constants.java` is edited and rebuilt. Document profile
+eligibility, placeholders (e.g. `FirstRobot()`'s zero velocity/heading-PIDF/
+centripetal-scaling fields, `FieldUpdates.getGoalPose()` returning `null`), and
+scaffolds (e.g. `IntakeBallPath.generateIntakePathFromCam()`'s no-arg overload
+returning an empty `PathChain`) as such rather than as finished behavior. Keep
+the FTC development hub (`ftcdev-20373.html` and `ftcdev-20373/*.html`)
+aligned with the source rather than retaining historical examples purely for
+familiarity.
 
-- you do **not** need to re-document every older repo change from the beginning of time
-- instead, find the most recent commit that already updated the skills docs
-- then inspect the commits **after** that point and update only what is newly relevant
+## Cross-checking commit history against source
 
-If you discover an older documentation gap that is still materially wrong and should be corrected, tell the user and update it if appropriate.
+When a task references "the latest changes" or a specific commit range,
+resolve the boundary first (`git log --oneline -20`, `git show --stat
+<sha>`), then re-derive facts from the files that changed rather than trusting
+the commit subject line alone — subjects like "Add CompositeControllers and
+More updates to ShotSolver/Shooter" or "Support dual gamepads and drive
+follower modes" describe intent but not the exact resulting API surface
+(e.g. whether a params class's `updateFromBot(...)` was actually implemented,
+or still returns `null`/`this` unconditionally). Prefer reading the changed
+file directly over inferring behavior from the diff summary alone.
 
-If the user explicitly wants a codebase-only audit or bans history / diff inspection, skip the history-bounding step and audit the current tree directly.
+## Avoiding accidental formatting errors
 
-## If history is allowed, start with commit history
-
-A good recent-history snapshot is:
-
-```zsh
-git --no-pager log --stat --decorate -4
-```
-
-Use that as an initial recent-history snapshot when the request is recent-history-driven.
-
-Also use commands like these to find the correct doc-update boundary and the latest relevant code changes:
-
-```zsh
-git --no-pager log --stat --decorate -4
-git --no-pager log --decorate --oneline --grep='skill' -i --all | cat
-git --no-pager log --decorate --oneline -- .github/skills TeamCode | cat
-git --no-pager diff --name-only <LAST_SKILLS_COMMIT>..HEAD | cat
-git --no-pager log --stat --decorate <LAST_SKILLS_COMMIT>..HEAD -- TeamCode .github/skills | cat
-```
-
-In this repo, a command like this is especially useful for locating the most recent skills-update boundary from scratch:
-
-```zsh
-git --no-pager log --decorate --oneline --grep='skill' -i --all | cat
-```
-
-If the most recent skills-update commit title already says it updated the skills, you usually only need to inspect the commits after that point.
-
-Useful ways to figure out the latest commits from scratch:
-
-```zsh
-git --no-pager log --decorate --oneline -20 | cat
-git --no-pager log --stat --decorate -10 | cat
-git --no-pager log --decorate --oneline --all --graph | cat
-```
-
-If you need to inspect only the recent code under `TeamCode/`:
-
-```zsh
-git --no-pager log --stat --decorate -10 -- TeamCode | cat
-```
-
-## Workflow for a skill-doc update request
-
-1. Read `.github/copilot-instructions.md` and `.github/skills/README.md` first.
-2. If history is allowed and relevant, find the most recent skills-update commit.
-3. If history is allowed and relevant, inspect commits after that point.
-4. Inspect the actual current code, not just commit messages.
-5. Map which skill files are affected by those changes.
-6. `Constants.currentBot` can change quickly, do not update SKILL files/README.md to state the current profile as it might become outdated quickly.
-7. Update only the necessary skills unless the user explicitly asks for a blanket refresh.
-8. If the index file `.github/skills/README.md` should mention a new pattern, package, or skill, update it too.
-9. If `ftcdev-20373.html` is present and acts as repo documentation, treat both it and the long-form static chapters under `ftcdev-20373/` as part of the same “update all the skill files” maintenance surface unless the user explicitly narrows the scope away from them.
-10. After editing docs, validate the changed markdown files and any touched companion reference docs for obvious consistency issues, then summarize exactly which skill files and companion docs changed.
-
-## What kinds of code changes usually require skill updates
-
-- new architecture conventions in `Constants`, `RobotConstants`, `RobotConfigurations`, or `Mechanism`
-- new mechanisms or wrappers under `mechanisms/` or `library/hardware/...`
-- a new `library/` utility that changes house style, such as `OpModeHelper.kt`
-- new custom FTC hardware devices under `library/hardware/hardwareDevice/`
-- changes to how tests should reference hardware names or profile-managed factories
-- new op mode base classes, variants, or pose-handoff patterns
-- new Pedro/Ivy workflow changes
-- new planner-style pathing layers under `library/planners/`
-- new tuning packages or calibration op modes such as `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pid/autoTune/`
-- new third-party build wiring in `build.dependencies.gradle`, especially new repositories or driver-station-facing libraries
-- new build, lint, or validation expectations
-- new skill directories or renamed skills
-- repo documentation drift in `ftcdev-20373.html` or `ftcdev-20373/`, especially stale snippets, outdated BioBuzz architecture notes, broken hub-to-chapter links, or non-FTChimera links
-
-## How to decide which skill files to touch
-
-Examples:
-
-- If the change adds a new slides mechanism layer around `SlidesMotor`, update:
-  - `mechanisms-and-hardware-wrappers`
-  - `teamcode-library-architecture`
-  - `tests-and-tuning-opmodes`
-  - `library-utilities-and-shared-types` if the lower-level device layer changed expectations
-- If the change centralizes test hardware naming through `RobotConfigurations` or `*_PARAMS`, update:
-  - `tests-and-tuning-opmodes`
-  - `build-and-validation`
-  - `robot-configurations-and-follower-builder`
-  - any skill whose examples referenced stale test-only strings
-- If the change adds a lifecycle helper like `OpModeHelper.kt`, update:
-  - `library-utilities-and-shared-types`
-  - `ftc-sdk-hardwaremap-and-lifecycle`
-  - possibly `teamcode-library-architecture`
-- If the change adds a new tuning package or driver-station-visible calibration flow like `pid/autoTune`, update:
-  - `tests-and-tuning-opmodes`
-  - `build-and-validation`
-  - `ftc-sdk-opmodes`
-  - `ftc-sdk-hardwaremap-and-lifecycle`
-  - `constants-not-configured` if the new package introduces its own configurable tuning constants
-- If the change renames `Constants` helpers, moves drive registration, or adds an aggregate factory like `createRobot(...)`, update:
-  - `ftc-sdk-opmodes`
-  - `ftc-sdk-hardwaremap-and-lifecycle`
-  - `drivetrain-and-drivevector`
-  - `mechanisms-and-hardware-wrappers`
-  - `constants-not-configured`
-  - `opmode-variants-and-pose-handoff`
-
-## Rules for editing the skills docs
-
-- Keep the docs repo-specific and practical.
-- Prefer concrete file names and actual current symbols.
-- Remove stale references when current architecture supersedes them.
-- Do not claim a pattern is active unless you verified it in the current code.
-- When updating `ftcdev-20373.html` or `ftcdev-20373/`, source examples from `TeamCode/` instead of inventing generic FTC snippets, keep FTChimera / 20373 RMS Chimera branding current, and preserve the landing hub's links to the corresponding static chapters.
-- Distinguish between:
-  - profile-managed `Mechanism`/factory flows
-  - lower-level direct `hardwareMap.get(...)` custom devices
-  - test/proof-of-concept exceptions
-- If a behavior is intentionally provisional or preseason, say so.
-- If a recent change only affected one narrow area, do not rewrite unrelated skill files just for style consistency.
-
-## Recommended final report shape
-
-When done, report:
-
-1. which code/doc scope you used, and if allowed, which commits/history range you used
-2. which skill files were updated
-3. which skill files were reviewed but did not need changes
-4. any older gaps you noticed that predate the last skills-update commit
-5. any assumptions or open questions that would help future skill maintenance
-
-## Assumptions to surface when needed
-
-If you would normally ask these, state the assumption you chose and proceed:
-
-- Should I update only the skill files affected since the last skills-update commit, or do you want a full sweep anyway?
-- If I find older stale skill content that predates the last skills update, do you want me to fix it now or just report it?
-- Do you want me to also update non-skill documentation such as `README.md` when the same architecture changes apply there?
+Keep Markdown frontmatter exactly two `---` fences around `name:`/
+`description:` and avoid stray characters introduced by manual edits (for
+example, a leftover `+` from a diff-style edit accidentally left in prose,
+which previously appeared before `stop()` in this file's baseline-facts
+section). Run `git diff --check` after editing skill files to catch trailing
+whitespace or conflict markers before finishing a documentation pass.

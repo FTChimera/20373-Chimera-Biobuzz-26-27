@@ -1,92 +1,109 @@
 ---
 name: opmode-variants-and-pose-handoff
-description: Use this skill when asked to add annotated variants, share logic across op modes, or preserve robot pose and shared driver state through `configs.Blackboard` between autonomous and teleop.
+description: Use this skill for selectable match entries, alliance selection, and Blackboard handoff.
 ---
 
-# OpMode Variants and Pose Handoff
+# Op Mode Entries and Pose Handoff
 
-Use this skill when working on the repo’s shared-base-class plus thin-wrapper pattern.
+The historical abstract-base plus `opModes/variants/` pattern no longer
+exists in source (it only still appears under the stale `TeamCode/bin/`
+compiled-classes output, which is not source). `opModes/`, `IvyAuton`,
+`IvyTeleOp`, and separate `Blue_TeleOp` / `Red_TeleOp` files were removed from
+`TeamCode/src`.
 
-## Upstream `~/.gradle` lookup
+## Current selectable entries
 
-If a variant or shared base class depends on external op-mode infrastructure,
-inspect `~/.gradle/caches/modules-2/files-2.1/` with the versions pinned in
-`build.dependencies.gradle`.
+- `tele/TeleOp.java` is the concrete `LinearOpMode` annotated
+  `@TeleOp(name = Constants.TELEOP_NAME, group = Constants.COMPETITION_GROUP)`
+  ("Main TeleOp"). Its nested static classes `Red_Tele` and `Blue_Tele` are
+  separately annotated `@TeleOp(name = "Red TeleOp")` / `@TeleOp(name = "Blue
+  TeleOp")`; each overrides `runOpMode()` to call the protected
+  `setAllianceColor(AllianceColor.RED/BLUE)` (which writes directly to
+  `Blackboard.Caption.ALLIANCE`) before delegating to `super.runOpMode()`.
+  These exist as an alliance-selection fallback in case the Driver Station's
+  autonomous-preselect flow is unavailable — prefer the Garden8 autonomous
+  path for normal alliance selection.
+- `autos/Garden8.java` is the concrete `OpMode`-based autonomous. Its nested
+  `redalliance` and `bluealliance` static subclasses each run a **static
+  initializer block** (`static { setAllianceColor(...); }`) that writes
+  Blackboard alliance at class-load time (before `init()` runs), and are
+  annotated `@Autonomous(name = "Red/Blue Garden 8", group =
+  Constants.COMPETITION_GROUP, preselectTeleOp = Constants.TELEOP_NAME)` so the
+  Driver Station auto-selects Main TeleOp afterward. Both nested classes share
+  the same `PlanBuilder`-driven Garden planner implementation from the parent
+  class's `init()`.
+- `configs/ConfigOpMode.java` is the selectable pre-start configuration menu.
 
-- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
-  SDK op-mode and hardware behavior
-- `com.pedropathing/ivy` for Ivy-based shared autonomous/teleop orchestration
-- `com.pedropathing/telemetry` when `pedroPathing/Tuning.java` selection or
-  registration is part of the issue
+Use a compact nested class (annotated concrete `@TeleOp`/`@Autonomous`, or a
+static-initializer alliance variant) only when it expresses real selection
+data, as the two examples above do. Do not reintroduce an abstract-base plus
+`variants/` package layout merely to reproduce the deleted arrangement.
 
-## Relevant files
+## Blackboard structure
 
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/ConfigOpMode.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/OpModeHelper.kt`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/TeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyTeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Blue_TeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Red_TeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Test_IvyAuton.java`
+`configs/Blackboard.java` holds a static `List<Item>` seeded with one `Item`
+per `Caption`: `POSE` (`Pose.class`), `DRIVER` (`Driver.class`), and `ALLIANCE`
+(`AllianceColor.class`). `Blackboard.Item` enforces the caption's declared
+class on both construction and `setValue(...)` (throwing
+`IllegalArgumentException` on a mismatch), and remembers the **first** value
+ever set as `defaultV`; `Item.reset()` restores that default rather than
+clearing to `null`. A freshly constructed `Item(Caption)` with no value has
+`val == null` and `defaultV == null` — `getValue()` on it returns `null`, which
+callers must distinguish from a meaningful zero pose.
+`Blackboard.get(Caption)`/`put(Caption, Object)`/`put(Item)`/`getAll()`/
+`resetAll()` are the only entry points; there is no per-op-mode Blackboard
+instance.
 
-## Design intent
+## Handoff owner: `Robot.saveEndVals()`
 
-1. Shared robot behavior goes in a reusable base op mode.
-2. Driver-station-visible entries stay small and hold the FTC annotation.
-3. Alliance-specific differences should usually be expressed in wrappers or parameters.
-4. Cross-opmode pose transfer and shared driver preferences go through `configs.Blackboard`.
+`Robot.saveEndVals()` is the single handoff owner and branches on
+`getRobotMode()`:
 
-## Current patterns in this repo
+- **Autonomous**: only runs if `lastState != null` (i.e. `Robot.periodic(state)`
+  executed at least once — `Robot.periodic(...)` sets `lastState = state` at
+  the top of every call). It writes `Blackboard.Caption.POSE` from
+  `getPoseCompensatedForVelocity()` and, if `lastState.getAllianceColor() !=
+  null`, writes `Blackboard.Caption.ALLIANCE` too.
+- **Teleop**: resets every `Blackboard.Item` **except** `DRIVER` back to its
+  default via `Item.reset()`, so a driver preference persists across a match
+  but pose/alliance do not leak into the next op mode.
 
-- `TeleOp` is an abstract `LinearOpMode` that accepts an `AllianceColor`, but the current base stores that value without branching on it yet.
-- `Blue_TeleOp` and `Red_TeleOp` are the current concrete wrappers; each reads `Blackboard.Caption.POSE` first and only falls back to the alliance default constant when the stored pose is still `0,0,0`.
-- `IvyTeleOp` is currently a standalone annotated teleop, so not every teleop in the repo uses the thin-wrapper pattern.
-- `IvyAuton` is an abstract `OpMode` that accepts an `AllianceColor` plus an `IvyAuton_Paths` implementation, but the current base also stores rather than branches on the alliance value.
-- `Test_IvyAuton` provides a nested `Paths` implementation and currently passes `AllianceColor.RED` to the shared base.
-- `IvyAuton.stop()` calls `Robot.stop()` before resetting the Ivy scheduler.
-  In autonomous mode, Robot stores a velocity-compensated end pose plus the
-  state alliance in `Blackboard`.
-- `ConfigOpMode` is the one iterative pre-start menu for `Blackboard` mutations. Its D-pad menus set `POSE`, `DRIVER`, or `ALLIANCE`, or reset every entry before the op mode is started.
-- `OpModeHelper.kt` is available as shared lifecycle plumbing if a future base op mode needs loop timing or manual bulk-cache handling, but it is not itself an annotated op mode base.
+`Robot.stop(boolean saveEndVals)` calls `saveEndVals()` after every mechanism's
+`stop()` and `helper.close()` when the flag is `true`; `Garden8.loop()` calls
+`robot.stop(false)` first (to let the robot decelerate) and only calls
+`robot.saveEndVals()` once velocity has settled, then `requestOpModeStop()`.
 
-## Mechanism construction rule for shared bases
+## Consuming the handoff in TeleOp
 
-Shared base op modes should initialize mechanisms through `Constants.create...(...)` so every variant uses the same profile-aware factories.
+`TeleOp.getStartingPoseAndSetAlliance()` runs before `waitForStart()`: it
+first adopts `Blackboard.Caption.ALLIANCE`'s value if the field-local
+`allianceColor` is still `null`, then returns the Blackboard pose if one is
+present and non-null, else falls back to `Constants.RED_DEFAULT_START_POSE` /
+`Constants.BLUE_DEFAULT_START_POSE` keyed off the resolved alliance (defaulting
+to `RED` if no alliance is known at all). `Garden8` is the current concrete
+autonomous producing that handoff; new autonomous work can follow its
+`Robot`/`PlanBuilder`/`saveEndVals()` pattern directly rather than needing
+further abstraction.
 
-Variant wrappers inherit whatever profile and aggregate assumptions their base
-class makes. For example, `TeleOp.java` creates `RobotMode.TELEOP` Robot and
-State instances, then calls `requireDrive()` and optional `get(...)` lookups
-for `Intake`; it requires `Vision`. The selected profile must still register
-any class that the base treats as required.
+## `ConfigOpMode`: pre-start Blackboard editor
 
-If a new subsystem is introduced for a base op mode:
+`configs/ConfigOpMode.java` extends Pedro's `SelectableOpMode`
+(`@TeleOp(name = "Configuration", group = "Configuration")`) and exposes a
+folder-based menu of one-shot `BlackboardActionOpMode`s: "Alliance Color"
+(writes `AllianceColor.RED`/`BLUE` to `Blackboard.Caption.ALLIANCE`), "Driver"
+(writes one of `Driver.ATHARVA`/`SHLOK`/`EASON`/`SIMPLE` to
+`Blackboard.Caption.DRIVER`), "Pose" (writes `RED_DEFAULT_START_POSE`,
+`BLUE_DEFAULT_START_POSE`, or a zero `Pose()` to `Blackboard.Caption.POSE`),
+and "Miscellaneous -> Reset All Blackboard" (`Blackboard::resetAll`). Each
+selection runs its action in `init()`, shows a confirmation in `init_loop()`,
+and calls `requestOpModeStop()` on `loop()` — so selecting a menu item and
+pressing Start both applies the change and exits immediately.
 
-1. make it follow the repo’s `Mechanism` + `(HardwareMap, RobotConstants)` constructor pattern when it is a profile-managed subsystem
-2. register it in the active robot profile with `.addMechanism(...)`
-3. add `Constants.create...(...)` when the shared base should access it directly
-4. initialize it in the shared base, not separately in every variant wrapper
-
-## Rules
-
-- Keep FTC annotations like `@TeleOp` and `@Autonomous` on concrete selectable classes, not on abstract bases.
-- Prefer adding a new wrapper class in `opModes/variants/` over copy-pasting a full base class.
-- If teleop needs autonomous pose handoff, read from and write to `Blackboard.Caption.POSE` intentionally.
-- If you rely on pose handoff, preserve the current `0,0,0` guard in `Blue_TeleOp` / `Red_TeleOp` or replace it with another explicit "pose is valid" signal.
-- Keep alliance-specific differences explicit through constructor parameters, paths, or start poses.
-- Keep subsystem factories centralized through `Constants` / `RobotConstants.createMechanism(...)`, not redefined per variant.
-- Use `ConfigOpMode` when the task is a one-shot configuration or reset flow rather than a continuously running teleop.
-
-## Good use cases
-
-- Add a `Blue_*` and `Red_*` pair with shared logic in one base class.
-- Move duplicate driver code out of a variant and into `TeleOp`.
-- Add a new autonomous by subclassing `IvyAuton` and supplying a repo-style `IvyAuton_Paths` object.
-
-## Things to watch
-
-- `Blackboard` is currently seeded with default `POSE`, `DRIVER`, and `ALLIANCE` entries, so consumers should understand the difference between “default value” and “meaningful restored value”.
-- `LinearOpMode` and iterative `OpMode` bases behave differently; do not blindly move logic between them.
-- Keep `waitForStart()` only in `LinearOpMode` flows.
+`library/robot/Driver` holds named per-driver preference singletons
+(`ATHARVA`, `SHLOK`, `EASON`, `DEFAULT` all `USE_FIELD_CENTRIC = true`;
+`SIMPLE` is `false`). `MecanumDrive.setTeleOpDrive(DriveVector)` (the
+overload with no explicit `fieldCentric` flag) reads the current
+`Blackboard.Caption.DRIVER` value (falling back to `Driver.DEFAULT` if unset)
+to decide whether to apply field-centric rotation — so a driver selection made
+through `ConfigOpMode` before a match directly changes teleop drive behavior
+without any code change.

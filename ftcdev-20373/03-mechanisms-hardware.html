@@ -1,43 +1,101 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mechanisms & Hardware | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>Subsystems</h2><a href="#mechanism">Mechanism contract</a><a href="#aggregate">Aggregate access</a><a href="#new">Add a mechanism</a><a href="#hardware">Direct hardware devices</a><a href="#validation">Validate construction</a></nav>
-<main class="article"><p class="eyebrow">03 / Subsystems</p><h1>Put robot behavior behind a mechanism.</h1><p class="lead">A profile-managed mechanism gets a <code>HardwareMap</code> and active <code>RobotConstants</code>, resolves its own parameters, participates in aggregate updates, and becomes available only after its profile registers it. This prevents each op mode from inventing a new hardware construction path.</p>
-<section id="first-call"><h2>Call a mechanism from an OpMode</h2><p>Once a mechanism is registered, callers should request it through the aggregate and invoke its public behavior. For example, an explicit intake action can be used in a focused test while normal teleop lets <code>periodic(...)</code> consume its configured trigger bindings.</p><pre>Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
-RobotDrive drive = robot.requireDrive();
-Intake intake = robot.get(Intake.class);
-
-waitForStart();
-if (intake != null) intake.HalfPower();
-sleep(250);
-if (intake != null) intake.Stop();
-
-// Shared teleop normally delegates all configured controls here:
-robot.periodic(new State(driverBindings, RobotMode.TELEOP));</pre></section>
-<section id="mechanism"><h2>The Mechanism contract is small on purpose</h2><pre>public abstract class Mechanism {
-    protected HardwareMap hardwareMap;
-    protected RobotConstants bot;
-
-    protected &lt;P extends Params&lt;P&gt;&gt; P resolveParams(
-            Class&lt;? extends Mechanism&gt; mechanismClass, P defaultParams) {
-        return bot.getMechanismParams(mechanismClass, defaultParams)
-                .updateFromBot(bot);
-    }
-
-    public abstract void periodic(State state, RobotMode mode);
-}</pre><p>The small API is the point. A mechanism owns its hardware and per-loop behavior; the op mode owns the loop. Implement <code>periodic(...)</code> even when it intentionally does nothing, because the aggregate container calls a consistent surface. Autonomous mechanisms must not consume teleop bindings.</p>
-<div class="source"><span class="label">Existing examples</span><code>mechanisms/RobotDrive.java</code> resolves stick bindings and delegates to <code>MecanumDrive</code>. <code>mechanisms/Intake.java</code> resolves power/binding parameters, creates a <code>Motor</code>, and combines trigger command values in <code>periodic(...)</code>.</div></section>
-<section id="aggregate"><h2>Use the aggregate container for shared op modes</h2><p><code>Robot</code> constructs every class in <code>bot.Mechanisms</code>, keeps typed lookup methods, and fans a mode-aware <code>State</code> update to every mechanism. It is the normal shared-teleop construction path.</p>
-<pre>Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
-RobotDrive drive = robot.requireDrive();
-Intake intake = robot.get(Intake.class);
-
-// One updated input view; one aggregate periodic call each loop.
-driver.update();
-robot.periodic(new State(driverResult, RobotMode.TELEOP));</pre>
-<table><tr><th>Method</th><th>Use it when</th></tr><tr><td><code>get(SomeClass.class)</code></td><td>The mechanism is optional across profiles. Handle <code>null</code> intentionally.</td></tr><tr><td><code>require(SomeClass.class)</code></td><td>The op mode cannot run safely without it. A missing registration should fail clearly.</td></tr><tr><td><code>has(SomeClass.class)</code></td><td>A test or conditional path needs to inspect the aggregate before choosing work.</td></tr><tr><td><code>all()</code></td><td>Telemetry or generic inspection needs the registered set.</td></tr></table></section>
-<section id="new"><h2>Workflow: add a profile-managed mechanism</h2><ol><li>Create the class under <code>mechanisms/</code> or an appropriate <code>library/hardware/...</code> package, extending <code>Mechanism</code>.</li><li>Add a nested params type implementing <code>Mechanism.Params&lt;T&gt;</code>. Give it <code>copy()</code>, <code>updateFromBot(...)</code>, and focused builder methods for meaningful local values.</li><li>Use <code>resolveParams(NewMechanism.class, new PARAMS())</code> in the constructor before touching hardware.</li><li>Construct lower-level wrappers such as <code>Motor</code> inside the mechanism, not in every caller.</li><li>Implement <code>periodic(State, RobotMode)</code>. Keep it safe when bindings are absent and suppress teleop input in autonomous mode.</li><li>Register the class with <code>.addMechanism(NewMechanism.class, params)</code> in every supporting profile.</li><li>Add a narrow <code>Constants.createNewMechanism(...)</code> helper only when direct callers need it; otherwise prefer the aggregate.</li></ol>
-<div class="warning"><span class="label">Do not skip registration</span>Matching the constructor signature alone is not enough. <code>RobotConstants.createMechanism(...)</code> intentionally rejects an unregistered class.</div></section>
-<section id="hardware"><h2>Do not confuse mechanisms with direct SDK devices</h2><p>The repo also has custom device classes under <code>library/hardware/hardwareDevice/</code>. These represent an FTC SDK registration/use path and are appropriate for direct <code>hardwareMap.get(...)</code> in a lower-level test or device flow. They are not automatically part of the profile mechanism set.</p><div class="grid"><div class="card"><h3>Profile-managed</h3><p><code>RobotDrive</code>, <code>Intake</code>, <code>Vision</code> (which owns Limelight), and wrapper-side RGB indicator use the <code>Mechanism</code> factory path.</p></div><div class="card"><h3>Direct devices</h3><p><code>SlidesMotor</code>, <code>RevPotentiometer</code>, and the device-level <code>RGBIndicator</code> are SDK-facing classes used through hardware mapping and dedicated tests.</p></div></div></section>
-<section id="validation"><h2>Validate mechanism construction in layers</h2><div class="checklist"><span class="label">A safe validation ladder</span><ol><li>Build <code>:TeamCode:assembleDebug</code> after changing constructors, params, or registrations.</li><li>For pure parameter behavior, add or update a JVM test.</li><li>Use a matching <code>tests/ftcSdk/*FactoryTest</code> style flow to validate profile creation on hardware.</li><li>Only then drive the mechanism from a shared or match op mode.</li></ol></div></section>
-<nav class="pager"><a href="02-profiles-factories.html">← Profiles & factories</a><a href="04-opmodes-lifecycle.html">OpModes & lifecycle →</a></nav></main></div><footer class="footer">Mechanism guide · One construction path per profile-managed subsystem.</footer></body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mechanisms | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">03 / Subsystems</p>
+        <h1>Mechanisms all share one loop contract: <code>periodic(State)</code> plus <code>stop()</code>.</h1>
+        <p class="lead">The base class takes <code>HardwareMap</code> and <code>RobotConstants</code> in the constructor, resolves copied params through the active profile, and leaves mode and match context inside <code>State</code> rather than in an extra method argument.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>Mechanism</code> exposes <code>public abstract void periodic(State robotState)</code> and <code>public abstract void stop()</code>.</li>
+                <li><code>Robot</code> is itself a mechanism that aggregates the configured mechanism instances in class-name order.</li>
+                <li><code>Robot.periodic(State)</code> updates the helper, injects robot and alliance data into state, then dispatches mechanism work.</li>
+                <li><code>Robot.stop(boolean)</code> can stop mechanisms without immediately saving Blackboard handoff values.</li>
+                <li><code>Intake</code>, <code>RobotDrive</code>, and <code>Vision</code> are the current profile-managed subsystems available in the active robot profile.</li>
+                <li>Direct device wrappers such as <code>SlidesMotor</code>, <code>RevPotentiometer</code>, and <code>RGBIndicator</code> live outside the aggregate mechanism set.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Base contract snapshot</h2>
+            <p>This is the exact abstract surface every profile-managed mechanism must satisfy.</p>
+            <pre>
+public abstract class Mechanism {
+    public abstract void stop();
+    public abstract void periodic(State robotState);
+}
+            </pre>
+        </section>
+        <section>
+            <h2>What Robot adds on top of Mechanism</h2>
+            <p>The aggregate robot is more than a bag of getters.</p>
+            <ul>
+                <li>It reads alliance color from Blackboard during construction and stores the chosen <code>RobotMode</code> beside that alliance.</li>
+                <li>It runs <code>Common.init(color)</code> once so alliance-aware planner pose containers point at the selected side.</li>
+                <li>It builds each configured mechanism with <code>bot.createMechanism(map, mechanismClass)</code>.</li>
+                <li>It exposes convenience accessors like <code>requireDrive()</code>, <code>requireIntake()</code>, and <code>requireVision()</code>.</li>
+                <li>It owns helper-backed voltage and op mode timing, so mechanisms can read them through <code>State</code> when needed.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Lifecycle details worth documenting</h2>
+            <p>These behaviors are easy to miss if you only read op modes.</p>
+            <ul>
+                <li><code>Robot.start()</code> starts the helper and calls <code>startVision(Vision.Pipeline.APRIL_TAG)</code>.</li>
+                <li><code>Robot.periodic(State)</code> throws when the supplied state mode does not match the robot’s configured mode.</li>
+                <li><code>lastState</code> is recorded during periodic and later used by <code>saveEndVals()</code>.</li>
+                <li><code>stop()</code> defaults to <code>stop(true)</code>, but autonomous code can call <code>stop(false)</code> to delay pose persistence until velocity settles.</li>
+                <li>Teleop shutdown clears Blackboard items except driver preference, while autonomous shutdown writes pose and alliance when possible.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Hardware ownership boundary</h2>
+            <p>If code needs to coordinate motors, follower state, intake behavior, or camera results over time, it belongs in a mechanism or in <code>Robot</code>. If it only wraps one SDK device type, it usually belongs under <code>library/hardware</code> and can be tested directly.</p>
+            <p>That split matters for documentation too: describe aggregate behavior in the mechanism chapters, and describe one-device constructors or sensors in hardware-specific notes or test instructions instead of pretending they are full subsystems.</p>
+        </section>
+        <section>
+            <h2>Safe extension rules</h2>
+            <p>New mechanism code should match the current architecture rather than invent a parallel one.</p>
+            <ul>
+                <li>Resolve profile params through <code>resolveParams(...)</code> instead of reading raw robot constants everywhere.</li>
+                <li>Use <code>State</code> for mode, bindings, alliance, helper, and robot access instead of passing extra globals around.</li>
+                <li>Let <code>Robot</code> own startup and shutdown sequencing so Blackboard persistence stays centralized.</li>
+                <li>Add Driver Station tests under <code>tests/</code> or <code>tests/ftcSdk/</code> when a behavior touches real hardware.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>One aggregate owner</h2>
+            <p>Keep only one live instance of each profile-managed mechanism in a match flow. The source is built around the aggregate robot being that owner, so duplicate mechanism construction in op modes would bypass the shared lifecycle and handoff rules documented here.</p>
+        </section>
+        <nav class="pager">
+            <a href="02-profiles-factories.html">← Profiles</a>
+            <a href="04-opmodes-lifecycle.html">Lifecycle →</a>
+        </nav>
+    </main>
+</body>
+</html>

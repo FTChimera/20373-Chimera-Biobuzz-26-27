@@ -1,30 +1,102 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Library, Math & Simulation | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>Reusable Code</h2><a href="#rule">Library rule</a><a href="#time">Time & utilities</a><a href="#control">Control & filters</a><a href="#math">Math & curves</a><a href="#simulation">Simulation</a><a href="#extend">Extension workflow</a></nav>
-<main class="article"><p class="eyebrow">10 / Reusable Code</p><h1>Keep shared code focused, tested, and robot-agnostic where possible.</h1><p class="lead">The <code>library/</code> package is where TeamCode keeps small reusable types and adapters: timers, drive vectors, control helpers, filters, interpolation, geometry, hardware wrappers, robot configuration, and planner building blocks. It should reduce duplication without becoming a place to hide match routines.</p>
-<section id="first-call"><h2>Call utility code from an OpMode loop</h2><p>Shared helpers should make an OpMode smaller. This caller-side example tracks loop time, smooths a sensor value, and reports the result without putting a match routine into <code>library/</code>.</p><pre>Timer loopTimer = new Timer(TimeUnit.MILLISECONDS);
-LowPassFilter filteredDistance = new LowPassFilter(0.2);
-
-waitForStart();
-while (opModeIsActive()) {
-    double rawDistance = distanceSensor.getDistance(DistanceUnit.INCH);
-    filteredDistance.updateState(rawDistance);
-
-    telemetry.addData("Raw inches", rawDistance);
-    telemetry.addData("Filtered inches", filteredDistance.getState());
-    telemetry.addData("Loop ms", loopTimer.dt());
-    telemetry.update();
-}</pre></section>
-<section id="rule"><h2>The library rule: utility or subsystem?</h2><table><tr><th>If the class mainly...</th><th>Put it in...</th></tr><tr><td>Represents a value, performs reusable math, or adapts a low-level device</td><td><code>library/</code></td></tr><tr><td>Owns a robot behavior, responds to driver bindings, and needs profile registration</td><td><code>mechanisms/</code></td></tr><tr><td>Coordinates a match or test flow</td><td>An op mode or planner layer</td></tr></table><p>Examples of focused reusable types include <code>Tuple</code>, <code>DriveVector</code>, <code>Timer</code>, <code>Direction</code>, <code>Motor</code>, <code>MathUtils</code>, filters, interpolation helpers, and <code>Field</code>. A class that starts managing a physical mechanism should normally move to the Mechanism path.</p></section>
-<section id="time"><h2>Time, units, and small utilities</h2><p><code>Timer</code> is unit-aware and uses <code>double</code> time values for its getters, delta-time tracking, and threshold checks. Create it with a declared <code>TimeUnit</code> and keep that unit obvious at the call site. Use <code>MathUtils</code> for common unit conversion, heading normalization, FTC/Pedro pose conversion, and planner geometry helpers instead of creating local copies.</p><pre>Timer retryTimer = new Timer(TimeUnit.SECONDS);
-retryTimer.reset();
-if (retryTimer.get() >= DETECTOR_RETRY_SECONDS) {
-    // Choose the fail-safe route.
-}</pre><div class="source"><span class="label">Loop helper</span><code>OpModeHelper.kt</code> is available for manual Lynx bulk caching and loop-<code>dt</code> tracking. It is lifecycle plumbing, not another input or scheduler abstraction.</div></section>
-<section id="control"><h2>Control and filtering utilities stay generic</h2><p><code>PIDFController&lt;T&gt;</code> and its related coefficient classes are generic helpers. It validates non-null, equal-dimension current/target state arrays and intentionally omits derivative output on the first update. These controllers are appropriate when reusable across state types; mechanism-specific telemetry, limits, and lifecycle still belong with the mechanism. <code>NoiseFilter</code> and <code>LowPassFilter</code> are lightweight signal conditioning tools.</p><pre>// Conceptual low-pass rule used by the library:
-filtered = filtered * (1 - alpha) + measurement * alpha;</pre><ul><li>A smaller <code>alpha</code> smooths more aggressively but reacts more slowly.</li><li>Call a controller/filter consistently each loop; inconsistent sample timing creates misleading tuning behavior.</li><li>There is no checked-in Kalman filter. Do not document or invoke one as a repo API.</li></ul></section>
-<section id="math"><h2>Equation math and Pedro curve adaptation</h2><p>The equation layer under <code>library/math/</code> supports reusable symbolic/value expressions through <code>Equation</code>, <code>Polynomial</code>, <code>Term</code>, and internal <code>SumEquation</code>. <code>Polynomial</code> stores coefficients highest degree first. The Pedro-specific <code>EquationCurve</code> adapter belongs under <code>pedroPathing/custom/</code> because it turns the general math surface into a followable Pedro custom curve.</p><div class="grid"><div class="card"><h3>Interpolation</h3><p><code>LinearInterp</code> provides table-like piecewise linear lookup with configured edge outputs and ascending keys; <code>LagrangeInterp</code> produces a reusable polynomial from samples.</p></div><div class="card"><h3>EquationCurve</h3><p>It checks that an equation matches requested endpoints within the repo's rough-equality contract and receives explicit heading interpolation.</p></div><div class="card"><h3>Planner helpers</h3><p><code>MathUtils</code> supplies smoothing/tangent/spacing helpers used by dynamic vision path construction.</p></div><div class="card"><h3>Field geometry</h3><p><code>Field</code> keeps JTS shape and robot-sweep computations reusable rather than embedding them in an autonomous command.</p></div></div><div class="warning"><span class="label">Math boundary</span>Use an equation curve when its function-through-endpoints model is clearer than Bezier control points. Do not use it merely because the math package exists; the ordinary Pedro line/curve path primitives remain the normal path-building tool.</div></section>
-<section id="simulation"><h2>Simulation is host-side support, not hardware validation</h2><p><code>TeamCode/src/test/java/.../simulation/RobotSimulator.java</code> and its related test surface provide a JVM-side place to exercise non-hardware behavior. Treat simulation results like any other host-side test: useful for logic and regression coverage, but not proof of motor direction, camera calibration, hub orientation, or field physics.</p></section>
-<section id="extend"><h2>Workflow: extend shared code responsibly</h2><ol><li>Find the narrowest existing type that already owns the concept.</li><li>Keep the API small and name it for a reusable behavior, not a single match route.</li><li>Add JVM tests when the behavior is deterministic and hardware-independent.</li><li>Use the required external dependency only after inspecting the pinned Gradle artifact when the API is dependency-owned.</li><li>Keep FTC lifecycle, profile registration, and match scheduling out of generic helpers unless the class is explicitly a wrapper/mechanism.</li></ol><div class="checklist"><span class="label">Before merging a library change</span><ul><li>Can a second unrelated caller use this API?</li><li>Does it duplicate existing <code>MathUtils</code>, Timer, control, or wrapper behavior?</li><li>Does it have a focused unit test or a reason it cannot?</li><li>Would it be clearer as a Mechanism, path planner, or op-mode-local helper instead?</li></ul></div></section>
-<nav class="pager"><a href="09-tests-tuning.html">← Tests & tuning</a><a href="index.html">Guide map →</a></nav></main></div><footer class="footer">Reusable code guide · Keep the library clear enough that the next program can reuse it.</footer></body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Library | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">10 / Reusable Code</p>
+        <h1>Keep shared APIs small, Java-backed, and separated from match-specific lifecycle code.</h1>
+        <p class="lead"><code>library/</code> contains reusable control loops, filters, math, interpolation, hardware wrappers, planners, game types, and robot-profile helpers. Match orchestration belongs in op modes and planners; reusable calculations belong here only when more than one caller can share them.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>library/math/MathUtils.java</code> is the current shared math hub; the guide should describe the Java file, not a deleted Kotlin equivalent.</li>
+                <li><code>MathUtils</code> provides distance, heading, tangent smoothing, adaptive handle lengths, coordinate offsets, and unit conversion helpers.</li>
+                <li><code>IntakeBallPath</code> relies on <code>MathUtils</code> for distance checks, heading deltas, waypoint smoothing, and robot-frame coordinate conversion.</li>
+                <li><code>library/control/</code>, <code>filters/</code>, and <code>interpolation/</code> host deterministic helpers that fit naturally in JVM tests.</li>
+                <li><code>library/game/</code> contains <code>State</code>, <code>RobotMode</code>, <code>Field</code>, and other reusable game-level types.</li>
+                <li><code>library/robot/</code> contains the current robot-profile and drivetrain helper types used by mechanisms and op modes.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>MathUtils snapshot</h2>
+            <p>These helpers show the kind of reusable geometry work already living in the shared math layer.</p>
+            <pre>
+double distance = MathUtils.distance(x1, y1, x2, y2);
+double heading = MathUtils.headingBetween(x1, y1, x2, y2);
+Pose[] tangents = MathUtils.smoothTangents(waypoints);
+double[] handles = MathUtils.adaptiveHandleLengths(waypoints, fraction);
+Pose shifted = MathUtils.offsetPoseInRobotFrame(robotPose, forward, lateral, coordinateSystem);
+            </pre>
+        </section>
+        <section>
+            <h2>What MathUtils currently exposes</h2>
+            <p>The shared Java math file already spans several categories.</p>
+            <ul>
+                <li>Angle and heading helpers such as <code>headingBetween</code>, <code>headingDelta</code>, and <code>wrapAngle</code>.</li>
+                <li>Vector normalization and waypoint-direction helpers used by curve generation.</li>
+                <li>Bezier support helpers such as <code>smoothTangents</code>, <code>adaptiveHandleLengths</code>, <code>maxTurnAngle</code>, and <code>maxSpacingRatio</code>.</li>
+                <li>Robot-frame offset conversion through the configured Pedro or FTC coordinate system.</li>
+                <li>Distance-unit and angle-unit conversion helpers through the nested <code>MathUnits</code> class.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Other reusable library boundaries</h2>
+            <p>The rest of <code>library/</code> supports the same idea of narrow, sharable responsibilities.</p>
+            <ul>
+                <li><code>control/</code> contains controllers that are independent of any one mechanism lifecycle.</li>
+                <li><code>filters/</code> contains reusable low-pass and related helpers.</li>
+                <li><code>hardware/</code> contains direct wrappers for actuators, gamepads, webcams, and devices.</li>
+                <li><code>planners/</code> contains reusable autonomous modules and builder utilities rather than annotated op modes.</li>
+                <li><code>robot/</code> contains profile configuration, driver preference, and drivetrain support types.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Testing boundary for shared code</h2>
+            <p>When a helper is deterministic and hardware-free, it should be validated in the JVM suite. <code>MathUtilsTest</code>, <code>IntakeBallPathTest</code>, <code>FieldTest</code>, and controller tests already follow that rule.</p>
+            <p>When a behavior needs hardware timing, motor power, or camera access, keep the reusable calculations in <code>library/</code> but validate the integration path with Driver Station or FTC SDK utility op modes instead.</p>
+        </section>
+        <section>
+            <h2>Extension rule for future shared APIs</h2>
+            <p>Only promote logic into the library when it really is reusable.</p>
+            <ul>
+                <li>Add a new shared helper only when two unrelated callers benefit from the same contract.</li>
+                <li>Keep match-specific sequencing in planners, op modes, or mechanisms instead of generic utility classes.</li>
+                <li>Prefer Java source that already matches the current package conventions used by the rest of TeamCode.</li>
+                <li>Add or update JVM tests when new reusable math or control behavior is introduced.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Shared code reminder</h2>
+            <p>If a helper only exists to serve one mechanism’s private state machine, keep it near that mechanism. Promote it into <code>library/</code> only after the source shows a real cross-package reuse case.</p>
+        </section>
+        <nav class="pager">
+            <a href="09-tests-tuning.html">← Validation</a>
+            <a href="index.html">Guide map →</a>
+        </nav>
+    </main>
+</body>
+</html>

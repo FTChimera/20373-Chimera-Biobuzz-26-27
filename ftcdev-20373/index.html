@@ -1,34 +1,104 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>20373 RMS Chimera | TeamCode Programming Guide</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>20373 TeamCode Guide</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<header class="site-header">
-  <a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a>
-  <a class="header-link" href="../ftcdev-20373.html">Hub home</a>
-</header>
-<main class="landing">
-  <p class="eyebrow">BioBuzz TeamCode Documentation</p>
-  <h1>Build programs the way this repository is built.</h1>
-  <p class="lead">This is the detailed, source-backed guide for the 20373 RMS Chimera FTC codebase. It explains what belongs where, how the factory and mechanism layers work, and how to progress from a safe hardware check to a match-ready program.</p>
-  <div class="lede"><strong>Recommended reading order:</strong> start with architecture and lifecycle, then mechanisms and driver control. Read the autonomous, vision, localization, and tuning guides only after the robot profile and basic teleop flow are understood.</div>
-  <section class="guide-grid" aria-label="Programming guide chapters">
-    <a class="guide-card" href="01-start-here.html" target="_blank"><span class="number">01 / FOUNDATION</span><h2>Start Here</h2><p>Package map, decision tree, and the standard workflow for adding code without bypassing house style.</p><span>Read the foundation →</span></a>
-    <a class="guide-card" href="02-profiles-factories.html" target="_blank"><span class="number">02 / CONFIGURATION</span><h2>Profiles & Factories</h2><p><code>Constants</code>, <code>RobotConfigurations</code>, <code>RobotConstants</code>, and mechanism registration.</p><span>Configure a robot →</span></a>
-    <a class="guide-card" href="03-mechanisms-hardware.html" target="_blank"><span class="number">03 / SUBSYSTEMS</span><h2>Mechanisms & Hardware</h2><p>Build profile-managed mechanisms, distinguish direct FTC devices, and use the aggregate container.</p><span>Add a mechanism →</span></a>
-    <a class="guide-card" href="04-opmodes-lifecycle.html" target="_blank"><span class="number">04 / EXECUTION</span><h2>OpModes & Lifecycle</h2><p>Choose LinearOpMode or iterative OpMode, preserve shared behavior, and use Blackboard configuration safely.</p><span>Create an OpMode →</span></a>
-    <a class="guide-card" href="05-input-drive.html" target="_blank"><span class="number">05 / TELEOP</span><h2>Input & Drive</h2><p><code>GamepadEx</code>, <code>GpBindings</code>, driver preference, DriveVector, and MecanumDrive behavior.</p><span>Wire driver controls →</span></a>
-    <a class="guide-card" href="06-autonomous-ivy.html" target="_blank"><span class="number">06 / AUTONOMOUS</span><h2>Pedro & Ivy</h2><p>Path chains, followers, scheduler ownership, and the existing shared Ivy autonomous patterns.</p><span>Build an autonomous →</span></a>
-    <a class="guide-card" href="07-planners-vision.html" target="_blank"><span class="number">07 / PLANNING</span><h2>Planner & Vision Intake</h2><p>PlanBuilder sequencing, dynamic detector paths, fail-safe behavior, and return-path ownership.</p><span>Use planner steps →</span></a>
-    <a class="guide-card" href="08-localization-field.html" target="_blank"><span class="number">08 / POSITION</span><h2>Localization & Field</h2><p>Pinpoint profile data, Limelight wrapper pipelines, coordinate conversion, and JTS field geometry.</p><span>Work with poses →</span></a>
-    <a class="guide-card" href="09-tests-tuning.html" target="_blank"><span class="number">09 / VALIDATION</span><h2>Tests & Tuning</h2><p>JVM tests, driver-station checks, factory smoke tests, Pedro tuning, and PID relay tuning.</p><span>Validate safely →</span></a>
-    <a class="guide-card" href="10-library-math-simulation.html" target="_blank"><span class="number">10 / REUSABLE CODE</span><h2>Library, Math & Simulation</h2><p>Utilities, control, equations, filtering, field geometry, and the host-side simulator surface.</p><span>Extend shared code →</span></a>
-  </section>
-</main>
-<footer class="footer">Maintained against <code>TeamCode/</code>. Source paths in these pages refer to this workspace; verify current profile registration and hardware configuration on the robot before field use.</footer>
+    <header class="site-header">
+        <a class="brand" href="../ftcdev-20373.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="landing">
+        <p class="eyebrow">Guide map</p>
+        <h1>Build with the current TeamCode architecture.</h1>
+        <p class="lead">This folder guide stays anchored to <code>TeamCode/src</code>: one robot aggregate, one current teleop, one current Garden autonomous path, reusable planner helpers, and explicit validation boundaries.</p>
+        <section>
+            <h2>How to read this guide</h2>
+            <ul>
+                <li>Start with the architecture and profile chapters before editing mechanisms or op modes.</li>
+                <li>Use the planning and localization chapters when work crosses Pedro, Limelight, or Blackboard handoff paths.</li>
+                <li>Finish with the validation chapter so build, JVM, and hardware checks stay in the right lane.</li>
+            </ul>
+        </section>
+        <section class="guide-grid">
+            <a class="guide-card" href="01-start-here.html">
+                <h2>01 · Start here</h2>
+                <p>Architecture and the standard Robot plus State lifecycle.</p>
+            </a>
+            <a class="guide-card" href="02-profiles-factories.html">
+                <h2>02 · Profiles</h2>
+                <p>Constants, FirstRobot, factories, and profile placeholders.</p>
+            </a>
+            <a class="guide-card" href="03-mechanisms-hardware.html">
+                <h2>03 · Mechanisms</h2>
+                <p>Mechanism lifecycle, Robot aggregation, and device boundaries.</p>
+            </a>
+            <a class="guide-card" href="04-opmodes-lifecycle.html">
+                <h2>04 · Lifecycle</h2>
+                <p>TeleOp, Garden8, Blackboard, and shutdown ownership.</p>
+            </a>
+            <a class="guide-card" href="05-input-drive.html">
+                <h2>05 · Input & drive</h2>
+                <p>DualGamepad, RobotDrive, MecanumDrive, and driver preference.</p>
+            </a>
+            <a class="guide-card" href="06-autonomous-ivy.html">
+                <h2>06 · Autonomous</h2>
+                <p>Garden8 scheduling, parking, and Ivy ownership.</p>
+            </a>
+            <a class="guide-card" href="07-planners-vision.html">
+                <h2>07 · Planning & vision</h2>
+                <p>PlanBuilder, Common, AlliancePoses, Vision, and IntakeBallPath.</p>
+            </a>
+            <a class="guide-card" href="08-localization-field.html">
+                <h2>08 · Localization</h2>
+                <p>Follower construction, relocalization, and Field geometry helpers.</p>
+            </a>
+            <a class="guide-card" href="09-tests-tuning.html">
+                <h2>09 · Validation</h2>
+                <p>Gradle build steps, UnitTestAll, FTC SDK tests, and tuning.</p>
+            </a>
+            <a class="guide-card" href="10-library-math-simulation.html">
+                <h2>10 · Library</h2>
+                <p>MathUtils.java and the shared library boundary.</p>
+            </a>
+        </section>
+        <section>
+            <h2>Current source-backed takeaways</h2>
+            <ul>
+                <li><code>tele/TeleOp</code> is the main match teleop and wires <code>DualGamepad</code> into <code>Robot.periodic(State)</code>.</li>
+                <li><code>autos/Garden8</code> is the current autonomous entry and schedules the Garden preload plus intake path through <code>PlanBuilder</code>.</li>
+                <li><code>Mechanism</code> subclasses implement <code>periodic(State)</code> and <code>stop()</code>; <code>Robot</code> aggregates and sequences them.</li>
+                <li><code>Vision</code> owns Limelight results and explicit relocalization; <code>IntakeBallPath</code> owns the detector-to-path algorithm.</li>
+                <li><code>MathUtils.java</code> is the shared math file used by path smoothing and coordinate conversion helpers.</li>
+                <li>Validation is split among Gradle build steps, JVM tests, Driver Station utilities, FTC SDK smoke tests, and Pedro tuning op modes.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Recommended reading order</h2>
+            <ol>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ol>
+        </section>
+        <section>
+            <h2>Validation reminder</h2>
+            <pre>
+./gradlew :TeamCode:assembleDebug --console=plain
+./gradlew :TeamCode:lint --console=plain
+./gradlew :TeamCode:testDebugUnitTest --console=plain
+            </pre>
+            <p>Use the narrowest Driver Station or FTC SDK test after the host-side checks pass.</p>
+        </section>
+    </main>
 </body>
 </html>

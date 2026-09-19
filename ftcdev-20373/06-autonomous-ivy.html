@@ -1,37 +1,100 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Pedro & Ivy | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>Autonomous</h2><a href="#follower">Follower setup</a><a href="#path">Build paths</a><a href="#scheduler">Scheduler ownership</a><a href="#shared">Shared IvyAuton</a><a href="#new">New autonomous workflow</a></nav>
-<main class="article"><p class="eyebrow">06 / Autonomous</p><h1>Use one follower and one scheduler execution loop.</h1><p class="lead">Pedro pathing and Ivy scheduling are separate concepts that meet in an FTC lifecycle class. The repository creates followers from the active robot profile, uses <code>PathChain</code> as the reusable path container, composes commands with Ivy, and deliberately keeps scheduler execution and follower updates visible.</p>
-<section id="first-call"><h2>Call the shared autonomous base from a variant</h2><p>For a simple shared Ivy autonomous, the new class supplies the path provider and passes it to <code>IvyAuton</code>. The inherited base owns hardware construction, scheduler setup, command execution, follower updates, and Blackboard pose handoff.</p><pre>@Autonomous(name = "My Red Auto")
-public class MyRedAuto extends IvyAuton {
-    static class Paths extends IvyAuton_Paths {
-        private final Pose start = new Pose(36, 12, Math.toRadians(180));
-        @Override protected Pose getStartingPose() { return start.copy(); }
-        @Override protected PathChain getPath1() {
-            Path path = new Path(new BezierLine(start, new Pose(36, 36)));
-            path.setHeadingInterpolation(
-                HeadingInterpolator.linear(start.getHeading(), Math.toRadians(180)));
-            return new PathChain(path);
-        }
-    }
-    public MyRedAuto() { super(AllianceColor.RED, new Paths()); }
-}</pre></section>
-<section id="follower"><h2>Start from the active profile follower</h2><p>Use <code>Constants.createFollower(hardwareMap)</code>. It delegates to the selected <code>RobotConstants.createFollower(...)</code>, where FollowerBuilder receives profile drive names/directions, path constraints, and Pinpoint localizer constants. Do not create a second standalone FollowerBuilder inside an autonomous op mode.</p><pre>follower = Constants.createFollower(hardwareMap);
-follower.setStartingPose(startPose);</pre><div class="source"><span class="label">Configuration boundary</span>Follower tuning and Pinpoint geometry belong in <code>library/robot/RobotConfigurations.java</code> and <code>RobotConstants.java</code>. Autonomous geometry belongs near the autonomous path provider or planner step.</div></section>
-<section id="path"><h2>Build PathChain objects with explicit heading behavior</h2><p>Use a <code>PathChain</code> even when the geometry contains only one <code>Path</code>. Place heading interpolation next to the geometry rather than relying on external defaults.</p><pre>Path path = new Path(new BezierLine(STARTING_POSE, endPose));
-path.setHeadingInterpolation(HeadingInterpolator.linear(
-    STARTING_POSE.getHeading(), endPose.getHeading()));
-return new PathChain(path);</pre><p>Use <code>BezierLine</code> for a direct segment and <code>BezierCurve</code> when control points express the route better. <code>EquationCurve</code> is a Pedro-specific adapter for an equation-through-endpoints model; use it only when that model really fits the path.</p></section>
-<section id="scheduler"><h2>Ivy owns command composition, not the FTC loop</h2><p>Ivy commands are assembled with existing operations such as <code>Commands.instant(...)</code>, <code>Commands.waitMs(...)</code>, <code>Groups.sequential(...)</code>, and <code>PedroCommands.follow(...)</code>. For an aggregate robot, use <code>RobotIvyBuilder</code> so commands retain the selected mode and mechanism checks. The FTC op mode still calls <code>Scheduler.execute()</code> once per loop. A command sequence does not run by itself.</p><pre>RobotIvyBuilder commands = robot.build();
-Scheduler.schedule(Groups.sequential(
-    commands.runIntakeHalfPower(),
-    commands.followPath(paths.getPath1(), true),
-    commands.startIntake(),
-    waitMs(1000),
-    commands.stopIntake(),
-    Commands.instant(this::requestOpModeStop)
-));</pre><div class="warning"><span class="label">Avoid duplicate ownership</span>Do not schedule two infinite updates for the same mechanism. Do not add a second <code>follower.update()</code> loop if the selected shared base already updates the follower in <code>loop()</code>.</div></section>
-<section id="shared"><h2>The shared iterative IvyAuton pattern</h2><p><code>opModes/IvyAuton.java</code> is an abstract iterative base. A concrete variant supplies an <code>AllianceColor</code> and an <code>IvyAuton_Paths</code> implementation. The base initializes an autonomous aggregate plus <code>RobotIvyBuilder</code>, schedules its mode-aware periodic and representative command sequence, executes Ivy in the iterative loop, and lets <code>Robot.stop()</code> store pose/alliance handoff in <code>Blackboard</code>.</p><div class="grid"><div class="card"><h3>Use this for</h3><p>Shared match-style autonomous behavior that benefits from a common lifecycle and variant-specific geometry.</p></div><div class="card"><h3>Do not use this for</h3><p>A raw quick test, a blocking SDK experiment, or a second scheduler abstraction. Put those in <code>tests/</code> or learn from the unannotated examples.</p></div></div></section>
-<section id="new"><h2>Workflow: make a new autonomous safely</h2><ol><li>Choose shared <code>IvyAuton</code>, a planner test, or a fresh LinearOpMode based on whether the behavior is shared match code, planner experimentation, or a focused test.</li><li>Define and validate the start pose. Set it on the follower before running any paths.</li><li>Build each <code>PathChain</code> with explicit heading interpolation.</li><li>Decide which owner calls <code>follower.update()</code>; preserve exactly one active update path.</li><li>Schedule commands only after <code>Scheduler.reset()</code>.</li><li>Use <code>stop()</code> to persist pose when the next teleop will use Blackboard handoff.</li><li>Validate individual geometry in a safe test before combining mechanisms and timing.</li></ol></section>
-<nav class="pager"><a href="05-input-drive.html">← Input & drive</a><a href="07-planners-vision.html">Planner & vision intake →</a></nav></main></div><footer class="footer">Pedro and Ivy guide · Scheduler execution and follower updates need one clear owner.</footer></body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Autonomous | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">06 / Autonomous</p>
+        <h1>Garden8 is the current autonomous owner for planner scheduling, timeout parking, and pose handoff.</h1>
+        <p class="lead">The autonomous flow in source is centered on <code>Garden8</code>, the Ivy <code>Scheduler</code>, and the reusable planner chain returned by <code>PlanBuilder</code>. This guide chapter documents that route instead of removed autonomous entry classes.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>Garden8.init()</code> resets the scheduler, creates the robot, and schedules the Garden preload plus intake chain.</li>
+                <li><code>Garden8.loop()</code> runs <code>Scheduler.execute()</code> every cycle before timeout and parking checks.</li>
+                <li><code>robot.shouldPark()</code> and <code>Scheduler.isRunning(plan)</code> both feed the decision to call <code>robot.moveToPark()</code>.</li>
+                <li><code>Robot.moveToPark()</code> follows a Pedro <code>PathChain</code> built from the current pose to <code>Common.park.pose()</code>.</li>
+                <li>Ivy command helpers are split across <code>RobotIvyBuilder</code>, planner classes, and Pedro helpers rather than a separate commands package.</li>
+                <li>Alliance-specific autonomous variants are the nested <code>redalliance</code> and <code>bluealliance</code> classes in <code>Garden8</code>.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Current Garden8 plan chain</h2>
+            <p>This is the exact fluent path the current autonomous entry schedules during init.</p>
+            <pre>
+plan = PlanBuilder.startGardenPose(robot)
+        .shootPreloads()
+        .intakeGarden()
+        .schedule();
+            </pre>
+        </section>
+        <section>
+            <h2>Garden8 lifecycle checkpoints</h2>
+            <p>These checkpoints are the high-value parts of the current autonomous entry.</p>
+            <ul>
+                <li>The scheduler is always reset both before autonomous work begins and again in <code>stop()</code>.</li>
+                <li>Timeout handling begins once <code>robot.getOpModeTimeSeconds()</code> reaches <code>RobotMode.AUTONOMOUS.timeLimit()</code>.</li>
+                <li>Velocity settling uses a two-second <code>Timer</code> fallback plus a velocity magnitude threshold of <code>0.2</code>.</li>
+                <li>Normal <code>stop()</code> still preserves Blackboard handoff by calling <code>robot.stop(true)</code> unless an earlier timeout path already called <code>robot.stop(false)</code>.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Where autonomous command composition actually lives</h2>
+            <p>Current source spreads Ivy usage across three layers.</p>
+            <ul>
+                <li><code>library/robot/RobotIvyBuilder</code> wraps aggregate robot actions as commands.</li>
+                <li><code>library/planners/PathPlanner</code> and <code>PathPlannerList</code> compose planner-level commands and transitions.</li>
+                <li><code>pedroPathing/Pedro</code> provides lower-level path and command helpers for Pedro pathing.</li>
+                <li>Mechanism-level actions such as intake or drive helpers stay on the owning class instead of a separate commands folder.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Autonomous boundaries that remain unfinished</h2>
+            <p><code>PlanBuilder</code> still has unimplemented loading-side branches and throws when methods are called from the wrong position. The guide should describe only the Garden start path as implemented match flow.</p>
+            <p><code>Common</code> still stores many alliance pose placeholders as <code>new Pose()</code>, so any chapter that mentions park, start, or intake poses must clearly treat them as structure, not as tuned field coordinates.</p>
+        </section>
+        <section>
+            <h2>Safe autonomous doc phrasing</h2>
+            <p>Use wording that matches the code without overstating calibration.</p>
+            <ul>
+                <li>Say that Garden8 is the current autonomous entry, planner consumer, and parking owner.</li>
+                <li>Say that Pedro paths are followed through the drive mechanism and follower configuration supplied by the active profile.</li>
+                <li>Say that alliance handoff is persisted through Robot shutdown when autonomous periodic has produced a last state.</li>
+                <li>Do not present placeholder loading routes or placeholder <code>Common</code> poses as measured strategy data.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>What stays outside Garden8</h2>
+            <p>Garden8 owns scheduling and timeout flow, but it does not replace the shared Robot lifecycle. Drive following, pose persistence, and mechanism shutdown still route through the aggregate robot and its configured mechanisms.</p>
+            <p>That split is why autonomous docs should still reference <code>Robot</code>, <code>RobotDrive</code>, and planner helpers instead of treating Garden8 as a monolithic subsystem.</p>
+        </section>
+        <nav class="pager">
+            <a href="05-input-drive.html">← Input & drive</a>
+            <a href="07-planners-vision.html">Planning & vision →</a>
+        </nav>
+    </main>
+</body>
+</html>

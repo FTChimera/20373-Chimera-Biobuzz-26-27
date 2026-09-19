@@ -1,28 +1,100 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Tests & Tuning | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>Validation</h2><a href="#layers">Validation layers</a><a href="#jvm">JVM tests</a><a href="#runtime">Driver-station tests</a><a href="#pedro">Pedro tuning</a><a href="#pid">PID AutoTune</a><a href="#build">Build checklist</a></nav>
-<main class="article"><p class="eyebrow">09 / Validation</p><h1>Prove each assumption at the right layer.</h1><p class="lead">A successful Android build does not prove hardware wiring, and a successful hardware smoke test does not prove mathematical behavior. TeamCode separates host-side JUnit coverage, driver-station validation op modes, Pedro tuning flows, and relay-feedback PID tools so each question has an appropriate test surface.</p>
-<section id="first-call"><h2>Call the current profile follower in a safe runtime test</h2><p>When verifying factory construction, begin with a no-motion setup like the existing follower factory test. This creates the follower through <code>Constants</code>, sets a declared pose, updates a few times, and reports measurements.</p><pre>@Override protected void test(HardwareMap hardwareMap,
-		GamepadEx gamepad1, GamepadEx gamepad2, Telemetry telemetry) {
-	Follower follower = Constants.createFollower(hardwareMap);
-	follower.setStartingPose(Constants.RED_DEFAULT_START_POSE);
-	follower.update();
-	follower.startTeleopDrive();
-	follower.setTeleOpDrive(0, 0, 0, false);
-
-	telemetry.addData("Pose", follower.getPose());
-	telemetry.addData("Velocity", follower.getVelocity());
-	telemetry.addLine("This test should not move the robot.");
-	telemetry.update();
-}</pre></section>
-<section id="layers"><h2>Know which test layer answers your question</h2><table><tr><th>Layer</th><th>Question it answers</th><th>Location</th></tr><tr><td>JVM unit test</td><td>Does pure logic, math, state, or configuration behavior work without FTC hardware?</td><td><code>TeamCode/src/test/java/</code></td></tr><tr><td>Factory/runtime test</td><td>Can the FTC app construct the profile factory or direct hardware device on the robot?</td><td><code>TeamCode/.../tests/ftcSdk/</code></td></tr><tr><td>Driver-station behavior test</td><td>Does the robot drive, follow a path, see vision, or run a safe demonstration?</td><td><code>TeamCode/.../tests/</code></td></tr><tr><td>Tuning op mode</td><td>What measured values should feed follower/PID behavior?</td><td><code>pedroPathing/Tuning.java</code> or <code>pid/autoTune/</code></td></tr></table></section>
-<section id="jvm"><h2>Use JVM tests for code that does not need a robot</h2><p><code>UnitTestAll.java</code> is the explicit suite entry point. It currently includes Blackboard, DriveVector, Timer, PIDF, filters, input wrappers, interpolation, symbolic math, robot configuration, RobotMode/State, EquationCurve, and Field geometry coverage. Add a JUnit test when you change deterministic behavior; it is faster and safer than discovering a math error on the Driver Station.</p><pre>./gradlew :TeamCode:testDebugUnitTest --console=plain</pre><div class="source"><span class="label">Recent geometry coverage</span><code>library/game/FieldTest.java</code> checks contained, partial, and outside robot footprints as well as swept boundary crossings. That is the model for testing geometry without FTC hardware.</div></section>
-<section id="runtime"><h2>Use driver-station tests for construction and behavior</h2><p><code>tests/ftcSdk/androidTest.java</code> is a shared scripted LinearOpMode base for factory/device checks. Its profile-aware helpers let tests skip optional mechanisms with clear telemetry rather than crashing because a factory helper is unavailable in the selected profile.</p><div class="grid"><div class="card"><h3>Factory checks</h3><p><code>FollowerFactoryTest</code>, <code>RobotDriveFactoryTest</code>, <code>IntakeFactoryTest</code>, <code>VisionFactoryTest</code>, <code>RGBFactoryTest</code>, and <code>WebcamFactoryTest</code> validate construction paths.</p></div><div class="card"><h3>Direct-device checks</h3><p><code>SlidesMotorTest</code> and the device part of <code>RGBIndicatorTest</code> validate custom FTC hardware-device usage.</p></div><div class="card"><h3>Drive checks</h3><p><code>MecanumTeleOp</code> provides raw direct drive/IMU inspection. <code>MotorDirectionTest</code> is a low-speed profile direction sanity check.</p></div><div class="card"><h3>Integrated tests</h3><p><code>TestPathPlanner</code>, <code>PlannerIntakeVisionAuto</code>, and <code>PreseasonWebcamAuto</code> expose clearly scoped path/vision experiments.</p></div></div>
-<div class="warning"><span class="label">Hardware safety</span>Factory success means construction succeeded, not that a mechanism is safe at full power. Keep wheels off the ground where practical, make moving tests single-purpose, and read test telemetry before assuming complete coverage.</div></section>
-<section id="pedro"><h2>Pedro tuning follows the profile follower</h2><p><code>pedroPathing/Tuning.java</code> exposes selectable Pedro tuner flows. It uses <code>Constants.createFollower(hardwareMap)</code>, so it measures the profile currently selected by the codebase. Tune only after drivetrain names/directions, Pinpoint geometry, and basic localization are correct.</p><ol><li>Begin with safe drivetrain direction and localization checks.</li><li>Use the relevant Pedro tuning flow for forward, lateral, turn, velocity, braking, PIDF, or path-shape behavior.</li><li>Record measurements and move them into the appropriate robot profile field.</li><li>Rebuild and rerun a behavior test after a configuration change.</li></ol></section>
-<section id="pid"><h2>PID AutoTune is a calibration-only exception</h2><p>The three driver-station-visible <code>pid/autoTune/</code> op modes wrap repo-local FTC adapters around the external relay-feedback algorithm. Their direct names, direction booleans, targets, and relay settings live in <code>TuningConstants</code>, rather than the normal profile-managed factory flow.</p><table><tr><th>Op mode</th><th>Use</th></tr><tr><td><code>PositionPIDTunerOpMode</code></td><td>Position-control mechanisms.</td></tr><tr><td><code>VelocityPIDFTunerOpMode</code></td><td>One motor velocity behavior.</td></tr><tr><td><code>DualVelocityPIDFTunerOpMode</code></td><td>Matched paired velocity systems such as flywheels.</td></tr></table><div class="warning"><span class="label">Tuning safety</span>These op modes intentionally move or spin hardware. Set safe limits and relay amplitude before Start, keep clear of mechanisms, and understand both automatic relay collection and the optional live test phase.</div></section>
-<section id="build"><h2>Finish with the build checklist</h2><div class="checklist"><span class="label">Normal TeamCode validation</span><pre>./gradlew :TeamCode:assembleDebug --console=plain
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Validation | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">09 / Validation</p>
+        <h1>Build the Android module, run JVM tests, then use focused Driver Station checks and tuning op modes.</h1>
+        <p class="lead">The repo already separates compile-time validation, host-side unit tests, FTC SDK utility op modes, and Pedro tuning utilities. This chapter keeps those boundaries explicit so documentation does not blur a build step into a robot-on-field test.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>TeamCode/build.gradle</code> declares JUnit 4, MockK, Android test support, and the TeamCode Android namespace.</li>
+                <li><code>UnitTestAll</code> is the suite entry point for the JVM test tree under <code>TeamCode/src/test/java</code>.</li>
+                <li><code>tests/ftcSdk/androidTest</code> is a reusable LinearOpMode base for profile-aware factory and hardware smoke tests.</li>
+                <li><code>tests/</code> contains focused Driver Station utilities such as drive, Limelight, and Pedro pathing checks.</li>
+                <li><code>pedroPathing/Tuning</code> is the current tuning menu for localization, velocity, braking, and drive constants.</li>
+                <li><code>pid/autoTune/</code> contains relay-feedback tuning helpers that are calibration tools, not match entries.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Current validation command set</h2>
+            <p>These commands match the active guide entry points already referenced by the docs.</p>
+            <pre>
+./gradlew :TeamCode:assembleDebug --console=plain
 ./gradlew :TeamCode:lint --console=plain
-./gradlew :TeamCode:testDebugUnitTest --console=plain</pre><p>Use the TeamCode debug build to catch source, Android, annotation-processor, and dependency wiring errors. Lint adds Android/static checks. Unit tests exercise pure logic. Then use the narrowest corresponding robot-side test for real hardware behavior.</p></div></section>
-<nav class="pager"><a href="08-localization-field.html">← Localization & field</a><a href="10-library-math-simulation.html">Library, math & simulation →</a></nav></main></div><footer class="footer">Tests and tuning guide · Build, test, then validate on safe hardware.</footer></body></html>
+./gradlew :TeamCode:testDebugUnitTest --console=plain
+            </pre>
+        </section>
+        <section>
+            <h2>What the JVM suite currently covers</h2>
+            <p><code>UnitTestAll</code> aggregates deterministic code that does not need a Control Hub.</p>
+            <ul>
+                <li>Blackboard, timer, drive-vector, interpolation, and state behavior tests.</li>
+                <li>Control-loop tests for bang-bang, composite, and PIDF helpers.</li>
+                <li><code>MathUtilsTest</code> and equation-math coverage for reusable calculations.</li>
+                <li><code>IntakeBallPathTest</code> for camera-path generation logic.</li>
+                <li><code>FieldTest</code> and <code>RobotConfigurationTest</code> for geometry and profile behavior.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>What the FTC SDK utility layer does</h2>
+            <p>The <code>tests/ftcSdk</code> package is for on-robot smoke checks that still respect profile configuration.</p>
+            <ul>
+                <li>The shared <code>androidTest</code> base waits for start, updates both wrapped gamepads, runs one test body, then stops the op mode.</li>
+                <li><code>skipIfMechanismMissing(...)</code> reports when a requested mechanism is not registered in <code>Constants.currentBot</code>.</li>
+                <li>Current factory checks include follower, robot drive, intake, vision, webcam, RGB indicator, motor, IMU, and slides tests.</li>
+                <li>These tests are intentionally narrow and should not be confused with full match validation.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>What the Driver Station utility layer does</h2>
+            <p>Other validation op modes under <code>tests/</code> exercise higher-level behavior live on the robot.</p>
+            <ul>
+                <li><code>PedroPathingTeleOpTest</code> checks manual follower teleop control and on-demand path following.</li>
+                <li>Focused mecanum and intake utilities help validate direction, power, and field-centric behavior before using competition teleop.</li>
+                <li>Limelight and preseason utility op modes provide quick visibility into camera and follower integration during development.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Tuning boundary</h2>
+            <p><code>Tuning.java</code> recreates the follower through <code>Constants.createFollower(hardwareMap)</code> and exposes localization, automatic, manual, and simple path tests through a selectable menu. That makes it the right place for Pedro follower calibration, not the competition op modes.</p>
+            <p>Use <code>pid/autoTune/</code> only when you are intentionally calibrating controller constants. Keep those relay-feedback tools separate from match lifecycle docs so readers do not mistake them for regular autonomous or teleop flows.</p>
+        </section>
+        <section>
+            <h2>Fast validation order</h2>
+            <p>Start with build and JVM feedback on the development machine, then move to FTC SDK factory checks, then move to the narrowest live Driver Station or tuning op mode that exercises the hardware path you changed.</p>
+            <p>This order keeps fast failures cheap and reserves robot time for checks that truly need hardware or driver-station interaction.</p>
+            <p>It also keeps tuning runs from masking compile or unit-test failures that could have been found earlier.</p>
+        </section>
+        <nav class="pager">
+            <a href="08-localization-field.html">← Localization</a>
+            <a href="10-library-math-simulation.html">Library →</a>
+        </nav>
+    </main>
+</body>
+</html>

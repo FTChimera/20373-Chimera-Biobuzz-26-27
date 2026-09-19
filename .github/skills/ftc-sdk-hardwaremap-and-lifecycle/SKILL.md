@@ -1,121 +1,101 @@
 ---
 name: ftc-sdk-hardwaremap-and-lifecycle
-description: Use this skill when asked to call FTC SDK APIs directly, work with `HardwareMap`, write `LinearOpMode` or `OpMode` classes, or debug lifecycle ordering in this repo.
+description: Use this skill for FTC SDK HardwareMap access and op mode lifecycle work.
 ---
 
 # FTC SDK HardwareMap and Lifecycle
 
-Use this skill for direct FTC SDK integration work.
+Use FTC SDK lifecycle callbacks correctly and keep hardware construction profile-managed.
 
-## Upstream `~/.gradle` lookup
+## Match entries
 
-When TeamCode wraps an FTC SDK behavior, inspect the downloaded SDK modules
-under `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
-`build.dependencies.gradle`.
+- `tele/TeleOp` extends `LinearOpMode`.
+- It uses `runOpMode()`, `waitForStart()`, and `while (opModeIsActive())`.
+- `autos/Garden8` extends iterative `OpMode`.
+- It implements `init()`, `start()`, `loop()`, and `stop()`.
+- Its nested red and blue classes are the annotated autonomous registrations.
+- `TeleOp` contains the annotated base entry plus nested red and blue selections.
 
-- `org.firstinspires.ftc/RobotCore` for op mode, telemetry, gamepad, and core
-  hardware-map behavior
-- `org.firstinspires.ftc/Hardware` for controllers, motors, sensors, and
-  hardware wrappers
-- `org.firstinspires.ftc/Vision` when AprilTag, camera, or vision-portal APIs
-  are involved
-- `com.pedropathing/telemetry` if the issue is actually tied to
-  `pedroPathing/Tuning.java` op-mode selection rather than base SDK lifecycle
+## Hardware construction
 
-## Repo context
+- Pass the FTC SDK `hardwareMap` to `Constants.createRobot(...)`.
+- The aggregate `Robot` uses the active `RobotConstants` profile.
+- Profiles choose registered mechanisms and their device construction.
+- Do not instantiate motors, cameras, or the aggregate robot with guessed names in an entry point.
+- Confirm a mechanism is registered before calling a `require...()` accessor.
+- Use an optional getter when an entry intentionally supports missing hardware.
 
-- The project depends on FTC SDK `11.2.1`.
-- Team code lives in `TeamCode/`; SDK app code and samples live in `FtcRobotController/`.
-- This repo uses both `LinearOpMode` and iterative `OpMode` styles.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories; always verify the selected profile's registrations before calling an optional mechanism factory.
-- The repo now also contains custom FTC `HardwareDevice` implementations under `library/hardware/hardwareDevice/` for direct `hardwareMap.get(CustomType.class, ...)` usage.
+## Linear teleop sequence
 
-## Current examples to follow
+1. Construct `DualGamepad(gamepad1, gamepad2)`.
+2. Create `State(RobotMode.TELEOP)`.
+3. Create the robot with the same mode.
+4. Set starting pose, alliance, drive curve, and teleop drive mode.
+5. Put bindings on the state.
+6. Show initialization telemetry.
+7. Wait for start.
+8. Start the robot and selected vision pipeline.
+9. Update gamepads and call `robot.periodic(state)` each active loop.
+10. Always call `robot.stop()` on exit.
 
-- `opModes/TeleOp.java` uses `LinearOpMode` with `waitForStart()` and `while (opModeIsActive())`.
-- `opModes/IvyTeleOp.java` uses `LinearOpMode` plus Ivy scheduling.
-- `opModes/IvyAuton.java` uses iterative `OpMode` lifecycle methods like `init()`, `start()`, `loop()`, and `stop()`.
-- `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that
-  constructs Vision directly through its factory and uses color results beside
-  a follower control loop.
-- `configs/ConfigOpMode.java` is an iterative pre-start configuration menu. `init()` builds the available blackboard mutations, `init_loop()` handles the D-pad selection UI, and `loop()` immediately requests stop after the driver starts the op mode.
-- `tests/ftcSdk/androidTest.java` is a shared `LinearOpMode` base for simple SDK-level validation flows that run one scripted test, sleep briefly, and then request stop.
-- `tests/MecanumTeleOp.java` is a current iterative `OpMode` example that resolves raw SDK devices in `init()`, uses `init_loop()` for mode selection, and handles IMU reset plus drive updates in `loop()`.
-- `Constants.createIMU(hardwareMap)` resolves the active profile's IMU, initializes it with the profile's REV Hub logo/USB orientation, and intentionally leaves yaw unchanged.
-- `library/OpModeHelper.kt` is an optional utility that wraps manual Lynx bulk caching and loop-`dt` tracking across `init()`, `start()`, `update()`, and `close()` style calls.
-- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `LinearOpMode` calibration wrappers around repo-local `PIDMaster` / `DualMotorPIDMaster` FTC adapters, backed by the external `pidautotuner-core` algorithms.
-- Profile-managed mechanism and wrapper constructors typically accept `HardwareMap` plus `RobotConstants` and resolve devices immediately.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` show the intended
-  aggregate factory style: they create a teleop `Robot` and matching `State`
-  with `RobotMode.TELEOP` and require `RobotDrive`. `TeleOp` requires Vision
-  while IvyTeleOp treats Vision and Intake as optional aggregate lookups.
+## Iterative autonomous sequence
 
-## HardwareMap rules in this repo
+1. Reset the Ivy scheduler in `init()`.
+2. Create the aggregate robot and build the autonomous command.
+3. Start the robot in `start()`.
+4. Execute the scheduler in `loop()`.
+5. Apply time-limit and parking behavior in the loop.
+6. Stop the aggregate robot exactly once.
+7. Reset the scheduler in `stop()`.
 
-- Resolve hardware once during initialization, not repeatedly inside the active loop.
-- Prefer team wrappers and mechanisms over raw device access in op modes.
-- Prefer `Constants.create...(...)` factories over direct `new Mechanism(...)` calls in op modes.
-- Every profile-managed `Constants.create...(...)` helper enforces `Constants.assertHasMechanism(...)` first; if the active profile has not registered that class, the helper throws before any device lookup happens. `createFollower(...)` and `createIMU(...)` are profile-configured helpers, not mechanism factories.
-- Keep drive/profile hardware names in `RobotConstants`, and let `Constants.create...(...)` delegate to the active profile for profile-managed subsystems.
-- Keep `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION` in `RobotConstants`; use `Constants.createIMU(hardwareMap)` instead of duplicating IMU lookup and orientation code.
-- If a wrapper can be disabled by robot profile, make sure it decides that before calling `hardwareMap.get(...)`.
-- If a class is a custom FTC `HardwareDevice` like `SlidesMotor`, `RevPotentiometer`, or the device-level `RGBIndicator`, fetch it directly from `hardwareMap` and keep it distinct from the profile-managed `Mechanism` wrappers.
-- `pid/autoTune/` is an intentional direct-motor exception: those calibration op modes pass motor names, directions, and target values through `TuningConstants` into `PIDMaster` / `DualMotorPIDMaster` instead of going through `Constants.create...(...)`.
-- `Constants.create...(...)` is runtime-valid only when the profile selected by `Constants.currentBot` registers the requested mechanism class.
+## Mechanism lifecycle
 
-## New mechanism pattern tied to lifecycle
+- Every profile-managed mechanism extends `Mechanism`.
+- Every such mechanism provides `periodic(State)` and `stop()`.
+- `Robot.periodic(State)` updates its helper and state context before dispatch.
+- It rejects a state whose mode differs from its configured mode.
+- `Robot.stop()` stops all configured mechanisms and closes helper resources.
+- Autonomous shutdown can save pose and alliance through `saveEndVals()`.
 
-When a task asks for a new mechanism or wrapper:
+## Vision lifecycle
 
-1. make it extend `Mechanism` if it belongs in the standard robot subsystem flow
-2. give it the `(HardwareMap, RobotConstants)` constructor that `RobotConstants.createMechanism(...)` expects
-3. register it in the active robot profile with `.addMechanism(...)`
-4. add or reuse a `Constants.create...(...)` helper when higher-level code should access it directly
-5. initialize the mechanism once during `init()` or before `waitForStart()`
+- `Robot.start()` attempts to start the AprilTag pipeline when Vision is configured.
+- `Robot.startVision(pipeline)` is safe when Vision is absent.
+- `Robot.stopVision()` is likewise optional.
+- A direct `requireVision()` call is a declared requirement.
+- Do not assume vision updates drive pose automatically.
+- Request relocalization explicitly when a valid vision measurement should affect pose.
 
-Do not create fresh subsystem instances every loop. The team wants one constructed mechanism instance per op mode, created through the normal profile-aware factory path.
+## SDK safety
 
-If the task is instead about a custom SDK device type, put that class under `library/hardware/hardwareDevice/` and use normal FTC constructor/annotation rules rather than the `Mechanism` factory flow.
+- Never access hardware before FTC initialization has provided `hardwareMap`.
+- Keep blocking work out of iterative `loop()`.
+- In a linear mode, honor interruption and stop requests.
+- Stop motors and close resources through the robot lifecycle rather than scattered cleanup.
+- Avoid static hardware instances and retain only configuration-level static data.
 
-## Lifecycle rules
+## Validation
 
-- In `LinearOpMode`, initialize first, then call `waitForStart()`, then loop while `opModeIsActive()`.
-- In iterative `OpMode`, put one-time setup in `init()`, one-time start actions in `start()`, repeated work in `loop()`, and cleanup/persistence in `stop()`.
-- For aggregate robots, call `robot.start()` after FTC start and before the
-  first `robot.periodic(...)`; call `robot.stop()` after the final periodic
-  update. Autonomous `Robot.stop()` persists the compensated end pose and
-  alliance through `Blackboard`.
-- Construct an aggregate with the intended mode and create a matching
-  `State`: `Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS)` with
-  `new State(RobotMode.AUTONOMOUS)`, or their teleop equivalents. `Robot`
-  rejects a periodic mode that differs from its construction mode.
-- Do not call `waitForStart()` from iterative `OpMode` classes.
-- Stop or persist important state in `stop()` when the repo already relies on that pattern, such as pose handoff.
+- Compile with `./gradlew :TeamCode:assembleDebug`.
+- Use existing test op modes for physical device verification.
+- Verify device names against the active Control Hub configuration.
+- Verify drivers can start and stop both match entries cleanly.
+- Confirm autonomous pose handoff is available to the following teleop.
 
-## FTC SDK details already used here
+## Failure handling
 
-- The repo uses FTC annotation discovery with `@TeleOp` and `@Autonomous`.
-- SDK gamepad edge helpers like `aWasPressed()`, `backWasPressed()`, `dpadLeftWasPressed()`, and `dpadRightWasPressed()` are already used in the codebase.
-- `telemetry.addData(...)` plus `telemetry.update()` is the common reporting pattern.
-- Kotlin op modes are also part of the TeamCode module now, so lifecycle/build work should tolerate both Java and Kotlin sources.
+- Let FTC lifecycle methods return promptly when a stop is requested.
+- Use telemetry to expose initialization failures before match start.
+- Do not suppress missing required hardware errors with broad exception handling.
+- For optional hardware, choose the optional aggregate accessor deliberately.
+- Avoid closing an SDK device twice through both a mechanism and an entry point.
+- Reset scheduler-owned work when an iterative autonomous stops early.
+- Keep explicit cleanup near aggregate `Robot.stop()` ownership.
+- Verify a changed lifecycle path on hardware before competition use.
 
-## Good practice
+## Change boundaries
 
-- If you need a new selectable mode, create a concrete annotated class.
-- If you need reusable lifecycle behavior, put it in an abstract base class and keep the annotation on the concrete subclass.
-- Use `requestOpModeStop()` rather than custom termination flags when the op mode should end.
-- The current `tests/ftcSdk/androidTest.java` base is an example of the preferred scripted-test termination pattern: run the validation, pause briefly if needed, then `requestOpModeStop()`.
-- If a subsystem is already factory-created from `Constants`, keep using that path and update the active `RobotConstants` profile so the helper is actually registered instead of mixing direct constructors into one op mode.
-- Use `configs/ConfigOpMode` for one-shot configuration mutations rather than re-implementing that pattern in each config class.
-- If a proof-of-concept or SDK-level test bypasses the wrapper path, still source hardware names from `RobotConfigurations` or the owning `*_PARAMS` class when those names already exist.
-- Reset IMU yaw explicitly in the op mode only when its control flow needs a new field-centric reference; `Constants.createIMU(...)` never resets it.
-
-## Common mistakes to avoid
-
-- Re-fetching devices from `hardwareMap` in every loop.
-- Writing FTC annotations on abstract base classes.
-- Mixing `LinearOpMode` flow control into iterative `OpMode` subclasses.
-- Bypassing the `Mechanism` / `RobotConstants.createMechanism(...)` pattern for profile-managed subsystems.
-- Treating the device-level `library.hardware.hardwareDevice.RGBIndicator` as a profile-managed mechanism instead of fetching it from `HardwareMap`.
-- Forgetting that many runtime issues are hardware-config dependent even when the project builds.
-- Forgetting that `tests/` may intentionally contain proof-of-concept code that uses more direct SDK access than shared match op modes.
+- Keep FTC callback code concise and delegate robot behavior to the aggregate.
+- Keep profile device lookup out of annotations and static initializers.
+- Keep scheduler execution within the iterative lifecycle that owns it.
+- Recheck all exit paths after adding a new callback or early-return condition.

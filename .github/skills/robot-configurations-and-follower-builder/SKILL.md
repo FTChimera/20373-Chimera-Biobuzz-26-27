@@ -1,121 +1,105 @@
 ---
 name: robot-configurations-and-follower-builder
-description: Use this skill when asked to edit robot profiles, drivetrain naming/directions, Pinpoint offsets, or Pedro follower construction in `Constants`, `RobotConfigurations`, or `RobotConstants`.
+description: Use this skill for robot profiles, drivetrain wiring, Pinpoint configuration, and follower construction.
 ---
 
 # Robot Configurations and Follower Builder
 
-Use this skill for robot-profile work centered around:
+`library/robot/RobotConfigurations` holds static profile-builder methods that
+each return a fully configured `RobotConstants`. Two profiles exist today:
+`OldDECODERobotTesting()` (marked `// TODO DELETE THIS ONCE 1ST ROBOT BUILT`,
+with measured `xVelocity`/`yVelocity` and tuned `FollowerConstants`/heading
+PIDF/centripetal scaling) and `FirstRobot()` (has real motor names/directions
+and Pinpoint pod offsets, but zero velocity constants, a default
+`FollowerConstants()`, zero heading PIDF, and zero centripetal scaling —
+placeholder tuning). `library/robot/RobotConstants` is the base class each
+profile configures via a fluent builder API (`frontLeftMotorName(...)`,
+`pinpointConstants(...)`, `driveConstants(...)`, `addMechanism(...)`, etc.) and
+also owns `createFollower(HardwareMap)` / `createMechanism(HardwareMap, Class)`.
 
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
+`Constants.currentBot = RobotConfigurations.FirstRobot()` selects the active
+profile as a compile-time constant — docs must not describe this as freely
+swappable at runtime; changing it means editing `Constants.java` and
+rebuilding. Verify profile membership with `Constants.hasMechanism(Class)` /
+`RobotConstants.Mechanisms.contains(Class)` rather than assuming every
+mechanism is present.
 
-## Upstream `~/.gradle` lookup
+## Factory facts
 
-If follower or profile behavior depends on external libraries rather than
-TeamCode, inspect `~/.gradle/caches/modules-2/files-2.1/` using the versions
-from `build.dependencies.gradle`.
+- `RobotConstants.createFollower(map)` assembles `FollowerConstants` (drive
+  constants + heading PIDF + centripetal scaling), `MecanumConstants` (motor
+  names/directions/max power/velocity), and `PinpointConstants` (profile pod
+  offsets plus a forced `DistanceUnit.INCH` and `goBILDA_4_BAR_POD` encoder
+  resolution), then builds a `PathConstraints` and passes everything to
+  `new FollowerBuilder(...).pathConstraints(...).mecanumDrivetrain(...).pinpointLocalizer(...).build()`.
+  It always builds a Pinpoint-based Pedro follower for the active profile.
+- `Constants.createIMU(hardwareMap)` reads `currentBot.IMU_HARDWAREMAP_NAME`
+  and initializes a `RevHubOrientationOnRobot` from
+  `IMU_LOGO_FACING_DIRECTION`/`IMU_USB_FACING_DIRECTION`; it intentionally does
+  not reset yaw.
+- `Constants.createDrive/createIntake/createVision(hardwareMap)` each call
+  `assertHasMechanism(Class)` (throws `IllegalStateException` if the profile
+  never registered that mechanism) before delegating to
+  `currentBot.createMechanism(hardwareMap, Class)`, which uses reflection to
+  invoke the mechanism's `(HardwareMap, RobotConstants)` constructor and throws
+  a wrapped `RuntimeException` on any construction failure.
+- `Constants.createRobot(hardwareMap, RobotMode)` returns
+  `new Robot(hardwareMap, currentBot, robotMode)`, which aggregates every
+  mechanism whose class is in `currentBot.Mechanisms`. The no-arg
+  `createRobot(hardwareMap)` overload defaults to `RobotMode.TELEOP` for
+  teleop-style compatibility call sites.
 
-- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro follower,
-  drivetrain, and path-constraint internals
-- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
-  FTC SDK motor, IMU, and hardware behavior that profile builders depend on
+## Registering mechanisms
 
-## How this repo is wired
+Use `.configureDriveMechanisms()` (defaults to `new
+RobotDrive.ROBOT_DRIVE_PARAMS()`) or `.configureDriveMechanisms(params)` to
+register `RobotDrive`. Use `.addMechanism(Class)` for a mechanism with no
+params override, or `.addMechanism(Class, params)` to both register the class
+and store a copied params override (`RobotConstants.mechanismParams(...)`
+calls `params.copy()` before storing, so later external mutation of the
+builder-supplied instance cannot leak into the profile). Every
+`Mechanism.Params<P>` implementation must implement real copy semantics
+(`copy()` returning an independent instance) — avoid sharing one mutable
+params object across multiple mechanisms or profiles.
 
-1. `Constants.currentBot` selects the active robot profile.
-2. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`.
-  `configureDriveMechanisms()` provides `RobotDrive`; each profile can then
-  register optional mechanisms with `.addMechanism(...)`. FirstRobot's
-  Pinpoint offsets and encoder directions are configured, while its Pedro
-  drive-tuning fields remain unconfigured.
-3. `RobotConstants` is a builder-style container for drive names, drive directions, IMU configuration, Pinpoint constants, follower tuning, path constraints, the set of enabled `Mechanism` classes, and profile-owned mechanism params overrides.
-4. `Constants.createFollower(hardwareMap)` delegates follower creation to the active `RobotConstants` instance.
-5. `RobotConstants.createFollower(...)` builds the Pedro follower through `FollowerBuilder` using `FollowerConstants`, `MecanumConstants`, `PinpointConstants`, and `PathConstraints`.
-6. Drive motor directions in `RobotConstants` use the shared `library.hardware.actuators.Direction` enum and convert to FTC SDK directions only when building drivetrain/follower objects.
-7. `RobotConstants.createMechanism(...)` is the uniform creation path for registered mechanisms and wrappers that follow the `(HardwareMap, RobotConstants)` constructor pattern.
-8. `Constants` now also exposes helper methods such as `createIMU(...)`,
-   `createDrive(...)`, `createVision(...)`,
-   deprecated `createWebcam(...)`, aggregate `createRobot(...)` /
-   `createRobot(..., RobotMode)`, generic
-   `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and
-   `assertHasMechanism(...)`.
-9. `Constants.currentBot` controls which profile provides mechanism registration and follower-drive configuration.
+`RobotConstants.getMechanismParams(Class, defaultParams)` returns a `.copy()`
+of the stored override if one exists, otherwise a `.copy()` of the supplied
+default — mechanisms always receive an isolated params instance through
+`Mechanism.resolveParams(...)`.
 
-## What belongs where
+## Calibration status
 
-- Put drive motor names, drive directions, IMU hardware/orientation settings, follower/pathing tuning, and enabled mechanism classes in `RobotConstants`.
-- Put concrete robot presets in `RobotConfigurations`.
-- Put top-level convenience helpers such as `createIMU(...)`,
-  `createIntake(...)`, `createVision(...)`, and
-  deprecated `createWebcam(...)` in `Constants` only when preserving an existing caller.
-- Keep mechanism-specific behavior and optional nested params types in the owning mechanism or wrapper class.
-- Prefer selecting a profile through `Constants.currentBot` instead of scattering conditionals throughout mechanisms or op modes.
-- Use `Direction.FORWARD` / `Direction.REVERSE` for drive motors in profiles.
+`FirstRobot()` has real physical wiring (motor names/directions, bot
+width/length, Pinpoint hardware name and pod offsets, encoder reversal flags)
+but not final follower tuning: zero `xVelocity`/`yVelocity`, a default
+`FollowerConstants()` (no mass/zero-power-acceleration/PIDF overrides), zero
+heading PIDF coefficients, and zero centripetal scaling. Treat those specific
+fields as calibration work, not as validated match-ready tuning, even though
+the rest of `FirstRobot()` reflects the actual robot.
 
-## Important separation of concerns
+## Reference profile: `OldDECODERobotTesting()`
 
-Do not use `RobotConstants` as a catch-all for every subsystem on the robot.
+`OldDECODERobotTesting()` is explicitly marked
+`// TODO DELETE THIS ONCE 1ST ROBOT BUILT` and carries the previous season's
+fully-measured numbers: `xVelocity`/`yVelocity` from empirical testing, a
+`FollowerConstants` with `mass(11.4)`, measured zero-power accelerations,
+tuned translational/heading PIDF coefficients, a `FilteredPIDFCoefficients`
+drive PIDF, and `centripetalScaling(0.003)` — plus a different Pinpoint
+hardware name (`"pinpoint"`) and IMU orientation (`LEFT`/`UP` vs.
+`FirstRobot()`'s `UP`/`FORWARD`). Use it only as a worked example of a fully
+tuned profile shape, not as data applicable to the current chassis; both
+profiles register `RobotDrive`, `Intake` (reversed direction, hardware name
+`"intake"`), and `Vision` with default params, and both set
+`useFollowerDrive(true)`.
 
-- `RobotConstants` / `RobotConfigurations` are for drivetrain, localizer, follower, pathing profile data, and which `Mechanism` classes are enabled on a given robot.
-- Mechanism-specific behavior or helper params such as intake power values or Limelight mounting values should stay with their mechanism/wrapper type rather than bloating the robot-profile object.
+## `USE_FOLLOWER_DRIVE` fallback path
 
-That separation keeps the robot profile focused on what varies per bot while reusable subsystem logic stays with the subsystem itself.
-
-## Current fields to know
-
-`RobotConstants` already owns:
-
-- drive motor names and directions
-- `IMU_HARDWAREMAP_NAME`, `IMU_LOGO_FACING_DIRECTION`, and `IMU_USB_FACING_DIRECTION`
-- `PinpointConstants PINPOINT_LOCALIZER_CONSTANTS`
-- max drivetrain power
-- Pedro x/y velocity values
-- path constraint tuning
-- heading PIDF coefficients
-- centripetal scaling
-- enabled mechanism classes via the `Mechanisms` `Set`, `configureDriveMechanisms()`, and `addMechanism(...)`
-- per-mechanism params templates via `mechanismParams(...)` and `getMechanismParams(...)`
-- follower-drive compatibility through `USE_FOLLOWER_DRIVE`
-
-## Rules
-
-- Reuse the existing fluent builder methods on `RobotConstants` instead of introducing parallel drivetrain configuration objects.
-- Keep all four drive motor names and directions together when changing a drivetrain profile.
-- Configure each profile's IMU name and REV Hub logo/USB directions with `imuHardwareMapName(...)`, `imuLogoFacingDirection(...)`, and `imuUsbFacingDirection(...)`.
-- Create IMUs through `Constants.createIMU(hardwareMap)`; it initializes orientation but deliberately does not reset yaw.
-- Keep Pinpoint-related updates bundled through `pinpointConstants(...)`.
-- Keep drive motor directions on the shared `Direction` enum so `RobotDrive`, `MecanumDrive`, and `RobotConstants.createFollower(...)` stay aligned.
-- Use `configureDriveMechanisms()` when you want the normal drive mechanism (`RobotDrive`) enabled by default.
-- When adding a new subsystem that should participate in the profile system, register it with `.addMechanism(...)`, store profile-specific params with `.mechanismParams(...)` when needed, and give it the constructor shape that `RobotConstants.createMechanism(...)` expects.
-- Do not create ad hoc `FollowerBuilder` calls elsewhere when `Constants.createFollower(...)` or `RobotConstants.createFollower(...)` can be reused.
-- For a shared aggregate flow, choose the RobotMode at construction and create
-  a matching State. The no-mode `createRobot(...)` overload is teleop
-  compatibility; autonomous callers must use the explicit overload.
-- Do not move mechanism-specific params into `RobotConstants` unless they truly vary by robot profile.
-- Treat values as placeholders unless they were explicitly measured on the
-  robot. FirstRobot's configured Pinpoint offsets and encoder directions are
-  the exception; its zero velocity, blank follower constants, zero heading
-  PIDF, and zero centripetal scaling remain drive-tuning targets.
-
-## Example workflow
-
-1. Add or update a preset in `RobotConfigurations`.
-2. Point `Constants.currentBot` at that preset.
-3. Confirm `RobotConstants.createFollower(...)` still matches the chosen localizer and drivetrain style.
-4. If the preset should support the normal drive mechanism, include `.configureDriveMechanisms()`.
-5. If a new mechanism is involved, register it with `.addMechanism(...)`, configure any profile-specific nested params through `.mechanismParams(...)`, confirm its constructor matches `(HardwareMap, RobotConstants)`, and optionally expose a `Constants.create...(...)` helper.
-6. Validate any op mode or mechanism that depends on the follower.
-
-## Common pitfalls in this repo
-
-- `Constants` is a convenience surface, but the actual uniform mechanism factory logic now lives in `RobotConstants.createMechanism(...)`.
-- `RobotDrive` depends on the same active robot profile, so follower changes affect teleop and autonomous.
-- `RobotConstants.createFollower(...)` currently assumes Pinpoint localization and the GoBILDA 4-bar pod resolution.
-- `RobotConstants.createMechanism(...)` throws if the requested class is not present in the active profile’s `Mechanisms` list.
-- `Constants.assertHasMechanism(...)` now fails earlier for convenience factory calls, so profile registration issues can show up before reflection-based construction.
-- The presence of `Constants.create...(...)` helpers does not mean the selected profile enables every class; check the profile's `Mechanisms` set before using a helper.
-- `tests/MecanumTeleOp.java` now reads drivetrain motor names and default directions from `Constants.currentBot`, so drivetrain-profile renames should keep that test aligned automatically.
-- `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` create their IMU through `Constants.createIMU(hardwareMap)`, so profile orientation changes apply to both tests.
+`RobotConstants.USE_FOLLOWER_DRIVE` (default `true`, set via
+`.useFollowerDrive(...)`) controls whether `MecanumDrive` drives through the
+Pedro follower's own teleop-drive API or falls back to directly commanding
+four `Motor` wrappers built from the profile's motor names/directions
+(`useManualDrive = !bot.USE_FOLLOWER_DRIVE`). The source comment notes the
+team had reliability issues with follower-based teleop drive in a previous
+season before getting it working — keep this flag in mind as an available
+escape hatch if follower teleop drive misbehaves again, rather than assuming
+manual drive motors are dead code.

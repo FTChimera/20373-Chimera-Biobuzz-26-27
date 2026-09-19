@@ -1,42 +1,102 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Planner & Vision Intake | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>Planning</h2><a href="#model">Planner model</a><a href="#builder">PlanBuilder</a><a href="#vision">IntakeWVision</a><a href="#fail-safe">Fail-safe and return</a><a href="#test">Integration test</a></nav>
-<main class="article"><p class="eyebrow">07 / Planning</p><h1>Use planner steps for mechanism-aware sequences.</h1><p class="lead">The planner stack is a repository layer on top of Pedro and Ivy. A <code>PathPlanner</code> step owns its start/end pose relationship, path construction, and command. <code>PlanBuilder</code> makes a sequence readable when it combines travel, waits, dynamic vision collection, and parking.</p>
-<section id="first-call"><h2>Call a plan from a LinearOpMode</h2><p>This is the call pattern used by <code>PlannerIntakeVisionAuto</code>: construct registered mechanisms once, build the sequence before start, then schedule and execute it in the active loop.</p><pre>Robot robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
-RobotDrive drive = robot.requireDrive();
-Vision vision = robot.requireVision();
-PathPlannerList plan = new PlanBuilder(robot, vision, START_POSE)
-    .linearPathTo(STAGING_POSE)
-    .waitMs(250)
-    .intakeWVision(2, createVisionFailSafePath())
-    .linearPathTo(PARK_POSE)
-    .build();
-
-waitForStart();
-plan.schedule();
-while (opModeIsActive()) {
-    Scheduler.execute();
-    drive.periodic(null, RobotMode.AUTONOMOUS);
-}</pre></section>
-<section id="model"><h2>Understand the PathPlanner contract</h2><pre>public interface PathPlanner {
-    Pose getEndPose();
-    Command run();
-    void setStartPose(Pose pose);
-    void buildPaths();
-}</pre><p><code>PathPlannerList</code> turns individual steps into a sequence. The start pose flows from one planner to the next; a step must accurately report its end pose. <code>PathPlanner.asCommand()</code> owns the <code>buildPaths()</code> then <code>run()</code> pairing, so callers do not duplicate that lifecycle.</p><div class="source"><span class="label">Built-in steps</span><code>library/planners/paths/Utils.java</code> currently supplies <code>StartPose</code>, <code>CustomPath</code>, <code>LinearPath</code>, <code>Wait</code>, and <code>IntakeWVision</code>.</div></section>
-<section id="builder"><h2>Compose a readable PlanBuilder sequence</h2><pre>plan = new PlanBuilder(robot, vision, START_POSE)
-    .linearPathTo(STAGING_POSE)
-    .followPath(createApproachPath())
-    .waitMs(250)
-    .intakeWVision(2, createVisionFailSafePath())
-    .linearPathTo(PARK_POSE)
-    .build();</pre><p>This is not a generic fluent API: it is an autonomous sequence over the aggregate mechanism set. The builder seeds its list with <code>Utils.StartPose</code>, so the drive follower receives the declared beginning before path steps run.</p><table><tr><th>Builder method</th><th>Use</th></tr><tr><td><code>linearPathTo(pose)</code></td><td>Create a repo-provided linear planner step from the previous end pose.</td></tr><tr><td><code>followPath(chain)</code></td><td>Insert explicit prebuilt Pedro geometry.</td></tr><tr><td><code>waitMs(ms)</code></td><td>Insert intentional timing, not a busy wait.</td></tr><tr><td><code>intakeWVision(count, failSafe)</code></td><td>Collect with neural-detector results while retaining a deterministic fallback.</td></tr></table></section>
-<section id="vision"><h2>IntakeWVision owns a dynamic path decision</h2><p><code>Utils.IntakeWVision</code> gets the profile-created <code>Vision</code>, <code>RobotDrive</code>, and <code>Intake</code> from the aggregate. It switches to <code>NEURAL_DETECTOR</code>, retries for a bounded period, filters and scores detector candidates, chooses a sequence, then creates either a Pedro curve-through path or adaptive-handle Bezier segments based on waypoint geometry.</p><ul><li>Candidate filtering rejects weak confidence, too-small target area, non-finite distance, and excessive lateral offset.</li><li>It deduplicates nearby detections and scores a forward-ordered collection route.</li><li>It starts the intake while it follows the selected outbound path.</li><li>It retains a resolved end pose and does not pretend a dynamic route is guaranteed.</li></ul><div class="warning"><span class="label">Pipeline ownership</span>Do not silently leave the Limelight in AprilTag mode when a planner step expects detector output. <code>IntakeWVision.buildPaths()</code> and its start logic explicitly select the neural detector pipeline.</div></section>
-<section id="fail-safe"><h2>Dynamic paths require a fail-safe and a return owner</h2><p>Vision can be unavailable, poorly calibrated, or timeout before a valid route exists. <code>IntakeWVision</code> uses the supplied fail-safe outbound chain when it cannot use vision. After the outbound follower is no longer busy, it creates a return line to the step's configured start pose with piecewise heading interpolation. It stops the intake before following the return.</p><pre>if (shouldUseFailSafePath) {
-    startFailSafePath();
-}
-// After outbound completion:
-startReturnPath(drive.mecanumDrive.follower.getPose());</pre><p>When adding another dynamic planner, make the failure decision explicit. A plan should either choose a known fallback, finish safely, or return a no-op that its caller understands; it should not leave a follower or mechanism running indefinitely.</p></section>
-<section id="test"><h2>Use the integration test as the starting point</h2><p><code>tests/PlannerIntakeVisionAuto.java</code> is the current Driver Station-visible integration test. It creates an autonomous aggregate, requires drive and Vision, treats Intake as optional for telemetry, starts Vision in detector mode after start, schedules the plan, calls <code>Scheduler.execute()</code>, and calls <code>drive.periodic(null, RobotMode.AUTONOMOUS)</code> in its active loop.</p><div class="checklist"><span class="label">Before adding a new planner step</span><ul><li>Validate the step with a deterministic fail-safe route first.</li><li>Keep start/end pose behavior correct so later steps attach to the intended place.</li><li>Validate optional mechanism absence instead of dereferencing a missing wrapper.</li><li>Keep detector calibration and robot safety bounds conservative until tested on field.</li></ul></div></section>
-<nav class="pager"><a href="06-autonomous-ivy.html">← Pedro & Ivy</a><a href="08-localization-field.html">Localization & field →</a></nav></main></div><footer class="footer">Planner guide · Dynamic perception needs deterministic fallback behavior.</footer></body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Planning & Vision | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">07 / Planning</p>
+        <h1>Use the current planner chain deliberately and treat vision-generated intake paths as explicit, filtered helpers.</h1>
+        <p class="lead"><code>PlanBuilder</code> wraps a <code>PathPlannerList</code>. <code>Common</code> and <code>AlliancePoses</code> provide alliance-aware pose containers. <code>Vision</code> manages Limelight results, while <code>IntakeBallPath</code> turns detector output into a forward Pedro route when enough verified data is supplied.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>PlanBuilder.startGardenPose(robot)</code> is the active entry point used by Garden8.</li>
+                <li><code>Common.init(alliance)</code> only sets alliance selection on pose containers; many stored pose values are still zero poses.</li>
+                <li><code>AlliancePoses.pose()</code> returns the red or blue copy based on the last selected alliance color.</li>
+                <li><code>Vision.periodic(State)</code> updates orientation and camera results every cycle and can trigger an auto-intake follow request in teleop.</li>
+                <li><code>IntakeBallPath.generateIntakePathFromCam(...)</code> is the fully featured overload; the no-argument overload currently returns an empty <code>PathChain</code>.</li>
+                <li>The strongest current detector path logic filters weak detections, de-duplicates close targets, scores forward sequences, and smooths the resulting path.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>Planner chain snapshot</h2>
+            <p>This reflects the public PlanBuilder methods used by the current autonomous flow.</p>
+            <pre>
+PathPlannerList list = PlanBuilder.startGardenPose(robot)
+        .shootPreloads()
+        .intakeGarden()
+        .build();
+            </pre>
+        </section>
+        <section>
+            <h2>PlanBuilder state machine facts</h2>
+            <p>The fluent API is stateful and enforces position transitions.</p>
+            <ul>
+                <li><code>startGardenPose</code> seeds the list with <code>FromStartGardenPose</code>.</li>
+                <li><code>shootPreloads()</code> changes the tracked position from <code>GARDEN_START</code> to <code>GARDEN_SHOOT</code>.</li>
+                <li><code>intakeGarden()</code> is only legal after the shoot step and throws for other positions.</li>
+                <li><code>followPath</code>, <code>linearPathTo</code>, and <code>waitMs</code> are utility additions layered on the same planner list.</li>
+                <li><code>schedule()</code> delegates to the built <code>PathPlannerList</code>.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Common and AlliancePoses boundaries</h2>
+            <p>These helpers are structural, not finished match geometry.</p>
+            <ul>
+                <li><code>Common.StartPoses</code>, <code>IntakePoses</code>, and <code>ShootPoses</code> each store mirrored <code>AlliancePoses</code> fields.</li>
+                <li>The current constructor values for those containers are mostly <code>new Pose()</code> placeholders.</li>
+                <li><code>Common.init(color)</code> chooses alliance on the stored containers but does not measure or populate field coordinates.</li>
+                <li><code>AlliancePoses.Red()</code> and <code>Blue()</code> return copies, which helps callers avoid mutating the shared containers.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>What the full IntakeBallPath overload actually does</h2>
+            <p>The source-backed detection pipeline is more selective than a naive nearest-target pick.</p>
+            <ul>
+                <li>It rejects missing detector lists and non-positive requested counts immediately.</li>
+                <li>It scores detections with a confidence and target-area weighted first pass before building candidates.</li>
+                <li>It rejects low-confidence, tiny-area, too-near, too-far, or too-far-lateral detections.</li>
+                <li>It converts robot-relative readings into field poses through <code>MathUtils.offsetPoseInRobotFrame(...)</code>.</li>
+                <li>It de-duplicates candidates within a merge distance, then chooses the best increasing-forward sequence.</li>
+                <li>It builds either a Pedro curve-through chain or an adaptive-handle Bezier chain based on turn angle and waypoint spacing.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Vision integration reality check</h2>
+            <p>The teleop auto-intake button path in <code>Vision.periodic(State)</code> currently calls the no-argument <code>generateIntakePathFromCam()</code> overload, which returns an empty <code>PathChain</code>. The richer overload exists in the library, but the teleop trigger path is still only scaffolded.</p>
+            <p>That means the docs should distinguish between the implemented path-generation library and the currently lightweight teleop trigger integration, rather than claiming end-to-end autonomous intake by camera is already finished.</p>
+        </section>
+        <section>
+            <h2>Useful chapter handoff</h2>
+            <p>Use this chapter for planner composition and detector-path generation, then move to the localization chapter when the change affects pose ownership, relocalization, or field geometry helpers.</p>
+        </section>
+        <nav class="pager">
+            <a href="06-autonomous-ivy.html">← Autonomous</a>
+            <a href="08-localization-field.html">Localization →</a>
+        </nav>
+    </main>
+</body>
+</html>

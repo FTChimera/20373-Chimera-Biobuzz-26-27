@@ -1,162 +1,108 @@
 ---
 name: teamcode-library-architecture
-description: Use this skill when asked to work with the team's current library, hardware wrappers, mechanisms, constants, or overall TeamCode architecture instead of generic FTC examples.
+description: Use this skill for the current TeamCode architecture, factories, mechanisms, and match code boundaries.
 ---
 
 # TeamCode Library Architecture
 
-Use this skill to stay aligned with the repo’s current architecture instead of falling back to generic FTC examples.
+## Current package map
 
-## Upstream `~/.gradle` lookup
+- `autos/`: competition autonomous entries; `Garden8.java` (`OpMode`) is the
+  current planner consumer, with nested `redalliance`/`bluealliance`
+  `@Autonomous` subclasses.
+- `tele/`: match teleop; `TeleOp.java` (`LinearOpMode`) is the current
+  annotated Main TeleOp, with nested `Red_Tele`/`Blue_Tele` `@TeleOp`
+  subclasses.
+- `configs/`: `Blackboard.java` (static cross-op-mode state) and
+  `ConfigOpMode.java` (selectable pre-start configuration menu).
+- `mechanisms/`: profile-managed behavior — `Mechanism` (abstract base),
+  `Robot` (aggregate), `RobotDrive`, `Intake`, `Vision`, `Shooter`, and
+  `FieldUpdates`.
+- `library/`: reusable code, split into `control/` (PIDF/bang-bang/composite
+  controllers), `filters/` (e.g. low-pass), `game/` (`State`, `RobotMode`,
+  `Field`, `HiveState`, `Pollen`), `hardware/` (`actuators/`, `gamepad/`,
+  `hardwareDevice/`, `webcam/`; `leds/` is an empty leftover directory),
+  `interpolation/`, `math/` (`MathUtils`, `EquationCurve` support),
+  `planners/` (`Common`, `PlanBuilder`, `PathPlanner`, `PathPlannerList`,
+  `paths/`), and `robot/` (`RobotConstants`, `RobotConfigurations`,
+  `RobotIvyBuilder`, `Driver`, `drivetrain/MecanumDrive`).
+- `pedroPathing/`: `Tuning.java` (Pedro tuning menu), `AlliancePoses.java`,
+  the renamed `Pedro.java` helper, and `custom/` adapters
+  (`LimelightPinpointLocalizer`, `EquationCurve`).
+- `pid/autoTune/`: relay-feedback AutoTune op modes and `TuningConstants`,
+  plus `master/` (`PIDMaster`, `DualMotorPIDMaster`) shared logic.
+- `tests/`: Driver Station validation op modes, including `tests/ftcSdk/` for
+  the profile-factory smoke tests built on `androidTest`.
+- `TeamCode/src/test/java`: JVM/host-side JUnit tests, aggregated by
+  `UnitTestAll`.
 
-If an architectural decision depends on external library behavior instead of
-repo-local code, inspect `~/.gradle/caches/modules-2/files-2.1/` using the
-versions pinned in `build.dependencies.gradle`.
+`opModes/` and its Ivy-specific bases/variants were removed from
+`TeamCode/src`; only the stale `TeamCode/bin/` build output (not source) still
+contains that directory, and it must not be treated as current architecture.
 
-- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro architecture and
-  motion/pathing assumptions
-- `com.pedropathing/ivy` for command-architecture assumptions
-- `com.pedropathing/telemetry` for tuning and telemetry-op-mode assumptions
-- `com.bylazar/fullpanels` and related `com.bylazar/...` modules for
-  panels-related architecture
-- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
-  `org.firstinspires.ftc/Vision` for FTC SDK-backed architecture details
+## Construction and lifecycle
 
-## Package layout
+The standard flow is:
 
-- `configs/`: `Blackboard` plus `ConfigOpMode`, the iterative pre-start menu for alliance, driver, pose, and reset preferences.
-- `library/`: small reusable types and wrappers, now split across areas such as `control/`, `filters/`, `game/`, `hardware/`, `interpolation/`, `math/`, `planners/`, and `robot/`.
-- `library/game/Field.java`: JTS-backed preseason geometry for polygons, circles, robot-footprint sweeps, and autonomous-boundary contact classification.
-- `library/robot/drivetrain/`: the reusable `MecanumDrive` helper under the public drive mechanism layer.
-- `library/hardware/hardwareDevice/`: SDK-registerable custom devices such as `RevPotentiometer`, `SlidesMotor`, and the device-level `RGBIndicator`.
-- `mechanisms/`: robot subsystems plus the shared abstract base class `Mechanism`.
-- `library/OpModeHelper.kt`: optional op-mode utility for manual Lynx bulk caching and loop `dt` tracking.
-- `opModes/`: shared base op mode logic.
-- `opModes/variants/`: thin FTC-annotated wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`.
-- `pid/autoTune/`: FTC AutoTune relay-feedback tuner op modes, repo-local FTC master adapters, and a shared `TuningConstants` config class for calibration-only workflows.
-- `pedroPathing/`: Pedro-specific helpers, Ivy adapters, tuning entry points, and custom geometry such as `custom/EquationCurve`.
-- `tests/`: driver-station validation and proof-of-concept op modes, including `PreseasonWebcamAuto` and `tests/ftcSdk` helpers.
-- `src/test/java/`: JVM unit tests for non-hardware TeamCode logic, with `UnitTestAll.java` as a single suite entry point.
-- `learning/`: teaching or scratch op modes, including the Kotlin Ivy autonomous
-  example.
-- `learning/flyset/`: an unannotated PIDF teaching sketch with placeholder
-  `Sensor` methods; it is not hardware-ready robot code.
-- `java-autogen/`: browser-side HTML/JS generators for producing starter Java autonomous classes from Pedro/Turtle Tracer path data or manual path-builder drafts.
-- `Constants.java`: the active robot profile, default poses, and op-mode-facing convenience factories.
+```java
+Robot robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+State state = new State(RobotMode.TELEOP);
+// after FTC start
+robot.start();
+robot.periodic(state);
+robot.stop();
+```
 
-## House style for mechanisms and wrappers
+Each registered profile mechanism has a `(HardwareMap, RobotConstants)`
+constructor, implements `periodic(State)` and `stop()`, and uses copied nested
+`Mechanism.Params` when it needs profile-specific tuning. `Robot` (itself a
+`Mechanism`) aggregates the profile's mechanism set in class-name order,
+enriches `State` each cycle (`state.setRobot(this)`, alliance/mode, the
+`OpModeHelper`), keeps bulk-cache/battery reads current through
+`OpModeHelper`, and owns shutdown/persistence via `stop(boolean saveEndVals)`
+-> `saveEndVals()`.
 
-This repo now wants reusable subsystems and higher-level wrappers to share one construction shape instead of ad hoc constructors in op modes.
+## Boundaries
 
-Use this pattern:
+- `RobotConstants` / `RobotConfigurations`: robot-specific hardware and
+  follower configuration plus mechanism registration (`Mechanisms` set and
+  `mechanismParams` overrides). See `robot-configurations-and-follower-builder`.
+- mechanism params (`XxxMechanism.XXX_PARAMS`): local behavior and optional
+  per-profile overrides, always copied through `Params.copy()`.
+- `library/hardware/hardwareDevice`: direct SDK device types
+  (`SlidesMotor`, `RevPotentiometer`, `RGBIndicator`), not aggregate
+  mechanisms — construct these directly, not through `Robot`.
+- `library/planners`: reusable, stateful autonomous modules
+  (`PlanBuilder`/`PathPlanner`/`PathPlannerList`/`paths/*`). See
+  `pedro-pathing-and-ivy`.
+- `library/game`: reusable geometry, game types (`Field`, `HiveState`,
+  `Pollen`), `State`, and `RobotMode`; not finished strategy by default (e.g.
+  `FieldUpdates.getGoalPose()` still returns `null`).
 
-1. Reusable robot subsystems and wrappers that depend on the active robot profile should extend `mechanisms/Mechanism`.
-2. Give them a constructor shaped like `(HardwareMap, RobotConstants)`.
-3. Use the `bot` profile passed into that constructor for shared robot-profile data and mechanism enablement checks.
-4. Register optional subsystems in each robot preset with `RobotConstants.configureDriveMechanisms()` and/or `RobotConstants.addMechanism(...)`.
-5. If the mechanism has local configuration, keep it in a nested builder-style params class that implements `Mechanism.Params<...>` and resolve it through `Mechanism.resolveParams(...)`.
-6. Instantiate from `RobotConstants.createMechanism(...)`, usually surfaced through `Constants.createRobot(hardwareMap, RobotMode...)` for shared aggregate flows or through narrow convenience helpers such as `createIntake(hardwareMap)` when a test really wants one mechanism directly.
-7. Op modes should call the existing `Constants.create...(...)` helpers instead of using direct constructors.
+Use `Vision` for new camera work (see `limelight-wrapper-and-pipelines`) and
+`RobotIvyBuilder` for aggregate Ivy commands. Use `PlanBuilder` and
+`autos/Garden8` for current match autonomous structure. Do not treat
+unfinished `Shooter`, `FieldUpdates`, `ShotSolver`, `HiveState`, or `Common`'s
+placeholder `AlliancePoses` (`new Pose()` field values) as calibrated match
+behavior — they compile and run but have not been measured for the current
+field/robot.
 
-Mechanisms with local config now own nested builder-style params types such as `Intake.INTAKE_PARAMS`, `RobotDrive.ROBOT_DRIVE_PARAMS`, and `Vision.VISION_PARAMS`, and the uniform repo-level construction pattern is now `Mechanism` + `Mechanism.Params` + `RobotConstants.createMechanism(...)`. `LogitechWebcam.LOGITECH_WEBCAM_PARAMS` remains only for the deprecated standalone wrapper.
+## Where cross-cutting Ivy code lives
 
-A helper existing in `Constants` does **not** mean the profile selected by
-`Constants.currentBot` registers that class; check the selected profile's
-`Mechanisms` set or `Constants.hasMechanism(...)` before using a factory
-helper, and prefer runtime-test guards for optional subsystems.
+Ivy `Command`/`Scheduler` usage spans three layers rather than one package:
+`library/robot/RobotIvyBuilder` wraps aggregate `Robot` actions,
+`library/planners/PathPlanner`/`PathPlannerList` compose planner-level
+commands (`asCommand()`, `fromPrev(...)`), and `pedroPathing/Pedro` provides
+low-level Pedro-specific command/path helpers (`runIvy`, `ivyFollowPath`,
+`linear`). Mechanism-level Ivy commands (e.g. `Intake.fullPower()`,
+`MecanumDrive.teleOp(...)`) live directly on the mechanism/drivetrain class
+that owns the underlying state, not in a separate command package — there is
+no `commands/` directory in current source.
 
-## Where configuration belongs
+## Learning/scratch code is not match code
 
-- Put drive motor names, `Direction`-based drive directions, IMU names and hub orientation, Pinpoint data, follower tuning, path constraints, and the enabled-mechanism set in `library/robot/RobotConstants` / `RobotConfigurations`.
-- Put default poses and top-level convenience factories in `Constants`, including `createIMU(...)`, generic helpers such as `createMechanism(...)`, `getMechanisms()`, `hasMechanism(...)`, and mechanism-specific helpers such as `createVision(...)`. `createWebcam(...)` is retained only as a deprecated compatibility helper.
-- Keep mechanism-specific behavior and optional nested params types in the mechanism or wrapper class that owns them.
-- Keep lightweight math helpers such as `Equation`, `Polynomial`, `Term`, `MathUtils`, interpolation helpers, filters, and generic PIDF controllers in `library/`.
-- Keep calibration-only tuner adapters such as `pid/autoTune/*` in their own package; they are op-mode utilities, not profile-managed robot.
-- Keep Pedro-specific curve integration such as `EquationCurve` in `pedroPathing/custom/`.
-- Do not turn `RobotConstants` into a catch-all for arbitrary per-mechanism tuning unless that data is truly robot-profile-wide.
-
-## Existing wrappers and mechanisms to reuse
-
-- `library.hardware.actuators.Direction`
-- `library.hardware.actuators.Motor`
-- `library.robot.drivetrain.MecanumDrive`
-- `library.hardware.hardwareDevice.RevPotentiometer`
-- `library.hardware.hardwareDevice.SlidesMotor`
-- `library.hardware.hardwareDevice.RGBIndicator`
-- `library.hardware.webcam.Limelight`
-- `library.hardware.webcam.LogitechWebcam` (deprecated)
-- `library.DriveVector`
-- `library.Tuple`
-- `library.game.Field`
-- `library.control.PIDFController`
-- `library.control.DoublePIDFController`
-- `library.interpolation.LinearInterp`
-- `library.interpolation.LagrangeInterp`
-- `library.math.Equation`
-- `library.math.MathUtils`
-- `library.math.Polynomial`
-- `library.math.Term`
-- `robot.Intake`
-- `robot.RobotDrive`
-- `mechanisms.Robot`
-- `robot.Mechanism`
-- `library.robot.RobotConstants`
-- `library.robot.RobotConfigurations`
-- `configs.Blackboard`
-- `pedroPathing.custom.EquationCurve`
-
-## Rules
-
-- Prefer extending existing wrappers over bypassing them.
-- When adding a new profile-managed mechanism, extend `Mechanism`, use the `(HardwareMap, RobotConstants)` constructor shape, and register it in `RobotConfigurations`.
-- Add a `Constants.create...(...)` helper when that mechanism is expected to be used directly by op modes or other high-level code.
-- Keep op modes focused on orchestration, not low-level hardware construction.
-- Use `Constants.createIMU(hardwareMap)` for profile-configured IMUs. It initializes the active profile's `RevHubOrientationOnRobot` settings but never calls `resetYaw()`; callers own their heading-reset timing.
-- Keep pose and driver-preference transfer through `configs/Blackboard` when op modes need shared state.
-- Match the repo’s split between mechanism logic, wrapper logic, and op mode orchestration.
-
-## Good places to edit for common tasks
-
-- New top-level subsystem convenience factory or active-profile selection: `Constants.java`
-- New drive profile or Pedro follower constant set: `library/robot/...`
-- New simple hardware wrapper: `library/hardware/...`
-- New custom SDK hardware device definition: `library/hardware/hardwareDevice/...`
-- New subsystem behavior: `mechanisms/...`
-- New shared blackboard/configuration preference: `configs/...`
-- New teleop or autonomous entry: `opModes/variants/...` or `tests/...`, depending on whether it is match logic or validation logic
-- New Pedro/localization behavior: `pedroPathing/...`
-- New FTC AutoTune calibration wrapper or repo-local tuner constants: `pid/autoTune/...`
-- New lightweight math/filter/interpolation helper: `library/...`
-
-## Things not to assume
-
-- Generic FTC sample patterns from `FtcRobotController/external/samples/` are not the house style for TeamCode.
-- New mechanisms should not be instantiated directly from op modes when a `Constants.create...(...)` factory belongs there.
-- A profile-managed `Constants.create...(...)` helper is only a convenience surface; it still depends on the active profile’s `Mechanisms` set and `Constants.assertHasMechanism(...)`. `createFollower(...)` and `createIMU(...)` use the active profile without requiring a registered mechanism.
-- A mechanism no longer needs a centrally shared params singleton in `Constants` to fit repo style; the important uniformity point is the `Mechanism` + `RobotConstants.createMechanism(...)` construction flow.
-- `Polynomial`, `Term`, and the internal `SumEquation` now provide real `Equation` algebra for evaluation, derivatives, and supported elementary antiderivatives; unsupported integral cases should still fail explicitly instead of returning placeholder values.
-- `MathUtils.kt` is the shared conversion/normalization utility for generic angle, distance, and FTC/Pedro pose math; use it instead of re-implementing frame or unit conversions in wrappers.
-- `EquationCurve` is the Pedro-specific adapter that turns repo equation geometry into a `CustomCurve`, now with an explicit `HeadingInterpolator`.
-- `tests/` and `learning/` intentionally contain validation and teaching code; not every file there is meant to model final match architecture.
-- `tests/` and `src/test/java/` serve different purposes: runtime FTC validation versus host-side unit coverage.
-- Every concrete `Mechanism` subclass implements `periodic(State, RobotMode)`.
-  The one-argument bridge derives the mode from `State` (or defaults to
-  teleop), while `Robot` enforces the immutable mode chosen at construction.
-- `Constants.createRobot(hardwareMap, RobotMode)` is the aggregate helper for
-  constructing a `Robot` object that instantiates every class registered in
-  the active profile’s `Mechanisms` set. Create the matching `State`, call
-  `robot.start()` before periodic updates, and use `robot.stop()` for cleanup
-  and autonomous pose/alliance handoff.
-- `Robot.build()` supplies a `RobotIvyBuilder` so command-driven code can use
-  the aggregate's lifecycle, periodic, follower, intake, drive, vision, and
-  explicit `forceRelocalize()` APIs without rebuilding them inline.
-- `RobotDrive` is the public profile-managed drive mechanism. `library/robot/drivetrain/MecanumDrive` is the reusable helper underneath it, not a separately registered mechanism.
-- `java-autogen/` is intentional tooling, but it is not part of the Android/FTC runtime architecture until generated code is copied into `TeamCode/` and reviewed.
-- `pid/autoTune/` is also intentional calibration code: those op modes may use direct motor names from `TuningConstants` because repo-local `PIDMaster` / `DualMotorPIDMaster` classes own the FTC relay-test layer, so do not force that package into the normal `Constants.create...(...)` mechanism-factory shape.
-- `library.hardware.hardwareDevice.RGBIndicator` is an SDK-registerable device for direct `hardwareMap.get(...)` use and SDK registration tests; it is not a profile-managed mechanism.
-
-## Current build-tooling note
-
-- `TeamCode/build.gradle` wires Project Lombok annotation processing, Sloth load/runtime support, and the Kotlin Android plugin.
-- `build.dependencies.gradle` now wires JitPack plus `com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v0.3.7`; the repo-local `pid/autoTune/master/` classes supply the removed FTC-specific adapter layer.
-- The root `build.gradle` currently pins the Kotlin Gradle plugin with `kotlin_version = '2.1.20'`, so build or architecture work should preserve that wiring unless the repo is intentionally being migrated.
+`learning/` (`flyset`, `kotlinTest`, `teachEason`) holds exploratory or
+teaching snippets outside the `autos`/`tele`/`mechanisms`/`library` boundaries
+described above. Do not treat classes under `learning/` as part of the current
+architecture when documenting match behavior, and do not assume they compile
+against the latest `Mechanism`/`RobotConstants` contracts.

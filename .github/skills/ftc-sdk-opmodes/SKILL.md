@@ -1,133 +1,101 @@
 ---
 name: ftc-sdk-opmodes
-description: Use this skill when asked to create or edit FTC SDK op modes, wire hardware through HardwareMap, add TeleOp or Autonomous classes, or debug FTC lifecycle issues in this TeamCode project.
+description: Use this skill to create or edit FTC SDK op modes in TeamCode.
 ---
 
-# FTC SDK Op Modes for This Repository
+# FTC SDK Op Modes
 
-Use this skill when working on FTC SDK code in `TeamCode/src/main/java/org/firstinspires/ftc/teamcode`.
+Use the current concrete match entries rather than creating a parallel architecture.
 
-## Upstream `~/.gradle` lookup
+## Registered competition entries
 
-If an op-mode behavior depends on FTC SDK or Pedro infrastructure rather than
-repo-local code, inspect `~/.gradle/caches/modules-2/files-2.1/` using the
-versions pinned in `build.dependencies.gradle`.
+- `tele/TeleOp.java` is the teleoperated implementation.
+- It is a `LinearOpMode`.
+- It has the competition teleop annotation.
+- Its nested `Red_Tele` and `Blue_Tele` classes provide alliance choices.
+- `autos/Garden8.java` is the autonomous implementation.
+- It is an iterative `OpMode`.
+- Its nested `redalliance` and `bluealliance` classes are the autonomous choices.
+- Both autonomous choices preselect the configured teleop name.
 
-- `org.firstinspires.ftc/RobotCore`, `org.firstinspires.ftc/Hardware`, and
-  `org.firstinspires.ftc/Vision` for SDK-side op-mode behavior
-- `com.pedropathing/ivy` for Ivy command-driven op modes
-- `com.pedropathing/telemetry` for `pedroPathing/Tuning.java` op-mode selection
-  or telemetry registration issues
+## Choosing an op mode shape
 
-## Repository context
+- Use `LinearOpMode` when sequential initialization and an active-loop structure fit.
+- Use iterative `OpMode` when scheduler execution belongs in `loop()`.
+- Do not mix `waitForStart()` semantics into an iterative mode.
+- Do not block an iterative callback waiting for a command or sensor.
+- Keep driver-station annotations on concrete, source-backed entries.
 
-- The app uses FTC SDK `11.2.1`.
-- `TeamCode/` is the team module; `FtcRobotController/` is the controller app plus SDK samples.
-- Shared robot constants and mechanism factories live in `Constants.java`, with drive-profile and follower configuration under `library/robot/`.
-- The `OldDECODERobotTesting` and `FirstRobot` profiles exist. `Constants.currentBot` selects the profile used for profile-managed factories.
-  `configureDriveMechanisms()` supplies the normal `RobotDrive` registration,
-  while each profile explicitly registers any optional mechanism it supports.
-- Custom FTC `HardwareDevice` classes now live under `library/hardware/hardwareDevice/` for direct SDK registration and `hardwareMap.get(...)` usage.
-- Pose and driver-preference handoff between op modes lives in `configs/Blackboard.java`.
-- Shared bases and concrete match op modes live under `opModes/`; `variants/` currently holds thin wrappers such as `Blue_TeleOp`, `Red_TeleOp`, and `Test_IvyAuton`, while `IvyTeleOp` is an annotated class in the `opModes/` root.
-- Validation and proof-of-concept op modes live under `tests/`.
-- FTC AutoTune calibration op modes live under `pid/autoTune/`.
-- One-shot configuration op modes live under `configs/`.
-- Learning or scratch op modes live under `learning/`.
-- Browser-side autonomous generators live under `java-autogen/`; they are tooling inputs to op-mode authoring, not selectable FTC classes by themselves.
+## Teleop pattern
 
-## Use these patterns
+1. Create `DualGamepad` from the SDK gamepads.
+2. Create `State(RobotMode.TELEOP)`.
+3. Create `Robot` through `Constants.createRobot(hardwareMap, RobotMode.TELEOP)`.
+4. Resolve alliance and starting pose from `Blackboard`.
+5. Configure drive curve and start teleop drive.
+6. Set `GpBindings` on the state.
+7. Call `waitForStart()`.
+8. Start the robot.
+9. In the active loop update gamepads and call `robot.periodic(state)`.
+10. Stop the robot after the loop.
 
-1. Put reusable op mode logic in a shared base class under `opModes/`.
-2. When you use the thin-wrapper pattern, put the driver-station-visible wrappers in `opModes/variants/` and annotate those with `@TeleOp` or `@Autonomous`.
-3. Resolve subsystem construction through `Constants.create...(...)` instead of direct constructors in op modes.
-4. Let `Constants.create...(...)` delegate to the active robot profile when the subsystem is profile-managed.
-5. If teleop needs the last autonomous pose or configured driver preference, read and write `configs.Blackboard` intentionally.
-6. Use `tests/` for proof-of-concept or validation flows that are not part of the shared match architecture.
-7. Use `pid/autoTune/` for driver-station-visible relay-feedback tuning utilities that use repo-local FTC master adapters backed by `pidautotuner-core`.
-8. If an op mode wants loop timing or manual bulk-cache clearing, reuse `library/OpModeHelper.kt` instead of inventing a second helper with the same role.
+## Autonomous pattern
 
-## Central mechanism-creation convention
+1. Reset `Scheduler` in `init()`.
+2. Build the robot and its `PlanBuilder` route.
+3. Start the robot in `start()`.
+4. Execute the scheduler every `loop()`.
+5. Apply the autonomous time limit and park behavior.
+6. Stop once, then reset the scheduler in `stop()`.
+7. Preserve the pose handoff through the aggregate robot lifecycle.
 
-When an op mode needs a subsystem:
+## Alliance and handoff
 
-- prefer `Constants.createRobot(hardwareMap, RobotMode...)` in shared op
-  modes, create a matching `State`, then use `robot.requireIntake()` or
-  `robot.get(...)` for profile-managed subsystems
-- call `Constants.createVision(hardwareMap)` or retrieve `Vision` from
-  `Robot`; `Limelight` is the controller owned privately by `Vision`
-- call `Constants.createRobot(hardwareMap, RobotMode...)` when a shared op
-  mode wants the whole registered mechanism set, then use `robot.requireDrive()`
-  or optional `robot.get(...)` lookups as needed
-- call `Constants.createDrive(hardwareMap)` when you intentionally want just the public drive mechanism
-- call `Constants.createIMU(hardwareMap)` instead of directly retrieving and orienting an `IMU`
-- call `Constants.createVision(hardwareMap)` for profile-managed vision; `Constants.createWebcam(hardwareMap)` is deprecated compatibility only
+- Put selected alliance values in `Blackboard`.
+- `TeleOp` prefers a Blackboard pose when one exists.
+- It otherwise uses the selected alliance default pose.
+- `Robot.saveEndVals()` saves autonomous pose and alliance only after periodic state is available.
+- Do not manually duplicate handoff logic in each entry unless behavior intentionally differs.
 
-Every profile-managed `Constants.create...(...)` helper first calls `Constants.assertHasMechanism(...)`, so the profile selected by `Constants.currentBot` must register the requested mechanism class before the helper will run successfully. `createFollower(...)` and `createIMU(...)` are profile-configured helpers, not mechanism factories.
+## Mechanism use
 
-When adding a brand-new mechanism, add all three pieces together:
+- Create mechanisms through the aggregate robot, not directly from an op mode.
+- Use `requireDrive()` only when drive is profile-mandatory.
+- Use optional getters for profile-dependent equipment.
+- Each aggregate periodic call supplies `State` to configured mechanisms.
+- Start and stop vision through the robot API.
 
-1. make it extend `Mechanism` if it should participate in the standard robot-subsystem flow
-2. give it the `(HardwareMap, RobotConstants)` constructor expected by `RobotConstants.createMechanism(...)`
-3. register it in `RobotConfigurations` with `.addMechanism(...)`
-4. add a `Constants.create...(...)` helper if op modes should access it directly
+## New entries
 
-The important repo contract is that profile-managed subsystems can be created uniformly from the active `RobotConstants` instance.
+- Add an annotation only when the class is meant to appear on the Driver Station.
+- Give the annotation a stable name and competition group.
+- Decide explicitly whether the mode should preserve pose handoff.
+- Reuse `PlanBuilder`, `Common`, `Robot`, and `DualGamepad` where their existing behavior fits.
+- Do not copy stale base-class patterns or deleted test examples.
+- Keep exploratory code in existing test or learning areas rather than registering it as competition code.
 
-## Current repo conventions
+## Verification
 
-- Teleop drive is usually routed through `RobotDrive`, which wraps `MecanumDrive`.
-- Intake is wrapped by `mechanisms/Intake.java`, and `Constants.createIntake(...)` is the intended factory path when the active profile registers `Intake.class`.
-- Limelight usage is profile-managed by `mechanisms/Vision.java`, and
-  `Constants.createVision(...)` is the intended factory path when the active
-  profile registers `Vision.class`.
-- Logitech webcam has a `Constants` helper, but `Constants.currentBot` does not currently register that mechanism.
-- `library/hardware/hardwareDevice/SlidesMotor.java` is the current direct SDK-level slides device surface.
-- Ivy-based op modes use `Scheduler.reset()`, `Scheduler.schedule(...)`, and `Scheduler.execute()`.
-- `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt` are unannotated Java and Kotlin scratch iterative Ivy autonomous examples, not driver-station-visible match op modes.
-- `learning/ExampleIvyWithSubsystems.java` is an unannotated scratch scaffold. Its unfinished `autoAlign()` step is commented out, and it initializes a direct intake `DcMotor` from `Intake.INTAKE_PARAMS`; do not use it as the profile-managed subsystem reference.
-- Non-Ivy op modes call subsystem update methods directly inside `loop()` or the main `while (opModeIsActive())` block.
-- `opModes/TeleOp.java` and `opModes/IvyTeleOp.java` both construct
-  `RobotMode.TELEOP` aggregates and matching `State` objects, then start the
-  robot after `waitForStart()`. `TeleOp` requires `RobotDrive` and `Vision`
-  while leaving `Intake` optional; `IvyTeleOp` treats both `Intake` and
-  `Vision` as optional.
-- `tests/MecanumTeleOp.java` is a current iterative FTC test op mode for raw mecanum drive, IMU yaw reset, and manual direction checks.
-- `tests/MecanumTeleOp.java` now sources drivetrain motor names and directions from `Constants.currentBot` instead of separate test-only strings.
-- `tests/MecanumTeleOp.java` and `tests/FieldCentricMecanumTeleOp.java` source IMU lookup and hub orientation from `Constants.createIMU(hardwareMap)`; yaw reset remains an explicit driver-control action.
-- `tests/PreseasonWebcamAuto.java` is a proof-of-concept `LinearOpMode` that
-  uses `Vision` for color-based artifact tracking.
-- `tests/MotorDirectionTest.java` is now a looping low-speed sanity check that keeps telemetry live while you flip drivetrain or intake directions.
-- `pid/autoTune/PositionPIDTunerOpMode.java`, `VelocityPIDFTunerOpMode.java`, and `DualVelocityPIDFTunerOpMode.java` are `@TeleOp` calibration utilities in group `FtcAutoTune`; they use repo-local `PIDMaster` / `DualMotorPIDMaster` adapters plus `TuningConstants`, with `pidautotuner-core` providing the tuning primitives.
-- `configs/ConfigOpMode.java` is the single iterative configuration menu for blackboard alliance, driver, pose, and reset mutations; it no longer delegates those actions to separate annotated config op modes.
+- Compile TeamCode.
+- Confirm annotated names are unique in source.
+- Confirm the active profile supplies required mechanisms.
+- Confirm teleop starts after autonomous with the expected pose.
+- Confirm stop reliably clears outputs and scheduler state.
 
-## Rules
+## Documentation requirements
 
-- Keep FTC annotations on concrete, selectable classes only.
-- Prefer adding alliance-specific wrappers over duplicating whole op modes.
-- Do not bypass mechanism wrappers with raw `DcMotorEx` or `Limelight3A` access unless the wrapper is being improved.
-- If an SDK-level test intentionally bypasses a wrapper, keep the hardware naming aligned with `RobotConfigurations` or the owning params class.
-- The `pid/autoTune/` op modes are an intentional exception to the normal `Constants.create...(...)` factory rule: their direct motor-name configuration lives in `TuningConstants`, while the repo-local master adapters own the FTC relay-test integration.
-- Keep subsystem creation on the `Constants` / `RobotConstants.createMechanism(...)` path; keep drive/follower profile data in `library/robot/RobotConstants`.
-- Preserve FTC lifecycle expectations: initialize hardware before using it, update telemetry in the loop, and stop or persist state in `stop()` when needed.
-- With the aggregate path, invoke `robot.start()` before its first periodic
-  update and `robot.stop()` during cleanup. Use the autonomous mode explicitly
-  so drive and intake periodic code does not consume teleop inputs.
+- Describe an entry by its actual package and class name.
+- Describe only annotations that exist in current Java source.
+- State whether the entry is linear or iterative.
+- State how it creates the aggregate robot and state mode.
+- State whether it participates in Blackboard pose handoff.
+- Keep test-only entry points separate from competition entry documentation.
+- Remove references to deleted base classes rather than preserving path lists.
+- Recheck entry documentation after moving or renaming an annotated class.
 
-## Examples in this repo
+## Change boundaries
 
-- Shared teleop base: `opModes/TeleOp.java`
-- Ivy teleop: `opModes/IvyTeleOp.java`
-- Iterative Ivy autonomous base and concrete example: `opModes/IvyAuton.java` and `opModes/variants/Test_IvyAuton.java`
-- Linear Ivy autonomous helper: `pedroPathing/IvyAuto.java`
-- Annotated teleop wrappers: `opModes/variants/Blue_TeleOp.java` and `opModes/variants/Red_TeleOp.java`
-- Standalone validation op mode: `tests/MecanumTeleOp.java`
-- Proof-of-concept test op mode: `tests/PreseasonWebcamAuto.java`
-- Scratch iterative Ivy autonomous examples: `learning/ExampleIvyAuto.java` and `learning/kotlinTest/KtExampleIvyAuto.kt`
-- FTC AutoTune calibration op modes: `pid/autoTune/PositionPIDTunerOpMode.java`, `pid/autoTune/VelocityPIDFTunerOpMode.java`, `pid/autoTune/DualVelocityPIDFTunerOpMode.java`
-- Pre-start blackboard configuration menu: `configs/ConfigOpMode.java`
-
-## Validation
-
-- Build with Gradle before concluding changes are done.
-- The root `build.gradle` uses Android Gradle Plugin `8.7.0`, and `TeamCode/build.gradle` also adds Lombok annotation processing plus Sloth load / runtime wiring, so build troubleshooting should include both files.
+- Keep annotations, lifecycle, and Driver Station labels in the entry class.
+- Keep hardware construction in `Constants` and profile factories.
+- Keep route composition in planner classes and mechanism work in the aggregate.
+- Verify these ownership boundaries before adding a new competition selection.

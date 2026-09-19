@@ -1,91 +1,116 @@
 ---
 name: pedro-localizers-and-pose-estimation
-description: Use this skill when asked to work on Pinpoint setup, custom localizers, pose estimation flow, or Pedro localization updates in this repository.
+description: Use this skill for Pinpoint setup, Pedro pose flow, and camera-assisted pose estimation.
 ---
 
 # Pedro Localizers and Pose Estimation
 
-Use this skill for localization work that is narrower than general autonomous/path construction.
+`RobotConstants.createFollower(HardwareMap)` is the single place a Pedro
+`Follower` is assembled. It builds three pieces from profile fields, then
+hands them to `FollowerBuilder`:
 
-## Upstream `~/.gradle` lookup
+- `FollowerConstants` from `DRIVE_CONSTANTS`, with
+  `.headingPIDFCoefficients(HEADING_PIDF_COEFFICIENTS.getAsPedroPathing())`
+  and `.centripetalScaling(CENTRIPETAL_SCALING)` applied on top.
+- `MecanumConstants` from `MAX_POWER`, the four drive motor names/directions,
+  and `X_VELOCITY`/`Y_VELOCITY`.
+- `PinpointConstants` from `PINPOINT_LOCALIZER_CONSTANTS`, with
+  `.distanceUnit(DistanceUnit.INCH)` and
+  `.encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)`
+  applied on top of the profile's pod offsets/encoder directions.
 
-If a localization behavior comes from Pedro or the FTC SDK rather than TeamCode,
-inspect `~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
-`build.dependencies.gradle`.
+`PathConstraints` comes from `T_VALUE_CONSTRAINT`, `TIMEOUT_CONSTRAINT`,
+`BRAKING_STRENGTH`, and `BRAKING_START`. Keep the Pinpoint hardware name, pod
+offsets (`forwardPodY`, `strafePodX`), encoder directions, and follower tuning
+in `RobotConfigurations` (`FirstRobot()` / `OldDECODERobotTesting()`), not
+scattered in op mode code.
 
-- `com.pedropathing/core` and `com.pedropathing/ftc` for Pedro localizer, pose,
-  and follower internals
-- `org.firstinspires.ftc/Hardware` and `org.firstinspires.ftc/RobotCore` for
-  SDK sensor and pose-support behavior
-- `org.firstinspires.ftc/Vision` if a pose estimate depends on camera or
-  AprilTag APIs
+## Pose update order
 
-## Relevant files
+`MecanumDrive.periodic()` does exactly two things in order: snapshot
+`lastPose = follower.getPose()`, then call `follower.update()`. `RobotDrive`
+(a `Mechanism`) invokes `mecanumDrive.periodic()` as the first statement of its
+own `periodic(State)`, before follower-mode bookkeeping or manual-drive input
+handling. `Robot.periodic(state)` calls every mechanism's `periodic(state)`
+once per aggregate cycle in class-name-sorted order — do not add a second,
+competing `follower.update()` call anywhere else when using the aggregate
+`Robot`/`RobotDrive` path.
 
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/configs/Blackboard.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/IvyAuton.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Red_TeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/opModes/variants/Blue_TeleOp.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedroPathing/custom/LimelightPinpointLocalizer.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/tests/PreseasonWebcamAuto.java`
+## Vision interaction
 
-## Current localization flow
+`Vision.periodic(State)` calls `updateRobotOrientation(currentHeading)` and
+`update()` to refresh cached Limelight/MT2 results; it does not write those
+results back into the Pedro pose during periodic (the `forceRelocalize(...)`
+call in `Vision.periodic` is commented out in source). `Robot.forceRelocalize()`
+is the deliberate entry point: it requires a currently valid AprilTag result,
+blends the MT2 pose with the existing follower pose using a fixed `0.3`
+vision-weight / `0.7` existing-pose-weight low-pass filter
+(`Pose.linearCombination(...)`), and writes the blended result with
+`drive.setPose(...)`. Call it only when appropriate (e.g. a known tag-visible
+moment), not every loop.
 
-1. The default follower path is `Constants.createFollower(...)` → `Constants.currentBot.createFollower(...)`. The `OldDECODERobotTesting` and `FirstRobot` profiles exist in `RobotConfigurations`; `Constants.currentBot` selects the profile that provides follower configuration.
-2. `RobotConstants.createFollower(...)` wires localization through `FollowerBuilder(...).pinpointLocalizer(PINPOINT_LOCALIZER_CONSTANTS)`.
-3. FirstRobot explicitly configures Pinpoint's hardware name, forward-pod Y
-   offset, strafe-pod X offset, and both encoder directions. The follower
-   factory supplies the shared inch unit and GoBILDA 4-bar pod resolution.
-   These Pinpoint values are covered; FirstRobot's drive-tuning values remain
-   unconfigured.
-4. `library/robot/drivetrain/MecanumDrive` snapshots `follower.getPose()` into static `lastPose` and then calls `follower.update()` inside `periodic()`, while `RobotDrive` is the profile-managed mechanism that owns the public teleop-facing drive behavior.
-5. Shared autonomous-to-teleop pose handoff happens when
-   `opModes/IvyAuton.java` calls `Robot.stop()` in autonomous mode. Robot
-   stores a velocity-compensated end pose and the State alliance in
-   `Blackboard`; `variants/Red_TeleOp.java` / `Blue_TeleOp.java` read the pose
-   back if it is not `(0,0,0)`.
-6. `LimelightPinpointLocalizer` exists as a custom fusion localizer, is marked `@Deprecated`, and is not used by the default follower factory.
-7. `tests/PreseasonWebcamAuto.java` keeps the normal follower and consumes
-   Vision color results separately; it does not replace the default localizer.
+`pedroPathing/custom/LimelightPinpointLocalizer` is a separate, `@Deprecated`
+`Localizer` implementation. It delegates almost every `Localizer` method
+(`getPose`, `getVelocity`, `getVelocityVector`, `setStartPose`, `setPose`,
+`getTotalHeading`, the multiplier getters, `resetIMU`, `getIMUHeading`,
+`isNAN`) straight through to an internal `PinpointLocalizer`; only its
+`update()` differs — it calls `pinpoint.update()`, then tries to read a fresh
+Limelight MT2 botpose and overwrite the Pinpoint pose with it directly (no
+blending), swallowing any exception silently. It is never constructed by
+`RobotConstants.createFollower(...)`, so it is inert unless a follower is
+rewired to use it in place of the plain `PinpointLocalizer`.
 
-## Configuration split to preserve
+## Alliance-aware pose selection and handoff
 
-- Keep drivetrain names, motor directions, follower tuning, and Pinpoint constants in `RobotConstants` / `RobotConfigurations`.
-- Keep non-drive subsystem behavior out of the robot-profile layer unless it truly varies by robot profile.
-- If localization work also touches camera behavior, use the profile-managed
-  `Vision` mechanism through `RobotConstants.createMechanism(...)`.
+`pedroPathing/AlliancePoses` stores a mirrored `redAlliancePose`/
+`blueAlliancePose` pair and an internal `AllianceColor color` (defaults `RED`);
+`pose()` returns `Red()` or `Blue()` (each a defensive `.copy()`) based on the
+current color, and `setAlliance(...)` mutates that color. `Robot`'s
+constructor reads `Blackboard.Caption.ALLIANCE` (defaulting to `RED` if unset)
+and calls `Common.init(color)`, which is how planner poses such as
+`Common.park` and route `AlliancePoses` fields become alliance-correct before
+any mechanism periodic runs. Autonomous pose persistence itself is owned by
+`Robot.saveEndVals()` (see `opmode-variants-and-pose-handoff`); teleop simply
+consumes the resulting Blackboard pose/alliance at startup.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles use explicit mechanism
-sets. Localization changes that use `Constants.createVision(...)` must verify
-that `Vision` is registered in the selected profile before calling its helper.
+## Encoder resolution and distance units are forced, not profile-chosen
 
-## Rules
+`RobotConstants.createFollower(...)` always applies
+`.distanceUnit(DistanceUnit.INCH)` and
+`.encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)`
+on top of whatever `PinpointConstants` a profile supplies — a profile can
+still override hardware name, pod offsets, and encoder directions, but cannot
+change distance unit or pod type through `RobotConfigurations` alone; that
+would require editing `createFollower(...)` itself. Keep this in mind before
+documenting a profile as using different Pinpoint pods.
 
-- Keep Pinpoint hardware naming and localizer configuration in `RobotConstants` / `RobotConfigurations`.
-- When changing fusion math, keep coordinate-system conversion explicit.
-- Do not add multiple competing pose-update loops for the same follower.
-- If a task needs Limelight color detection at the same time as following, follow the current repo pattern: keep the follower on Pinpoint and consume Limelight results separately unless the fusion plan is intentionally revisited.
-- If you change auto-to-teleop pose handoff behavior, update both the writer (`IvyAuton.stop()`) and the readers (`Red_TeleOp` / `Blue_TeleOp`).
-- `Vision.periodic(...)` refreshes pose candidates but never applies them.
-  Call `Robot.forceRelocalize()` explicitly only when the valid MT2 pose should
-  replace the drive localizer.
+## Standalone IMU vs. follower heading
 
-## Things to watch
+A plain `IMU` device (`Constants.createIMU(hardwareMap)`) exists separately
+from the Pinpoint-backed follower heading and is only wired into standalone
+hardware test op modes (`tests/LLTester`, `tests/MTeleWIntakeTest`,
+`tests/FieldCentricMecanumTeleOp`, `tests/MecanumTeleOp`,
+`tests/ftcSdk/IMUTest`) — none of `Robot`, `RobotDrive`, or `MecanumDrive`
+construct or read it. Any change to `IMU_LOGO_FACING_DIRECTION`/
+`IMU_USB_FACING_DIRECTION` in `RobotConstants` therefore affects only those
+standalone tests, not the Pedro follower's pose estimate.
 
-- `LimelightPinpointLocalizer.update()` first updates Pinpoint, then pushes Pinpoint heading into `limelight.updateRobotOrientation(...)`, then tries to replace pose from `getBotpose_MT2()`.
-- The fusion localizer converts Limelight data through FTC coordinates before storing the result back into Pedro coordinates.
-- The fusion class swallows exceptions, so missing or invalid Limelight data is treated as a normal condition.
-- Changes to `LimelightPinpointLocalizer` do not affect `Constants.createFollower(...)` unless you also rewire `RobotConstants.createFollower(...)`.
+## Quick reference: who owns each localization concern
 
-## Good edit targets
+- Pinpoint hardware wiring (name, pod offsets, encoder directions): profile
+  builders in `RobotConfigurations`.
+- Encoder resolution / distance unit (forced to `goBILDA_4_BAR_POD` / inches):
+  `RobotConstants.createFollower(...)`.
+- Per-loop pose update: `MecanumDrive.periodic()` -> `follower.update()`,
+  driven by `RobotDrive.periodic(State)` inside `Robot.periodic(state)`.
+- One-shot vision correction: `Vision.forceRelocalize(RobotDrive)` via
+  `Robot.forceRelocalize()`.
+- Cross-op-mode pose persistence: `Robot.saveEndVals()` writing
+  `Blackboard.Caption.POSE`/`ALLIANCE`.
+- Deprecated, unused-by-default alternative localizer:
+  `pedroPathing/custom/LimelightPinpointLocalizer`.
 
-- Pinpoint geometry or profile selection: `RobotConfigurations.java` / `RobotConstants.java`
-- Default follower wiring: `RobotConstants.createFollower(...)`
-- Custom fusion logic: `LimelightPinpointLocalizer.java`
-- Shared pose handoff behavior: `IvyAuton.java`, `Blackboard.java`, `Red_TeleOp.java`, `Blue_TeleOp.java`
-- Raw Limelight-follow integration tests: `tests/PreseasonWebcamAuto.java`
+Treat any change to localization behavior as touching at least two of these
+layers (e.g. a new blend ratio touches `Vision.forceRelocalize`, while a new
+pod offset touches `RobotConfigurations`); update both the code and this
+guide together.

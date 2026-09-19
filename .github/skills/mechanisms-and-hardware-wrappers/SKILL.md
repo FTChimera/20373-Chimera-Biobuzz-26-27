@@ -1,144 +1,100 @@
 ---
 name: mechanisms-and-hardware-wrappers
-description: Use this skill when asked to add or modify TeamCode wrappers, hardware factories, or subsystem classes under `library/hardware` or `mechanisms`.
+description: Use this skill for profile-managed mechanisms, reusable wrappers, and custom FTC hardware devices.
 ---
 
 # Mechanisms and Hardware Wrappers
 
-Use this skill when extending the team’s abstraction layers instead of writing raw FTC SDK calls directly in op modes.
+## Profile-managed contract
 
-This includes both:
+`mechanisms/Mechanism.java` is an abstract base:
 
-- profile-managed wrappers and subsystems built around `Mechanism`
-- custom SDK-registerable hardware under `library/hardware/hardwareDevice/`
+```java
+public abstract class Mechanism {
+    public interface Params<T extends Params<T>> {
+        T copy();
+        T updateFromBot(RobotConstants bot);
+    }
+    protected HardwareMap hardwareMap;
+    protected RobotConstants bot;
+    public Mechanism(HardwareMap map, RobotConstants bot) { ... }
+    protected <P extends Params<P>> P resolveParams(Class<? extends Mechanism> mechanismClass, P defaultParams) {
+        return bot.getMechanismParams(mechanismClass, defaultParams).updateFromBot(bot);
+    }
+    public abstract void stop();
+    public abstract void periodic(State robotState);
+}
+```
 
-## Upstream `~/.gradle` lookup
+A profile-managed subsystem extends `Mechanism`, has a
+`(HardwareMap, RobotConstants)` constructor (required by
+`RobotConstants.createMechanism(...)`, which finds it via reflection), resolves
+any nested `Params` implementation through `resolveParams(...)` so a profile
+override is copied in, and implements both `periodic(State)` and `stop()` —
+both are abstract, so a mechanism cannot compile without either one.
 
-If a wrapper mirrors dependency behavior instead of pure TeamCode logic, inspect
-`~/.gradle/caches/modules-2/files-2.1/` using the version pinned in
-`build.dependencies.gradle`.
+## Registration and aggregation
 
-- `org.firstinspires.ftc/RobotCore` and `org.firstinspires.ftc/Hardware` for
-  FTC SDK device and controller behavior
-- `org.firstinspires.ftc/Vision` when wrappers touch webcam or vision APIs
-- `com.bylazar/fullpanels` and related `com.bylazar/...` modules for
-  panels-related wrapper behavior
-- `com.pedropathing/ftc` when a wrapper interacts with Pedro-managed motion
+Register a mechanism class with `RobotConstants.addMechanism(Class, params)` or
+the drivetrain-specific `.configureDriveMechanisms()` helper (both live on
+`RobotConstants`, used fluently from `RobotConfigurations` profile builders). A
+class only becomes constructible through `createMechanism(...)` once its
+`Class` is present in `RobotConstants.Mechanisms`; otherwise both
+`createMechanism(...)` and `Constants.assertHasMechanism(...)` throw.
 
-## Relevant files
+`Robot` (itself a `Mechanism`) constructs every registered class in
+`bot.Mechanisms` (sorted by class name) during its constructor, calls every
+mechanism's `periodic(state)` during `Robot.periodic(state)`, and calls every
+mechanism's `stop()` during `Robot.stop(...)` / `stopAllSubsystems()`. Look
+mechanisms up with `Robot.get(Class)` (nullable), `Robot.require(Class)`
+(throws `IllegalStateException` if missing), or the typed convenience methods
+`getDrive()/requireDrive()`, `getIntake()/requireIntake()`,
+`getVision()/requireVision()`. Use `Constants.create...(...)` factories or the
+aggregate `Robot`, not a direct `new SomeMechanism(...)` constructor, in op
+mode code.
 
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/Constants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Direction.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConstants.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/RobotConfigurations.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/robot/drivetrain/MecanumDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Mechanism.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Intake.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/RobotDrive.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/mechanisms/Robot.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/actuators/Motor.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RevPotentiometer.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/SlidesMotor.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/hardwareDevice/RGBIndicator.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/Limelight.java`
-- `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/library/hardware/webcam/LogitechWebcam.java`
+## Current mechanisms
 
-## Design intent in this repo
+- `RobotDrive`: wraps `MecanumDrive`/`Follower`, tracks a `FollowerMode`
+  (`MANUAL`, `FOLLOWING`, `HOLDING`, `TURNING`), and exposes
+  `followPath(...)`, `holdPoint(...)`, `turn(...)`/`turnTo(...)`, and manual
+  teleop drive. Its `periodic(State)` reads `ROBOT_DRIVE_PARAMS.TRANSLATION_STICK`
+  /`ROTATION_STICK`/`ZERO_HEADING_BUTTON` from `GpBindings` only in `TELEOP`.
+- `Intake`: trigger-controlled mechanism. `INTAKE_PARAMS` binds
+  `FORWARD_COMMAND`/`REVERSE_COMMAND` (default `Trigger.RIGHT`/`Trigger.LEFT`),
+  and `updateFromBot(bot)` disables itself (`ISBEINGUSED = false`) when
+  `Intake.class` is not in the profile's `Mechanisms` set. Exposes both direct
+  methods (`FullPower()`, `HalfPower()`, `ReverseFullPower()`, `Stop()`) and Ivy
+  `Command` factories (`fullPower()`, `reverseFullPower()`, `stopCmd()`,
+  `setPowerCommand(Supplier<Double>)`).
+- `Vision`: Limelight pipelines and explicit relocalization support (see
+  `limelight-wrapper-and-pipelines`).
+- `Shooter`: flywheel scaffold. Its `SHOOTER_PARAMS.updateFromBot(...)` returns
+  `null` (a latent bug if a future caller relies on it), and it optionally
+  wraps a `DoubleCompositeController` (bang-bang + PIDF switch) built from
+  `DoubleCompositeConstants` when `usingVelocityController` is set. Its
+  `updateFlywheel(...)` switch over `ShooterMode` intentionally falls through
+  `CRUISING` into `SPINNING_UP` (no `break`), so both branches call
+  `flywheel.setVelocity(...)` back-to-back — treat as scaffold logic, not tuned
+  behavior.
+- `FieldUpdates`: game-state update scaffold. Both `stop()` and `periodic(State)`
+  are empty bodies, and `getGoalPose()` unconditionally returns `null` — its
+  goal-pose logic is not yet implemented.
 
-1. Low-level device access belongs in wrappers such as `Motor`, `Limelight`, or `LogitechWebcam`.
-2. Reusable subsystems and high-level wrappers share the `Mechanism` base class so they all receive `HardwareMap` and the active `RobotConstants` profile the same way.
-3. Profile-controlled creation lives in `RobotConstants.createMechanism(...)`, with `Constants.create...(...)` acting as a convenience surface for common callers.
-4. `Constants` exposes dedicated helpers for common mechanisms/wrappers
-   (`createDrive`, `createIntake`, `createVision`, `createWebcam`)
-   plus the aggregate `createRobot(...)` helper and a generic
-   `createMechanism(...)` fallback.
-5. Op modes should orchestrate mechanisms, not become the main place for hardware-map lookups, profile checks, or reflection-free one-off construction code.
+`Shooter`, `FieldUpdates`, and their supporting `HiveState`/`ShotSolver` model
+must be registered in a robot profile (they are not in `FirstRobot()` today)
+before any `Robot.get/require` lookup can use them.
 
-The `OldDECODERobotTesting` and `FirstRobot` profiles exist. Their mechanism
-sets are explicit profile configuration: `configureDriveMechanisms()` registers
-`RobotDrive`, and optional mechanisms need their own `.addMechanism(...)`
-entries. `Constants.assertHasMechanism(...)` runs before construction, so code
-that supports multiple profiles must verify the requested class is registered.
+## Direct SDK devices vs. mechanisms
 
-There is also a lower layer for custom FTC devices:
+`library/hardware/hardwareDevice/{SlidesMotor,RevPotentiometer,RGBIndicator}`
+are plain FTC device wrappers meant for direct `hardwareMap.get(...)` /
+`new SlidesMotor(hardwareMap, name)` usage — they are not `Mechanism`
+subclasses and are not aggregated by `Robot`. The former
+`library/hardware/leds/RGBIndicator` location is now an empty directory; the
+class lives only under `hardwareDevice/` today.
 
-6. If a class is meant to be selectable via the FTC robot configuration UI with `hardwareMap.get(CustomType.class, ...)`, it belongs under `library/hardware/hardwareDevice/` and should implement or extend FTC `HardwareDevice` infrastructure directly.
-
-## Required pattern for new mechanisms
-
-When asked to create a new mechanism, follow this repo style:
-
-1. Define the mechanism or wrapper class under `mechanisms/` or the appropriate `library/hardware/...` package.
-2. Have it extend `Mechanism` if it participates in the robot profile / subsystem creation flow.
-3. Give it a constructor shaped like `new NewMechanism(HardwareMap hardwareMap, RobotConstants bot)` and call `super(hardwareMap, bot)`.
-4. Use `bot` for robot-profile state such as hardware names, directions, feature enablement, or follower compatibility.
-5. Register the class in each relevant robot preset with `.addMechanism(NewMechanism.class)` or, for normal drive-stack behavior, through `configureDriveMechanisms()`.
-6. Give it a builder-style nested params type that implements `Mechanism.Params<...>` when the mechanism has local configuration, and resolve that config through `Mechanism.resolveParams(...)`.
-7. Implement `periodic(State state, RobotMode robotMode)` required by
-   `Mechanism`; use a real per-loop update when the mechanism has one,
-   otherwise keep the no-op implementation explicit. Autonomous mechanisms
-   must not consume teleop bindings.
-8. Instantiate it through `RobotConstants.createMechanism(...)`, usually behind a small helper like `Constants.createNewMechanism(hardwareMap)` if higher-level code needs one.
-9. If the mechanism can be disabled by profile selection, determine that before touching hardware.
-10. Have op modes use the existing helper or `currentBot.createMechanism(...)` rather than constructing the class directly.
-
-Why: the repo’s uniformity now comes from the shared `Mechanism` base class, profile registration with `addMechanism(...)`, and one reflection-based factory path in `RobotConstants.createMechanism(...)`.
-
-## Existing patterns to reuse
-
-- `Intake` extends `Mechanism`, owns a builder-style `INTAKE_PARAMS` helper, wraps the intake `Motor`, and now also performs raw `SlidesMotor` setup from its nested slides params without turning the slides into a separate profile-managed mechanism.
-- `Mechanism` requires `periodic(State, RobotMode)`. `State` carries the
-  optional `GpBindings`, current drive, lifecycle helper, alliance, and mode;
-  its one-argument bridge remains only for callers that can derive the mode.
-- `Motor` is a low-level `DcMotorEx` wrapper that now implements `HardwareDevice`, and it also exposes helpers like `reverse()` and `getDirection()` that current drivetrain/intake direction tests rely on.
-- `Motor.setDirection(Direction)` is the shared path for repo-level motor direction intent, with conversion to FTC SDK direction hidden inside the wrapper.
-- `Limelight` and `LogitechWebcam` are standalone camera controllers with
-  builder-style params. They are created through their `Constants` helpers or
-  directly with explicit params, not through the mechanism factory.
-- `SlidesMotor` is a custom `DcMotorImplEx`-based hardware device intended for direct `hardwareMap.get(...)` usage in SDK-style tests or other raw-device flows. Its `initialize(min, max)`, absolute positions, and percentages validate finite/in-range requests before driving hardware.
-- `RevPotentiometer` is a proof-of-concept custom analog sensor device that is meant to be fetched directly from `hardwareMap`.
-- `library.hardware.hardwareDevice.RGBIndicator` is the SDK-registerable RGB indicator; fetch it directly from `HardwareMap` in SDK-device validation code.
-- `LogitechWebcam` is a deprecated standalone controller retained only for existing callers. New code should use the profile-managed `Vision` mechanism.
-- `library/robot/drivetrain/MecanumDrive` is the reusable drive helper under the public mechanism layer; it owns both follower-backed drive behavior and the fallback manual-motor path used when `USE_FOLLOWER_DRIVE` is false.
-- `RobotDrive` is the profile-managed `Mechanism` that owns nested drive params, constructs the `MecanumDrive` helper from the active profile, and turns `GpBindings` into teleop drive behavior.
-- `Robot` is the aggregate wrapper over every class in `bot.Mechanisms`; it
-  instantiates the current profile-managed mechanism set, exposes typed
-  lookup helpers, owns an immutable `RobotMode`, and fans out
-  `periodic(State, RobotMode)` calls. Call `start()` before periodic updates
-  and `stop()` when the lifecycle ends.
-- `RobotConstants` now stores per-mechanism params overrides through `mechanismParams(...)` / `getMechanismParams(...)`, so builder-style nested params can vary by robot profile without moving all subsystem data into the robot profile class.
-- Profile params supplied through `mechanismParams(...)` do not make a class factory-eligible; the profile selected by `Constants.currentBot` must also register it with `addMechanism(...)`.
-
-## Rules
-
-- Add new reusable hardware access under `library/hardware/...` first.
-- Add custom FTC robot-configuration devices under `library/hardware/hardwareDevice/...` when the goal is `hardwareMap.get(CustomType.class, ...)` support.
-- Add robot behavior under `mechanisms/...` second.
-- For a profile-managed subsystem, add the `Mechanism` subclass, register it in `RobotConfigurations`, and expose a `Constants.create...(...)` helper when it should be easy to consume.
-- If the wrapper is optional, do not fetch hardware until its params or profile say it is in use.
-- Preserve chainable convenience methods where a wrapper already uses them, as `Motor` does.
-- If a wrapper or profile needs reusable drive direction state, prefer the shared `Direction` enum instead of pushing `DcMotorSimple.Direction` through higher-level config.
-- If a mechanism already exposes Ivy command helpers, prefer extending that API instead of duplicating inline commands in op modes.
-- Make sure any class created through `RobotConstants.createMechanism(...)` actually has the required `(HardwareMap, RobotConstants)` constructor.
-
-## Good edits for common tasks
-
-- New motor behavior like brake/float/PIDF convenience: `Motor.java`
-- New intake-level operation or params field: `Intake.java`
-- New robot-profile registration or creation eligibility: `RobotConfigurations.java` / `RobotConstants.java`
-- New top-level subsystem convenience helper: `Constants.java`
-- New device-level LED indicator behavior: `hardwareDevice/RGBIndicator.java`
-- New custom FTC device registration or controller/port behavior: `library/hardware/hardwareDevice/...`
-- New slides raw-device behavior: `SlidesMotor.java`
-- New drive behavior or teleop helper: `library/robot/drivetrain/MecanumDrive.java` or `mechanisms/RobotDrive.java`
-- New camera wrapper behavior: `Limelight.java` or `LogitechWebcam.java`
-
-## Things to avoid
-
-- Bypassing `Motor` with raw `DcMotorEx` in an op mode unless the wrapper itself needs improvement.
-- Bypassing `Limelight` with raw `Limelight3A` calls all over the codebase.
-- Instantiating the same mechanism differently in every op mode.
-- Forgetting to add a new mechanism class to `RobotConfigurations`; `RobotConstants.createMechanism(...)` intentionally refuses to create classes that are not registered in the active profile.
-- Forgetting that `Constants.assertHasMechanism(...)` now enforces profile registration on the convenience-factory path too.
-- Treating the device-level `library.hardware.hardwareDevice.RGBIndicator` as a profile-managed mechanism instead of fetching it directly from `HardwareMap`.
-- Putting a custom FTC device in the `Mechanism` factory flow when it is really meant to be used directly through `hardwareMap.get(...)`.
+Keep low-level motor behavior in `Motor` (`library/hardware/actuators`),
+profile data in `RobotConstants`, and mechanism behavior in the owning
+mechanism class. `LogitechWebcam` is `@Deprecated`; new camera features belong
+in `Vision`.

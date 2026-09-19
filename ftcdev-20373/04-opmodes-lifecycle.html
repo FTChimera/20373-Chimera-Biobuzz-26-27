@@ -1,53 +1,105 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OpModes & Lifecycle | 20373 TeamCode</title><link rel="stylesheet" href="styles.css"><script defer src="guide.js"></script></head>
-<body><header class="site-header"><a class="brand" href="index.html"><img class="brand-logo" src="../20373logo.png" alt="20373 RMS Chimera logo"><span>RMS Chimera<br>TeamCode Guide</span></a><a class="header-link" href="index.html">All chapters</a></header>
-<div class="layout"><nav class="toc"><h2>Execution</h2><a href="#choose">Choose lifecycle type</a><a href="#linear">LinearOpMode pattern</a><a href="#iterative">Iterative pattern</a><a href="#variants">Base classes & variants</a><a href="#blackboard">Config & handoff</a></nav>
-<main class="article"><p class="eyebrow">04 / Execution</p><h1>One OpMode owns the FTC lifecycle.</h1><p class="lead">FTC code must choose a lifecycle shape before it chooses control logic. This repo uses both <code>LinearOpMode</code> and iterative <code>OpMode</code>; both are valid, but their initialization, active loop, and cleanup points are different.</p>
-<section id="first-call"><h2>Call a shared base by writing a small variant</h2><p>For an alliance teleop, callers generally do not copy the entire control loop. They extend the repo base and supply only the selected start pose. The existing red wrapper follows this pattern.</p><pre>@TeleOp(name = "My Red TeleOp", group = "0: TeleOp")
-public class MyRedTeleOp extends TeleOp {
-    public MyRedTeleOp() {
-        super(AllianceColor.RED);
-    }
-
-    @Override protected Pose getStartingPose() {
-        return Constants.RED_DEFAULT_START_POSE.copy();
-    }
-}</pre><p>For pre-start preferences, select <code>ConfigOpMode</code> on the Driver Station, choose the D-pad item, then start it to persist Blackboard state. A match op mode reads that state; it does not reimplement the menu.</p></section>
-<section id="choose"><h2>Choose the lifecycle that matches the control flow</h2><table><tr><th>Use</th><th>When it fits</th><th>Current repository examples</th></tr><tr><td><code>LinearOpMode</code></td><td>A clear sequential setup, <code>waitForStart()</code>, and active loop fits naturally.</td><td><code>opModes/TeleOp.java</code>, <code>tests/PlannerIntakeVisionAuto.java</code>, factory-test base flows</td></tr><tr><td>Iterative <code>OpMode</code></td><td>The operation benefits from distinct <code>init()</code>, <code>start()</code>, <code>loop()</code>, and <code>stop()</code> hooks.</td><td><code>opModes/IvyAuton.java</code>, <code>configs/ConfigOpMode.java</code></td></tr></table><div class="warning"><span class="label">Lifecycle rule</span>Never use <code>waitForStart()</code> inside an iterative <code>OpMode</code>. Conversely, do not turn a LinearOpMode into an uncontrolled busy loop; use <code>opModeIsActive()</code> as the active condition.</div></section>
-<section id="linear"><h2>The shared LinearOpMode teleop pattern</h2><pre>public void runOpMode() {
-    GamepadEx driver = new GamepadEx(gamepad1);
-    State state = new State(driver.result(), RobotMode.TELEOP);
-    robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
-    drive = robot.requireDrive();
-    intake = robot.get(Intake.class);
-
-    telemetry.addData("Status", "Initialized");
-    telemetry.update();
-    waitForStart();
-
-    robot.start();
-    while (opModeIsActive()) {
-        driver.update();
-        robot.periodic(state);
-        telemetry.addData("Pose", drive.getPose());
-        telemetry.update();
-    }
-    robot.stop();
-}</pre><p>That sequence gives input edge detection a single update point, makes required/optional mechanism behavior explicit, and preserves telemetry ownership in the op mode.</p></section>
-<section id="iterative"><h2>The iterative autonomous pattern</h2><p><code>IvyAuton</code> resets the scheduler and builds autonomous <code>Robot</code>, <code>State</code>, and <code>RobotIvyBuilder</code> resources in <code>init()</code>, starts the aggregate and schedules the sequence in <code>start()</code>, executes scheduler work in <code>loop()</code>, then lets <code>Robot.stop()</code> write pose handoff before resetting the scheduler.</p><pre>@Override public void init() {
-    Scheduler.reset();
-    robot = Constants.createRobot(hardwareMap, RobotMode.AUTONOMOUS);
-    commands = robot.build();
-    autonomousState = new State(RobotMode.AUTONOMOUS);
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Match Lifecycle | 20373 TeamCode</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" href="index.html">RMS Chimera · TeamCode Guide</a>
+    </header>
+    <main class="article">
+        <p class="eyebrow">04 / Execution</p>
+        <h1>Use the concrete match entry points that are in TeamCode/src now: <code>tele/TeleOp</code> and <code>autos/Garden8</code>.</h1>
+        <p class="lead">The current repo does not route match execution through deleted Ivy-specific base classes. TeleOp is a <code>LinearOpMode</code>; Garden8 is an iterative <code>OpMode</code> that owns scheduling, parking, and shutdown timing.</p>
+        <section>
+            <h2>What this chapter covers</h2>
+            <p>Use this page before changing code in the matching source areas.</p>
+            <ul>
+                <li><code>TeleOp</code> creates <code>DualGamepad</code>, <code>State(RobotMode.TELEOP)</code>, and a teleop <code>Robot</code>.</li>
+                <li><code>TeleOp</code> restores alliance and pose from Blackboard, sets a stick curve, starts teleop drive, then loops on <code>drivers.update()</code> and <code>robot.periodic(robotState)</code>.</li>
+                <li><code>Garden8</code> resets the Ivy scheduler in <code>init()</code>, builds a plan through <code>PlanBuilder</code>, then executes the scheduler inside <code>loop()</code>.</li>
+                <li>Nested alliance subclasses exist in both match entries and set Blackboard alliance before delegating to shared logic.</li>
+                <li><code>ConfigOpMode</code> is the runtime menu for Blackboard values such as alliance, driver preference, and starting pose.</li>
+                <li>Autonomous-to-teleop pose handoff is written by Robot shutdown, not by a second persistence helper in TeleOp.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Guide chapters</h2>
+            <ul>
+                <li><a href="01-start-here.html">01 · Start here</a></li>
+                <li><a href="02-profiles-factories.html">02 · Profiles</a></li>
+                <li><a href="03-mechanisms-hardware.html">03 · Mechanisms</a></li>
+                <li><a href="04-opmodes-lifecycle.html">04 · Lifecycle</a></li>
+                <li><a href="05-input-drive.html">05 · Input & drive</a></li>
+                <li><a href="06-autonomous-ivy.html">06 · Autonomous</a></li>
+                <li><a href="07-planners-vision.html">07 · Planning & vision</a></li>
+                <li><a href="08-localization-field.html">08 · Localization</a></li>
+                <li><a href="09-tests-tuning.html">09 · Validation</a></li>
+                <li><a href="10-library-math-simulation.html">10 · Library</a></li>
+            </ul>
+        </section>
+        <section>
+            <h2>TeleOp loop snapshot</h2>
+            <p>This shortened flow matches the current <code>TeleOp.java</code> implementation.</p>
+            <pre>
+DualGamepad drivers = new DualGamepad(gamepad1, gamepad2);
+State robotState = new State(RobotMode.TELEOP);
+robot = Constants.createRobot(hardwareMap, RobotMode.TELEOP);
+robot.setStartingPose(getStartingPoseAndSetAlliance());
+robot.startTeleOpDrive();
+waitForStart();
+robot.start();
+robot.startVision(Vision.Pipeline.APRIL_TAG);
+while (opModeIsActive()) {
+    drivers.update();
+    robot.periodic(robotState);
 }
-@Override public void start() {
-    robot.start();
-    Scheduler.schedule(commands.periodic(autonomousState));
-}
-@Override public void stop() {
-    robot.stop();
-    Scheduler.reset();
-}</pre><p>Do not casually add another follower update loop around this base. The shared lifecycle already owns it.</p></section>
-<section id="variants"><h2>Keep shared behavior in bases and selection in variants</h2><p>Shared competition code belongs in a base class under <code>opModes/</code>. A Driver Station-visible variant under <code>opModes/variants/</code> should be small: it supplies the alliance or path implementation and carries the FTC annotation. This reduces duplicate mechanism construction and keeps pose handoff consistent.</p><div class="source"><span class="label">Existing pattern</span><code>TeleOp</code> is a shared abstract LinearOpMode. <code>Blue_TeleOp</code> and <code>Red_TeleOp</code> are concrete wrappers that select an alliance-specific starting pose. <code>IvyAuton</code> is an abstract iterative base paired with an <code>IvyAuton_Paths</code> implementation.</div></section>
-<section id="blackboard"><h2>Configuration and pose handoff use Blackboard</h2><p><code>Blackboard</code> stores typed runtime values for <code>POSE</code>, <code>DRIVER</code>, and <code>ALLIANCE</code>. It is not the robot configuration profile. <code>ConfigOpMode</code> is an iterative pre-start menu: <code>init()</code> builds selectable actions, <code>init_loop()</code> handles D-pad navigation, and <code>loop()</code> stops after the driver starts the op mode.</p><div class="checklist"><span class="label">Before adding shared state</span><ul><li>Add a typed <code>Caption</code> and a sensible default.</li><li>Decide which lifecycle owner writes it and which concrete mode consumes it.</li><li>Handle default state versus a meaningful restored value explicitly. Teleop pose wrappers currently guard the zero pose before reuse.</li><li>Use the config menu for preferences; do not multiply one-action annotated configuration op modes.</li></ul></div></section>
-<nav class="pager"><a href="03-mechanisms-hardware.html">← Mechanisms & hardware</a><a href="05-input-drive.html">Input & drive →</a></nav></main></div><footer class="footer">Lifecycle guide · Keep initialization, loop work, and cleanup in the correct FTC phase.</footer></body></html>
+            </pre>
+        </section>
+        <section>
+            <h2>TeleOp details to keep accurate</h2>
+            <p>The main match teleop does a little more than start a drive loop.</p>
+            <ul>
+                <li><code>getStartingPoseAndSetAlliance()</code> first checks Blackboard for alliance and pose, then falls back to the default start pose constants.</li>
+                <li><code>robot.setDriveStickCurve(x -&gt; Math.signum(x) * x * 1.1)</code> is applied before start.</li>
+                <li><code>robotState.setGpBindings(drivers.result())</code> happens once before the active loop, while controller edge state is refreshed by <code>drivers.update()</code> each iteration.</li>
+                <li>The loop publishes telemetry for pose and intake power in addition to running the robot periodic cycle.</li>
+                <li><code>Red_Tele</code> and <code>Blue_Tele</code> only set Blackboard alliance and then call <code>super.runOpMode()</code>.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Garden8 details to keep accurate</h2>
+            <p>The autonomous entry owns its own iterative lifecycle instead of copying the teleop pattern.</p>
+            <ul>
+                <li><code>init()</code> calls <code>Scheduler.reset()</code>, constructs the robot, and schedules <code>startGardenPose(robot).shootPreloads().intakeGarden()</code>.</li>
+                <li><code>start()</code> only calls <code>robot.start()</code>.</li>
+                <li><code>loop()</code> runs <code>Scheduler.execute()</code>, then checks the autonomous time limit and park logic.</li>
+                <li>When the time limit is reached, Garden8 uses <code>robot.stop(false)</code>, waits for low velocity or a timeout, then calls <code>saveEndVals()</code> and stops the op mode.</li>
+                <li><code>stop()</code> still safeguards cleanup by calling <code>robot.stop(true)</code> when shutdown has not already started, then resets the scheduler.</li>
+            </ul>
+        </section>
+        <section>
+            <h2>Blackboard and lifecycle ownership</h2>
+            <p><code>ConfigOpMode</code> uses a selectable menu to write <code>Blackboard.Caption.ALLIANCE</code>, <code>DRIVER</code>, and <code>POSE</code>. Match entries consume those values rather than implementing their own configuration UI.</p>
+            <p>This split keeps setup decisions outside the match loop, while <code>Robot.saveEndVals()</code> remains the single owner of post-run pose and alliance persistence.</p>
+        </section>
+        <section>
+            <h2>Documentation shortcuts to avoid</h2>
+            <p>A few tempting summaries would be inaccurate for this source tree.</p>
+            <ul>
+                <li>Do not describe TeleOp as an iterative <code>OpMode</code>; it subclasses <code>LinearOpMode</code>.</li>
+                <li>Do not describe Garden8 as a deleted planner wrapper; it is the current autonomous entry class.</li>
+                <li>Do not imply a runtime profile picker for <code>currentBot</code>; the runtime menu only affects Blackboard state.</li>
+                <li>Do not move Robot lifecycle responsibility out of these entries when writing guide text.</li>
+            </ul>
+        </section>
+        <nav class="pager">
+            <a href="03-mechanisms-hardware.html">← Mechanisms</a>
+            <a href="05-input-drive.html">Input & drive →</a>
+        </nav>
+    </main>
+</body>
+</html>
