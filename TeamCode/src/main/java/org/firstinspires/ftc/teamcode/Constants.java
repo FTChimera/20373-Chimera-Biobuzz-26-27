@@ -22,7 +22,8 @@ import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 import java.util.Set;
 
 public class Constants {
-    /** https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html#coordinate-system
+    /** <a href="https://ftc-docs.firstinspires.org/en/latest/game_specific_resources/field_coordinate_system/field-coordinate-system.html#coordinate-system">OPEN</a>
+     * <a href="https://docs.limelightvision.io/docs/resources/downloads">...</a>
      * Look when game is released and change the constant todo */
     public static final CoordinateSystem FTC_COORDINATE_SYSTEM = InvertedFTCCoordinates.INSTANCE;
     public static final Pose RED_DEFAULT_START_POSE = new Pose(0, 0, 0);
