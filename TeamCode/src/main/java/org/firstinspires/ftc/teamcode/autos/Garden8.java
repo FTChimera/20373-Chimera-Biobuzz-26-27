@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.configs.Blackboard;
 import org.firstinspires.ftc.teamcode.library.AllianceColor;
 import org.firstinspires.ftc.teamcode.library.Timer;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
+import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 
@@ -34,6 +35,7 @@ public class Garden8 extends OpMode {
                 .shootPreloads()
                 .intakeGarden()
                 .schedule();
+        robot.build().periodic(new State(RobotMode.AUTONOMOUS)).schedule();
     }
     @Override public void start() {robot.start();}
     /**
@@ -75,14 +77,10 @@ public class Garden8 extends OpMode {
     }
     @Autonomous(name="Red Garden 8", group = Constants.COMPETITION_GROUP, preselectTeleOp = Constants.TELEOP_NAME)
     public static class redalliance extends Garden8 {
-        static {
-            setAllianceColor(AllianceColor.RED);
-        }
+        @Override public void init() {setAllianceColor(AllianceColor.RED);super.init();}
     }
     @Autonomous(name="Blue Garden 8", group = Constants.COMPETITION_GROUP, preselectTeleOp = Constants.TELEOP_NAME)
     public static class bluealliance extends Garden8 {
-        static {
-            setAllianceColor(AllianceColor.BLUE);
-        }
+        @Override public void init() {setAllianceColor(AllianceColor.BLUE);super.init();}
     }
 }
