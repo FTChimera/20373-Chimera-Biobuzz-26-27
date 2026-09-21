@@ -49,6 +49,11 @@ public class PedroPathingTeleOpTest extends OpMode {
     @Override
     public void loop() {
         driver.update();
+        //Stop automated following if the follower is done
+        if (driver.wasJustPressed(Button.B) || !follower.isBusy()) {
+            follower.startTeleopDrive();
+            automatedDrive = false;
+        }
         if (!automatedDrive) {
             //Make the last parameter false for field-centric
 
@@ -70,12 +75,6 @@ public class PedroPathingTeleOpTest extends OpMode {
         if (driver.wasJustPressed(Button.A)) {
             follower.followPath(pathChain.get());
             automatedDrive = true;
-        }
-
-        //Stop automated following if the follower is done
-        if (driver.wasJustPressed(Button.B)) {
-            follower.startTeleopDrive();
-            automatedDrive = false;
         }
 
         // Call this once per loop after any teleop/path command updates.
