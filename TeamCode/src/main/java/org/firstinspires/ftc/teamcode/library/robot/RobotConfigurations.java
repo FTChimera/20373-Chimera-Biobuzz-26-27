@@ -9,6 +9,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.library.hardware.actuators.Direction;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDrive;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
 /**
@@ -62,7 +63,12 @@ public class RobotConfigurations {
                 .headingPIDFCoefficients(0.067,0,0.05,0.01)
                 .centripetalScaling(0.003)
                 // MECHANISM USAGE
-                .configureDriveMechanisms()
+                .configureDriveMechanisms(new RobotDrive.ROBOT_DRIVE_PARAMS()
+                        .startTeleOpDriveOnInit(true)
+                        .defaultStickCurve(x->Math.copySign(x*x, x))
+                        .resetStickCurveOnInit(true) // this sets the stick curve: NEEDS to be on
+                        .updateFollowerOnInit(true)
+                )
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
                         .hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))

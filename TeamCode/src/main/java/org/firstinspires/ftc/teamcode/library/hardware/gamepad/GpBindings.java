@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.library.hardware.gamepad;
 
+import org.firstinspires.ftc.teamcode.library.Tuple;
+
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -140,6 +142,9 @@ public class GpBindings {
 
     public <T extends GpCommand> T getCommand(T command) {
         return getCommand(GamepadId.ONE, command);
+    }
+    public <T extends GpCommand> T getCommand(Tuple<T, GamepadId> tuple) {
+        return getCommand(tuple.getB(), tuple.getA());
     }
 
     @SuppressWarnings("unchecked")

@@ -166,8 +166,8 @@ public class Intake extends Mechanism {
         if (state.getGpBindings() == null) {
             return;
         }
-        GpCommand forwardCommand = state.gpBindings.getCommand(params.FORWARD_COMMAND);
-        GpCommand reverseCommand = state.gpBindings.getCommand(params.REVERSE_COMMAND);
+        GpCommand forwardCommand = state.getGpBindings().getCommand(params.FORWARD_COMMAND);
+        GpCommand reverseCommand = state.getGpBindings().getCommand(params.REVERSE_COMMAND);
         configureTriggerOutput(forwardCommand);
         configureTriggerOutput(reverseCommand);
         double power = params.STOP_POWER;

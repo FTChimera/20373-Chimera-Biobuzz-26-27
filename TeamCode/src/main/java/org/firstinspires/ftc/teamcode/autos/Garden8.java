@@ -22,6 +22,7 @@ public class Garden8 extends OpMode {
     Timer zeroVelocityTimer = new Timer(TimeUnit.SECONDS);
     double pastTime;
     Command plan;
+    boolean parked;
     /**
      * User-defined init method
      * <p>
@@ -61,8 +62,9 @@ public class Garden8 extends OpMode {
             }
         }
 
-        if (robot.shouldPark() || Scheduler.isRunning(plan)) {
+        if ((robot.shouldPark() || !Scheduler.isRunning(plan))&&!parked) {
             robot.moveToPark();
+            parked = true;
         }
     }
 

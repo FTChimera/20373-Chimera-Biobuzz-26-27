@@ -10,9 +10,9 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import java.util.Objects;
 
 public class State {
-    public GpBindings gpBindings;
-    public OpModeHelper opModeHelper;
-    public Robot robot;
+    private GpBindings gpBindings;
+    private OpModeHelper opModeHelper;
+    private Robot robot;
     private Tuple<AllianceColor, RobotMode> allianceColorAndRobotMode;
 
     public void setAllianceColor(AllianceColor allianceColor) {

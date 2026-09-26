@@ -9,6 +9,8 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.library.DriveVector;
+import org.firstinspires.ftc.teamcode.library.ShotSolver;
+import org.firstinspires.ftc.teamcode.library.Tuple;
 import org.firstinspires.ftc.teamcode.library.game.RobotMode;
 import org.firstinspires.ftc.teamcode.library.game.State;
 import org.firstinspires.ftc.teamcode.library.robot.drivetrain.MecanumDrive;
@@ -29,7 +31,7 @@ public class RobotDrive extends Mechanism {
         TURNING
     }
 
-    public static class ROBOT_DRIVE_PARAMS implements Mechanism.Params<ROBOT_DRIVE_PARAMS> {
+    public static class ROBOT_DRIVE_PARAMS implements Params<ROBOT_DRIVE_PARAMS> {
         public DoubleUnaryOperator DEFAULT_STICK_CURVE = DoubleUnaryOperator.identity();
         public boolean START_TELEOP_DRIVE_ON_INIT = true;
         public boolean RESET_STICK_CURVE_ON_INIT = true;
@@ -37,7 +39,7 @@ public class RobotDrive extends Mechanism {
         public double INITIAL_HEADING_OFFSET = 0;
         public Stick TRANSLATION_STICK = Stick.LEFT;
         public Stick ROTATION_STICK = Stick.RIGHT;
-        public Button ZERO_HEADING_BUTTON = Button.BACK;
+        public Tuple<Button, GpBindings.GamepadId> ZERO_HEADING_BUTTON = new Tuple<>(Button.BACK, GpBindings.GamepadId.ONE);
 
         public ROBOT_DRIVE_PARAMS() {}
 
@@ -87,8 +89,8 @@ public class RobotDrive extends Mechanism {
             return this;
         }
 
-        public ROBOT_DRIVE_PARAMS zeroHeadingButton(Button zeroHeadingButton) {
-            this.ZERO_HEADING_BUTTON = zeroHeadingButton;
+        public ROBOT_DRIVE_PARAMS zeroHeadingButton(Button zeroHeadingButton, GpBindings.GamepadId gamepadId) {
+            this.ZERO_HEADING_BUTTON = new Tuple<>(zeroHeadingButton, gamepadId);
             return this;
         }
 
@@ -106,12 +108,14 @@ public class RobotDrive extends Mechanism {
     public final ROBOT_DRIVE_PARAMS params;
     public final MecanumDrive mecanumDrive;
     private FollowerMode followerMode = FollowerMode.MANUAL;
+    private ShotSolver shotSolver; // used for auto alignment
     private boolean holdAtPathEnd;
 
     public RobotDrive(HardwareMap map, RobotConstants bot) {
         super(map, bot);
         params = resolveParams(RobotDrive.class, new ROBOT_DRIVE_PARAMS());
         mecanumDrive = new MecanumDrive(map, bot, params);
+        shotSolver = new ShotSolver();
     }
 
     @Override
@@ -138,12 +142,8 @@ public class RobotDrive extends Mechanism {
     }
 
     public void startTeleOpDrive() {
-        Follower follower = mecanumDrive.follower;
-        follower.setTeleOpDrive(0, 0, 0, false);
-        follower.startTeleOpDrive();
-        if (mecanumDrive.useManualDrive) {
-            mecanumDrive.startTeleOpDrive();
-        }
+        mecanumDrive.setTeleOpDrive(DriveVector.IDLE);
+        mecanumDrive.startTeleOpDrive();
         setManualMode();
     }
 
@@ -287,7 +287,7 @@ public class RobotDrive extends Mechanism {
     }
 
     public boolean isIdle() {
-        return !isBusy();
+        return !isBusy()&& followerMode != FollowerMode.HOLDING;
     }
 
     public boolean isTurning() {
@@ -307,7 +307,7 @@ public class RobotDrive extends Mechanism {
         double forward = translationStick == null ? 0 : translationStick.getY();
         double strafe = translationStick == null ? 0 : translationStick.getX();
         double rotate = rotationStick == null ? 0 : rotationStick.getX();
-        return new DriveVector(forward, strafe, rotate);
+        return new DriveVector(forward, strafe, rotate, getPose().getHeading());
     }
 
     @Override
@@ -320,11 +320,14 @@ public class RobotDrive extends Mechanism {
         if (state.getRobotMode() == RobotMode.TELEOP) {
             Button zeroHeadingButton = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);
             Button cameraRelocalization;
+            Button automatedIntakePath;
+            Button shootAndAutoAlign = state.getGpBindings().getCommand(params.ZERO_HEADING_BUTTON);
+
             DriveVector driveVector = getDriveVector(state.getGpBindings());
             if (followerMode != FollowerMode.MANUAL && isBusy()) {
                 return;
             } else if (followerMode != FollowerMode.MANUAL && isIdle()) {
-                startTeleOpDrive();
+                enterManualMode();
             }
             if (zeroHeadingButton != null && zeroHeadingButton.isPressed()) {
                 zeroHeadingOffset();
@@ -333,6 +336,16 @@ public class RobotDrive extends Mechanism {
 
             if (state.getRobot().getVision().getLatestResult().getFiducialResults() != null) {
 
+            }
+
+            if (shootAndAutoAlign.isPressed()) {
+                ShotSolver.ShotContext context = ShotSolver.ShotContext.Builder.create().
+                        pose(state.getRobot().getPoseCompensatedForVelocity())//.
+                        //state(state.getRobot().getFieldUpdates().getCurrentHiveState())
+                        .c;
+                turn(shotSolver.calculateShot(context).getA());
+            } else if (shootAndAutoAlign.wasJustReleased()) {
+                enterManualMode(); // if no other automation
             }
         }
     }
