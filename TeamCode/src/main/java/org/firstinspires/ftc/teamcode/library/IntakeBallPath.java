@@ -9,7 +9,7 @@ import com.pedropathing.paths.PathChain;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 
 import org.firstinspires.ftc.teamcode.Constants;
-import org.firstinspires.ftc.teamcode.library.game.Pollen;
+import org.firstinspires.ftc.teamcode.library.game.Ball;
 import org.firstinspires.ftc.teamcode.library.math.MathUtils;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 
@@ -156,7 +156,7 @@ public final class IntakeBallPath {
             double lensHeightInches,
             double mountAngleDegrees
     ) {
-        double heightDelta = Pollen.RADIUS - lensHeightInches;
+        double heightDelta = Ball.POLLEN.e.getRadius() - lensHeightInches;
         double angleRadians = MathUtils.units.toRadians(mountAngleDegrees + targetYDegrees);
         double tangent = Math.tan(angleRadians);
 
