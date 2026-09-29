@@ -23,8 +23,12 @@ public class Intake extends Mechanism {
         public double HALF_POWER = 0.5;
         public double REVERSE_FULL_POWER = -1.0;
         public double STOP_POWER = 0.0;
-        public String HARDWAREMAP_NAME = "intake";
+        public String HARDWAREMAP_NAME_MAIN = "intakeMain";
+        public String HARDWAREMAP_NAME_SIDELEFT = "intakeLeft";
+        public String HARDWAREMAP_NAME_SIDERIGHT = "intakeRight";
         public Direction INTAKE_MOTOR_DIRECTION = Direction.REVERSE;
+        public Direction INTAKE_SIDELEFT_DIRECTION = Direction.FORWARD;
+        public Direction INTAKE_SIDERIGHT_DIRECTION = Direction.REVERSE;
         public GpCommand FORWARD_COMMAND = Trigger.RIGHT;
         public GpCommand REVERSE_COMMAND = Trigger.LEFT;
         public boolean ISBEINGUSED = true;
@@ -34,7 +38,9 @@ public class Intake extends Mechanism {
             HALF_POWER = other.HALF_POWER;
             REVERSE_FULL_POWER = other.REVERSE_FULL_POWER;
             STOP_POWER = other.STOP_POWER;
-            HARDWAREMAP_NAME = other.HARDWAREMAP_NAME;
+            HARDWAREMAP_NAME_MAIN = other.HARDWAREMAP_NAME_MAIN;
+            HARDWAREMAP_NAME_SIDELEFT = other.HARDWAREMAP_NAME_SIDELEFT;
+            HARDWAREMAP_NAME_SIDERIGHT = other.HARDWAREMAP_NAME_SIDERIGHT;
             INTAKE_MOTOR_DIRECTION = other.INTAKE_MOTOR_DIRECTION;
             FORWARD_COMMAND = other.FORWARD_COMMAND;
             REVERSE_COMMAND = other.REVERSE_COMMAND;
@@ -56,8 +62,10 @@ public class Intake extends Mechanism {
             this.STOP_POWER = stopPower;
             return this;
         }
-        public INTAKE_PARAMS hardwareMapName(String hardwareMapName) {
-            this.HARDWAREMAP_NAME = hardwareMapName;
+        public INTAKE_PARAMS hardwareMapName(String hardwareMapNameMain, String sideLeft, String sideRight) {
+            this.HARDWAREMAP_NAME_MAIN = hardwareMapNameMain;
+            this.HARDWAREMAP_NAME_SIDERIGHT = sideRight;
+            this.HARDWAREMAP_NAME_SIDELEFT = sideLeft;
             return this;
         }
         public INTAKE_PARAMS intakeMotorDirection(Direction intakeMotorDirection) {
@@ -79,7 +87,7 @@ public class Intake extends Mechanism {
         @Override
         public INTAKE_PARAMS updateFromBot(RobotConstants bot) {
             if (!ISBEINGUSED) return this;
-            HARDWAREMAP_NAME = bot.Mechanisms.contains(Intake.class) ? HARDWAREMAP_NAME : "";
+            HARDWAREMAP_NAME_MAIN = bot.Mechanisms.contains(Intake.class) ? HARDWAREMAP_NAME_MAIN : "";
             ISBEINGUSED = bot.Mechanisms.contains(Intake.class);
             return this;
         }
@@ -96,7 +104,7 @@ public class Intake extends Mechanism {
         if (!params.ISBEINGUSED) {
             return;
         }
-        this.Intake_Motor = new Motor(map, params.HARDWAREMAP_NAME);
+        this.Intake_Motor = new Motor(map, params.HARDWAREMAP_NAME_MAIN);
         Intake_Motor.setDirection(params.INTAKE_MOTOR_DIRECTION);
         Stop();
     }

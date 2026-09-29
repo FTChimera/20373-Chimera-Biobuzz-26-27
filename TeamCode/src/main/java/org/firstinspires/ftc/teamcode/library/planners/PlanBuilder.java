@@ -36,7 +36,7 @@ public class PlanBuilder {
         } else if (startPosition==Positions.LOADING_START) {
             return null;
         }
-        return new Utils.StartPose(robot, Constants.RED_DEFAULT_START_POSE);
+        return new Utils.StartPose(robot, robot.getAllianceColor().isRed()?Constants.RED_DEFAULT_START_POSE:Constants.BLUE_DEFAULT_START_POSE);
     }
 
     public PlanBuilder add(PathPlanner pathPlanner) {

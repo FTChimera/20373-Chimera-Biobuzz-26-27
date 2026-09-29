@@ -9,7 +9,6 @@ import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.ivy.groups.Groups;
 import com.pedropathing.ivy.pedro.PedroCommands;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -68,7 +67,7 @@ public class ExampleIvyWithSubsystems extends OpMode {
     public void init() {
         reset();
         follower = Constants.createFollower(hardwareMap);
-        intake = hardwareMap.get(DcMotor.class, new Intake.INTAKE_PARAMS().HARDWAREMAP_NAME);
+        intake = hardwareMap.get(DcMotor.class, new Intake.INTAKE_PARAMS().HARDWAREMAP_NAME_MAIN);
         buildPaths();
         follower.setStartingPose(startPose);
     }

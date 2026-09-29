@@ -86,7 +86,7 @@ public class RobotConfigurationTest {
                 .botLength(17.008)
                 .configureDriveMechanisms()
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
-                        .hardwareMapName("intake")
+                        //.hardwareMapName("intake")
                         .intakeMotorDirection(Direction.REVERSE))
                 .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 .useFollowerDrive(false);
@@ -101,7 +101,7 @@ public class RobotConfigurationTest {
         assertFalse(configured.USE_FOLLOWER_DRIVE);
 
         Intake.INTAKE_PARAMS intakeParams = configured.getMechanismParams(Intake.class, new Intake.INTAKE_PARAMS());
-        assertEquals("intake", intakeParams.HARDWAREMAP_NAME);
+        assertEquals("intake", intakeParams.HARDWAREMAP_NAME_MAIN);
         assertEquals(Direction.REVERSE, intakeParams.INTAKE_MOTOR_DIRECTION);
 
         RobotDrive.ROBOT_DRIVE_PARAMS robotDriveParams = configured.getMechanismParams(RobotDrive.class, new RobotDrive.ROBOT_DRIVE_PARAMS());

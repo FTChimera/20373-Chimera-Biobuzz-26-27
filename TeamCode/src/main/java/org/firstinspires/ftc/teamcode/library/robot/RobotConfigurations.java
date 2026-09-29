@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Vision;
  * Not to be confused with RobotConstants, which is a base class for all constants
  */
 public class RobotConfigurations {
-
+    /*
     public static RobotConstants OldDECODERobotTesting() {
         // TODO DELETE THIS ONCE 1ST ROBOT BUILT
         return new RobotConstants()
@@ -70,12 +70,13 @@ public class RobotConfigurations {
                         .updateFollowerOnInit(true)
                 )
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
-                        .hardwareMapName("intake")
+                        .hardwareMapName("intake", )
                         .intakeMotorDirection(Direction.REVERSE))
                 .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 // COMPATIBILITY
                 .useFollowerDrive(true);
     }
+     */
 
     public static RobotConstants FirstRobot() {
         return new RobotConstants()
@@ -115,7 +116,7 @@ public class RobotConfigurations {
                 // MECHANISM USAGE
                 .configureDriveMechanisms()
                 .addMechanism(Intake.class, new Intake.INTAKE_PARAMS()
-                        .hardwareMapName("intake")
+                        .hardwareMapName("intakeMain", "sideLeft", "sideRight")
                         .intakeMotorDirection(Direction.REVERSE))
                 .addMechanism(Vision.class, new Vision.VISION_PARAMS())
                 // COMPATIBILITY
