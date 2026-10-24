@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.mechanisms.scrim.ScrimTele;
 import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.commands.Scheduler;
@@ -17,7 +16,7 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 
 import java.util.concurrent.TimeUnit;
 
-@Autonomous(name = "Garden 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = ScrimTele.NAME) //TODO: change to main tele
+@Autonomous(name = "Garden 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME) //TODO: change to main tele
 public class Garden8 extends OpMode {
     Robot robot;
     boolean isStopped=false;

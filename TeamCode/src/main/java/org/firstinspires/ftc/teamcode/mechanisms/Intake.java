@@ -18,7 +18,6 @@ import java.util.InvalidPropertiesFormatException;
 
 public class Intake {
     CachedMotor mainMotor;
-    CRServo servoLeft, servoRight;
 
     AllianceColor allianceColor;
 
@@ -36,17 +35,12 @@ public class Intake {
     private Mode mode = Mode.IDLE;
     double customPower=0;
     private boolean modeSwitch = false;
-    private boolean autoEject = false;
     public boolean allowOverrideOverEject = false;
 
     public Intake(HardwareMap map, AllianceColor color) {
         mainMotor = new CachedMotor(map.get(DcMotorEx.class, "intake"), 0.1);
-        servoLeft = map.get(CRServo.class, "servoLeft");
-        servoRight = map.get(CRServo.class, "servoRight");
 
         mainMotor.setDirection(Direction.FORWARD.toMotor());
-        servoLeft.setDirection(Direction.REVERSE.toCRServo());
-        servoRight.setDirection(Direction.FORWARD.toCRServo());
 
         colorSensorLeft = new ColorSensor(map, "intakeColLeft", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
         colorSensorRight = new ColorSensor(map, "intakeColRight", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
@@ -98,13 +92,7 @@ public class Intake {
         this.mode = mode;
         modeSwitch = true;
     }
-    public void setAutoEject(boolean autoEject) {
-        this.autoEject = autoEject;
-    }
 
-    public boolean isAutoEjectSet() {
-        return autoEject;
-    }
 
     public boolean isEjecting() {return mode==Mode.EJECTING;}
     public Mode prev = null;
@@ -115,15 +103,13 @@ public class Intake {
     }
     public void stopEjecting() {
         mode = Intake.Mode.values()[prev.ordinal()];
+        modeSwitch = true;
     }
 
     public void update() {//Twist twist) {
         colorSensorRight.update();
         colorSensorLeft.update();
         if (mode != Mode.EJECTING) prev = Mode.values()[mode.ordinal()];
-        if (isAutoEjectSet() && isOpposingAllianceNectar()) {
-            forceEject();
-        }
 
         //double twistDir = twist.vy;
         switch (mode) {
@@ -149,11 +135,6 @@ public class Intake {
                     prev = Mode.values()[mode.ordinal()];
                 }
                 internalSet(prev==Mode.LOW_POWER? -0.5: -0.7);
-                if (isAutoEjectSet() && !isOpposingAllianceNectar()) {
-                    mode = Mode.values()[prev.ordinal()];
-                    modeSwitch = true;
-                    return;
-                }
                 break;
         }
         modeSwitch=false;
@@ -186,8 +167,6 @@ public class Intake {
 
     public void internalSet(double power) {
         mainMotor.setPower(power);
-        servoLeft.setPower(power);
-        servoRight.setPower(power);
     }
 
     public String getDebugString() {

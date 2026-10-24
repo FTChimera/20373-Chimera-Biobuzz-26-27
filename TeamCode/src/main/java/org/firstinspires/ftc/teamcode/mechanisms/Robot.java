@@ -284,7 +284,6 @@ public class Robot {
 
     // smart intake control basically has intake on the whole time except for auto eject and battery voltage low
     public void setSmartIntakeControl(boolean set) {
-        intake.setAutoEject(set);
         if (set) intake.setFullPower();
         smartIntakeControl = set;
     }
