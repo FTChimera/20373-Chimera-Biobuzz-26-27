@@ -26,7 +26,7 @@ public class Tuning {
         colorSensorV3.setGain(gain);
         return colorSensorV3;
     }
-
+    @Tuner
     public static Procedure robotDevTester() { return new RobotDevelopmentTester(
             hardwareMap -> {
                 DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "intake");
@@ -54,7 +54,8 @@ public class Tuning {
         // add TunerRegistrar.register(name, procedure) here
         // todo: also if tuning does not work then add back @Tuner
         // and all the functions
-
+        // TODO: here is the problem
+        // it looks for classes annotated with @Tuner then registers all of them. so, one @Tuner would make all work, but none would make none work.
         // ok
 
         TunerRegistrar.deregisterAll();
@@ -70,6 +71,6 @@ public class Tuning {
                 null,
                 null,
                 hardwareMap -> colorSensor(hardwareMap, "color_sensor", 65.3F)));
-        TunerRegistrar.register("Robot Dev Tester", robotDevTester());
+        //TunerRegistrar.register("Robot Dev Tester", robotDevTester());
     }
 }

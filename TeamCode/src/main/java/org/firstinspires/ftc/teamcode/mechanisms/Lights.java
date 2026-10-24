@@ -15,10 +15,6 @@ public class Lights {
     public AllianceColor allianceColor;
     private final LightStrips lightStrips = new LightStrips(
             LightSize.SIX_LED_STRIP_104MM,
-            LightSize.TWELVE_LED_STRIP_200MM,
-            LightSize.SIX_LED_STRIP_104MM,
-            LightSize.TWELVE_LED_STRIP_200MM,
-            LightSize.TWELVE_LED_STRIP_200MM,
             LightSize.TWELVE_LED_STRIP_200MM
     );
 

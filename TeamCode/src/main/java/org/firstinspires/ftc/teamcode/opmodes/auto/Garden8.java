@@ -45,6 +45,7 @@ public class Garden8 extends OpMode {
     public void loop() {
         Scheduler.INSTANCE.execute();
         robot.update();
+        telemetry.update();
         if (robot.opModeTimeRemaining() <= 0) {
             if (!isStopped) {
                 zeroVelocityTimer.reset();

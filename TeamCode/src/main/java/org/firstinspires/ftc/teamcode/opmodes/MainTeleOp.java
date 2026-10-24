@@ -31,6 +31,7 @@ public class MainTeleOp extends LinearOpMode {
     GpFancyButton autoAlignAndStartShoot;
     GpFancyButton keepShooterOn;
 
+    GpFancyButton flipHive;
 
     Robot robot;
 
@@ -128,6 +129,7 @@ public class MainTeleOp extends LinearOpMode {
 
 
             robot.update();
+            telemetry.update();
         }
 
     }

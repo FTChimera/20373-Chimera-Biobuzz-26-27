@@ -25,6 +25,7 @@ public class Scheduler {
     private final Deque<Command> queuedCommands = new ArrayDeque<>();
     private final Deque<Command> suspendedCommands = new ArrayDeque<>();
     public Scheduler(Command... commands) {
+        reset();
         schedule(commands);
     }
 
