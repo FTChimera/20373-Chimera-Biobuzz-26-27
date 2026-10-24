@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.commands.Scheduler;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartGardenPose;
+import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
@@ -48,7 +49,7 @@ public class PlanBuilder {
             planners.add(new FromStartGardenPose.ShootPreloads(robot));
             position=Positions.GARDEN_SHOOT;
         } else if (position==Positions.LOADING_START) {
-
+            planners.add(new FromStartLoadingPose.ShootPreloads(robot));
             position=Positions.GARDEN_SHOOT;
         } else {
             throw new IllegalStateException("Cannot Shoot Preloads from Position " + position);
@@ -88,8 +89,12 @@ public class PlanBuilder {
     }
 
     public Command schedule() {
+        return schedule(Scheduler.INSTANCE);
+    }
+
+    public Command schedule(Scheduler scheduler) {
         Command command = asCommand();
-        Scheduler.INSTANCE.schedule(command);
+        scheduler.schedule(command);
         return command;
     }
     public Command asCommand() {
