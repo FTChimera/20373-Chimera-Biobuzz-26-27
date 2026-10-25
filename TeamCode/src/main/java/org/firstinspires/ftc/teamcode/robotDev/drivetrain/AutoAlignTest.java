@@ -68,9 +68,9 @@ public class AutoAlignTest extends LinearOpMode {
             autoAimerCalculator.updatePedro(currentPose, deltaPose);
 
             if (gamepad1.a) {
-                follower.manual(-gamepad1.left_stick_y*0.8, gamepad1.left_stick_x*0.8, Angle.error(currentPose.heading(), autoAimerCalculator.getCorrectedPose().heading()) * Kp_Turn.get());
+                follower.manual(-gamepad1.left_stick_y*0.8, -gamepad1.left_stick_x*0.8, Angle.error(currentPose.heading(), autoAimerCalculator.getCorrectedPose().heading()) * Kp_Turn.get(), true);
             } else {
-                follower.manual(-gamepad1.left_stick_y*0.8, gamepad1.left_stick_x*0.8, gamepad1.right_stick_x*0.8);
+                follower.manual(-gamepad1.left_stick_y*0.8, -gamepad1.left_stick_x*0.8, -gamepad1.right_stick_x*0.8, true);
             }
 
             follower.update();

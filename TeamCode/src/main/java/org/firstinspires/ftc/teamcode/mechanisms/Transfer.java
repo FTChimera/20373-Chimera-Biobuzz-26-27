@@ -32,8 +32,8 @@ public class Transfer {
     }
 
     private final CachedMotor transferMotor;
-    private final ColorSensor colorSensor;
-
+//    private final ColorSensor colorSensor;
+// TODO: 10/24/26 uncomment this
     private boolean modeSwitch = false;
     private Mode mode = Mode.IDLE;
     Timer modeTimer;
@@ -41,7 +41,7 @@ public class Transfer {
     public Transfer(HardwareMap hardwareMap) {
         transferMotor = new CachedMotor(hardwareMap.get(DcMotorEx.class, "transfer"), 0.01);
         transferMotor.setDirection(Direction.FORWARD.toMotor());
-        colorSensor = new ColorSensor(hardwareMap, "transferCol", Color.TRANSPARENT, 4F, ColorSensor.COST_THRESHOLD_DEFAULT);
+//        colorSensor = new ColorSensor(hardwareMap, "transferCol", Color.TRANSPARENT, 4F, ColorSensor.COST_THRESHOLD_DEFAULT);
     }
 
     public Mode mode() {
@@ -64,11 +64,12 @@ public class Transfer {
     }
 
     public BallCol getBallColor() {
-        try {
-            return colorSensor.getBallCol();
-        } catch (InvalidPropertiesFormatException e) {
-            return BallCol.UNKNOWN;
-        }
+//        try {
+            return BallCol.POLLEN_YELLOW;
+//            return colorSensor.getBallCol();
+//        } catch (InvalidPropertiesFormatException e) {
+//            return BallCol.UNKNOWN;
+//        }
     }
 
     public void slow() {
@@ -109,7 +110,7 @@ public class Transfer {
     }
 
     public void update() {
-        colorSensor.update();
+//        colorSensor.update();
         if (mode != Mode.KICK_ONE) prevMode = Mode.values()[mode.ordinal()];
         switch (mode) {
             case IDLE:

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedro.procedures;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.algorithm.Algorithm;
 import com.pedropathing.drivetrain.DrivePowers;
 import com.pedropathing.drivetrain.Drivetrain;
@@ -309,7 +310,7 @@ class TestsLocalization extends TuningOpMode<Boolean> {
     public Boolean runTuningOpMode() throws InterruptedException {
         Localizer localizer = localizerFunction.apply(hardwareMap);
         Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
-
+        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), telemetry);
         localizer.setPose(Pose.zero());
 
         Thread.sleep(1000);
@@ -359,7 +360,7 @@ class TestsOdometry extends TuningOpMode<Boolean> {
     public Boolean runTuningOpMode() throws InterruptedException {
         Localizer localizer = localizerFunction.apply(hardwareMap);
         Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
-
+        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), telemetry);
         localizer.setPose(Pose.zero());
 
         Thread.sleep(1000);
@@ -485,6 +486,7 @@ class TestsPose extends TuningOpMode<Boolean> {
     @Override
     public Boolean runTuningOpMode() throws InterruptedException {
         Localizer localizer = localizerFunction.apply(hardwareMap);
+        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), telemetry);
         Thread.sleep(1000);
         waitForStart();
         localizer.setPose(Pose.zero());
@@ -509,7 +511,7 @@ class TestsColorSensor extends TuningOpMode<Boolean> {
     @Override
     protected Boolean runTuningOpMode() throws InterruptedException {
         RevColorSensorV3 colorSensor = colorSensorV3Function.apply(hardwareMap); // TODO: check, this sets the gain right? :)
-        telemetry = FtcDashboard.getInstance().getTelemetry();
+        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), telemetry);
         telemetry.clearAll();
         Thread.sleep(1000);
         waitForStart();

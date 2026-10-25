@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedro;
 
+import com.pedropathing.algorithm.Foresight;
 import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.pedropathing.tuning.autotune.Procedure;
@@ -68,8 +69,8 @@ public class Tuning {
         TunerRegistrar.register("Color Sensor Tuner", new ColorSensorTuner());
         TunerRegistrar.register("Tests", new Tests(
                 hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
-                null,
-                null,
+                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
+                () -> new Foresight(Constants.FORESIGHT_CONFIG),
                 hardwareMap -> colorSensor(hardwareMap, "color_sensor", 65.3F)));
         //TunerRegistrar.register("Robot Dev Tester", robotDevTester());
     }

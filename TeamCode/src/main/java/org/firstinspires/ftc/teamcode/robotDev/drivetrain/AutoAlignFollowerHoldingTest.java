@@ -56,19 +56,19 @@ public class AutoAlignFollowerHoldingTest extends LinearOpMode {
             Velocity velocity = follower.localizer.velocity();
             Velocity deltaPose = velocity.scale(dt);
 
-            deltaPose = Velocity.zero(); //TODO Comment this out
+            //deltaPose = Velocity.zero(); //TODO Comment this out
             autoAimerCalculator.updatePedro(currentPose, deltaPose);
 
             if (gamepad1.a) {
-                follower.manual(-gamepad1.left_stick_y*0.8, gamepad1.left_stick_x*0.8, follower.algorithm.calculateHold(
+                follower.manual(-gamepad1.left_stick_y*0.8, -gamepad1.left_stick_x*0.8, follower.algorithm.calculateHold(
                         follower.drivetrain,
                         autoAimerCalculator.getCorrectedPose().withHeading(autoAimerCalculator.getTargetHeading()),
                         follower.localizer.state(),
                         false, // Use hold scaling
                         dt // in seconds
-                ).turn());
+                ).turn(), true);
             } else {
-                follower.manual(-gamepad1.left_stick_y*0.8, gamepad1.left_stick_x*0.8, gamepad1.right_stick_x*0.8);
+                follower.manual(-gamepad1.left_stick_y*0.8, -gamepad1.left_stick_x*0.8, -gamepad1.right_stick_x*0.8, true);
             }
 
             follower.update();

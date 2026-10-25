@@ -13,8 +13,9 @@ public class DisplayStand extends LinearOpMode {
     @Override
     public void runOpMode() {
         Lights lights = new Lights(hardwareMap, AllianceColor.RED);
-        waitForStart();
         lights.clearAll();
+        waitForStart();
         lights.rainbowParty();
+        sleep(1000);
     }
 }

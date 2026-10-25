@@ -25,7 +25,7 @@ public class PoseCollector extends LinearOpMode {
         telemetry.addLine("Start at Corner Garden Area");
         waitForStart();
         while (opModeIsActive()) {
-            follower.manual(ManualDrive.fieldCentric(new DriveVector(-gamepad1.left_stick_y*0.4, gamepad1.left_stick_x*0.4, gamepad1.right_stick_x*0.4), follower.localizer.pose().heading()));
+            follower.manual(ManualDrive.fieldCentric(new DriveVector(-gamepad1.left_stick_y*0.4, -gamepad1.left_stick_x*0.4, -gamepad1.right_stick_x*0.4), follower.localizer.pose().heading()));
             follower.update();
             telemetry.addData("Pose", formatPose(follower.localizer.pose()));
             telemetry.addLine();
@@ -41,7 +41,7 @@ public class PoseCollector extends LinearOpMode {
                 poses.add(follower.localizer.pose());
             }
             if (gamepad1.bWasPressed()) {
-                poses.remove(poses.size()-1);
+                if (!poses.isEmpty()) poses.remove(poses.size()-1);
             }
             if (gamepad1.xWasPressed()) {
                 follower.localizer.setPose(UtilityPoses.cornerGardenArea);

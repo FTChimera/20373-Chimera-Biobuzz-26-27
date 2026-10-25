@@ -41,7 +41,7 @@ public class FollowerTurningTest extends LinearOpMode {
             if (gamepad1.a) {
                 follower.hold(follower.localizer.pose().withHeading(0));
             } else {
-                follower.manual(-gamepad1.left_stick_y*0.8, gamepad1.left_stick_x*0.8, gamepad1.right_stick_x*0.8);
+                follower.manual(-gamepad1.left_stick_y*0.8, -gamepad1.left_stick_x*0.8, -gamepad1.right_stick_x*0.8,true);
             }
 
             follower.update();

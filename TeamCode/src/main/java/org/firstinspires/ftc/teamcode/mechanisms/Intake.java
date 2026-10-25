@@ -21,7 +21,7 @@ public class Intake {
 
     AllianceColor allianceColor;
 
-    ColorSensor colorSensorLeft, colorSensorRight;
+    //ColorSensor colorSensorLeft, colorSensorRight;
 
     public enum Mode {
         FULL_POWER,
@@ -42,8 +42,8 @@ public class Intake {
 
         mainMotor.setDirection(Direction.FORWARD.toMotor());
 
-        colorSensorLeft = new ColorSensor(map, "intakeColLeft", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
-        colorSensorRight = new ColorSensor(map, "intakeColRight", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
+        //colorSensorLeft = new ColorSensor(map, "intakeColLeft", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
+        //colorSensorRight = new ColorSensor(map, "intakeColRight", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
         internalSet(0);
         this.allianceColor = color;
     }
@@ -107,8 +107,8 @@ public class Intake {
     }
 
     public void update() {//Twist twist) {
-        colorSensorRight.update();
-        colorSensorLeft.update();
+        //colorSensorRight.update();//todo attach color sensor
+        //colorSensorLeft.update();
         if (mode != Mode.EJECTING) prev = Mode.values()[mode.ordinal()];
 
         //double twistDir = twist.vy;
@@ -150,11 +150,12 @@ public class Intake {
     }
 
     public BallCol getCurrentCol() {
-        try {
-            return BallCol.compose(colorSensorRight.getBallCol(), colorSensorLeft.getBallCol(), allianceColor);
-        } catch (InvalidPropertiesFormatException e) {
-            return BallCol.UNKNOWN;
-        }
+        //try {
+            return BallCol.POLLEN_YELLOW;
+            //return BallCol.compose(colorSensorRight.getBallCol(), colorSensorLeft.getBallCol(), allianceColor);
+//        } catch (InvalidPropertiesFormatException e) {
+//            return BallCol.UNKNOWN;
+//        }
     }
 
     public boolean isOpposingAllianceNectar() {
