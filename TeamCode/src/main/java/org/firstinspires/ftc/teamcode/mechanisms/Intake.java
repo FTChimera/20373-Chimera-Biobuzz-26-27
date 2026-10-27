@@ -98,6 +98,7 @@ public class Intake {
     public Mode prev = null;
     public void forceEject() {
         if (isEjecting() && !allowOverrideOverEject) return;
+        prev = mode;
         mode = Mode.EJECTING;
         modeSwitch = true;
     }
@@ -110,7 +111,7 @@ public class Intake {
         //colorSensorRight.update();//todo attach color sensor
         //colorSensorLeft.update();
         if (mode != Mode.EJECTING) prev = Mode.values()[mode.ordinal()];
-
+        if (prev == Mode.EJECTING) prev = Mode.IDLE;
         //double twistDir = twist.vy;
         switch (mode) {
             case IDLE:
@@ -125,7 +126,7 @@ public class Intake {
                 internalSet(0.7);
                 break;
             case REVERSE:
-                internalSet(-1);
+                internalSet(-0.5);
                 break;
             case CUSTOM_POWER:
                 internalSet(customPower);

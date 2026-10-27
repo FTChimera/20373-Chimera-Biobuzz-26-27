@@ -6,11 +6,13 @@ import org.firstinspires.ftc.teamcode.util.game.Ball;
 import org.firstinspires.ftc.teamcode.util.interpolation.Interpolate;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class TableShotCalc implements ShotCalculator {
-    public static final List<TableEntry> shooterMap = Collections.emptyList();
+    String debug = "";
+    public static final List<TableEntry> shooterMap = new ArrayList<>();
     static {
         shooterMap.add(new TableEntry(30, 1000, 800));
         shooterMap.add(new TableEntry(40, 1200, 1000));
@@ -19,12 +21,16 @@ public class TableShotCalc implements ShotCalculator {
     }
     @Override
     public ShotSolution calculateShot(ShotContext context) {
+        debug = "";
         ShotContext ctx = context.copy();
+        debug+= ("SOTM: "); debug+=(ctx.sotm);
         if (ctx.sotm) {
             ctx.robotPose = ctx.robotPose.exp(ctx.velocity, ctx.dt);
         }
         ShotSolution solution = null;
         boolean nectar = ctx.transferBallCol.ball==Ball.NECTAR;
+        debug+=("\nballcol: ");debug+=(ctx.transferBallCol);
+        debug+=("\ndistanceToTarget: ");debug+=(String.format(Locale.US, "(%.2f)", ctx.distanceToTarget()));
         if (ctx.distanceToTarget() <= shooterMap.get(0).distance) {
             solution = new ShotSolution(nectar? shooterMap.get(0).flywheelRPMNectar : shooterMap.get(0).flywheelRPMPollen);
         }
@@ -44,8 +50,15 @@ public class TableShotCalc implements ShotCalculator {
         if (solution == null) {
             solution = new ShotSolution(nectar? shooterMap.get(shooterMap.size() - 1).flywheelRPMNectar : shooterMap.get(shooterMap.size()-1).flywheelRPMPollen);
         }
+        debug+=("\nsolution Speed: ");debug+=(solution.flywheelSpeed);
         return solution;
     }
+
+    @Override
+    public String getDebugString() {
+        return debug;
+    }
+
     public static class TableEntry {
         public double distance;
         public double flywheelRPMNectar;

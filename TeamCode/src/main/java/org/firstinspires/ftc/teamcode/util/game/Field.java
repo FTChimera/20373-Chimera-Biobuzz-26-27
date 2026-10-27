@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.game;
 
+import androidx.annotation.NonNull;
+
 import com.pedropathing.api.Paths;
 import com.pedropathing.math.Pose;
 import com.pedropathing.math.Vector2D;
@@ -29,7 +31,7 @@ public class Field {
         TIPPED,
         UNTIPPED;
 
-        public Pose goalPose(AllianceColor allianceColor) {
+        public Pose goalPose(@NonNull AllianceColor allianceColor) {
             // Representative coordinate positions for the Red and Blue alliance target zones
             if (allianceColor.isRed()) {
                 if (this == TIPPED) {

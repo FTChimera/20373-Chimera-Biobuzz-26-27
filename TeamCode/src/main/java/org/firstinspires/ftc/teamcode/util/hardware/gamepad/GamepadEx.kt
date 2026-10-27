@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.util.hardware.gamepad
 
 import com.pedropathing.drivetrain.DrivePowers
+import com.sun.tools.javac.api.Formattable
 import org.firstinspires.ftc.teamcode.util.Timer
 import org.firstinspires.ftc.teamcode.util.math.MathUtils.Companion.DEG_TO_RAD
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.function.BooleanSupplier
 import java.util.function.Consumer
@@ -134,7 +136,7 @@ class DriveVector(var forward: Double, var strafe:Double, var turn:Double) : Dri
     }
 
     override fun toString(): String {
-        return "drivePowers(forward=$forward, strafe=$strafe, turn=$turn)"
+        return String.format(Locale.US, "(%.2f, %.2f, %.2f)", forward, strafe, turn)
     }
 
     inline fun doubleUnaryOperator(op: (Double) -> Double): DriveVector {

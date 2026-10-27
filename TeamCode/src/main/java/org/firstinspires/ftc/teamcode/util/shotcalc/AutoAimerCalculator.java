@@ -19,7 +19,7 @@ public class AutoAimerCalculator {
     public boolean useFollowerHold;
     public boolean pedro = true;
     Pose2d correctedPose;
-    public Field.HiveState hiveState = Field.HiveState.UNTIPPED;
+    public Field.HiveState hiveState;
 
     double targetHeading = 0;
     public double turningpower = 0;
@@ -27,13 +27,13 @@ public class AutoAimerCalculator {
 
     public AutoAimerCalculator(AllianceColor allianceColor) {
         this.color = allianceColor;
+        this.hiveState = Field.HiveState.UNTIPPED;
     }
 
-    public void updatePedro(Pose robotPose, Velocity deltaPose, Field.HiveState hiveState) {
+    public void updatePedro(Pose robotPose, Velocity deltaPose) {
         this.pedro = true;
         // TODO: verify this one by testing this method for corrected pose.
         // If this does not work, replace it with a manual scale instead of dt
-        this.hiveState = hiveState;
         correctedPose = PoseFactory.of(robotPose.plus(deltaPose.toVector2D().toPose()));
         Pose hivePose = hiveState.goalPose(color);
         double dydx = (hivePose.y()-robotPose.y())/ (hivePose.x()-robotPose.x());
@@ -41,8 +41,9 @@ public class AutoAimerCalculator {
         targetHeading = Angle.normalize(theta);
     }
 
-    public void updatePedro(Pose pose, Velocity deltaPose) {this.updatePedro(pose, deltaPose, hiveState);}
-
+    public void setHiveState(Field.HiveState newHiveState) {
+        this.hiveState = newHiveState;
+    }
     public void updateLimelight(LLResult llResult, Velocity pedroVelocity) {
         this.updateLimelight(llResult, pedroVelocity, hiveState);
     }

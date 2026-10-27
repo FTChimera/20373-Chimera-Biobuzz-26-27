@@ -39,13 +39,14 @@ public class MainTeleOp extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         // ROBOT
-        if (!OpModeStorage.initialized) OpModeStorage.resetToDefaultTesting();
+        if (!OpModeStorage.initialized) OpModeStorage.resetToDefault();
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.TELEOP, OpModeStorage.pose);
         robot.matchMode = OpModeStorage.matchMode;
         robot.debug = true;
 
         robot.setManualBrake(false);
-        robot.setSmartIntakeControl(false); // Manually control via toggle gp
+        robot.setSmartIntakeControl(true); // Manually control via toggle gp
+        robot.setSmartShooterControl(false);
 
         // Buttons
         intakeControl = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad1.x);
@@ -59,16 +60,17 @@ public class MainTeleOp extends LinearOpMode {
 
         moveToParkZone = new GpFancyButton(FancyButton.PressType.RisingEdge, ()-> gamepad2.a);
 
-        runTransferFast = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.right_bumper);
-        runTransferSlow = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.left_bumper);
+        runTransferFast = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad1.right_bumper);
+        runTransferSlow = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad1.left_bumper);
         panicShoot = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.b);
         autoAlignAndStartShoot = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.y);
-        keepShooterOn = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad2.x);
-        keepShooterOn.setPressed(true);
+        keepShooterOn = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad1.y);
+        keepShooterOn.setPressed(false);
 
 
         waitForStart();
         robot.start();
+        robot.intake.setFullPower();
 
         while (opModeIsActive()) {
             intakeControl.update();
@@ -82,14 +84,18 @@ public class MainTeleOp extends LinearOpMode {
             autoAlignAndStartShoot.update();
             keepShooterOn.update();
 
-            if (intakeControl.isPressed() && intakeControl.startPress()) {
-                robot.intake.setFullPower();
+            if (intakeEject.startPress()) {
+                robot.intakeEject();
+            }
+            else if (intakeControl.isPressed() && intakeControl.startPress()) {
+                robot.setSmartIntakeControl(true);
             } else if (!intakeControl.isPressed() && intakeControl.startPress()) {
+                robot.setSmartIntakeControl(false);
                 robot.intake.stop();
             }
+            if (intakeEject.endPress()) robot.restoreIntake();
 
-
-            if (runTransferFast.isPressed()) {
+            if (runTransferFast.isPressed() && robot.shooter.upToSpeed()) {
                 robot.transfer.shootAll();
             }
 
@@ -102,11 +108,14 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             if (panicShoot.startPress()) {
-                robot.panic();
+                robot.transfer.panicShoot();
+                //robot.panic();
             } else if (panicShoot.endPress()) {
-                robot.endPanicShoot();
-
+                //robot.endPanicShoot();
             }
+
+            robot.setSmartShooterControl(keepShooterOn.isPressed());
+            if (keepShooterOn.startPress() && !keepShooterOn.isPressed()) robot.shooter.setVelocity(0);
 
             robot.setTeleOpDrive(
                     new DriveVector(
@@ -129,7 +138,7 @@ public class MainTeleOp extends LinearOpMode {
 
 
             robot.update();
-            telemetry.update();
+            robot.telemetry.update();
         }
 
     }

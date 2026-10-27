@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
+import org.firstinspires.ftc.teamcode.util.Color;
+
 @Utility
 public class PrismConfig extends LinearOpMode {
     GoBildaPrismDriver prism;
@@ -24,17 +26,18 @@ public class PrismConfig extends LinearOpMode {
     public void loadAnimationArtboard(GoBildaPrismDriver.Artboard artboard) {
         switch (artboard) {
             case ARTBOARD_0:
-                PrismAnimations.AnimationBase animation1 = new PrismAnimations.PoliceLights();
+                PrismAnimations.Blink animation1 = new PrismAnimations.Blink();
+                animation1.setPrimaryColor(Color.RED);
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, animation1);
                 break;
             case ARTBOARD_1:
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Rainbow());
                 break;
             case ARTBOARD_2:
-                    prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Blink());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.solid().primaryColor(Color.GREEN).build());
                 break;
             case ARTBOARD_3:
-                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Blink());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.pulse().primaryColor(Color.TEAM_COLOR_BLUE).secondaryColor(Color.TEAM_COLOR_BLUE.dimColor()).build());
                 break;
             case ARTBOARD_4:
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Blink());

@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import static org.firstinspires.ftc.teamcode.util.math.MathUtils.DEG_TO_RAD;
 
-import com.pedropathing.utils.Angle;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -11,23 +10,24 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.teamcode.pedro.commands.TimedScheduler;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.CamTransform;
+import org.firstinspires.ftc.teamcode.util.localization.CamTransform;
 import org.firstinspires.ftc.teamcode.util.game.BiobuzzAprilTags;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
+import java.util.List;
+
 public class Vision {
     public Limelight3A limelight3A;
-    public WebcamName arducam;
     public final CamTransform camTransform;
     public final BiobuzzAprilTags tags;
+    private double lastTxAvgIndicator;
     AllianceColor allianceColor;
     public Vision(HardwareMap hardwareMap, AllianceColor allianceColor) {
         limelight3A = hardwareMap.get(Limelight3A.class, "limelight");
-        camTransform = new CamTransform(0);
+        camTransform = new CamTransform(limelight3A, allianceColor);
         tags = new BiobuzzAprilTags(allianceColor);
         this.allianceColor = allianceColor;
     }
@@ -67,7 +67,7 @@ public class Vision {
 
     // SHOOTER
 
-    public double getDistance() {
+    public double getDistance() {//TODO : Integrate cam transform
         LLResult result = getLatestResult();
         if (result==null || !result.isValid()) return -1;
         double y = getBestCenterTag(Field.HiveState.TIPPED).getTargetYDegrees()* DEG_TO_RAD; //todo replace placeholder TIPPED
@@ -77,9 +77,13 @@ public class Vision {
         return (targetHeight - camHeight) / Math.tan(Math.toRadians(camAngle + y));
     }
     private int[] getCenterTagIds(Field.HiveState hiveState) {
+        return getCluster(hiveState).getMidTwoTags();
+    }
+
+    private BiobuzzAprilTags.Cluster getCluster(Field.HiveState hiveState) {
         return hiveState.ordinal() + allianceColor.ordinal() == 1
-                ? tags.alliance.getMidTwoTags()
-                : tags.opposite.getMidTwoTags();
+                ? tags.alliance
+                : tags.opposite;
     }
 
     public LLResultTypes.FiducialResult getBestCenterTag(
@@ -126,5 +130,25 @@ public class Vision {
 
         return best;
     }
+
+    public double getAveragedTx(Field.HiveState hiveState) {
+        LLResult result = getLatestResult();
+
+        if (!(result == null) && result.isValid()) {
+            int[] tids = getCluster(hiveState).getTags();
+            lastTxAvgIndicator =  result.getFiducialResults().stream()
+                    .filter(tag -> tag.getTargetArea()>=0 && (tag.getFiducialId() == tids[0] || tag.getFiducialId() == tids[1] || tag.getFiducialId() == tids[2] || tag.getFiducialId() == tids[3]))
+                    .mapToDouble(LLResultTypes.FiducialResult::getTargetXDegrees)
+                    .average().orElse(lastTxAvgIndicator);
+        }
+        return lastTxAvgIndicator;
+    }
+
+
+    public List<LLResultTypes.FiducialResult> fiducials() {
+        return getLatestResult().getFiducialResults();
+
+    }
+
 
 }

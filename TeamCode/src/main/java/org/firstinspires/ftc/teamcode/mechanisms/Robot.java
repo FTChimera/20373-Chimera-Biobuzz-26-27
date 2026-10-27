@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.localization.MotionState;
@@ -69,8 +71,8 @@ public class Robot {
         follower.holdEnd.set(false);
         follower.localizer.setPose(startingPose);
 
-        autoAimerCalculator = new AutoAimerCalculator(allianceColor);
         this.allianceColor = color;
+        autoAimerCalculator = new AutoAimerCalculator(allianceColor);
 
         intake = new Intake(hardwareMap, color);
         transfer = new Transfer(hardwareMap);
@@ -90,7 +92,7 @@ public class Robot {
 
 
         this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-
+        this.telemetry.clearAll();
         Variables.registerAllToFtcDash();
     }
 
@@ -110,23 +112,31 @@ public class Robot {
             }
             setTeleOpDrive = false;
         }
+
+        autoAimerCalculator.updatePedro(getPose(), getVelocity());
+
         follower.update(dt);
         if (smartIntakeControl) smartIntakeUpdate();
+        if (smartShooterControl) smartShooterUpdate();
         intake.update(/*follower.twist()*/);
         transfer.update();
         shooter.update();
-        lights.update(BallCol.POLLEN_YELLOW, false, false, opModeTimeRemaining()<=7); // Todo
+        lightsControl();
+        lights.update(); // Todo
         if (debug) debug();
     }
 
+
     public void debug() {
-        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ opModeTimer.get()+ "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());
+        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ opModeTimer.get()+ "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
         telemetry.addData("=== FOLLOWER DEBUG ===", follower.debug().toString());
         telemetry.addData("Pose", getPose().toString());
         telemetry.addData("=== INTAKE DEBUG ===", "\n"+intake.getDebugString());
         telemetry.addData("=== TRANSFER DEBUG ===", "\n"+transfer.getDebugString());
         telemetry.addData("=== SHOOTER DEBUG ===", "\n"+shooter.getDebugString());
         telemetry.addData("=== LIGHTS DEBUG ===", "\n"+lights.getDebugString());
+        telemetry.addData("=== AUTO AIMER CALCULATOR DEBUG ===", "\n"+autoAimerCalculator.getDebugString());
+        telemetry.addData("=== SHOT CALC DEBUG", shooter.shotCalculator.getDebugString());
     }
     public void stopAllSubsystems() {
         //allHubs.forEach(LynxModule::close);
@@ -318,13 +328,19 @@ public class Robot {
 
     public void smartShooterUpdate() {
         if (shooter.panicking) return;
-        shooter.solveAndSetVelocity(PoseFactory.of(follower.localizer.pose()), follower.localizer.velocity(), field.getHiveState(), transfer.getBallColor(), getDt());
+        //shooter.solveAndSetVelocity(PoseFactory.of(follower.localizer.pose()), follower.localizer.velocity(), field.getHiveState(), transfer.getBallColor(), getDt());
+        shooter.setVelocity(1270);//todo
     }
 
     /* LIGHTS */
 
-    public void t() {
-
+    private void lightsControl() {
+        if (opModeTimeRemaining() <= 7) lights.flashRed();
+        else if (shooter.upToSpeed()) {
+            lights.displayGreen();
+        } else {
+            lights.off();
+        }
     }
 
     /* VISION */

@@ -50,26 +50,18 @@ public class Lights {
         prism.clearAllAnimations();
         this.allianceColor = allianceColor;
         //displayAllianceColor();
-        rainbowParty();
+        displayTeamColor();
     }
 
     public void start() {
-
+        displayTeamColor();
     }
 
     public void rainbowParty() {
-        PrismAnimations.AnimationBase animation = prism
-                .rainbow()
-                .speed(0.2F)
-                .startHue(0.0F)
-                .stopHue(1.0F)
-                .repeatAfter(3)
-                .indexes(0, lightStrips.numLights()-1)
-                .build();
-        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, animation); //TODO: need to tune this
+        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_1);
     }
 
-    public void update(BallCol transferCol, boolean displayTransferColor, boolean readyToShoot, boolean closeToEndOfMatch) {
+    public void update() {
         prism.updateAllAnimations();
     }
 
@@ -90,11 +82,11 @@ public class Lights {
     }
 
     public void displayTeamColor() {
-        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, teamColorAnimation); //TODO: need to tune this
+        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_0);
     }
 
     public void flashRed() {
-        prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_9, animation); //TODO: need to tune this
+        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_3);
     }
 
     public void displayAllianceColor() {
@@ -121,6 +113,14 @@ public class Lights {
     public String getDebugString() {return "Gobilda prism indicator";} // TODO
 
     public void clearAll() {
+        prism.clearAllAnimations();
+    }
+
+    public void displayGreen() {
+        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_2);
+    }
+
+    public void off() {
         prism.clearAllAnimations();
     }
 

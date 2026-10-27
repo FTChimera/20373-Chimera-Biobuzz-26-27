@@ -129,7 +129,7 @@ public class Transfer {
                 }
                 break;
             case SHOOT_ALL:
-                transferMotor.setPower(0.8);
+                transferMotor.setPower(1);
                 break;
             case PANIC_SHOOT:
                 transferMotor.setPower(1);

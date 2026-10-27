@@ -6,6 +6,7 @@ import com.pedropathing.math.Velocity;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
@@ -21,31 +22,32 @@ import org.firstinspires.ftc.teamcode.util.shotcalc.ShotSolution;
 import org.firstinspires.ftc.teamcode.util.vars.Var;
 
 public class Shooter {
-    public static final DoubleFlywheelFullVelocityConstants shooterPIDConstants = new DoubleFlywheelFullVelocityConstants(
-            0, 0, 0, 0, 0, 0, 0, 0
+    // TODO: switch back to DOuble Flywheel Full Velocity.
+    public static final PIDFCoefficients shooterPIDConstants = new PIDFCoefficients(
+            105, 1, 0, 30//todo tune
     );
-    public SmartFlywheel motor;
+    public DcMotorEx motor;
 
     public ShotCalculator shotCalculator;
     public AllianceColor color;
     public boolean panicking=false;
+    private int target_velocity = 0;
     public Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
         this.color = color;
-        motor = new SmartFlywheel(
-                hardwareMap.get(DcMotorEx.class, "shooter"),
-                Controller.doubleFlywheelFullVelocity(shooterPIDConstants),
-                new SmartFlywheel.Params(28, 1) // for the Gobilda 5203 6000 RPM Motor
-        );
-        motor.motor.setDirection(Direction.REVERSE.toMotor());
-        motor.motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        motor = hardwareMap.get(DcMotorEx.class, "shooter");
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, shooterPIDConstants);
+        motor.setDirection(Direction.FORWARD.toMotor());
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shotCalculator = ShotCalculator.table();
     }
 
     /** Sets velocity of motor in ticks per second */
-    public void setVelocity(double ticksPerSecond) {
+    public void setVelocity(int ticksPerSecond) {
         motor.setVelocity(ticksPerSecond);
+        target_velocity = ticksPerSecond;
         panicking = false;
     }
 
@@ -66,23 +68,23 @@ public class Shooter {
         context.transferBallCol = transferBallCol;
         context.sotm = useSotm.get();
         ShotSolution solution = shotCalculator.calculateShot(context);
-        setVelocity(solution.flywheelSpeed);
+        setVelocity((int) solution.flywheelSpeed);
     }
 
     public boolean upToSpeed() {
-        return Math.abs(motor.targetTicksPerSecond - motor.getTicksPerSecond()) <= 20;
+        return Math.abs(target_velocity - motor.getVelocity()) <= 20;
     }
 
     public void update() {
-        motor.update();
+
     }
 
     public String getDebugString() {
-        return "Set Velocity: " + motor.targetTicksPerSecond + "\n Get Velocity: " + motor.getTicksPerSecond();
+        return "Set Velocity: " + target_velocity+ "\n Get Velocity: " + motor.getVelocity();
     }
 
     public void stopImmediately() {
-        motor.stopImmediately();
+        motor.setPower(0);
     }
 
     public boolean panicking() {

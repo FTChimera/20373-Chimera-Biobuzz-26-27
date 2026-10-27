@@ -83,6 +83,10 @@ public class Constants {
                 f.maxAchievableStrafeVelocity.set(72.07259558080416);
                 f.naturalForwardDeceleration.set(29.55621578414096);
                 f.naturalStrafeDeceleration.set(56.068908924605985);
+
+                f.maxPathSpeed.set(1.0);
+                f.brakeAtEnd.set(true);
+
                 FOLLOWER_MAX_PATH_SPEED = f.maxPathSpeed;
                 FOLLOWER_BRAKE_AT_END = f.brakeAtEnd; // is true
             });
