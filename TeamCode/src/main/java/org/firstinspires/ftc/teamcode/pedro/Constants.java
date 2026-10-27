@@ -61,34 +61,34 @@ public class Constants {
             });
 
     public static ForesightConfig FORESIGHT_CONFIG = new ForesightConfig(
-            f -> {
-                Controller primaryTranslationalForward = Controller.proportional(0.2590734236566328);
-                Controller secondaryTranslationalForward = Controller.proportional(0.09572070747175095);
-                Controller primaryTranslationalLateral = Controller.proportional(0.3229333883091061);
-                Controller secondaryTranslationalLateral = Controller.proportional(0.11931525804115767);
+            c -> {
+                Controller primaryTranslationalForward = Controller.proportional(0.25393523777407717);
+                Controller secondaryTranslationalForward = Controller.proportional(0.093822285083002);
+                Controller primaryTranslationalLateral = Controller.proportional(0.34211089068822603);
+                Controller secondaryTranslationalLateral = Controller.proportional(0.1264008327379413);
 
-                f.forwardTranslational.set(Controller.piecewise(secondaryTranslationalForward).put(2.5, primaryTranslationalForward));
-                f.strafeTranslational.set(Controller.piecewise(secondaryTranslationalLateral).put(2.5, primaryTranslationalLateral));
+                c.forwardTranslational.set(Controller.piecewise(secondaryTranslationalForward).put(2.5, primaryTranslationalForward));
+                c.strafeTranslational.set(Controller.piecewise(secondaryTranslationalLateral).put(2.5, primaryTranslationalLateral));
 
-                f.coast.set(Controller.proportionalFeedforward(0.011724128037577176));
-                f.brake.set(Controller.proportionalFeedforward(0.0099655088319406));
+                c.coast.set(Controller.proportionalFeedforward(0.012646681150676874));
+                c.brake.set(Controller.proportionalFeedforward(0.010749678978075342));
 
-                f.headingFeedback.set(Controller.proportional(3.52768815337747));
-                f.headingBrakeCoefficients.set(Vector2D.cartesian(0.04935565176248614, 0.0068564035845885525));
+                c.headingFeedback.set(Controller.proportional(3.2355359581547116));
+                c.headingBrakeCoefficients.set(Vector2D.cartesian(0.048720657697875876, 0.007348353148259572));
 
-                f.linearBrakeCoefficients.set(Matrix.diag(0.07755767657551609, 0.043645391664046206));
-                f.quadraticBrakeCoefficients.set(Matrix.diag(0.001692160003567388, 0.00228994514980421));
+                c.linearBrakeCoefficients.set(Matrix.diag(0.07910109428104556, 0.06292995560631676));
+                c.quadraticBrakeCoefficients.set(Matrix.diag(0.0020346280054097223, 0.0018481479677086117));
 
-                f.maxAchievableForwardVelocity.set(81.1464712284475);
-                f.maxAchievableStrafeVelocity.set(72.07259558080416);
-                f.naturalForwardDeceleration.set(29.55621578414096);
-                f.naturalStrafeDeceleration.set(56.068908924605985);
+                c.maxAchievableForwardVelocity.set(75.46293364655632);
+                c.maxAchievableStrafeVelocity.set(61.97638820235382);
+                c.naturalForwardDeceleration.set(40.570781365019975);
+                c.naturalStrafeDeceleration.set(73.55783046488493);
 
-                f.maxPathSpeed.set(1.0);
-                f.brakeAtEnd.set(true);
+                c.maxPathSpeed.set(1.0);
+                c.brakeAtEnd.set(true);
 
-                FOLLOWER_MAX_PATH_SPEED = f.maxPathSpeed;
-                FOLLOWER_BRAKE_AT_END = f.brakeAtEnd; // is true
+                FOLLOWER_MAX_PATH_SPEED = c.maxPathSpeed;
+                FOLLOWER_BRAKE_AT_END = c.brakeAtEnd; // is true
             });
 
 
