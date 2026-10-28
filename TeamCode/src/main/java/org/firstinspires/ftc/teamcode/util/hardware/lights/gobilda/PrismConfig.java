@@ -31,7 +31,7 @@ public class PrismConfig extends LinearOpMode {
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, animation1);
                 break;
             case ARTBOARD_1:
-                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Rainbow());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.rainbow().brightness(40).build());
                 break;
             case ARTBOARD_2:
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.solid().primaryColor(Color.GREEN).build());
@@ -40,7 +40,7 @@ public class PrismConfig extends LinearOpMode {
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.pulse().primaryColor(Color.TEAM_COLOR_BLUE).secondaryColor(Color.TEAM_COLOR_BLUE.dimColor()).build());
                 break;
             case ARTBOARD_4:
-                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Blink());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.pulse().primaryColor(Color.RED).secondaryColor(Color.RED.dimColor()).build());
                 break;
             case ARTBOARD_5:
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.RainbowSnakes());

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.planners.modules;
 
+import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import androidx.annotation.NonNull;
@@ -32,6 +33,7 @@ public class FromStartGardenPose {
         @Override
         public Command run() {
             return sequential(
+                    instant(robot.transfer::slow),
                     follow(robot.follower, pathToShoot),
                     ShooterCommands.shootAllPollen(robot)
             );

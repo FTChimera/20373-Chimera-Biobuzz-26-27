@@ -24,7 +24,7 @@ import org.firstinspires.ftc.teamcode.util.vars.Var;
 public class Shooter {
     // TODO: switch back to DOuble Flywheel Full Velocity.
     public static final PIDFCoefficients shooterPIDConstants = new PIDFCoefficients(
-            105, 1, 0, 30//todo tune
+            99, 1, 0, 0//todo tune
     );
     public DcMotorEx motor;
 

@@ -34,7 +34,6 @@ public class Garden8 extends OpMode {
         robot.debug = true;
         plan = PlanBuilder.startGarden(robot)
                 .shootPreloads()
-                .intakeFromGarden()
                 .schedule();
     }
 

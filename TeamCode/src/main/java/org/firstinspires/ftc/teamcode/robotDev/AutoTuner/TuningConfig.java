@@ -32,10 +32,10 @@ public class TuningConfig {
     public static String MOTOR_NAME_2 = "motor2";
 
     /** Set true if positive power should produce a decreasing encoder reading. */
-    public static boolean REVERSED = Direction.FORWARD.ordinal()==0;
+    public static boolean REVERSED = false;
 
     /** Direction of the second motor. Usually true for opposing-face flywheel setups. */
-    public static boolean REVERSED_2 = Direction.FORWARD.ordinal()==0;
+    public static boolean REVERSED_2 = false;
 
     /**
      * True if both motors have encoders connected. False if only motor 1 has
@@ -50,7 +50,7 @@ public class TuningConfig {
      * to avoid hitting hard stops; 0.5–0.7 is typical for flywheels.
      * Increase if the mechanism fails to oscillate.
      */
-    public static double RELAY_AMPLITUDE = 0.5;
+    public static double RELAY_AMPLITUDE = 0.9;
 
     /** Number of full oscillation cycles to average for Ku and Tu. */
     public static int CYCLES_TO_COLLECT = 6;

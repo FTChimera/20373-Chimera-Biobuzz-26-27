@@ -329,7 +329,7 @@ public class Robot {
     public void smartShooterUpdate() {
         if (shooter.panicking) return;
         //shooter.solveAndSetVelocity(PoseFactory.of(follower.localizer.pose()), follower.localizer.velocity(), field.getHiveState(), transfer.getBallColor(), getDt());
-        shooter.setVelocity(1270);//todo
+        shooter.setVelocity(1350);//todo
     }
 
     /* LIGHTS */
