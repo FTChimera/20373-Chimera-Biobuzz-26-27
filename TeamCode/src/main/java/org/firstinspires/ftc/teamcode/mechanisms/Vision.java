@@ -131,6 +131,10 @@ public class Vision {
         return best;
     }
 
+    public double getBestTx(Field.HiveState hiveState) {
+        return getBestCenterTag(hiveState).getTargetXDegrees();
+    }
+
     public double getAveragedTx(Field.HiveState hiveState) {
         LLResult result = getLatestResult();
 

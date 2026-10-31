@@ -12,9 +12,11 @@ fun init(color:AllianceColor) {
     IntakePoses.init(color)
     ShootPoses.init(color)
 }
-fun fastInterpolationDegraded(endHeading: Double): Interpolator {
+fun fastInterpolationDegraded(endHeading: Double, change: Double, reverse: Boolean): Interpolator {
+    var tangent = Interpolator.tangent
+    if (reverse) tangent = tangent.reverse()
     return Interpolator.piecewise()
-        .until(0.8, Interpolator.tangent.reverse())
+        .until(change, tangent)
         .until(1.0, Interpolator.constant(endHeading))
 }
 
@@ -43,6 +45,7 @@ fun fastInterpolation(pos1: Pose2d, pos2: Pose2d, startTValue: Double, endTValue
 }
 
 object Timings {
+    const val gardenIntakeTimeMs = 300
     const val flowerIntakeTime = 2
 }
 
@@ -51,12 +54,15 @@ object Values {
     const val fastInterpolationStartTValue = 0.7
     const val fastInterpolationEndTValue = 0.9
 
+    const val gardenIntakeConstantTValue = 0.8
+    const val gardenIntakeMaxPowerSetChangeTValue = 0.7
     // drive powers
+    const val gardenIntakeMaxPowerSetChangeNewPower = 0.5
 }
 
 object StartPoses {
-    @JvmField val gardenArea = alliance(pose(47.0, -63.0, 0.0), pose())
-    @JvmField val loadingArea = alliance(pose(), pose())
+    @JvmField val gardenArea = alliance(pose(9.0, 25.0, 0.0), pose())
+    @JvmField val loadingArea = alliance(pose(60.0, 135.0, -90.0), pose())
     @JvmField val visionAnchorGarden = alliance(pose(), pose())
     @JvmField val visionAnchorLoading = alliance(pose(), pose())
 
@@ -70,19 +76,17 @@ object StartPoses {
 }
 
 object IntakePoses {
-    @JvmField val gardenEnd = alliance(pose(), pose())
-    @JvmField val gardenControl1 = alliance(pose(), pose())
-    @JvmField val gardenControl2 = alliance(pose(), pose())
+    @JvmField val gardenEnd = alliance(pose(10.0, 10.0, -90.0), pose())
+    @JvmField val gardenControl1 = alliance(pose(18.0, 25.0), pose())
 
     fun init(color: AllianceColor) {
         gardenEnd.setAllianceColor(color)
         gardenControl1.setAllianceColor(color)
-        gardenControl2.setAllianceColor(color)
     }
 }
 
 object ShootPoses {
-    @JvmField val garden = alliance(pose(60.0, -15.0, 90.0), pose())
+    @JvmField val garden = alliance(pose(60.0, 25.0, 90.0), pose())
     @JvmField val loading = alliance(pose(), pose())
 
     fun init(color: AllianceColor) {
@@ -97,7 +101,7 @@ object UtilityPoses {
 }
 
 private fun alliance(red: Pose2d, blu: Pose2d): AlliancePose2d {
-    return AlliancePose2d(red.withHeading(Math.toRadians(red.heading)), blu.withHeading(Math.toRadians(blu.heading)), AllianceColor.RED)
+    return AlliancePose2d(red, blu, AllianceColor.RED)
 }
 
 private fun pose(x: Double, y: Double, heading: Double): Pose2d {

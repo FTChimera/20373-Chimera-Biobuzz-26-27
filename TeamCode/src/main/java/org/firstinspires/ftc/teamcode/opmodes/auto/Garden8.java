@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 
 import java.util.concurrent.TimeUnit;
 
-@Autonomous(name = "Garden 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME) //TODO: change to main tele
+@Autonomous(name = "Garden 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class Garden8 extends OpMode {
     Robot robot;
     boolean isStopped=false;

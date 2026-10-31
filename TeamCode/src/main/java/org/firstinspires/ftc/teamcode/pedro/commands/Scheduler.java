@@ -15,8 +15,6 @@ import java.util.stream.Collectors;
  * @author Baron Henderson
  * @author Kabir Goyal
  * @author Davis Luxenberg
- * // TODO: move all IVY stuff here or build own command based system
- * // TODO: do a full rewrite in kotlin for kt practice
  */
 public class Scheduler {
     public static final Scheduler INSTANCE = new Scheduler();

@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.config;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
+import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.MatchMode;
@@ -37,7 +39,7 @@ public class OpModeStorage {
      */
 
     public static void resetToDefault() {
-        pose = PoseFactory.deg(47, -63, 0); // Chimera's testing start pose in robotics room
+        pose = StartPoses.gardenArea; // Chimera's testing start pose in robotics room
         allianceColor = AllianceColor.BLUE;
         matchMode = MatchMode.QUALIFICATIONS;
     }

@@ -11,7 +11,6 @@ import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.GoBildaPrismD
 /** When the robot is on a display stand*/
 @TeleOp
 public class DisplayStand extends LinearOpMode {
-    // TODO: Implement
     @Override
     public void runOpMode() {
         Lights lights = new Lights(hardwareMap, AllianceColor.RED);

@@ -56,7 +56,7 @@ public class AutoAlignFollowerHoldingTest extends LinearOpMode {
             Velocity velocity = follower.localizer.velocity();
             Velocity deltaPose = velocity.scale(dt);
 
-            //deltaPose = Velocity.zero(); //TODO Comment this out
+            //deltaPose = Velocity.zero();
             autoAimerCalculator.updatePedro(currentPose, deltaPose);
 
             if (gamepad1.a) {

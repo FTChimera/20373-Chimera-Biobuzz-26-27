@@ -17,7 +17,6 @@ public interface BasicStateMachine {
     default CommandBuilder asIvy() {
         AtomicBoolean done = new AtomicBoolean(false);
         return Command.build()
-                .requiring(done, this)
                 .setExecute(() -> done.set(this.run()))
                 .setDone(done::get);
     }

@@ -35,16 +35,16 @@ public class Field {
             // Representative coordinate positions for the Red and Blue alliance target zones
             if (allianceColor.isRed()) {
                 if (this == TIPPED) {
-                    return new Pose(135.0, 135.0, Math.toRadians(45)); //TODO: POSITIONS
+                    return new Pose(60, 84);
                 } else {
-                    return new Pose(135.0, 120.0, Math.toRadians(0));
+                    return new Pose(60, 60);
                 }
             }
             if (allianceColor.isBlue()) {
                 if (this == TIPPED) {
-                    return new Pose(9.0, 135.0, Math.toRadians(135));
+                    return new Pose(84, 60);
                 } else {
-                    return new Pose(9.0, 120.0, Math.toRadians(180));
+                    return new Pose(84, 84);
                 }
             }
             return Pose.zero();
@@ -59,18 +59,18 @@ public class Field {
 
     // Defined loading zones using 24x24 inch floor tiles corners on standard 144x144 field layout
     public static final Coordinate[] RED_LOADING_ZONE = new Coordinate[]{
-            new Coordinate(0, 0),//TODO
-            new Coordinate(24, 0),
-            new Coordinate(24, 24),
-            new Coordinate(0, 24),
-            new Coordinate(0, 0)
+            new Coordinate(0, 120),
+            new Coordinate(12, 120),
+            new Coordinate(12, 96),
+            new Coordinate(0, 96),
+            new Coordinate(0, 120)
     };
     public static final Coordinate[] BLUE_LOADING_ZONE = new Coordinate[]{
-            new Coordinate(120, 0),
-            new Coordinate(144, 0),
             new Coordinate(144, 24),
-            new Coordinate(120, 24),//TODO
-            new Coordinate(120, 0)
+            new Coordinate(120, 24),
+            new Coordinate(120, 48),
+            new Coordinate(144, 48),
+            new Coordinate(144, 24)
     };
 
     public double botWidth, botLength;
@@ -86,12 +86,12 @@ public class Field {
 
         // Model static obstacles on the field (e.g., Hive structure bases modeled as rectangles)
         Polygon hiveBase1 = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(60, 68), new Coordinate(84, 68),//TODO
-                new Coordinate(84, 70), new Coordinate(60, 70), new Coordinate(60, 68)
+                new Coordinate(45, 50), new Coordinate(51, 50),
+                new Coordinate(51, 94), new Coordinate(45, 94), new Coordinate(45, 50)
         });
         Polygon hiveBase2 = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(68, 60), new Coordinate(70, 60),
-                new Coordinate(70, 84), new Coordinate(68, 84), new Coordinate(68, 60)
+                new Coordinate(99, 94), new Coordinate(93, 94),
+                new Coordinate(93, 50), new Coordinate(99, 50), new Coordinate(99, 94)
         });
         obstacles = hiveBase1.union(hiveBase2);
     }

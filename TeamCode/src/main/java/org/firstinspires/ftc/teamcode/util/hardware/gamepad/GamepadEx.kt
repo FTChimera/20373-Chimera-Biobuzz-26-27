@@ -83,7 +83,6 @@ open class GpFancyButton(typePressType: PressType, gamepadButtonSupplier: Boolea
 
 class NormalButton(gamepadButtonSupplier: BooleanSupplier) : GpFancyButton(PressType.Normal, gamepadButtonSupplier)
 
-// TODO: Create a generic type button for sticks (drivepowers)
 
 class DriveVector(var forward: Double, var strafe:Double, var turn:Double) : DrivePowers(forward, strafe, turn) {
     companion object {

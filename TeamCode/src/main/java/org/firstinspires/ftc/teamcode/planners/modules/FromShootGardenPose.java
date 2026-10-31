@@ -10,19 +10,21 @@ import androidx.annotation.NonNull;
 import com.pedropathing.api.Paths;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.Path;
-import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
+import org.firstinspires.ftc.teamcode.planners.Timings;
+import org.firstinspires.ftc.teamcode.planners.Values;
+import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 public class FromShootGardenPose {
     public static class ToIntakeGarden extends PathPlanner {
         Path toGarden;
-        Path finishIntake;
         Path back;
         public ToIntakeGarden(Robot robot) {
             super(robot);
@@ -37,24 +39,20 @@ public class FromShootGardenPose {
         public Command run() {
             return sequential(
                     instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, toGarden), setMaxPowerOnFly(0.5, 0.4))
+                    parallel(follow(robot.follower, toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
+                    waitMs(Timings.gardenIntakeTimeMs),
+                    parallel(follow(robot.follower, back), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Constants.FORESIGHT_CONFIG.maxPathSpeed.get()))
             );
-        }
-
-        private Command setMaxPowerOnFly(double tValue, double newPower) {
-            return Command.build()
-                    .requiring(robot, tValue, newPower)
-                    .setExecute(() -> {
-                        if (robot.follower.completion() >= tValue) Constants.FOLLOWER_MAX_PATH_SPEED.set(newPower);
-                    })
-                    .setDone(() -> Constants.FOLLOWER_MAX_PATH_SPEED.get()==newPower);
         }
 
         @Override
         public void buildPaths() {
             toGarden = Paths
-                    .curve(startPose, IntakePoses.gardenControl1, IntakePoses.gardenControl2, IntakePoses.gardenEnd)
-                    .heading(Interpolator.tangent);
+                    .curve(startPose, IntakePoses.gardenControl1, IntakePoses.gardenEnd)
+                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.gardenEnd.heading(), Values.gardenIntakeConstantTValue, false));
+            back = Paths
+                    .curve(IntakePoses.gardenEnd, IntakePoses.gardenControl1, ShootPoses.garden)
+                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull
