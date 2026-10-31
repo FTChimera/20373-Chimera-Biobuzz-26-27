@@ -34,6 +34,7 @@ public class Garden8 extends OpMode {
         robot.debug = true;
         plan = PlanBuilder.startGarden(robot)
                 .shootPreloads()
+                .intakeFromGarden()
                 .schedule();
     }
 
@@ -44,6 +45,7 @@ public class Garden8 extends OpMode {
     public void loop() {
         Scheduler.INSTANCE.execute();
         robot.update();
+        // todo: implement logging for plan
         telemetry.update();
         if (robot.opModeTimeRemaining() <= 0) {
             if (!isStopped) {
