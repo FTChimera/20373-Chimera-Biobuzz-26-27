@@ -86,7 +86,11 @@ public class Lights {
     }
 
     public void flashRed() {
-        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_3);
+        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_4);
+    }
+
+    public void oneMinThing() {
+        prism.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_6);
     }
 
     public void displayAllianceColor() {

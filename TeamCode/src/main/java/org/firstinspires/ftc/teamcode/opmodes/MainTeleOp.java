@@ -49,22 +49,22 @@ public class MainTeleOp extends LinearOpMode {
         robot.setSmartShooterControl(false);
 
         // Buttons
-        intakeControl = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad1.x);
+        intakeControl = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad2.x);
         intakeControl.setPressed(true);
-        intakeEject = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad1.back);
+        intakeEject = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.back);
 
         reZeroCornerNextToLoadingZone = new GpFancyButton(FancyButton.PressType.LongPress, ()->gamepad2.back);
         reZeroCornerNextToLoadingZone.declareActionOnPress((fancyButton) -> {if (fancyButton.startPress()) MainTeleOp.this.robot.reZeroCornerNextToLoadingZone();});
         reZeroVision = new GpFancyButton(FancyButton.PressType.LongPress, ()->gamepad2.start);
         reZeroVision.declareActionOnPress((fancyButton) -> {if (fancyButton.startPress()) MainTeleOp.this.robot.reZeroVision();});
 
-        moveToParkZone = new GpFancyButton(FancyButton.PressType.RisingEdge, ()-> gamepad2.a);
+        moveToParkZone = new GpFancyButton(FancyButton.PressType.RisingEdge, ()-> gamepad1.a);
 
-        runTransferFast = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad1.right_bumper);
-        runTransferSlow = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad1.left_bumper);
+        runTransferFast = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.right_bumper);
+        runTransferSlow = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.left_bumper);
         panicShoot = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.b);
         autoAlignAndStartShoot = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.y);
-        keepShooterOn = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad1.y);
+        keepShooterOn = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad2.y);
         keepShooterOn.setPressed(false);
 
 

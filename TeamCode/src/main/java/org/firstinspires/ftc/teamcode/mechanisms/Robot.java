@@ -64,7 +64,7 @@ public class Robot {
     public boolean debug = false;
 
     public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color, RobotMode robotMode, Pose2d startingPose) {
-        CommonKt.init(color);
+        CommonKt.init(color);// todo add 1 min lights
         Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
         Constants.FOLLOWER_BRAKE_AT_END.set(true);
         follower = Constants.createFollower(hardwareMap);
@@ -289,8 +289,12 @@ public class Robot {
     }
     public void intakeEject() {
         intake.forceEject();
+        transfer.reverse();
     }
-    public void restoreIntake() {intake.stopEjecting();}
+    public void restoreIntake() {
+        intake.stopEjecting();
+        transfer.stop();
+    }
 
     // smart intake control basically has intake on the whole time except for auto eject and battery voltage low
     public void setSmartIntakeControl(boolean set) {
@@ -329,14 +333,16 @@ public class Robot {
     public void smartShooterUpdate() {
         if (shooter.panicking) return;
         //shooter.solveAndSetVelocity(PoseFactory.of(follower.localizer.pose()), follower.localizer.velocity(), field.getHiveState(), transfer.getBallColor(), getDt());
-        shooter.setVelocity(1350);//todo
+        shooter.setVelocity(1370);//todo
     }
 
     /* LIGHTS */
 
     private void lightsControl() {
-        if (opModeTimeRemaining() <= 7) lights.flashRed();
-        else if (shooter.upToSpeed()) {
+        if (opModeTimeRemaining() <= 7) {lights.flashRed();}
+        else if (opModeTimeRemaining() >= 57 && opModeTimeRemaining() <= 63) {
+            lights.oneMinThing();
+        } else if (shooter.upToSpeed()) {
             lights.displayGreen();
         } else {
             lights.off();
