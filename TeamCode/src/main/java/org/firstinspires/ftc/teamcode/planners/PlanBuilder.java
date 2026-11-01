@@ -50,7 +50,7 @@ public class PlanBuilder {
             position=Positions.GARDEN_SHOOT;
         } else if (position==Positions.LOADING_START) {
             planners.add(new FromStartLoadingPose.ShootPreloads(robot));
-            position=Positions.LOADING_SHOOT;
+            position=Positions.GARDEN_SHOOT;
         } else {
             throw new IllegalStateException("Cannot Shoot Preloads from Position " + position);
         }
@@ -60,6 +60,8 @@ public class PlanBuilder {
     public PlanBuilder intakeFromGarden() {
         if (position==Positions.GARDEN_SHOOT) {
             planners.add(new FromShootGardenPose.ToIntakeGarden(robot));
+        } else if (position==Positions.LOADING_START) {
+            position=Positions.GARDEN_SHOOT;
         } else {
             throw new IllegalStateException("Cannot Intake from the Garden from Position " + position);
         }

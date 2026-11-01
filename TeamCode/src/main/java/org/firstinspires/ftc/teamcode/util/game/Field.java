@@ -27,12 +27,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class Field {
-    public static class NoRouteException extends IllegalStateException {
-        public NoRouteException(String message) {
-            super(message);
-        }
-    }
-
     public enum HiveState {
         TIPPED,
         UNTIPPED;
@@ -114,10 +108,6 @@ public class Field {
         return loadingZone.distance(geometryFactory.createPoint(robotPose.toCoordinate()));
     }
 
-    public boolean isRobotOverlappingLoadingZone(Pose2d robotPose) {
-        return loadingZone.intersects(createRobotGeom(robotPose));
-    }
-
     public Geometry createRobotGeom(Pose2d robotPose) {
         double halfLength = botLength / 2;
         double halfWidth = botWidth / 2;
@@ -131,9 +121,6 @@ public class Field {
     }
 
     public Path generatePathToLoadingZoneShortest(Pose2d robotPose, double innerVal) {
-        if (isRobotOverlappingLoadingZone(robotPose)) {
-            throw new NoRouteException("Robot already overlaps the loading zone; no park path is required");
-        }
         Coordinate closestPtOnLoadingZone = DistanceOp.nearestPoints(loadingZone, createRobotGeom(robotPose))[0];
         double theta = Vector2D.cartesian(closestPtOnLoadingZone.x - robotPose.x, closestPtOnLoadingZone.y - robotPose.y).theta();
         Vector2D inwards = Vector2D.polar(innerVal, theta);
@@ -153,7 +140,8 @@ public class Field {
         List<Pose2d> poses = pathfinder.findPath(startPose, endPose, forbiddenSpace);
 
         if (poses.isEmpty()) {
-            throw new NoRouteException("No collision-free path to the loading zone");
+            // If no path is found, return a straight line path as a fallback
+            return Paths.line(startPose, startPose).heading(Interpolator.constant(startPose));
         }
         return Paths.through(poses.toArray(new Pose2d[0])).heading(closestTangent);
     }

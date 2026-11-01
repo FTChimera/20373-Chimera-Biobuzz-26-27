@@ -13,9 +13,6 @@ public class BiobuzzAprilTags {
     public final Cluster opposite, alliance;
 
     public BiobuzzAprilTags(AllianceColor allianceColor) {
-        if (allianceColor.isUnknown()) {
-            throw new IllegalArgumentException("Alliance color must be RED or BLUE");
-        }
         opposite = allianceColor.isRed()? RED_OPPOSITE:BLUE_OPPOSITE;
         alliance = allianceColor.isRed()? RED_AUDIENCE:BLUE_AUDIENCE;
     }

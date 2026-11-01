@@ -12,6 +12,7 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
@@ -38,9 +39,9 @@ public class FromShootGardenPose {
         public Command run() {
             return sequential(
                     instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
+                    parallel(follow(robot.follower, toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
                     waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> back)
+                    parallel(follow(robot.follower, back), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Constants.FORESIGHT_CONFIG.maxPathSpeed.get()))
             );
         }
 

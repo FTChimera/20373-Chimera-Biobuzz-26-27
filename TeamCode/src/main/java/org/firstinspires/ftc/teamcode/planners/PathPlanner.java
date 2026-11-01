@@ -12,7 +12,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
-import java.util.Objects;
 
 public abstract class PathPlanner {
     protected Pose2d startPose;
@@ -31,7 +30,7 @@ public abstract class PathPlanner {
         );
     }
     public abstract void buildPaths();
-    public void setStartPose(Pose newPose) {this.startPose = PoseFactory.of(Objects.requireNonNull(newPose, "Start pose cannot be null"));}
+    public void setStartPose(Pose newPose) {this.startPose = PoseFactory.of(newPose);}
 
     @NonNull public abstract String toString();
 }

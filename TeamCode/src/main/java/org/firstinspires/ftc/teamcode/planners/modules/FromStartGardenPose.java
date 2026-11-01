@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.planners.modules;
 
+import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import androidx.annotation.NonNull;
@@ -32,14 +33,15 @@ public class FromStartGardenPose {
         @Override
         public Command run() {
             return sequential(
-                    follow(robot.follower, () -> pathToShoot),
+                    instant(robot.transfer::slow),
+                    follow(robot.follower, pathToShoot),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
 
         @Override
         public void buildPaths() {
-            pathToShoot = Paths.line(startPose, ShootPoses.garden).linear(startPose, ShootPoses.garden);
+            pathToShoot = Paths.line(StartPoses.gardenArea, ShootPoses.garden).linear(StartPoses.gardenArea, ShootPoses.garden);
         }
 
         @NonNull
@@ -70,7 +72,7 @@ public class FromStartGardenPose {
         public Command run() {
             return sequential(
                     super.run(),
-                    follow(robot.follower, () -> toVision)
+                    follow(robot.follower, toVision)
             );
         }
 
@@ -102,7 +104,7 @@ public class FromStartGardenPose {
         public Command run() {
             return sequential(
                     super.run(),
-                    follow(robot.follower, () -> toLoading)
+                    follow(robot.follower, toLoading)
             );
         }
 

@@ -48,8 +48,8 @@ public enum BallCol {
 
         if (most == RGB.BLUE && cost > costThreshold) return NECTAR_BLUE;
         if (most == RGB.RED && cost > costThreshold) return NECTAR_RED;
-        if (Math.min(rn, gn) - bn > costThreshold) {
-            return POLLEN_YELLOW;
+        if (most == RGB.GREEN && cost > costThreshold) {
+            return POLLEN_YELLOW; // TODO : find a counter example then replace logic with RED+Green detection
         }
 
         return UNKNOWN;

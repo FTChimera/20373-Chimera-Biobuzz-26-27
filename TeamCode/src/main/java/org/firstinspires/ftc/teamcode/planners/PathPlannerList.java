@@ -22,15 +22,15 @@ public class PathPlannerList extends ArrayList<PathPlanner> implements List<Path
      * @param startPose The starting pose to set.
      */
     public void setStartPose(Pose2d startPose) {
-        first().setStartPose(startPose);
+        if (size() > 0) {
+            first().setStartPose(startPose);
+        }
     }
 
     public PathPlanner last() {
-        requireNonEmpty();
         return get(size() - 1);
     }
     public PathPlanner first() {
-        requireNonEmpty();
         return get(0);
     }
 
@@ -40,20 +40,13 @@ public class PathPlannerList extends ArrayList<PathPlanner> implements List<Path
         return command;
     }
     public Command asCommand() {
-        requireNonEmpty();
         List<Command> commands = new ArrayList<>();
-        PathPlanner prevPlanner = first();
+        PathPlanner prevPlanner = new Utils.NullPlanner();
         for (PathPlanner pathPlanner : this) {
             PathPlanner finalPrevPlanner = prevPlanner;
             prevPlanner = pathPlanner;
             commands.add(pathPlanner.total(finalPrevPlanner.getEndPose()));
         }
         return Groups.sequential(commands.toArray(new Command[0]));
-    }
-
-    private void requireNonEmpty() {
-        if (isEmpty()) {
-            throw new IllegalStateException("A PathPlannerList requires a start planner");
-        }
     }
 }
