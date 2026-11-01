@@ -34,6 +34,7 @@ public class MainTeleOp extends LinearOpMode {
     GpFancyButton flipHive;
 
     Robot robot;
+    private boolean parkingInitiated;
 
 
     @Override
@@ -43,6 +44,7 @@ public class MainTeleOp extends LinearOpMode {
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.TELEOP, OpModeStorage.pose);
         robot.matchMode = OpModeStorage.matchMode;
         robot.debug = true;
+        parkingInitiated = false;
 
         robot.setManualBrake(false);
         robot.setSmartIntakeControl(true); // Manually control via toggle gp
@@ -126,8 +128,9 @@ public class MainTeleOp extends LinearOpMode {
                     true, false
             );
 
-            if (robot.shouldPark() || moveToParkZone.isPressed()) {
+            if (!parkingInitiated && (robot.shouldPark() || moveToParkZone.isPressed())) {
                 robot.moveToParkZone();
+                parkingInitiated = true;
             }
 
             if (robot.opModeTimeRemaining() <=0) {

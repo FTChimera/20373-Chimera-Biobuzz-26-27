@@ -88,7 +88,7 @@ public class Utils {
 
         @Override
         public Command run() {
-            return follow(robot.follower, path);
+            return follow(robot.follower, () -> path);
         }
 
         @Override
