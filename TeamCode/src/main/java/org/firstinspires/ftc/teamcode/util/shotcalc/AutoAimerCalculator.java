@@ -30,35 +30,69 @@ public class AutoAimerCalculator {
         this.hiveState = Field.HiveState.UNTIPPED;
     }
 
-    public void updatePedro(Pose robotPose, Velocity deltaPose) {
+    public void updatePedro(Pose robotPose, Velocity velocity, double latencySeconds) {
+        if (robotPose == null || velocity == null) {
+            throw new IllegalArgumentException("Robot pose and velocity are required for Pedro auto-aim.");
+        }
+        if (!Double.isFinite(latencySeconds) || latencySeconds < 0.0) {
+            throw new IllegalArgumentException("Auto-aim latency must be finite and nonnegative.");
+        }
         this.pedro = true;
-        // TODO: verify this one by testing this method for corrected pose.
-        // If this does not work, replace it with a manual scale instead of dt
-        correctedPose = PoseFactory.of(robotPose.plus(deltaPose.toVector2D().toPose()));
+        correctedPose = PoseFactory.of(robotPose).exp(velocity, latencySeconds);
         Pose hivePose = hiveState.goalPose(color);
-        double dydx = (hivePose.y()-robotPose.y())/ (hivePose.x()-robotPose.x());
-        double theta = Math.atan(dydx);
-        targetHeading = Angle.normalize(theta);
+        targetHeading = Angle.normalize(Math.atan2(
+                hivePose.y() - correctedPose.y(),
+                hivePose.x() - correctedPose.x()
+        ));
+    }
+
+    public void updatePedro(Pose robotPose, Velocity velocity) {
+        updatePedro(robotPose, velocity, 0.0);
     }
 
     public void setHiveState(Field.HiveState newHiveState) {
         this.hiveState = newHiveState;
     }
-    public void updateLimelight(LLResult llResult, Velocity pedroVelocity) {
-        this.updateLimelight(llResult, pedroVelocity, hiveState);
+    public void updateLimelight(LLResult llResult, Velocity velocity, double latencySeconds) {
+        this.updateLimelight(llResult, velocity, hiveState, latencySeconds);
     }
 
     public void updateLimelight(LLResult llResult, Velocity velocity, Field.HiveState hiveState) {
+        updateLimelight(llResult, velocity, hiveState, 0.0);
+    }
+
+    public void updateLimelight(LLResult llResult, Velocity velocity, Field.HiveState hiveState,
+                                double latencySeconds) {
+        if (llResult == null || velocity == null || hiveState == null) {
+            throw new IllegalArgumentException("Limelight result, velocity, and hive state are required for auto-aim.");
+        }
+        if (!Double.isFinite(latencySeconds) || latencySeconds < 0.0) {
+            throw new IllegalArgumentException("Auto-aim latency must be finite and nonnegative.");
+        }
         this.pedro = false;
-        this.turningpower = llResult.getTx();
-        //todo: compensate velocity
+        this.hiveState = hiveState;
+        this.turningpower = Math.toRadians(llResult.getTx()) - velocity.omega * latencySeconds;
     }
 
     public double getTargetHeading() {
         return targetHeading;
     }
 
+    public void initializeCorrectedPose(Pose robotPose) {
+        if (robotPose == null) {
+            throw new IllegalArgumentException("Robot pose is required to initialize corrected pose.");
+        }
+        correctedPose = PoseFactory.of(robotPose);
+    }
+
     public Pose2d getCorrectedPose() {
+        return correctedPose;
+    }
+
+    public Pose2d getCorrectedPoseOrFallback(Pose fallbackPose) {
+        if (correctedPose == null) {
+            initializeCorrectedPose(fallbackPose);
+        }
         return correctedPose;
     }
 
@@ -66,9 +100,15 @@ public class AutoAimerCalculator {
     public String getDebugString() {return "namaste. Your mode is "+ (pedro ? "Pedro Heading" : "Limelight") +" \nyour target heading is "+ getTargetHeading()/DEG_TO_RAD;}
 
     public double calculateTurningPower(double ehiuafhiushfuidshfsudhfdsufdshfudshfudhfHeading) {
-        double error = targetHeading - ehiuafhiushfuidshfsudhfdsufdshfudshfudhfHeading;
+        if (!pedro) {
+            return clamp(turningpower * 0.5);
+        }
+        double error = Angle.normalize(targetHeading - ehiuafhiushfuidshfsudhfdsufdshfudshfudhfHeading);
         double result = error * 0.5; // TODO: tune on auto align test
-        result += 0;
-        return result;
+        return clamp(result);
+    }
+
+    private double clamp(double value) {
+        return Math.max(-1.0, Math.min(1.0, value));
     }
 }

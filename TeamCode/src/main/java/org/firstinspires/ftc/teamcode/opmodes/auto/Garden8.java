@@ -27,6 +27,8 @@ public class Garden8 extends OpMode {
     double pastTime;
     Command plan;
     boolean parked;
+    private double lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
+    private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
     @Override
     public void init() {
@@ -71,8 +73,11 @@ public class Garden8 extends OpMode {
         }
 
         if ((robot.shouldPark() || (plan != null && !Scheduler.INSTANCE.isRunning(plan)))&&!parked) {
-            robot.moveToParkZone();
-            parked = true;
+            double now = robot.getOpModeTimeSeconds();
+            if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+                lastParkAttemptTimeSec = now;
+                parked = robot.moveToParkZone();
+            }
         }
 
     }

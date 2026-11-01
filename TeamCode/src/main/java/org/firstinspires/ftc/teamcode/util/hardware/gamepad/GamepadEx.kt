@@ -2,8 +2,11 @@ package org.firstinspires.ftc.teamcode.util.hardware.gamepad
 
 import com.pedropathing.drivetrain.DrivePowers
 import com.sun.tools.javac.api.Formattable
+import org.firstinspires.ftc.teamcode.util.AllianceColor
 import org.firstinspires.ftc.teamcode.util.Timer
+import org.firstinspires.ftc.teamcode.util.math.MathUtils.*
 import org.firstinspires.ftc.teamcode.util.math.MathUtils.Companion.DEG_TO_RAD
+import org.firstinspires.ftc.teamcode.util.math.MathUtils.Companion.units
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.function.BooleanSupplier
@@ -101,10 +104,10 @@ class DriveVector(var forward: Double, var strafe:Double, var turn:Double) : Dri
         forward: Double,
         strafe: Double,
         turn: Double,
-        heading: Double
+        headingRadians: Double
     ) : this(
-        forward * cos(heading * DEG_TO_RAD) + strafe * sin(heading * DEG_TO_RAD),
-        -forward * sin(heading * DEG_TO_RAD) + strafe * cos(heading * DEG_TO_RAD),
+        forward * cos(headingRadians) + strafe * sin(headingRadians),
+        -forward * sin(headingRadians) + strafe * cos(headingRadians),
         turn
     )
 
@@ -145,14 +148,22 @@ class DriveVector(var forward: Double, var strafe:Double, var turn:Double) : Dri
         return this
     }
 
-    fun fieldCentric(heading: Double): DriveVector {
-        val cosA = cos(heading * DEG_TO_RAD)
-        val sinA = sin(heading * DEG_TO_RAD)
+    fun fieldCentric(headingRadians: Double): DriveVector {
+        val cosA = cos(headingRadians)
+        val sinA = sin(headingRadians)
         val newForward = forward * cosA + strafe * sinA
         val newStrafe = -forward * sinA + strafe * cosA
         forward = newForward
         strafe = newStrafe
         return this
+    }
+
+    fun fieldCentric(headingRadians: Double, color: AllianceColor): DriveVector {
+        return fieldCentric(units.normalizeHeading(
+            headingRadians - (color.fieldCentricOffset() * DEG_TO_RAD),
+            unit = AngleUnit.RADIANS,
+            settings = HeadingNormSettings.POSITIVE
+        ))
     }
 
     fun copy(): DriveVector {
@@ -165,5 +176,4 @@ class DriveVector(var forward: Double, var strafe:Double, var turn:Double) : Dri
         turn *= v
     }
 }
-
 
