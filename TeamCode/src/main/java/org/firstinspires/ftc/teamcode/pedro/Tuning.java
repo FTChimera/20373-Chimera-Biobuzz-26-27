@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.pedro.procedures.ForesightTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.MecanumTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.PinpointTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.RobotDevelopmentTester;
+import org.firstinspires.ftc.teamcode.pedro.procedures.ShooterPIDSVATuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.Tests;
 
 public class Tuning {
@@ -66,6 +67,20 @@ public class Tuning {
                 return dcMotorEx;
             }
     ); }
+
+    @Tuner(name = "Shooter PIDSVA Tuner")
+    public static Procedure shooterPIDSVATuner() {
+        return new ShooterPIDSVATuner(
+                hardwareMap -> {
+                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "shooter");
+                    dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
+                    return dcMotorEx;
+                },
+                // TODO-USER-CONSTANTS: ticks per rev AT THE OUTPUT SHAFT
+                // = encoderCpm * gearRatio (see SmartFlywheel.Params).
+                // Placeholder 28.0 is from robotDev/AutoTuner/TuningConfig.java.
+                28.0);
+    }
 
     private static RevColorSensorV3 colorSensor(HardwareMap hardwareMap, String name, float gain) {
         RevColorSensorV3 colorSensorV3 = hardwareMap.get(RevColorSensorV3.class, name);
