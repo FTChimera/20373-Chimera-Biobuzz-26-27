@@ -174,11 +174,8 @@ public class Follower {
     }
 
     public void manual(DrivePowers powers, boolean fieldCentric) {
-        DrivePowers effectivePowers = powers;
-        if (fieldCentric) {
-            effectivePowers = ManualDrive.fieldCentric(powers, this.localizer.pose().heading());
-        }
-        this.manual(effectivePowers);
+        if (fieldCentric) {this.manual(ManualDrive.fieldCentric(powers, this.localizer.pose().heading()));}
+        this.manual(powers);
     }
 
     public void driveOrHold(DrivePowers drivePowers, double inputThreshold, double velocityThreshold) {
@@ -207,11 +204,8 @@ public class Follower {
     }
 
     public void manual(double forward, double lateral, double heading, boolean fieldCentric) {
-        DrivePowers powers = new DrivePowers(forward, lateral, heading);
-        if (fieldCentric) {
-            powers = ManualDrive.fieldCentric(powers, this.localizer.pose().heading());
-        }
-        this.manual(powers);
+        if (fieldCentric) {this.manual(ManualDrive.fieldCentric(new DrivePowers(forward, lateral, heading), this.localizer.pose().heading()));}
+        this.manual(new DrivePowers(forward, lateral, heading));
     }
 
     public void stop() {

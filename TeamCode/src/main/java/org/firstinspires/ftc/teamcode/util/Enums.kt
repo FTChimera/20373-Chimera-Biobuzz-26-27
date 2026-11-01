@@ -17,11 +17,6 @@ enum class AllianceColor {
         return this==UNKNOWN
     }
 
-    fun fieldCentricOffset(): Double {
-        if (isBlue()) return 0.0;
-        return 180.0;
-    }
-
     companion object {
          fun from (isRed: Boolean): AllianceColor {
             if (isRed) {

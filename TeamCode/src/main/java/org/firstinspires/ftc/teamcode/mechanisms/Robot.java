@@ -18,7 +18,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
-import org.firstinspires.ftc.teamcode.util.localization.VisionLocalizationMath;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
@@ -36,17 +35,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Robot {
-    public static boolean AUTO_RELOCALIZE_WITH_VISION = false;
-    public static double MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN = 24.0;
-    public static double MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG = 40.0;
-
     public RobotMode robotMode;
     public Follower follower;
     public Intake intake;
     public Transfer transfer;
     public Shooter shooter;
     public Lights lights;
-    public Vision vision;
+    // TODO: Add vision
     public AutoAimerCalculator autoAimerCalculator;
     public Field field;
     public HardwareMap.DeviceMapping<VoltageSensor> voltageSensors;
@@ -78,13 +73,11 @@ public class Robot {
 
         this.allianceColor = color;
         autoAimerCalculator = new AutoAimerCalculator(allianceColor);
-        autoAimerCalculator.initializeCorrectedPose(startingPose);
 
         intake = new Intake(hardwareMap, color);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap, color);
         lights = new Lights(hardwareMap, color);
-        vision = new Vision(hardwareMap, color);
         field = new Field(color, 13.835, 17.008);
         this.robotMode = robotMode;
         voltageSensors = hardwareMap.voltageSensor;
@@ -107,7 +100,6 @@ public class Robot {
         opModeTimer = new Timer(TimeUnit.SECONDS);
         opModeTimer.reset();
         lights.start();
-        vision.start();
     }
 
     public void update() {
@@ -121,14 +113,7 @@ public class Robot {
             setTeleOpDrive = false;
         }
 
-        vision.update(getHeading());
-        vision.applyInferredHiveState(field);
-        if (AUTO_RELOCALIZE_WITH_VISION && vision.hasReliableLocalization()) {
-            applyVisionLocalizationIfWithinBounds();
-        }
-
-        autoAimerCalculator.setHiveState(field.getHiveState());
-        autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt);
+        autoAimerCalculator.updatePedro(getPose(), getVelocity());
 
         follower.update(dt);
         if (smartIntakeControl) smartIntakeUpdate();
@@ -143,14 +128,13 @@ public class Robot {
 
 
     public void debug() {
-        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ opModeTimer.get()+ "\n Time Remaining (sec): " + opModeTimeRemaining() + "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
+        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ opModeTimer.get()+ "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
         telemetry.addData("=== FOLLOWER DEBUG ===", follower.debug().toString());
         telemetry.addData("Pose", getPose().toString());
         telemetry.addData("=== INTAKE DEBUG ===", "\n"+intake.getDebugString());
         telemetry.addData("=== TRANSFER DEBUG ===", "\n"+transfer.getDebugString());
         telemetry.addData("=== SHOOTER DEBUG ===", "\n"+shooter.getDebugString());
         telemetry.addData("=== LIGHTS DEBUG ===", "\n"+lights.getDebugString());
-        telemetry.addData("=== VISION DEBUG ===", "\n"+vision.getDebugString());
         telemetry.addData("=== AUTO AIMER CALCULATOR DEBUG ===", "\n"+autoAimerCalculator.getDebugString());
         telemetry.addData("=== SHOT CALC DEBUG", shooter.shotCalculator.getDebugString());
     }
@@ -160,7 +144,6 @@ public class Robot {
         transfer.stopImmediately();
         shooter.stopImmediately();
         lights.stop();
-        vision.stop();
     }
 
     public void stopEverything() {
@@ -176,7 +159,7 @@ public class Robot {
     double lastBatteryTime = System.currentTimeMillis();
     public double getBatteryVoltage() {
         double cur=System.currentTimeMillis();
-        if (cur - lastBatteryTime < 300 && !Double.isNaN(lastVolt)) {
+        if (lastBatteryTime-cur < 300 && !Double.isNaN(lastVolt)) {
             return lastVolt;
         }
         lastBatteryTime=cur;
@@ -249,7 +232,7 @@ public class Robot {
 
     public Pose2d getPoseCompensatedForVelocity() {
         //return PoseFactory.of(follower.localizer.pose().exp(follower.velocity(), dt));
-        return autoAimerCalculator.getCorrectedPoseOrFallback(follower.localizer.pose());
+        return autoAimerCalculator.getCorrectedPose();
     }
 
     public void breakFollowing() {follower.stop();}
@@ -257,7 +240,7 @@ public class Robot {
         if (follower.following()) return;
         this.drivePowers = DriveVector;
         if (fieldCentric) {
-            this.drivePowers.fieldCentric(getHeading(), allianceColor);
+            this.drivePowers.fieldCentric(getHeading());
         }
         this.drivePowers.scale(!isBatteryLowPower ? 0.8 : 0.4);
         this.holdIfNoInput = holdIfNoInput;
@@ -279,26 +262,12 @@ public class Robot {
         }
     }
 
-    public boolean reZeroCornerNextToLoadingZone() {
-        if (!UtilityPoses.isCornerLoadingAreaConfigured()) {
-            telemetry.addLine("Corner loading re-zero rejected: configure UtilityPoses.cornerLoadingArea.");
-            return false;
-        }
+    public void reZeroCornerNextToLoadingZone() {
         follower.localizer.setPose(UtilityPoses.cornerLoadingArea);
-        autoAimerCalculator.initializeCorrectedPose(UtilityPoses.cornerLoadingArea);
-        telemetry.addData("Corner loading re-zero applied", UtilityPoses.cornerLoadingArea);
-        return true;
     }
 
-    public boolean reZeroGarden() {
-        if (!UtilityPoses.isCornerGardenAreaConfigured()) {
-            telemetry.addLine("Garden corner re-zero rejected: configure UtilityPoses.cornerGardenArea.");
-            return false;
-        }
+    public void reZeroGarden() {
         follower.localizer.setPose(UtilityPoses.cornerGardenArea);
-        autoAimerCalculator.initializeCorrectedPose(UtilityPoses.cornerGardenArea);
-        telemetry.addData("Garden corner re-zero applied", UtilityPoses.cornerGardenArea);
-        return true;
     }
 
     public boolean moveToParkZone() {
@@ -372,13 +341,8 @@ public class Robot {
 
     public void smartShooterUpdate() {
         if (shooter.panicking) return;
-        shooter.solveAndSetVelocity(
-                getPose(),
-                getVelocity(),
-                field.getHiveState(),
-                transfer.getBallColor(),
-                getDt()
-        );
+        //shooter.solveAndSetVelocity(PoseFactory.of(follower.localizer.pose()), follower.localizer.velocity(), field.getHiveState(), transfer.getBallColor(), getDt());
+        shooter.setVelocity(1370);//todo
     }
 
     /* LIGHTS */
@@ -395,46 +359,7 @@ public class Robot {
     }
 
     /* VISION */
-    public boolean reZeroVision() {
-        if (!vision.hasReliableLocalization()) {
-            telemetry.addData("Vision re-zero rejected", vision.getLocalizationReliabilityReason());
-            return false;
-        }
-        Pose2d visionPose = vision.getFieldPoseEstimate();
-        follower.localizer.setPose(visionPose);
-        autoAimerCalculator.initializeCorrectedPose(visionPose);
-        telemetry.addData("Vision re-zero applied", visionPose);
-        return true;
-    }
+    public void reZeroVision() {
 
-    private void applyVisionLocalizationIfWithinBounds() {
-        Pose2d currentPose = getPose();
-        Pose2d visionPose = vision.getFieldPoseEstimate();
-
-        double positionDelta = currentPose.distance(visionPose);
-        double headingDeltaDeg = Math.abs(AngleUnit.DEGREES.fromRadians(
-                VisionLocalizationMath.normalizeRadians(currentPose.heading() - visionPose.heading())
-        ));
-
-        if (positionDelta > MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN) {
-            telemetry.addData(
-                    "Vision auto relocalize skipped",
-                    "Position delta %.2f in exceeds %.2f in",
-                    positionDelta,
-                    MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN
-            );
-            return;
-        }
-        if (headingDeltaDeg > MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG) {
-            telemetry.addData(
-                    "Vision auto relocalize skipped",
-                    "Heading delta %.2f deg exceeds %.2f deg",
-                    headingDeltaDeg,
-                    MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG
-            );
-            return;
-        }
-        follower.localizer.setPose(visionPose);
-        autoAimerCalculator.initializeCorrectedPose(visionPose);
     }
 }

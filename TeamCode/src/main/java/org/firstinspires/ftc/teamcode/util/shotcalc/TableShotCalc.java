@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.shotcalc;
 
+import com.pedropathing.math.Twist;
+
 import org.firstinspires.ftc.teamcode.util.game.Ball;
 import org.firstinspires.ftc.teamcode.util.interpolation.Interpolate;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
@@ -19,53 +21,36 @@ public class TableShotCalc implements ShotCalculator {
     }
     @Override
     public ShotSolution calculateShot(ShotContext context) {
-        if (context == null) {
-            throw new IllegalArgumentException("Shot context is required.");
-        }
         debug = "";
         ShotContext ctx = context.copy();
-        ctx.validate();
         debug+= ("SOTM: "); debug+=(ctx.sotm);
         if (ctx.sotm) {
-            ctx.robotPose = ctx.poseAtRelease();
+            ctx.robotPose = ctx.robotPose.exp(ctx.velocity, ctx.dt);
         }
+        ShotSolution solution = null;
         boolean nectar = ctx.transferBallCol.ball==Ball.NECTAR;
         debug+=("\nballcol: ");debug+=(ctx.transferBallCol);
-        double distanceToTarget = ctx.distanceToTarget();
-        debug+=("\ndistanceToTarget: ");debug+=(String.format(Locale.US, "(%.2f)", distanceToTarget));
-        if (distanceToTarget <= shooterMap.get(0).distance) {
-            return recordSolution(new ShotSolution(nectar
-                    ? shooterMap.get(0).flywheelTicksPerSecondNectar
-                    : shooterMap.get(0).flywheelTicksPerSecondPollen));
+        debug+=("\ndistanceToTarget: ");debug+=(String.format(Locale.US, "(%.2f)", ctx.distanceToTarget()));
+        if (ctx.distanceToTarget() <= shooterMap.get(0).distance) {
+            solution = new ShotSolution(nectar? shooterMap.get(0).flywheelRPMNectar : shooterMap.get(0).flywheelRPMPollen);
         }
-        for (int i = 1; i < shooterMap.size(); i++) {
+        for (int i = 0; i < shooterMap.size(); i++) {
             TableEntry entry = shooterMap.get(i);
-            if (distanceToTarget <= entry.distance) {
+            if (ctx.distanceToTarget() < entry.distance) {
                 TableEntry last = shooterMap.get(i - 1);
                 double d0 = last.distance;
                 double d1 = entry.distance;
-                double r0 = nectar
-                        ? last.flywheelTicksPerSecondNectar
-                        : last.flywheelTicksPerSecondPollen;
-                double r1 = nectar
-                        ? entry.flywheelTicksPerSecondNectar
-                        : entry.flywheelTicksPerSecondPollen;
-                double ratio = (distanceToTarget - d0) / (d1 - d0);
+                double r0 = nectar?last.flywheelRPMNectar:last.flywheelRPMPollen;
+                double r1 = nectar?entry.flywheelRPMNectar:entry.flywheelRPMPollen;
+                double ratio = (ctx.distanceToTarget() - d0) / (d1 - d0);
 
-                return recordSolution(new ShotSolution(
-                        Interpolate.func(ratio, r0, r1, MathUtils.func.smoothFunc())
-                ));
+                solution = new ShotSolution(Interpolate.func(ratio, r0, r1, MathUtils.func.smoothFunc()));
             }
         }
-
-        TableEntry last = shooterMap.get(shooterMap.size() - 1);
-        return recordSolution(new ShotSolution(nectar
-                ? last.flywheelTicksPerSecondNectar
-                : last.flywheelTicksPerSecondPollen));
-    }
-
-    private ShotSolution recordSolution(ShotSolution solution) {
-        debug+=("\nsolution ticks/sec: ");debug+=(solution.flywheelTicksPerSecond);
+        if (solution == null) {
+            solution = new ShotSolution(nectar? shooterMap.get(shooterMap.size() - 1).flywheelRPMNectar : shooterMap.get(shooterMap.size()-1).flywheelRPMPollen);
+        }
+        debug+=("\nsolution Speed: ");debug+=(solution.flywheelSpeed);
         return solution;
     }
 
@@ -76,18 +61,12 @@ public class TableShotCalc implements ShotCalculator {
 
     public static class TableEntry {
         public double distance;
-        public double flywheelTicksPerSecondNectar;
-        public double flywheelTicksPerSecondPollen;
-
-        public TableEntry(double distance, double flywheelTicksPerSecondNectar, double flywheelTicksPerSecondPollen) {
-            if (!Double.isFinite(distance) || distance < 0.0
-                    || !Double.isFinite(flywheelTicksPerSecondNectar) || flywheelTicksPerSecondNectar < 0.0
-                    || !Double.isFinite(flywheelTicksPerSecondPollen) || flywheelTicksPerSecondPollen < 0.0) {
-                throw new IllegalArgumentException("Shot-table distance and velocities must be finite and nonnegative.");
-            }
+        public double flywheelRPMNectar;
+        public double flywheelRPMPollen;
+        public TableEntry(double distance, double flywheelRPMNectar, double flywheelRPMPollen) {
             this.distance = distance;
-            this.flywheelTicksPerSecondNectar = flywheelTicksPerSecondNectar;
-            this.flywheelTicksPerSecondPollen = flywheelTicksPerSecondPollen;
+            this.flywheelRPMNectar = flywheelRPMNectar;
+            this.flywheelRPMPollen = flywheelRPMPollen;
         }
     }
 }

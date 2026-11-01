@@ -98,21 +98,6 @@ object ShootPoses {
 object UtilityPoses {
     @JvmField val cornerLoadingArea = alliance(pose(), pose()) //face driver
     @JvmField val cornerGardenArea = alliance(pose(), pose()) //face driver
-
-    private const val PLACEHOLDER_EPSILON = 1e-6
-
-    @JvmStatic
-    fun isCornerLoadingAreaConfigured(): Boolean = isConfigured(cornerLoadingArea)
-
-    @JvmStatic
-    fun isCornerGardenAreaConfigured(): Boolean = isConfigured(cornerGardenArea)
-
-    @JvmStatic
-    fun isConfigured(pose: Pose2d): Boolean {
-        return !(abs(pose.x()) < PLACEHOLDER_EPSILON
-                && abs(pose.y()) < PLACEHOLDER_EPSILON
-                && abs(pose.heading()) < PLACEHOLDER_EPSILON)
-    }
 }
 
 private fun alliance(red: Pose2d, blu: Pose2d): AlliancePose2d {

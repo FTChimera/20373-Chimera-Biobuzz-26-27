@@ -3,8 +3,10 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import static org.firstinspires.ftc.teamcode.util.vars.kt.TypesKt.BoolVar;
 
 import com.pedropathing.math.Velocity;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
@@ -20,14 +22,11 @@ import org.firstinspires.ftc.teamcode.util.shotcalc.ShotSolution;
 import org.firstinspires.ftc.teamcode.util.vars.Var;
 
 public class Shooter {
-    private static final SmartFlywheel.Params SHOOTER_PARAMS = new SmartFlywheel.Params(28, 1);
-    public static final DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
-            0.0169037, 0.0, 0.00377037,
-            0.0000, 0.00570009, 0.00666907,
-            30.0000, 1000.00,
-            true, 12.000
+    // TODO: switch back to DOuble Flywheel Full Velocity.
+    public static final PIDFCoefficients shooterPIDConstants = new PIDFCoefficients(
+            99, 1, 0, 0//todo tune
     );
-    public SmartFlywheel motor;
+    public DcMotorEx motor;
 
     public ShotCalculator shotCalculator;
     public AllianceColor color;
@@ -37,31 +36,23 @@ public class Shooter {
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
         this.color = color;
-        motor = new SmartFlywheel(
-                hardwareMap.get(DcMotorEx.class, "shooter"),
-                Controller.doubleFlywheelFullVelocity(shooterVelocityConstants),
-                SHOOTER_PARAMS,
-                hardwareMap.voltageSensor
-        );
-        motor.motor.setDirection(Direction.FORWARD.toMotor());
-        motor.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        motor = hardwareMap.get(DcMotorEx.class, "shooter");
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, shooterPIDConstants);
+        motor.setDirection(Direction.FORWARD.toMotor());
+        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         shotCalculator = ShotCalculator.table();
     }
 
     /** Sets velocity of motor in ticks per second */
     public void setVelocity(int ticksPerSecond) {
-        if (ticksPerSecond < 0) {
-            throw new IllegalArgumentException("Shooter velocity must be nonnegative ticks per second.");
-        }
         motor.setVelocity(ticksPerSecond);
-        motor.update();
         target_velocity = ticksPerSecond;
         panicking = false;
     }
 
     public void panic() {
         motor.setPower(1);
-        motor.update();
         panicking = true;
     }
     public void solveAndSetVelocity
@@ -77,11 +68,11 @@ public class Shooter {
         context.transferBallCol = transferBallCol;
         context.sotm = useSotm.get();
         ShotSolution solution = shotCalculator.calculateShot(context);
-        setVelocity((int) Math.round(solution.flywheelTicksPerSecond));
+        setVelocity((int) solution.flywheelSpeed);
     }
 
     public boolean upToSpeed() {
-        return hasNonzeroVelocityTarget() && Math.abs(target_velocity - motor.getTicksPerSecond()) <= 20;
+        return hasNonzeroVelocityTarget() && Math.abs(target_velocity - motor.getVelocity()) <= 20;
     }
 
     public boolean hasNonzeroVelocityTarget() {
@@ -89,17 +80,15 @@ public class Shooter {
     }
 
     public void update() {
-        motor.update();
+
     }
 
     public String getDebugString() {
-        return "Set Velocity: " + target_velocity+ "\n Get Velocity: " + motor.getTicksPerSecond();
+        return "Set Velocity: " + target_velocity+ "\n Get Velocity: " + motor.getVelocity();
     }
 
     public void stopImmediately() {
-        target_velocity = 0;
-        panicking = false;
-        motor.stopImmediately();
+        motor.setPower(0);
     }
 
     public boolean panicking() {

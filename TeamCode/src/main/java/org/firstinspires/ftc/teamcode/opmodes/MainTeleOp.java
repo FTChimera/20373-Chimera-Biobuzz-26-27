@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.util.RobotMode;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
@@ -21,6 +20,7 @@ public class MainTeleOp extends LinearOpMode {
     GpFancyButton intakeControl;
     GpFancyButton intakeEject;
 
+    GpFancyButton reZeroCornerNextToLoadingZone;
     GpFancyButton reZeroVision;
 
     GpFancyButton moveToParkZone;
@@ -35,9 +35,6 @@ public class MainTeleOp extends LinearOpMode {
 
     Robot robot;
     private boolean parkingInitiated;
-    private boolean parkingRequested;
-    private double lastParkAttemptTimeSec;
-    private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
 
     @Override
@@ -48,8 +45,6 @@ public class MainTeleOp extends LinearOpMode {
         robot.matchMode = OpModeStorage.matchMode;
         robot.debug = true;
         parkingInitiated = false;
-        parkingRequested = false;
-        lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
 
         robot.setManualBrake(false);
         robot.setSmartIntakeControl(true); // Manually control via toggle gp
@@ -60,12 +55,10 @@ public class MainTeleOp extends LinearOpMode {
         intakeControl.setPressed(true);
         intakeEject = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.back);
 
+        reZeroCornerNextToLoadingZone = new GpFancyButton(FancyButton.PressType.LongPress, ()->gamepad2.back);
+        reZeroCornerNextToLoadingZone.declareActionOnPress((fancyButton) -> {if (fancyButton.startPress()) MainTeleOp.this.robot.reZeroCornerNextToLoadingZone();});
         reZeroVision = new GpFancyButton(FancyButton.PressType.LongPress, ()->gamepad2.start);
-        reZeroVision.declareActionOnPress((fancyButton) -> {
-            if (fancyButton.startPress() && !MainTeleOp.this.robot.reZeroVision()) {
-                MainTeleOp.this.robot.telemetry.addLine("Vision re-zero skipped: " + MainTeleOp.this.robot.vision.getLocalizationReliabilityReason());
-            }
-        });
+        reZeroVision.declareActionOnPress((fancyButton) -> {if (fancyButton.startPress()) MainTeleOp.this.robot.reZeroVision();});
 
         moveToParkZone = new GpFancyButton(FancyButton.PressType.RisingEdge, ()-> gamepad1.a);
 
@@ -84,6 +77,7 @@ public class MainTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             intakeControl.update();
             intakeEject.update();
+            reZeroCornerNextToLoadingZone.update();
             reZeroVision.update();
             moveToParkZone.update();
             runTransferFast.update();
@@ -103,11 +97,11 @@ public class MainTeleOp extends LinearOpMode {
             }
             if (intakeEject.endPress()) robot.restoreIntake();
 
-            if (runTransferFast.isPressed() && robot.shooter.upToSpeed() && !(robot.transfer.mode()== Transfer.Mode.REVERSE_EJECT)) {
+            if (runTransferFast.isPressed() && robot.shooter.upToSpeed()) {
                 robot.transfer.shootAll();
             }
 
-            if (runTransferSlow.isPressed() && !(robot.transfer.mode()== Transfer.Mode.REVERSE_EJECT)) {
+            if (runTransferSlow.isPressed()) {
                 robot.transfer.slow();
             }
 
@@ -134,15 +128,9 @@ public class MainTeleOp extends LinearOpMode {
                     true, false
             );
 
-            if (robot.shouldPark() || moveToParkZone.isPressed()) {
-                parkingRequested = true;
-            }
-            if (parkingRequested && !parkingInitiated) {
-                double now = robot.getOpModeTimeSeconds();
-                if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
-                    lastParkAttemptTimeSec = now;
-                    parkingInitiated = robot.moveToParkZone();
-                }
+            if (!parkingInitiated && (robot.shouldPark() || moveToParkZone.isPressed())) {
+                robot.moveToParkZone();
+                parkingInitiated = true;
             }
 
             if (robot.opModeTimeRemaining() <=0) {
