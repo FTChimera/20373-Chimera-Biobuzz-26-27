@@ -5,7 +5,6 @@ import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.Tuner;
-import com.pedropathing.tuning.autotune.TunerRegistrar;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -22,12 +21,32 @@ import org.firstinspires.ftc.teamcode.pedro.procedures.Tests;
 
 public class Tuning {
     // Tuners go here
-    private static RevColorSensorV3 colorSensor(HardwareMap hardwareMap, String name, float gain) {
-        RevColorSensorV3 colorSensorV3 = hardwareMap.get(RevColorSensorV3.class, name);
-        colorSensorV3.setGain(gain);
-        return colorSensorV3;
+    @Tuner(name = "Mecanum Tuner")
+    public static Procedure mecanumTuner() { return new MecanumTuner(); }
+
+    @Tuner(name = "Pinpoint Tuner")
+    public static Procedure pinpointTuner() { return new PinpointTuner(); }
+
+    @Tuner(name = "Foresight Tuner")
+    public static Procedure foresightTuner() {
+        return new ForesightTuner(
+                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
+                hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG));
     }
-    @Tuner
+
+    @Tuner(name = "Color Sensor Tuner")
+    public static Procedure colorSensorTuner() { return new ColorSensorTuner(); }
+
+    @Tuner(name = "Tests")
+    public static Procedure tests() {
+        return new Tests(
+                hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
+                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
+                () -> new Foresight(Constants.FORESIGHT_CONFIG),
+                hardwareMap -> colorSensor(hardwareMap, "color_sensor", 65.3F));
+    }
+
+    @Tuner(name = "Robot Development Tester")
     public static Procedure robotDevTester() { return new RobotDevelopmentTester(
             hardwareMap -> {
                 DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "intake");
@@ -48,30 +67,10 @@ public class Tuning {
             }
     ); }
 
-
-
-    static {
-        // REGISTER ALL TUNERS HERE
-        // add TunerRegistrar.register(name, procedure) here
-        // todo: also if tuning does not work then add back @Tuner
-        // and all the functions
-        // TODO: here is the problem
-        // it looks for classes annotated with @Tuner then registers all of them. so, one @Tuner would make all work, but none would make none work.
-        // ok
-
-        TunerRegistrar.deregisterAll();
-        TunerRegistrar.register("Mecanum Tuner", new MecanumTuner());
-        TunerRegistrar.register("Pinpoint Tuner", new PinpointTuner());
-        TunerRegistrar.register("Foresight Tuner", new ForesightTuner(
-                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
-                hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG)
-        ));
-        TunerRegistrar.register("Color Sensor Tuner", new ColorSensorTuner());
-        TunerRegistrar.register("Tests", new Tests(
-                hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
-                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
-                () -> new Foresight(Constants.FORESIGHT_CONFIG),
-                hardwareMap -> colorSensor(hardwareMap, "color_sensor", 65.3F)));
-        //TunerRegistrar.register("Robot Dev Tester", robotDevTester());
+    private static RevColorSensorV3 colorSensor(HardwareMap hardwareMap, String name, float gain) {
+        RevColorSensorV3 colorSensorV3 = hardwareMap.get(RevColorSensorV3.class, name);
+        colorSensorV3.setGain(gain);
+        return colorSensorV3;
     }
 }
+
