@@ -67,7 +67,7 @@ public class MainTeleOp extends LinearOpMode {
             }
         });
 
-        moveToParkZone = new GpFancyButton(FancyButton.PressType.RisingEdge, ()-> gamepad1.a);
+        moveToParkZone = new GpFancyButton(FancyButton.PressType.Normal, ()-> gamepad1.a);
 
         runTransferFast = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.right_bumper);
         runTransferSlow = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.left_bumper);
