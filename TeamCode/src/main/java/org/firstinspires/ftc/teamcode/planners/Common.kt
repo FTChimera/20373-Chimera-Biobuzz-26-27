@@ -61,8 +61,8 @@ object Values {
 }
 
 object StartPoses {
-    @JvmField val gardenArea = alliance(pose(9.0, 25.0, 0.0), pose())
-    @JvmField val loadingArea = alliance(pose(60.0, 135.0, -90.0), pose())
+    @JvmField val gardenArea = alliance(pose(9.0, 25.0, 0.0), pose(135.0, 119.0, 180.0))
+    @JvmField val loadingArea = alliance(pose(60.0, 135.0, -90.0), pose(84.0, 9.0, 90.0))
     @JvmField val visionAnchorGarden = alliance(pose(), pose())
     @JvmField val visionAnchorLoading = alliance(pose(), pose())
 
@@ -76,8 +76,8 @@ object StartPoses {
 }
 
 object IntakePoses {
-    @JvmField val gardenEnd = alliance(pose(10.0, 10.0, -90.0), pose())
-    @JvmField val gardenControl1 = alliance(pose(18.0, 25.0), pose())
+    @JvmField val gardenEnd = alliance(pose(10.0, 10.0, -90.0), pose(134.0, 134.0, 90.0))
+    @JvmField val gardenControl1 = alliance(pose(18.0, 25.0), pose(126.0, 119.0, 180.0))
 
     fun init(color: AllianceColor) {
         gardenEnd.setAllianceColor(color)
@@ -86,7 +86,7 @@ object IntakePoses {
 }
 
 object ShootPoses {
-    @JvmField val garden = alliance(pose(60.0, 25.0, 90.0), pose())
+    @JvmField val garden = alliance(pose(60.0, 25.0, 90.0), pose(84.0, 119.0, -90.0))
     @JvmField val loading = alliance(pose(), pose())
 
     fun init(color: AllianceColor) {

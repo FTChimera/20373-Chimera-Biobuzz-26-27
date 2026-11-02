@@ -33,15 +33,14 @@ public class FromStartLoadingPose {
         @Override
         public Command run() {
             return sequential(
-                    follow(robot.follower, pathToShoot),
-                    ShooterCommands.waitForHiveLineup(robot),
+                    follow(robot.follower, () -> pathToShoot),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
 
         @Override
         public void buildPaths() {
-            pathToShoot = Paths.line(StartPoses.loadingArea, ShootPoses.loading).linear(StartPoses.loadingArea, ShootPoses.loading);
+            pathToShoot = Paths.line(startPose, ShootPoses.loading).linear(startPose, ShootPoses.loading);
         }
 
         @NonNull
@@ -72,7 +71,7 @@ public class FromStartLoadingPose {
         public Command run() {
             return sequential(
                     super.run(),
-                    follow(robot.follower, toVision)
+                    follow(robot.follower, () -> toVision)
             );
         }
 
@@ -104,7 +103,7 @@ public class FromStartLoadingPose {
         public Command run() {
             return sequential(
                     super.run(),
-                    follow(robot.follower, toGarden)
+                    follow(robot.follower, () -> toGarden)
             );
         }
 

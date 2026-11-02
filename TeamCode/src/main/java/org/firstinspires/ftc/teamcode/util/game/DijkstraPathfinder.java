@@ -49,6 +49,12 @@ public class DijkstraPathfinder {
     public List<Pose2d> findPath(Pose2d start, Pose2d end, Geometry forbiddenSpace) {
         Coordinate startCoord = start.toCoordinate();
         Coordinate endCoord = end.toCoordinate();
+        if (forbiddenSpace != null && !forbiddenSpace.isEmpty()) {
+            if (forbiddenSpace.contains(forbiddenSpace.getFactory().createPoint(startCoord))
+                    || forbiddenSpace.contains(forbiddenSpace.getFactory().createPoint(endCoord))) {
+                return Collections.emptyList();
+            }
+        }
 
         // 1. Build a unique list of all potential waypoints (Start, Goal, and Obstacle Corners)
         List<Coordinate> uniquePoints = new ArrayList<>();
@@ -150,7 +156,7 @@ public class DijkstraPathfinder {
 
         LineString line = Field.geometryFactory.createLineString(new Coordinate[]{c1, c2});
 
-        // A line of sight is clear if it doesn't cross, nor lie within, forbidden territory boundaries
-        return !line.intersects(forbiddenSpace);
+        // Touching obstacle boundaries at waypoint endpoints is allowed; entering obstacle interiors is not.
+        return !line.intersects(forbiddenSpace) || line.touches(forbiddenSpace);
     }
 }

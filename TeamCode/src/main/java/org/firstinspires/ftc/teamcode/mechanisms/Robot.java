@@ -270,10 +270,19 @@ public class Robot {
         follower.localizer.setPose(UtilityPoses.cornerGardenArea);
     }
 
-    public void moveToParkZone() {
+    public boolean moveToParkZone() {
+        Pose2d correctedPose = getPoseCompensatedForVelocity();
+        if (field.isRobotOverlappingLoadingZone(correctedPose)) return true;
         follower.holdEnd.set(true); // alliance partner does not push
         Constants.FOLLOWER_BRAKE_AT_END.set(false);
-        follower.follow(field.generatePathToLoadingZoneShortest(getPoseCompensatedForVelocity(), 2));// TODO TUNE INNER VAL
+        try {
+            follower.follow(field.generatePathToLoadingZoneShortest(correctedPose, 2));// TODO TUNE INNER VAL
+            return true;
+        } catch (Field.NoRouteException exception) {
+            follower.stop();
+            telemetry.addData("Park path unavailable", exception.getMessage());
+            return false;
+        }
     }
     public boolean shouldPark() {
         double timeToGetToPark = 2;

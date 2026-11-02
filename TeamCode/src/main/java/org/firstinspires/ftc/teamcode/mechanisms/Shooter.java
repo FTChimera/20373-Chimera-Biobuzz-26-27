@@ -72,7 +72,11 @@ public class Shooter {
     }
 
     public boolean upToSpeed() {
-        return Math.abs(target_velocity - motor.getVelocity()) <= 20;
+        return hasNonzeroVelocityTarget() && Math.abs(target_velocity - motor.getVelocity()) <= 20;
+    }
+
+    public boolean hasNonzeroVelocityTarget() {
+        return target_velocity != 0;
     }
 
     public void update() {

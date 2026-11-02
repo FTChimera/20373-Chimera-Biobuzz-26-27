@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ShooterCommands {
     public static Command waitForHiveLineup(Robot robot) {
-        return Command.build();
+        throw new UnsupportedOperationException("Hive lineup requires a vision-owned implementation");
     }
     public static Command shootAllPollen(Robot robot) {
         AtomicBoolean startShoot = new AtomicBoolean(false);
@@ -19,7 +19,11 @@ public class ShooterCommands {
         return Command.build()
                 .requiring(robot.shooter, robot.transfer)
                 .setPriority(0)
-                .setStart(robot.transfer::slow)
+                .setStart(() -> {
+                    if (!robot.shooter.hasNonzeroVelocityTarget()) {
+                        throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
+                    }
+                })
                 .setExecute(() -> {
                     if (!robot.shooter.upToSpeed() || startShoot.get()) {
                         return;
@@ -29,7 +33,7 @@ public class ShooterCommands {
                     timer.set(new Timer());
                 })
                 .setDone(() -> startShoot.get() && timer.get().past(2000))
-                .setEnd((endCondition) -> robot.transfer.slow());
+                .setEnd((endCondition) -> robot.transfer.stop());
 
     }
 }
