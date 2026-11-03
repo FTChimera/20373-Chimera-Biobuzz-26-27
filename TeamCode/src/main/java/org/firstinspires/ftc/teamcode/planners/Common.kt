@@ -63,8 +63,8 @@ object Values {
 object StartPoses {
     @JvmField val gardenArea = alliance(pose(9.0, 25.0, 0.0), pose(135.0, 119.0, 180.0))
     @JvmField val loadingArea = alliance(pose(60.0, 135.0, -90.0), pose(84.0, 9.0, 90.0))
-    @JvmField val visionAnchorGarden = alliance(pose(60.0, 44.0, 90.0), pose(84.0, 100.0, 270.0))
-    @JvmField val visionAnchorLoading = alliance(pose(60.0, 100.0, 270.0), pose(84.0, 44.0, 90.0))
+    @JvmField val visionAnchorGarden = alliance(pose(66.0, 27.0, 190.0), pose(78.0, 117.0, 10.0))
+    @JvmField val visionAnchorLoading = alliance(pose(66.0, 114.0, 135.0), pose(78.0, 30.0, 315.0))
 
     fun init(color: AllianceColor) {
         gardenArea.setAllianceColor(color)
@@ -96,8 +96,8 @@ object ShootPoses {
 }
 
 object UtilityPoses {
-    @JvmField val cornerLoadingArea = alliance(pose(9.0, 135.0, 270.0), pose(135.0, 9.0, 270.0)) //face driver
-    @JvmField val cornerGardenArea = alliance(pose(9.0, 9.0, 270.0), pose(135.0, 135.0, 270.0)) //face driver
+    @JvmField val cornerLoadingArea = alliance(pose(9.0, 135.0, 180.0), pose(135.0, 9.0, 0.0)) //face driver
+    @JvmField val cornerGardenArea = alliance(pose(9.0, 9.0, 180.0), pose(135.0, 135.0, 0.0)) //face driver
 
     private const val PLACEHOLDER_EPSILON = 1e-6
 
