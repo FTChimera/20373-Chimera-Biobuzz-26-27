@@ -64,7 +64,7 @@ object StartPoses {
     @JvmField val gardenArea = alliance(pose(9.0, 25.0, 0.0), pose(135.0, 119.0, 180.0))
     @JvmField val loadingArea = alliance(pose(60.0, 135.0, -90.0), pose(84.0, 9.0, 90.0))
     @JvmField val visionAnchorGarden = alliance(pose(66.0, 27.0, 190.0), pose(78.0, 117.0, 10.0))
-    @JvmField val visionAnchorLoading = alliance(pose(66.0, 114.0, 135.0), pose(78.0, 30.0, 315.0))
+    @JvmField val visionAnchorLoading = alliance(pose(60.0, 105.0, 142.0), pose(84.0, 39.0, 322.0))
 
     fun init(color: AllianceColor) {
         gardenArea.setAllianceColor(color)
