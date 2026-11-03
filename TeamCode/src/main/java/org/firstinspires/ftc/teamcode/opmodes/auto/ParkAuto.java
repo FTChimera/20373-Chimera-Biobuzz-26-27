@@ -60,9 +60,14 @@ public class ParkAuto extends LinearOpMode {
         follower.localizer.setPose(selectedPose.pose);
         if (isStopRequested()) return;
         follower.follow(Paths.line(selectedPose.pose, PARK_POSE).linear(selectedPose.pose, PARK_POSE));
-        while (opModeIsActive() && follower.isBusy()) {
-            follower.update();
-            telemetry.update();
+        try {
+            while (opModeIsActive() && follower.following()) {
+                follower.update();
+                telemetry.update();
+            }
+        } finally {
+            follower.stop();
+            follower.drivetrain.stop();
         }
         requestOpModeStop();
     }

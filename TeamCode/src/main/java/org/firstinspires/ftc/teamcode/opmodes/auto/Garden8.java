@@ -12,16 +12,11 @@ import org.firstinspires.ftc.teamcode.pedro.commands.Scheduler;
 import org.firstinspires.ftc.teamcode.planners.PlanBuilder;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.util.RobotMode;
-import org.firstinspires.ftc.teamcode.util.Timer;
-
-import java.util.concurrent.TimeUnit;
 
 @Autonomous(name = "Garden 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class Garden8 extends OpMode {
     Robot robot;
     boolean isStopped=false;
-    Timer zeroVelocityTimer = new Timer(TimeUnit.SECONDS);
-    double pastTime;
     Command plan;
     boolean parked;
     private double lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
@@ -46,30 +41,23 @@ public class Garden8 extends OpMode {
 
     @Override
     public void loop() {
+        if (robot.opModeTimeRemaining() <= 0) {
+            stopAutonomous();
+            return;
+        }
+
         Scheduler.INSTANCE.execute();
         robot.update();
         telemetry.addData("Garden plan", plan == null ? "not scheduled" : Scheduler.INSTANCE.isRunning(plan));
         telemetry.addData("Garden follower mode", robot.follower.mode());
         telemetry.addData("Garden follower path", robot.follower.pathIndex());
         telemetry.update();
-        if (robot.opModeTimeRemaining() <= 0) {
-            if (!isStopped) {
-                zeroVelocityTimer.reset();
-                pastTime = 2;
-                robot.stopAllSubsystems();
-                isStopped = true;
-            }
-            if (robot.getVelocity().toVector().magnitude() < 0.2 || zeroVelocityTimer.past(pastTime)) {
-                // save end vals
-                OpModeStorage.setEndVals(robot.getPoseCompensatedForVelocity());
-                requestOpModeStop();
-            }
-        }
 
         if ((robot.shouldPark() || (plan != null && !Scheduler.INSTANCE.isRunning(plan)))&&!parked) {
             double now = robot.getOpModeTimeSeconds();
             if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
                 lastParkAttemptTimeSec = now;
+                cancelPlan();
                 parked = robot.moveToParkZone();
             }
         }
@@ -78,7 +66,28 @@ public class Garden8 extends OpMode {
 
     @Override
     public void stop() {
-        if (!isStopped) OpModeStorage.setEndVals(robot.getPoseCompensatedForVelocity());
+        if (!isStopped) {
+            OpModeStorage.setEndVals(robot.getPoseCompensatedForVelocity());
+            cancelPlan();
+            robot.stopEverything();
+        }
         Scheduler.INSTANCE.reset();
+    }
+
+    private void stopAutonomous() {
+        if (isStopped) {
+            return;
+        }
+        OpModeStorage.setEndVals(robot.getPoseCompensatedForVelocity());
+        cancelPlan();
+        robot.stopEverything();
+        isStopped = true;
+        requestOpModeStop();
+    }
+
+    private void cancelPlan() {
+        if (plan != null && Scheduler.INSTANCE.isScheduled(plan)) {
+            Scheduler.INSTANCE.cancel(plan);
+        }
     }
 }

@@ -48,10 +48,19 @@ public class BasicAutonPreloads  extends LinearOpMode  {
         );
 
         waitForStart();
+        if (isStopRequested()) {
+            robot.stopEverything();
+            return;
+        }
         robot.start();
-        while (opModeIsActive()) {
-            scheduler.execute();
-            robot.update();
+        try {
+            while (opModeIsActive()) {
+                scheduler.execute();
+                robot.update();
+            }
+        } finally {
+            scheduler.reset();
+            robot.stopEverything();
         }
     }
 
