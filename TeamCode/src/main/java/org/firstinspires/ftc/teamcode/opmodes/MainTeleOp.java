@@ -55,6 +55,31 @@ public class MainTeleOp extends LinearOpMode {
         robot.setSmartIntakeControl(true); // Manually control via toggle gp
         robot.setSmartShooterControl(false);
 
+        robot.setManualBrake(false);
+        robot.setSmartIntakeControl(true); // Manually control via toggle gp
+        robot.setSmartShooterControl(false);
+
+        // Buttons
+        intakeControl = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad2.x);
+        intakeControl.setPressed(true);
+        intakeEject = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.back);
+
+        reZeroVision = new GpFancyButton(FancyButton.PressType.LongPress, ()->gamepad2.start);
+        reZeroVision.declareActionOnPress((fancyButton) -> {
+            if (fancyButton.startPress() && !MainTeleOp.this.robot.reZeroVision()) {
+                MainTeleOp.this.robot.telemetry.addLine("Vision re-zero skipped: " + MainTeleOp.this.robot.vision.getLocalizationReliabilityReason());
+            }
+        });
+
+        moveToParkZone = new GpFancyButton(FancyButton.PressType.Normal, ()-> gamepad1.a);
+
+        runTransferFast = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.right_bumper);
+        runTransferSlow = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.left_bumper);
+        panicShoot = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.b);
+        autoAlignAndStartShoot = new GpFancyButton(FancyButton.PressType.Normal, ()->gamepad2.y);
+        keepShooterOn = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad2.y);
+        keepShooterOn.setPressed(false);
+
         // Buttons
         intakeControl = new GpFancyButton(FancyButton.PressType.Toggle, ()->gamepad2.x);
         intakeControl.setPressed(true);

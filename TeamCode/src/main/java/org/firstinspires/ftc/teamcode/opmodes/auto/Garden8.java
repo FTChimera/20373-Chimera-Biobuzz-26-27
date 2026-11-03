@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto;
 
 import com.pedropathing.ivy.Command;
-import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -18,9 +17,7 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 @Autonomous(name = "Garden 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
-@Config
 public class Garden8 extends OpMode {
-    public static int PRELOAD_SHOOTER_VELOCITY_TICKS_PER_SECOND = 0;
     Robot robot;
     boolean isStopped=false;
     Timer zeroVelocityTimer = new Timer(TimeUnit.SECONDS);
@@ -37,12 +34,7 @@ public class Garden8 extends OpMode {
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
         robot.matchMode = OpModeStorage.matchMode;
         robot.debug = true;
-        if (PRELOAD_SHOOTER_VELOCITY_TICKS_PER_SECOND <= 0) {
-            telemetry.addLine("Set PRELOAD_SHOOTER_VELOCITY_TICKS_PER_SECOND before starting autonomous.");
-            telemetry.update();
-            return;
-        }
-        robot.shooter.setVelocity(PRELOAD_SHOOTER_VELOCITY_TICKS_PER_SECOND);
+        robot.setSmartShooterControl(true);
         plan = PlanBuilder.startGarden(robot)
                 .shootPreloads()
                 .intakeFromGarden()
@@ -56,7 +48,9 @@ public class Garden8 extends OpMode {
     public void loop() {
         Scheduler.INSTANCE.execute();
         robot.update();
-        // todo: implement logging for plan
+        telemetry.addData("Garden plan", plan == null ? "not scheduled" : Scheduler.INSTANCE.isRunning(plan));
+        telemetry.addData("Garden follower mode", robot.follower.mode());
+        telemetry.addData("Garden follower path", robot.follower.pathIndex());
         telemetry.update();
         if (robot.opModeTimeRemaining() <= 0) {
             if (!isStopped) {

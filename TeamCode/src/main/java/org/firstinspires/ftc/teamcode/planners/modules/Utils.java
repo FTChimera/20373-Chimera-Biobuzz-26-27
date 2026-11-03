@@ -30,7 +30,7 @@ public class Utils {
 
         @Override
         public Command run() {
-            return Command.NOOP;
+            return Command.build().setDone(()->true);
         }
 
         @Override

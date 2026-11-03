@@ -100,7 +100,7 @@ public class Robot {
 
         this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         this.telemetry.clearAll();
-        Variables.registerAllToFtcDash();
+//        Variables.registerAllToFtcDash();
     }
 
     public void start() {
@@ -307,7 +307,7 @@ public class Robot {
         follower.holdEnd.set(true); // alliance partner does not push
         Constants.FOLLOWER_BRAKE_AT_END.set(false);
         try {
-            follower.follow(field.generatePathToLoadingZoneShortest(correctedPose, 2));// TODO TUNE INNER VAL
+            follower.follow(field.generatePathToLoadingZoneShortest(correctedPose, 8));// TODO TUNE INNER VAL
             return true;
         } catch (Field.NoRouteException exception) {
             follower.stop();
