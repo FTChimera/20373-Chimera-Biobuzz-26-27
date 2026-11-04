@@ -46,7 +46,7 @@ open class FancyButton constructor(typePressType: PressType) {
         startPress = isPressed && !lastPress
         endPress = !isPressed && lastPress
         when (pressType) {
-            PressType.LongPress -> {pressed = timer.get()>=0.8 && isPressed && !longPressAlreadyHappened; longPressAlreadyHappened = longPressAlreadyHappened||pressed} // use rising edge
+            PressType.LongPress -> {pressed = timer.get()>=0.8 && isPressed && !longPressAlreadyHappened; longPressAlreadyHappened = longPressAlreadyHappened||pressed} // use rising edge TODO HERE IS THE LONGPRESS TIMER
             PressType.Toggle -> {if (startPress) {pressed = !pressed}} // also use rising edge
             PressType.RisingEdge -> {pressed = startPress}
             PressType.FallingEdge -> {pressed = endPress}
