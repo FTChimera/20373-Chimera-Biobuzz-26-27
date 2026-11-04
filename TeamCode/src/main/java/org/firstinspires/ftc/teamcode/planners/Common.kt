@@ -168,6 +168,8 @@ object UtilityPoses {
     }
 }
 
+object ParkAutoStartPoses {
+    private val redUntippedStart = pose(60.0, 10.0, 0.0)
     private val redTippedStart = pose(32.0, 134.0, 0.0)
     private val blueUntippedStart = pose(84.0, 130.0, 180.0)
     private val blueTippedStart = pose(112.0, 10.0, 180.0)
