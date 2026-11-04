@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.planners
 
 import com.pedropathing.paths.interpolator.Interpolator
 import com.pedropathing.paths.curves.Curve
-import com.pedropathing.utils.Angle
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory
 import org.firstinspires.ftc.teamcode.util.AllianceColor
 import org.firstinspires.ftc.teamcode.util.math.MathUtils
@@ -80,10 +79,10 @@ fun reversingTangent(
                 return if (d.magnitude() < 1e-9) startHeading else d.theta()
             }
             if (reversed == null) {
-                reversed = abs(Angle.error(startHeading, tangentAt(t))) > Math.PI / 2
+                reversed = abs(startHeading - tangentAt(t)) > Math.PI / 2
             }
             fun facing(heading: Double): Double =
-                if (reversed == true) Angle.normalize(heading + Math.PI) else Angle.normalize(heading)
+                if (reversed == true) MathUtils.units.normalizeHeading(heading + Math.PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE) else MathUtils.units.normalizeHeading(heading, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
 
             val completion = curve.pathCompletion(t)
             if (completion <= startTValue) return facing(tangentAt(t))
@@ -92,7 +91,7 @@ fun reversingTangent(
             if (completion >= endTValue) return endTarget
             val boundaryFacing = facing(tangentAt(curve.parameter(startTValue)))
             val local = (completion - startTValue) / (endTValue - startTValue)
-            return Angle.normalize(boundaryFacing + Angle.error(boundaryFacing, endTarget) * local)
+            return MathUtils.units.normalizeHeading(boundaryFacing + (boundaryFacing - endTarget) * local, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
         }
     }
 }
