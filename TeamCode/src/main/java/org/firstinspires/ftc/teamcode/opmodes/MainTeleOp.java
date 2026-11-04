@@ -61,6 +61,10 @@ public class MainTeleOp extends LinearOpMode {
         while (opModeIsActive()) {
             controls.update();
 
+            if (controls.flipHive().isPressed()) {
+                robot.toggleHiveState();
+            }
+
             if (controls.intakeEject().startPress()) {
                 robot.intakeEject();
             }

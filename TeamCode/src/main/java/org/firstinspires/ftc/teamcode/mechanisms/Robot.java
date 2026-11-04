@@ -333,6 +333,14 @@ public class Robot {
         return Math.abs(timeToGetToPark-opModeTimeRemaining())<=1 && matchMode==MatchMode.QUALIFICATIONS;
     }
 
+    public void toggleHiveState() {
+        Field.HiveState nextHiveState = field.getHiveState() == Field.HiveState.TIPPED
+                ? Field.HiveState.UNTIPPED
+                : Field.HiveState.TIPPED;
+        field.setHiveState(nextHiveState);
+        telemetry.addData("Hive state", nextHiveState);
+    }
+
     /* INTAKE */
     public BallCol intakeBall() {
         return intake.getCurrentCol();

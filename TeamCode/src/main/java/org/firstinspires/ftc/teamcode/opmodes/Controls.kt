@@ -42,6 +42,12 @@ class Controls(
 
     fun stopPark(): GpFancyButton = stopParkButton
 
+    private val flipHiveButton = GpFancyButton(FancyButton.PressType.RisingEdge) {
+        secondary().dpad_right
+    }
+
+    fun flipHive(): GpFancyButton = flipHiveButton
+
     private val runTransferFastButton = GpFancyButton(FancyButton.PressType.Normal) {
         secondary().right_bumper
     }
@@ -86,6 +92,7 @@ class Controls(
         reZeroVision().update()
         moveToParkZone().update()
         stopPark().update()
+        flipHive().update()
         runTransferFast().update()
         runTransferSlow().update()
         panicShoot().update()
