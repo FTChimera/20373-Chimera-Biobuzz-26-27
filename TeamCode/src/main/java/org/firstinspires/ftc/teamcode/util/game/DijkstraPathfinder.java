@@ -56,10 +56,20 @@ public class DijkstraPathfinder {
             }
         }
 
-        // 1. Build a unique list of all potential waypoints (Start, Goal, and Obstacle Corners)
+        // 1. Build a unique list of all potential waypoints (Start, Goal, fixed points, and Obstacle Corners)
         List<Coordinate> uniquePoints = new ArrayList<>();
         uniquePoints.add(startCoord);
         uniquePoints.add(endCoord);
+
+        for (int j = 1; j <= 3; j++) {
+            double coordinateX = 48.0 * j - 24.0;
+            for (int k = 1; k <= 3; k++) {
+            double coordinateY = 48.0 * k - 24.0;
+            Coordinate fixedPoint = new Coordinate(coordinateX, coordinateY);
+            if (!uniquePoints.contains(fixedPoint)) {
+                uniquePoints.add(fixedPoint);
+            }}
+        }
 
         // Add coordinates from the boundaries of all inflated obstacles
         if (forbiddenSpace != null) {

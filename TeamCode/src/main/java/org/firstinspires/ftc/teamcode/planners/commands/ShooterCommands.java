@@ -53,12 +53,13 @@ public class ShooterCommands {
         AtomicBoolean startShoot = new AtomicBoolean(false);
         AtomicReference<Timer> timer = new AtomicReference<>();
         return Command.build()
-                .requiring(robot.shooter, robot.transfer)
+                .requiring(robot.shooter, robot.transfer, robot.intake)
                 .setPriority(0)
                 .setStart(() -> {
                     if (!robot.shooter.hasNonzeroVelocityTarget()) {
                         throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
                     }
+                    robot.intake.setFullPower();
                 })
                 .setExecute(() -> {
                     if (!robot.shooter.upToSpeed() || startShoot.get()) {
@@ -68,7 +69,7 @@ public class ShooterCommands {
                     startShoot.set(true);
                     timer.set(new Timer());
                 })
-                .setDone(() -> startShoot.get() && timer.get().past(2000))
+                .setDone(() -> startShoot.get() && timer.get().past(5000))
                 .setEnd((endCondition) -> robot.transfer.stop());
 
     }

@@ -40,7 +40,7 @@ public class OpModeStorage {
 
     public static void resetToDefault() {
         pose = StartPoses.gardenArea; // Chimera's testing start pose in robotics room
-        allianceColor = AllianceColor.BLUE;
+        allianceColor = AllianceColor.RED;
         matchMode = MatchMode.QUALIFICATIONS;
     }
 

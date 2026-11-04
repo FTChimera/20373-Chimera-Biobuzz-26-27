@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.planners
 import com.pedropathing.paths.interpolator.Interpolator
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory
 import org.firstinspires.ftc.teamcode.util.AllianceColor
+import org.firstinspires.ftc.teamcode.util.math.MathUtils
 import org.firstinspires.ftc.teamcode.util.poses.AlliancePose2d
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d
 import kotlin.math.*
@@ -76,7 +77,7 @@ object StartPoses {
 }
 
 object IntakePoses {
-    @JvmField val gardenEnd = alliance(pose(10.0, 10.0, -90.0), pose(134.0, 134.0, 90.0))
+    @JvmField val gardenEnd = red(pose(7.0, 5.0, -90.0))
     @JvmField val gardenControl1 = alliance(pose(18.0, 25.0), pose(126.0, 119.0, 180.0))
 
     fun init(color: AllianceColor) {
@@ -97,7 +98,7 @@ object ShootPoses {
 
 object UtilityPoses {
     @JvmField val cornerLoadingArea = alliance(pose(9.0, 135.0, 180.0), pose(135.0, 9.0, 0.0)) //face driver
-    @JvmField val cornerGardenArea = alliance(pose(9.0, 9.0, 180.0), pose(135.0, 135.0, 0.0)) //face driver
+    @JvmField val cornerGardenArea = alliance(pose(9.0, 9.0, 180.0), pose(135.0, 130.0, 0.0)) //face driver
 
     private const val PLACEHOLDER_EPSILON = 1e-6
 
@@ -126,3 +127,13 @@ private fun pose(x: Double, y: Double): Pose2d {
     return PoseFactory.of(x, y)
 }
 private fun pose(): Pose2d{return pose(0.0,0.0,0.0)}
+
+
+private val mirrorFactory = PoseFactory({pose2d -> PoseFactory.of(144- pose2d.x(), 144-pose2d.y(),
+    MathUtils.units.normalizeHeading(pose2d.heading() + PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE))})
+private fun mirrorPose(red: Pose2d) = mirrorFactory.create(red)
+
+
+private fun red(red: Pose2d): AlliancePose2d {
+    return AlliancePose2d(red, mirrorPose(red), AllianceColor.RED)
+}

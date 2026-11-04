@@ -18,7 +18,7 @@ public class Garden8 extends OpMode {
     Robot robot;
     boolean isStopped=false;
     Command plan;
-    boolean parked;
+    boolean startParked;
     private double lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
     private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
@@ -41,7 +41,7 @@ public class Garden8 extends OpMode {
 
     @Override
     public void loop() {
-        if (robot.opModeTimeRemaining() <= 0) {
+        if (robot.opModeTimeRemaining() <= 0 || robot.inParkZone()) {
             stopAutonomous();
             return;
         }
@@ -53,12 +53,12 @@ public class Garden8 extends OpMode {
         telemetry.addData("Garden follower path", robot.follower.pathIndex());
         telemetry.update();
 
-        if ((robot.shouldPark() || (plan != null && !Scheduler.INSTANCE.isRunning(plan)))&&!parked) {
+        if ((robot.shouldPark() || (plan != null && !Scheduler.INSTANCE.isRunning(plan)))&&!startParked) {
             double now = robot.getOpModeTimeSeconds();
             if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
                 lastParkAttemptTimeSec = now;
                 cancelPlan();
-                parked = robot.moveToParkZone();
+                startParked = robot.moveToParkZone();
             }
         }
 

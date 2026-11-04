@@ -84,7 +84,7 @@ public class Robot {
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap, color);
         lights = new Lights(hardwareMap, color);
-        vision = new Vision(hardwareMap, color);
+        vision = new StubVision(hardwareMap, color);
         field = new Field(color, 13.835, 17.008);
         this.robotMode = robotMode;
         voltageSensors = hardwareMap.voltageSensor;
@@ -314,6 +314,10 @@ public class Robot {
             telemetry.addData("Park path unavailable", exception.getMessage());
             return false;
         }
+    }
+
+    public boolean inParkZone() {
+        return field.isRobotOverlappingLoadingZone(getPoseCompensatedForVelocity());
     }
     public boolean shouldPark() {
         double timeToGetToPark = 2;

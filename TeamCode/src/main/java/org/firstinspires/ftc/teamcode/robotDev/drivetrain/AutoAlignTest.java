@@ -67,6 +67,12 @@ public class AutoAlignTest extends LinearOpMode {
             deltaPose = Velocity.zero(); //TODO Comment this out
             autoAimerCalculator.updatePedro(currentPose, deltaPose);
 
+            if (gamepad1.bWasPressed()) {
+                autoAimerCalculator.hiveState = Field.HiveState.TIPPED;
+            }
+            if (gamepad1.xWasPressed()) {
+                autoAimerCalculator.hiveState = Field.HiveState.UNTIPPED;
+            }
             if (gamepad1.a) {
                 follower.manual(-gamepad1.left_stick_y*0.8, -gamepad1.left_stick_x*0.8, Angle.error(currentPose.heading(), autoAimerCalculator.getCorrectedPose().heading()) * Kp_Turn.get(), true);
             } else {
@@ -80,6 +86,7 @@ public class AutoAlignTest extends LinearOpMode {
             telemetry.addData("Compensated Pose", autoAimerCalculator.getCorrectedPose());
             telemetry.addData("DelTaTime", dt);
             telemetry.addData("--- AUTO AIMER CALCULATOR DEBUG STRING", autoAimerCalculator.getDebugString());
+            telemetry.addData("Hive State", autoAimerCalculator.hiveState);
             telemetry.update();
         } while (opModeIsActive());
     }

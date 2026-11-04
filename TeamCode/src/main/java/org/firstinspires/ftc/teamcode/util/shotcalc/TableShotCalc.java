@@ -14,7 +14,7 @@ public class TableShotCalc implements ShotCalculator {
     static {
         shooterMap.add(new TableEntry(30, 1000, 800));
         shooterMap.add(new TableEntry(40, 1200, 1000));
-        shooterMap.add(new TableEntry(50, 1400, 1200));
+        shooterMap.add(new TableEntry(50, 1300, 1400));
         //todo tune
     }
     @Override

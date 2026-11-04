@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
+import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 public class FromShootGardenPose {
@@ -40,7 +41,8 @@ public class FromShootGardenPose {
                     instant(robot.intake::setFullPower),
                     parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
                     waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> back)
+                    follow(robot.follower, () -> back),
+                    ShooterCommands.shootAllPollen(robot)
             );
         }
 
