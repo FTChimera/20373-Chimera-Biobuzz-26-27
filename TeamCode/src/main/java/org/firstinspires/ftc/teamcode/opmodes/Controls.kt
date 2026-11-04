@@ -10,60 +10,79 @@ class Controls(
     val oneController: Boolean
 ) {
 
-    fun intakeControl(): GpFancyButton {
-        return GpFancyButton(FancyButton.PressType.Toggle) {
-            secondary().x
-        }.apply {
-            setPressed(true)
-        }
+    private val intakeControlButton = GpFancyButton(FancyButton.PressType.Toggle) {
+        secondary().x
+    }.apply {
+        setPressed(true)
     }
 
-    fun intakeEject(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.Normal) {
-            secondary().back
-        }
+    fun intakeControl(): GpFancyButton = intakeControlButton
 
-    fun reZeroVision(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.LongPress) {
-            secondary().start
-        }
-
-    fun moveToParkZone(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.Normal) {
-            primary().a
-        }
-
-    fun runTransferFast(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.Normal) {
-            secondary().right_bumper
-        }
-
-    fun runTransferSlow(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.Normal) {
-            secondary().left_bumper
-        }
-
-    fun panicShoot(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.Normal) {
-            secondary().b
-        }
-
-    fun autoAlignAndStartShoot(): GpFancyButton =
-        GpFancyButton(FancyButton.PressType.Normal) {
-            secondary().y
-        }
-
-    fun keepShooterOn(): GpFancyButton {
-        return GpFancyButton(FancyButton.PressType.Toggle) {
-            secondary().y
-        }.apply {
-            setPressed(false)
-        }
+    private val intakeEjectButton = GpFancyButton(FancyButton.PressType.Normal) {
+        secondary().back
     }
+
+    fun intakeEject(): GpFancyButton = intakeEjectButton
+
+    private val reZeroVisionButton = GpFancyButton(FancyButton.PressType.LongPress) {
+        secondary().start
+    }
+
+    fun reZeroVision(): GpFancyButton = reZeroVisionButton
+
+    private val moveToParkZoneButton = GpFancyButton(FancyButton.PressType.Normal) {
+        primary().a
+    }
+
+    fun moveToParkZone(): GpFancyButton = moveToParkZoneButton
+
+    private val runTransferFastButton = GpFancyButton(FancyButton.PressType.Normal) {
+        secondary().right_bumper
+    }
+
+    fun runTransferFast(): GpFancyButton = runTransferFastButton
+
+    private val runTransferSlowButton = GpFancyButton(FancyButton.PressType.Normal) {
+        secondary().left_bumper
+    }
+
+    fun runTransferSlow(): GpFancyButton = runTransferSlowButton
+
+    private val panicShootButton = GpFancyButton(FancyButton.PressType.Normal) {
+        secondary().b
+    }
+
+    fun panicShoot(): GpFancyButton = panicShootButton
+
+    private val autoAlignAndStartShootButton = GpFancyButton(FancyButton.PressType.Normal) {
+        secondary().y
+    }
+
+    fun autoAlignAndStartShoot(): GpFancyButton = autoAlignAndStartShootButton
+
+    private val keepShooterOnButton = GpFancyButton(FancyButton.PressType.Toggle) {
+        secondary().y
+    }.apply {
+        setPressed(false)
+    }
+
+    fun keepShooterOn(): GpFancyButton = keepShooterOnButton
 
     fun primary(): Gamepad = gamepad1
 
     fun secondary(): Gamepad {
         return if (oneController) gamepad1 else gamepad2
+    }
+
+    fun update() {
+        intakeControl().update()
+        intakeEject().update()
+        reZeroVision().update()
+        moveToParkZone().update()
+        runTransferFast().update()
+        runTransferSlow().update()
+        panicShoot().update()
+        autoAlignAndStartShoot().update()
+        keepShooterOn().update()
     }
 }

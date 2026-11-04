@@ -80,7 +80,7 @@ fun reversingTangent(
                 return if (d.magnitude() < 1e-9) startHeading else d.theta()
             }
             if (reversed == null) {
-                reversed = abs(MathUtils.units.headingError(startHeading, tangentAt(t), MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)) > Math.PI / 2
+                reversed = abs(MathUtils.units.headingError(startHeading, tangentAt(t), MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.CENTERED_AT_ZERO)) > Math.PI / 2
             }
             fun facing(heading: Double): Double =
                 if (reversed == true) MathUtils.units.normalizeHeading(heading + Math.PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE) else MathUtils.units.normalizeHeading(heading, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
@@ -92,7 +92,7 @@ fun reversingTangent(
             if (completion >= endTValue) return endTarget
             val boundaryFacing = facing(tangentAt(curve.parameter(startTValue)))
             val local = (completion - startTValue) / (endTValue - startTValue)
-            return MathUtils.units.normalizeHeading(boundaryFacing + (endTarget - boundaryFacing) * local, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
+            return MathUtils.units.normalizeHeading(boundaryFacing + MathUtils.units.headingError(endTarget, boundaryFacing, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.CENTERED_AT_ZERO) * local, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
         }
     }
 }
