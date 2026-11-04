@@ -1,13 +1,13 @@
 package org.firstinspires.ftc.teamcode.planners;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class UtilityPosesTest {
     @Test
-    public void placeholderCornerRezeroesAreUnconfigured() {
-        assertFalse(UtilityPoses.isCornerLoadingAreaConfigured());
-        assertFalse(UtilityPoses.isCornerGardenAreaConfigured());
+    public void cornerRezeroesUseConfiguredRedPoses() {
+        assertTrue(UtilityPoses.isCornerLoadingAreaConfigured());
+        assertTrue(UtilityPoses.isCornerGardenAreaConfigured());
     }
 }

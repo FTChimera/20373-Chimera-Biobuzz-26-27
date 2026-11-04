@@ -7,6 +7,7 @@ import org.firstinspires.ftc.teamcode.util.AllianceColor
 import org.firstinspires.ftc.teamcode.util.math.MathUtils
 import org.firstinspires.ftc.teamcode.util.poses.AlliancePose2d
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d
+import org.locationtech.jts.geom.Coordinate
 import kotlin.math.*
 
 fun init(color:AllianceColor) {
@@ -79,7 +80,7 @@ fun reversingTangent(
                 return if (d.magnitude() < 1e-9) startHeading else d.theta()
             }
             if (reversed == null) {
-                reversed = abs(startHeading - tangentAt(t)) > Math.PI / 2
+                reversed = abs(MathUtils.units.headingError(startHeading, tangentAt(t), MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)) > Math.PI / 2
             }
             fun facing(heading: Double): Double =
                 if (reversed == true) MathUtils.units.normalizeHeading(heading + Math.PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE) else MathUtils.units.normalizeHeading(heading, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
@@ -113,10 +114,10 @@ object Values {
 }
 
 object StartPoses {
-    @JvmField val gardenArea = alliance(pose(9.0, 25.0, 0.0), pose(135.0, 119.0, 180.0))
-    @JvmField val loadingArea = alliance(pose(60.0, 135.0, -90.0), pose(84.0, 9.0, 90.0))
-    @JvmField val visionAnchorGarden = alliance(pose(66.0, 27.0, 190.0), pose(78.0, 117.0, 10.0))
-    @JvmField val visionAnchorLoading = alliance(pose(60.0, 105.0, 142.0), pose(84.0, 39.0, 322.0))
+    @JvmField val gardenArea = red(pose(9.0, 25.0, 0.0))
+    @JvmField val loadingArea = red(pose(60.0, 135.0, -90.0))
+    @JvmField val visionAnchorGarden = red(pose(66.0, 27.0, 190.0))
+    @JvmField val visionAnchorLoading = red(pose(60.0, 105.0, 142.0))
 
     fun init(color: AllianceColor) {
         gardenArea.setAllianceColor(color)
@@ -129,7 +130,7 @@ object StartPoses {
 
 object IntakePoses {
     @JvmField val gardenEnd = red(pose(7.0, 5.0, -90.0))
-    @JvmField val gardenControl1 = alliance(pose(18.0, 25.0), pose(126.0, 119.0, 180.0))
+    @JvmField val gardenControl1 = red(pose(18.0, 25.0))
 
     fun init(color: AllianceColor) {
         gardenEnd.setAllianceColor(color)
@@ -138,8 +139,8 @@ object IntakePoses {
 }
 
 object ShootPoses {
-    @JvmField val garden = alliance(pose(60.0, 25.0, 90.0), pose(84.0, 119.0, -90.0))
-    @JvmField val loading = alliance(pose(60.0, 119.0, 270.0), pose(84.0, 25.0, 90.0))
+    @JvmField val garden = red(pose(60.0, 25.0, 90.0))
+    @JvmField val loading = red(pose(60.0, 119.0, 270.0))
 
     fun init(color: AllianceColor) {
         garden.setAllianceColor(color)
@@ -148,8 +149,8 @@ object ShootPoses {
 }
 
 object UtilityPoses {
-    @JvmField val cornerLoadingArea = alliance(pose(9.0, 135.0, 180.0), pose(135.0, 9.0, 0.0)) //face driver
-    @JvmField val cornerGardenArea = alliance(pose(9.0, 9.0, 180.0), pose(135.0, 130.0, 0.0)) //face driver
+    @JvmField val cornerLoadingArea = red(pose(9.0, 135.0, 180.0)) //face driver
+    @JvmField val cornerGardenArea = red(pose(9.0, 9.0, 180.0)) //face driver
 
     private const val PLACEHOLDER_EPSILON = 1e-6
 
@@ -165,6 +166,74 @@ object UtilityPoses {
                 && abs(pose.y()) < PLACEHOLDER_EPSILON
                 && abs(pose.heading()) < PLACEHOLDER_EPSILON)
     }
+}
+
+    private val redTippedStart = pose(32.0, 134.0, 0.0)
+    private val blueUntippedStart = pose(84.0, 130.0, 180.0)
+    private val blueTippedStart = pose(112.0, 10.0, 180.0)
+    private val redDestination = pose(8.0, 104.0, 0.0)
+    private val blueDestination = pose(135.0, 38.0, 180.0)
+
+    @JvmStatic fun redUntippedStart(): Pose2d = redUntippedStart.copy()
+    @JvmStatic fun redTippedStart(): Pose2d = redTippedStart.copy()
+    @JvmStatic fun blueUntippedStart(): Pose2d = blueUntippedStart.copy()
+    @JvmStatic fun blueTippedStart(): Pose2d = blueTippedStart.copy()
+    @JvmStatic fun destination(color: AllianceColor): Pose2d =
+        if (color.isRed()) redDestination.copy() else blueDestination.copy()
+}
+
+object FieldPoses {
+    private val redTippedHiveGoal = pose(60.0, 84.0)
+    private val redUntippedHiveGoal = pose(60.0, 60.0)
+    private val blueTippedHiveGoal = pose(84.0, 60.0)
+    private val blueUntippedHiveGoal = pose(84.0, 84.0)
+
+    @JvmStatic fun redTippedHiveGoal(): Pose2d = redTippedHiveGoal.copy()
+    @JvmStatic fun redUntippedHiveGoal(): Pose2d = redUntippedHiveGoal.copy()
+    @JvmStatic fun blueTippedHiveGoal(): Pose2d = blueTippedHiveGoal.copy()
+    @JvmStatic fun blueUntippedHiveGoal(): Pose2d = blueUntippedHiveGoal.copy()
+}
+
+object FieldCoordinates {
+    @JvmStatic fun redLoadingZone(): Array<Coordinate> = arrayOf(
+        Coordinate(0.0, 120.0), Coordinate(12.0, 120.0), Coordinate(12.0, 96.0),
+        Coordinate(0.0, 96.0), Coordinate(0.0, 120.0)
+    )
+
+    @JvmStatic fun blueLoadingZone(): Array<Coordinate> = arrayOf(
+        Coordinate(144.0, 24.0), Coordinate(120.0, 24.0), Coordinate(120.0, 48.0),
+        Coordinate(144.0, 48.0), Coordinate(144.0, 24.0)
+    )
+
+    @JvmStatic fun westHiveBase(): Array<Coordinate> = arrayOf(
+        Coordinate(45.0, 50.0), Coordinate(51.0, 50.0), Coordinate(51.0, 94.0),
+        Coordinate(45.0, 94.0), Coordinate(45.0, 50.0)
+    )
+
+    @JvmStatic fun eastHiveBase(): Array<Coordinate> = arrayOf(
+        Coordinate(99.0, 94.0), Coordinate(93.0, 94.0), Coordinate(93.0, 50.0),
+        Coordinate(99.0, 50.0), Coordinate(99.0, 94.0)
+    )
+
+    @JvmStatic fun westFlower(): Array<Coordinate> = arrayOf(
+        Coordinate(0.0, 45.0), Coordinate(4.9, 45.0), Coordinate(4.9, 51.0),
+        Coordinate(0.0, 51.0), Coordinate(0.0, 45.0)
+    )
+
+    @JvmStatic fun northFlower(): Array<Coordinate> = arrayOf(
+        Coordinate(45.0, 139.1), Coordinate(51.0, 139.1), Coordinate(51.0, 144.0),
+        Coordinate(45.0, 144.0), Coordinate(45.0, 139.1)
+    )
+
+    @JvmStatic fun eastFlower(): Array<Coordinate> = arrayOf(
+        Coordinate(139.1, 93.0), Coordinate(144.0, 93.0), Coordinate(144.0, 99.0),
+        Coordinate(139.1, 99.0), Coordinate(139.1, 93.0)
+    )
+
+    @JvmStatic fun southFlower(): Array<Coordinate> = arrayOf(
+        Coordinate(93.0, 0.0), Coordinate(99.0, 0.0), Coordinate(99.0, 4.9),
+        Coordinate(93.0, 4.9), Coordinate(93.0, 0.0)
+    )
 }
 
 private fun alliance(red: Pose2d, blu: Pose2d): AlliancePose2d {

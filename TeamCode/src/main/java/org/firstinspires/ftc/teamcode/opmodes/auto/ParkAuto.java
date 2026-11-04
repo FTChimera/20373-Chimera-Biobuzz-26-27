@@ -5,28 +5,26 @@ import com.pedropathing.api.Paths;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
+import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
-import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 
 @Autonomous(name = "Park Auto", preselectTeleOp = MainTeleOp.NAME)
 public class ParkAuto extends LinearOpMode {
 
     enum StartPose {
-        RED_UNTIPPED(60, 10, 0),
-        RED_TIPPED(32, 134, 0),
-        BLUE_UNTIPPED(84, 130, 180),
-        BLUE_TIPPED(112, 10, 180);
+        RED_UNTIPPED(ParkAutoStartPoses.redUntippedStart()),
+        RED_TIPPED(ParkAutoStartPoses.redTippedStart()),
+        BLUE_UNTIPPED(ParkAutoStartPoses.blueUntippedStart()),
+        BLUE_TIPPED(ParkAutoStartPoses.blueTippedStart());
 
         public final Pose2d pose;
 
-        StartPose(double x, double y, double heading) {
-            pose = PoseFactory.deg(x, y, heading);
+        StartPose(Pose2d pose) {
+            this.pose = pose;
         }
     }
 
@@ -56,10 +54,10 @@ public class ParkAuto extends LinearOpMode {
                         : AllianceColor.BLUE;
 
         Follower follower = Constants.createFollower(hardwareMap).withLogger(followerLog -> telemetry.addLine(followerLog.toString()));
-        Pose2d PARK_POSE = alliance.isRed()? PoseFactory.deg(8,104,0) : PoseFactory.deg(135, 38, 180);
+        Pose2d parkPose = ParkAutoStartPoses.destination(alliance);
         follower.localizer.setPose(selectedPose.pose);
         if (isStopRequested()) return;
-        follower.follow(Paths.line(selectedPose.pose, PARK_POSE).linear(selectedPose.pose, PARK_POSE));
+        follower.follow(Paths.line(selectedPose.pose, parkPose).linear(selectedPose.pose, parkPose));
         try {
             while (opModeIsActive() && follower.following()) {
                 follower.update();

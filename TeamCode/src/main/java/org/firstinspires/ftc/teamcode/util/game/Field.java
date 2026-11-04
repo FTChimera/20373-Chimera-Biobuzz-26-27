@@ -10,6 +10,8 @@ import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
+import org.firstinspires.ftc.teamcode.planners.FieldCoordinates;
+import org.firstinspires.ftc.teamcode.planners.FieldPoses;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.locationtech.jts.geom.Coordinate;
@@ -41,16 +43,16 @@ public class Field {
             // Representative coordinate positions for the Red and Blue alliance target zones
             if (allianceColor.isRed()) {
                 if (this == TIPPED) {
-                    return new Pose(60, 84);
+                    return FieldPoses.redTippedHiveGoal();
                 } else {
-                    return new Pose(60, 60);
+                    return FieldPoses.redUntippedHiveGoal();
                 }
             }
             if (allianceColor.isBlue()) {
                 if (this == TIPPED) {
-                    return new Pose(84, 60);
+                    return FieldPoses.blueTippedHiveGoal();
                 } else {
-                    return new Pose(84, 84);
+                    return FieldPoses.blueUntippedHiveGoal();
                 }
             }
             return Pose.zero();
@@ -72,20 +74,8 @@ public class Field {
     private static final double SAFETY_RADIUS_INCHES = 5.0;
 
     // Defined loading zones using 24x24 inch floor tiles corners on standard 144x144 field layout
-    public static final Coordinate[] RED_LOADING_ZONE = new Coordinate[]{
-            new Coordinate(0, 120),
-            new Coordinate(12, 120),
-            new Coordinate(12, 96),
-            new Coordinate(0, 96),
-            new Coordinate(0, 120)
-    };
-    public static final Coordinate[] BLUE_LOADING_ZONE = new Coordinate[]{
-            new Coordinate(144, 24),
-            new Coordinate(120, 24),
-            new Coordinate(120, 48),
-            new Coordinate(144, 48),
-            new Coordinate(144, 24)
-    };
+    public static final Coordinate[] RED_LOADING_ZONE = FieldCoordinates.redLoadingZone();
+    public static final Coordinate[] BLUE_LOADING_ZONE = FieldCoordinates.blueLoadingZone();
 
     public double botWidth, botLength;
 
@@ -99,35 +89,17 @@ public class Field {
                 geometryFactory.createPolygon(BLUE_LOADING_ZONE);
 
         // Model static obstacles on the field (e.g., Hive structure bases modeled as rectangles)
-        Polygon hiveBase1 = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(45, 50), new Coordinate(51, 50),
-                new Coordinate(51, 94), new Coordinate(45, 94), new Coordinate(45, 50)
-        });
-        Polygon hiveBase2 = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(99, 94), new Coordinate(93, 94),
-                new Coordinate(93, 50), new Coordinate(99, 50), new Coordinate(99, 94)
-        });
+        Polygon hiveBase1 = geometryFactory.createPolygon(FieldCoordinates.westHiveBase());
+        Polygon hiveBase2 = geometryFactory.createPolygon(FieldCoordinates.eastHiveBase());
         obstacles = hiveBase1.union(hiveBase2);
         // FLAGGED CHANGE: FLOWER footprints, flush against the perimeter walls.
         // Kept separate from `obstacles`: the safety-radius buffer applies to the
         // hive only, so flowers join the forbidden space RAW (see the forbiddenSpace
         // line in generatePathToLoadingZoneShortest).
-        Polygon flowerWest = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(0, 45), new Coordinate(4.9, 45),
-                new Coordinate(4.9, 51), new Coordinate(0, 51), new Coordinate(0, 45)
-        });
-        Polygon flowerNorth = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(45, 139.1), new Coordinate(51, 139.1),
-                new Coordinate(51, 144), new Coordinate(45, 144), new Coordinate(45, 139.1)
-        });
-        Polygon flowerEast = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(139.1, 93), new Coordinate(144, 93),
-                new Coordinate(144, 99), new Coordinate(139.1, 99), new Coordinate(139.1, 93)
-        });
-        Polygon flowerSouth = geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(93, 0), new Coordinate(99, 0),
-                new Coordinate(99, 4.9), new Coordinate(93, 4.9), new Coordinate(93, 0)
-        });
+        Polygon flowerWest = geometryFactory.createPolygon(FieldCoordinates.westFlower());
+        Polygon flowerNorth = geometryFactory.createPolygon(FieldCoordinates.northFlower());
+        Polygon flowerEast = geometryFactory.createPolygon(FieldCoordinates.eastFlower());
+        Polygon flowerSouth = geometryFactory.createPolygon(FieldCoordinates.southFlower());
         flowerObstacles = flowerWest.union(flowerNorth).union(flowerEast).union(flowerSouth);
     }
 

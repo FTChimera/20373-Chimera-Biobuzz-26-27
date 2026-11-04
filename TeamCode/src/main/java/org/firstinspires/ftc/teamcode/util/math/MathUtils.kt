@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.math
 
 import com.pedropathing.math.Pose
+import com.pedropathing.utils.Angle
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D
 import org.firstinspires.ftc.teamcode.util.interpolation.Interpolate
@@ -292,6 +293,12 @@ class MathUtils private constructor() {
                 HeadingNormSettings.NEGATIVE ->
                     if (positiveWrapped == 0.0) 0.0 else positiveWrapped - fullTurn
             }
+        }
+
+        fun headingError(headingA: Double, headingB: Double, unit: AngleUnit, settings: HeadingNormSettings): Double  {
+            val normalizedA = normalizeHeading(headingA, unit, settings)
+            val normalizedB = normalizeHeading(headingB, unit, settings)
+            return normalizeHeading(normalizedA - normalizedB, unit, settings)
         }
     }
 
