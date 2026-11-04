@@ -87,11 +87,11 @@ fun reversingTangent(
             val completion = curve.pathCompletion(t)
             if (completion <= startTValue) return facing(tangentAt(t))
             val endTarget = if (reversed == true) facing(tangentAt(1.0))
-                else Angle.normalize(forwardEndHeading)
+                else MathUtils.units.normalizeHeading(forwardEndHeading, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
             if (completion >= endTValue) return endTarget
             val boundaryFacing = facing(tangentAt(curve.parameter(startTValue)))
             val local = (completion - startTValue) / (endTValue - startTValue)
-            return MathUtils.units.normalizeHeading(boundaryFacing + (boundaryFacing - endTarget) * local, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
+            return MathUtils.units.normalizeHeading(boundaryFacing + (endTarget - boundaryFacing) * local, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
         }
     }
 }
