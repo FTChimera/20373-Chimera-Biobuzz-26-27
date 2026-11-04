@@ -61,7 +61,7 @@ class Controls(
     fun autoAlignAndStartShoot(): GpFancyButton = autoAlignAndStartShootButton
 
     private val keepShooterOnButton = GpFancyButton(FancyButton.PressType.Toggle) {
-        secondary().y
+        secondary().a
     }.apply {
         setPressed(false)
     }
