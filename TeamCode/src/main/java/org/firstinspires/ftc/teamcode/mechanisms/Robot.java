@@ -316,6 +316,12 @@ public class Robot {
         }
     }
 
+    public void cancelPark() {
+        follower.stop();
+        follower.holdEnd.set(false);
+        Constants.FOLLOWER_BRAKE_AT_END.set(true);
+    }
+
     public boolean inParkZone() {
         return field.isRobotOverlappingLoadingZone(getPoseCompensatedForVelocity());
     }

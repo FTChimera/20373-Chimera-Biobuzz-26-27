@@ -20,6 +20,7 @@ public class MainTeleOp extends LinearOpMode {
     private Robot robot;
     private boolean parkingInitiated;
     private boolean parkingRequested;
+    private boolean automaticParkingCancelled;
     private double lastParkAttemptTimeSec;
     private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
@@ -34,6 +35,7 @@ public class MainTeleOp extends LinearOpMode {
         robot.debug = true;
         parkingInitiated = false;
         parkingRequested = false;
+        automaticParkingCancelled = false;
         lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
 
         robot.setManualBrake(false);
@@ -117,7 +119,15 @@ public class MainTeleOp extends LinearOpMode {
             );
             if (controls.autoAlignAndStartShoot().isPressed()) { robot.setAutoAlign(); }
 
-            if (robot.shouldPark() || controls.moveToParkZone().isPressed()) {
+            if (controls.stopPark().startPress()) {
+                robot.cancelPark();
+                parkingRequested = false;
+                parkingInitiated = false;
+                automaticParkingCancelled = true;
+            } else if (controls.moveToParkZone().startPress()) {
+                parkingRequested = true;
+                automaticParkingCancelled = false;
+            } else if (!automaticParkingCancelled && robot.shouldPark()) {
                 parkingRequested = true;
             }
             if (parkingRequested && !parkingInitiated) {

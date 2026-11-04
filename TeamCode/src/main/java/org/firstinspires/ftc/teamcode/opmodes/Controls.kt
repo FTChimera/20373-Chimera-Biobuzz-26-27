@@ -31,10 +31,16 @@ class Controls(
     fun reZeroVision(): GpFancyButton = reZeroVisionButton
 
     private val moveToParkZoneButton = GpFancyButton(FancyButton.PressType.Normal) {
-        primary().a
+        primary().dpad_up
     }
 
     fun moveToParkZone(): GpFancyButton = moveToParkZoneButton
+
+    private val stopParkButton = GpFancyButton(FancyButton.PressType.Normal) {
+        primary().dpad_down
+    }
+
+    fun stopPark(): GpFancyButton = stopParkButton
 
     private val runTransferFastButton = GpFancyButton(FancyButton.PressType.Normal) {
         secondary().right_bumper
@@ -79,6 +85,7 @@ class Controls(
         intakeEject().update()
         reZeroVision().update()
         moveToParkZone().update()
+        stopPark().update()
         runTransferFast().update()
         runTransferSlow().update()
         panicShoot().update()
