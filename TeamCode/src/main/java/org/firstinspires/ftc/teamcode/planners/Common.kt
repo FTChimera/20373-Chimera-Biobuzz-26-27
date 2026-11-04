@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.planners
 
 import com.pedropathing.paths.interpolator.Interpolator
+import com.pedropathing.paths.curves.Curve
+import com.pedropathing.utils.Angle
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory
 import org.firstinspires.ftc.teamcode.util.AllianceColor
 import org.firstinspires.ftc.teamcode.util.math.MathUtils
@@ -43,6 +45,56 @@ fun fastInterpolation(pos1: Pose2d, pos2: Pose2d, startTValue: Double, endTValue
         .until(startTValue, tangentInterpolator)
         .until(endTValue, Interpolator.linear(tangentHeading, endHeading))
         .until(1.0, Interpolator.constant(endHeading))
+}
+
+// FLAGGED CHANGE: heading interpolator that follows the curve tangent,
+// compared against the robot's heading at the start of the path: if the
+// curve's initial tangent points more than 90 degrees away from
+// [startHeading], the tangent segment is reversed so the robot drives
+// backward instead of spinning 180 degrees. Completion fractions follow
+// the existing Values (tangent until [startTValue], blended to the end
+// heading by [endTValue], then constant), measured by arc length via
+// Curve.pathCompletion, as in fastInterpolation.
+//
+// [forwardEndHeading] is the heading to end at when driving forward (the
+// cardinal heading set in Field.generatePathToLoadingZoneShortest). When
+// the path is reversed, it is ignored: the robot stays reversed and ends
+// facing the reversed final tangent, so there is no spin at the end
+// either.
+//
+// The reversal decision is latched on the first evaluation and must not be
+// shared across paths: construct one interpolator per path.
+fun reversingTangent(
+    startHeading: Double,
+    forwardEndHeading: Double,
+    startTValue: Double = Values.fastInterpolationStartTValue,
+    endTValue: Double = Values.fastInterpolationEndTValue
+): Interpolator {
+    var reversed: Boolean? = null
+    return object : Interpolator {
+        override fun isGeometric(): Boolean = true
+
+        override fun interpolate(curve: Curve, t: Double): Double {
+            fun tangentAt(tt: Double): Double {
+                val d = curve.derivative(tt)
+                return if (d.magnitude() < 1e-9) startHeading else d.theta()
+            }
+            if (reversed == null) {
+                reversed = abs(Angle.error(startHeading, tangentAt(t))) > Math.PI / 2
+            }
+            fun facing(heading: Double): Double =
+                if (reversed == true) Angle.normalize(heading + Math.PI) else Angle.normalize(heading)
+
+            val completion = curve.pathCompletion(t)
+            if (completion <= startTValue) return facing(tangentAt(t))
+            val endTarget = if (reversed == true) facing(tangentAt(1.0))
+                else Angle.normalize(forwardEndHeading)
+            if (completion >= endTValue) return endTarget
+            val boundaryFacing = facing(tangentAt(curve.parameter(startTValue)))
+            val local = (completion - startTValue) / (endTValue - startTValue)
+            return Angle.normalize(boundaryFacing + Angle.error(boundaryFacing, endTarget) * local)
+        }
+    }
 }
 
 object Timings {
