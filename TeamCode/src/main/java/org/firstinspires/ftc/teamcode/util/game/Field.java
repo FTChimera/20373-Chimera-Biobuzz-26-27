@@ -64,6 +64,13 @@ public class Field {
     private Geometry obstacles;
     private Geometry flowerObstacles;
 
+    // Manual safety buffer (inches) applied to the hive bases only when
+    // building the forbidden space. Replaces the half-diagonal formula
+    // (hypot(botLength, botWidth) / 2 + 1.5 = 12.46 in), which left only a
+    // 17.1-in corridor between the hives and made the whole central band
+    // unparkable-from. Flowers join the forbidden space raw, unbuffered.
+    private static final double SAFETY_RADIUS_INCHES = 5.0;
+
     // Defined loading zones using 24x24 inch floor tiles corners on standard 144x144 field layout
     public static final Coordinate[] RED_LOADING_ZONE = new Coordinate[]{
             new Coordinate(0, 120),
@@ -182,8 +189,8 @@ public class Field {
         Pose2d startPose = PoseFactory.of(robotPose.x, robotPose.y, robotPose.heading);
         Pose2d endPose = PoseFactory.of(aLittleInwardPose.x, aLittleInwardPose.y, aLittleInwardPose.heading);
 
-        // Inflate obstacles by the robot's physical boundaries (half-diagonal dimension acting as radius safety buffer)
-        double safetyRadius = Math.hypot(botLength, botWidth) / 2.0 + 1.5;
+        // Inflate the hive bases by the manual safety buffer (flowers join raw, unbuffered)
+        double safetyRadius = SAFETY_RADIUS_INCHES;
         BufferParameters bufParams = new BufferParameters();
         bufParams.setJoinStyle(BufferParameters.JOIN_MITRE);
         Geometry forbiddenSpace = BufferOp.bufferOp(obstacles, safetyRadius, bufParams)
