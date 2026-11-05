@@ -32,6 +32,8 @@ open class FancyButton constructor(typePressType: PressType) {
     private var startPress : Boolean = false
     private var endPress : Boolean = false
     private var lastPress: Boolean = false
+    // Previous cycle's OUTPUT (pressed), distinct from lastPress (raw input).
+    private var lastPressed: Boolean = false
 
     private var pressed: Boolean = false
 
@@ -54,10 +56,13 @@ open class FancyButton constructor(typePressType: PressType) {
         }
         action.accept(this)
         lastPress = isPressed
+        lastPressed = pressed
     }
 
     fun setPressed(pressed: Boolean) {
         this.pressed = pressed
+        // Establishing a baseline, not a transition: do not report an edge for it.
+        this.lastPressed = pressed
     }
 
     fun getTimeSec(): Double {
@@ -74,6 +79,22 @@ open class FancyButton constructor(typePressType: PressType) {
 
     fun endPress(): Boolean {
         return endPress
+    }
+
+    /**
+     * Edges on the OUTPUT (pressed) rather than the raw input: risingEdge()
+     * is true for the single cycle in which pressed turns true, fallingEdge()
+     * for the single cycle in which it turns false. For Normal buttons these
+     * match startPress()/endPress(); for Toggle buttons they fire when the
+     * toggle flips on/off; for LongPress, risingEdge() fires when the hold
+     * completes (0.8 s), not on the initial press.
+     */
+    fun risingEdge(): Boolean {
+        return pressed && !lastPressed
+    }
+
+    fun fallingEdge(): Boolean {
+        return !pressed && lastPressed
     }
 }
 

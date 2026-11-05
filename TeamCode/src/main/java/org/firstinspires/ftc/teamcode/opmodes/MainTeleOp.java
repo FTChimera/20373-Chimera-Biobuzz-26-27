@@ -48,7 +48,7 @@ public class MainTeleOp extends LinearOpMode {
 
         controls = new Controls(gamepad1, gamepad2, oneController);
         controls.reZeroVision().declareActionOnPress((fancyButton) -> {
-            if (fancyButton.startPress() && !MainTeleOp.this.robot.reZeroVision()) {
+            if (fancyButton.risingEdge() && !MainTeleOp.this.robot.reZeroVision()) {
                 MainTeleOp.this.robot.telemetry.addLine("Vision re-zero skipped: " + MainTeleOp.this.robot.vision.getLocalizationReliabilityReason());
             }
         });
@@ -65,19 +65,19 @@ public class MainTeleOp extends LinearOpMode {
                 robot.toggleHiveState();
             }
 
-            if (controls.intakeEject().startPress()) {
+            if (controls.intakeEject().risingEdge()) {
                 robot.intakeEject();
             }
-            else if (controls.intakeControl().isPressed() && controls.intakeControl().startPress()) {
+            else if (controls.intakeControl().risingEdge()) {
                 robot.setSmartIntakeControl(true);
-            } else if (!controls.intakeControl().isPressed() && controls.intakeControl().startPress()) {
+            } else if (controls.intakeControl().fallingEdge()) {
                 robot.setSmartIntakeControl(false);
                 robot.intake.stop();
             }
-            if (controls.intakeEject().endPress()) robot.restoreIntake();
+            if (controls.intakeEject().fallingEdge()) robot.restoreIntake();
 
             if (controls.panicShoot().isPressed()) {
-                if (controls.panicShoot().startPress()) robot.panic();
+                if (controls.panicShoot().risingEdge()) robot.panic();
             } else {
                 if (controls.runTransferFast().isPressed()
                         && robot.shooter.upToSpeed()
@@ -96,22 +96,22 @@ public class MainTeleOp extends LinearOpMode {
                     robot.transfer.shootAll();
                 }
 
-                if ((controls.runTransferFast().endPress()
-                        || controls.runTransferSlow().endPress()
-                        || controls.autoAlignAndStartShoot().endPress())
+                if ((controls.runTransferFast().fallingEdge()
+                        || controls.runTransferSlow().fallingEdge()
+                        || controls.autoAlignAndStartShoot().fallingEdge())
                         && !controls.runTransferFast().isPressed()
                         && !controls.runTransferSlow().isPressed()
                         && !controls.autoAlignAndStartShoot().isPressed()) {
                     robot.transfer.stop();
                 }
 
-                if (controls.panicShoot().endPress()) robot.endPanicShoot();
+                if (controls.panicShoot().fallingEdge()) robot.endPanicShoot();
             }
 
             robot.setSmartShooterControl(
                     controls.keepShooterOn().isPressed()
             );
-            if (controls.keepShooterOn().startPress() && !controls.keepShooterOn().isPressed()) robot.shooter.setVelocity(0);
+            if (controls.keepShooterOn().fallingEdge()) robot.shooter.setVelocity(0);
 
             robot.setTeleOpDrive(
                     new DriveVector(
@@ -123,12 +123,12 @@ public class MainTeleOp extends LinearOpMode {
             );
             if (controls.autoAlignAndStartShoot().isPressed()) { robot.setAutoAlign(); }
 
-            if (controls.stopPark().startPress()) {
+            if (controls.stopPark().risingEdge()) {
                 robot.cancelPark();
                 parkingRequested = false;
                 parkingInitiated = false;
                 automaticParkingCancelled = true;
-            } else if (controls.moveToParkZone().startPress()) {
+            } else if (controls.moveToParkZone().risingEdge()) {
                 parkingRequested = true;
                 automaticParkingCancelled = false;
             } else if (!automaticParkingCancelled && robot.shouldPark()) {
