@@ -44,6 +44,7 @@ open class FancyButton constructor(typePressType: PressType) {
     }
 
     fun update(isPressed: Boolean) {
+        val previousPressed = pressed
         if (isPressed != lastPress) {timer.reset(); longPressAlreadyHappened = false}
         startPress = isPressed && !lastPress
         endPress = !isPressed && lastPress
@@ -56,7 +57,7 @@ open class FancyButton constructor(typePressType: PressType) {
         }
         action.accept(this)
         lastPress = isPressed
-        lastPressed = pressed
+        lastPressed = previousPressed
     }
 
     fun setPressed(pressed: Boolean) {
@@ -197,4 +198,3 @@ class DriveVector(var forward: Double, var strafe:Double, var turn:Double) : Dri
         turn *= v
     }
 }
-

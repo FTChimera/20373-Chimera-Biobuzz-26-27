@@ -265,7 +265,7 @@ public final class RelayTuner {
 
     /** True once enough closed intervals exist for the requested usable cycles. */
     public boolean isFinished() {
-        return intervals.size() >= (cyclesToCollect + cyclesToIgnore) * 2;
+        return intervals.size() >= (cyclesToCollect + cyclesToIgnore) * 2 - 1;
     }
 
     public Failure getFailure() {

@@ -56,7 +56,7 @@ public class MainTeleOp extends LinearOpMode {
 
         waitForStart();
         robot.start();
-        robot.intake.setFullPower();
+        //robot.intake.setFullPower();
 
         while (opModeIsActive()) {
             controls.update();
@@ -69,7 +69,7 @@ public class MainTeleOp extends LinearOpMode {
                 robot.intakeEject();
             }
             else if (controls.intakeControl().risingEdge()) {
-                robot.setSmartIntakeControl(true);
+                robot.setSmartIntakeControl(false);
             } else if (controls.intakeControl().fallingEdge()) {
                 robot.setSmartIntakeControl(false);
                 robot.intake.stop();
@@ -143,9 +143,10 @@ public class MainTeleOp extends LinearOpMode {
             }
 
             if (robot.opModeTimeRemaining() <=0) {
-                robot.stopAllSubsystems();
+                robot.stopEverything();
                 OpModeStorage.endMatch();
                 requestOpModeStop();
+                break;
             }
 
 

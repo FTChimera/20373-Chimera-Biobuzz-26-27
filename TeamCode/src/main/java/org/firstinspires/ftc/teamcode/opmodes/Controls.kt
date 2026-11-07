@@ -13,7 +13,7 @@ class Controls(
     private val intakeControlButton = GpFancyButton(FancyButton.PressType.Toggle) {
         secondary().x
     }.apply {
-        setPressed(true)
+        setPressed(false)
     }
 
     fun intakeControl(): GpFancyButton = intakeControlButton

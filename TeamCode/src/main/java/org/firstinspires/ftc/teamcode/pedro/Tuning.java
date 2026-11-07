@@ -47,11 +47,32 @@ public class Tuning {
                 hardwareMap -> colorSensor(hardwareMap, "color_sensor", 65.3F));
     }
 
-    @Tuner(name = "Robot Development Tester")
-    public static Procedure robotDevTester() { return new RobotDevelopmentTester(
+    @Tuner(name = "Robot Development Tester 1")
+    public static Procedure robotDevTester1() { return new RobotDevelopmentTester(
             hardwareMap -> {
                 DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "intake");
                 dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
+                return dcMotorEx;
+            },
+            hardwareMap -> {
+                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "shooter");
+                dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD); // TODO
+                dcMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                dcMotorEx.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 0, 0, 30));
+                return dcMotorEx;
+            },
+            hardwareMap -> {
+                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "transfer");
+                dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
+                return dcMotorEx;
+            }
+    ); }
+
+    @Tuner(name = "Robot Development Tester 2")
+    public static Procedure robotDevTester2() { return new RobotDevelopmentTester(
+            hardwareMap -> {
+                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "intake");
+                dcMotorEx.setDirection(DcMotorSimple.Direction.REVERSE);
                 return dcMotorEx;
             },
             hardwareMap -> {

@@ -9,15 +9,6 @@ import java.util.*;
 
 public class DijkstraPathfinder {
 
-    // FLAGGED CHANGE: field walls. No graph node or segment endpoint may leave
-    // the 0-144 field; the wall rule is a boundary check, not extra obstacles.
-    private static final double FIELD_MIN = 0.0;
-    private static final double FIELD_MAX = 144.0;
-
-    private boolean insideField(Coordinate c) {
-        return c.x >= FIELD_MIN && c.x <= FIELD_MAX && c.y >= FIELD_MIN && c.y <= FIELD_MAX;
-    }
-
     /**
      * Inner class representing a node inside the Visibility Graph.
      */
@@ -83,7 +74,6 @@ public class DijkstraPathfinder {
         // Add coordinates from the boundaries of all inflated obstacles
         if (forbiddenSpace != null) {
             for (Coordinate c : forbiddenSpace.getCoordinates()) {
-                if (!insideField(c)) continue; // wall rule: no graph node outside the field
                 if (!uniquePoints.contains(c)) {
                     uniquePoints.add(c);
                 }
@@ -170,9 +160,6 @@ public class DijkstraPathfinder {
      * Checks if a straight path exists between two coordinates without clipping obstacles.
      */
     private boolean hasLineOfSight(Coordinate c1, Coordinate c2, Geometry forbiddenSpace) {
-        if (!insideField(c1) || !insideField(c2)) {
-            return false;
-        }
         if (forbiddenSpace == null || forbiddenSpace.isEmpty()) {
             return true;
         }

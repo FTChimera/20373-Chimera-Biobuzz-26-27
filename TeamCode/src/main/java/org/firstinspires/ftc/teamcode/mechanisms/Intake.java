@@ -103,7 +103,11 @@ public class Intake {
         modeSwitch = true;
     }
     public void stopEjecting() {
-        mode = Intake.Mode.values()[prev.ordinal()];
+        if (prev == null || prev == Mode.EJECTING) {
+            mode = Mode.IDLE;
+        } else {
+            mode = prev;
+        }
         modeSwitch = true;
     }
 
@@ -132,9 +136,6 @@ public class Intake {
                 internalSet(customPower);
                 break;
             case EJECTING:
-                if (modeSwitch) {
-                    prev = Mode.values()[mode.ordinal()];
-                }
                 internalSet(prev==Mode.LOW_POWER? -0.5: -0.7);
                 break;
         }

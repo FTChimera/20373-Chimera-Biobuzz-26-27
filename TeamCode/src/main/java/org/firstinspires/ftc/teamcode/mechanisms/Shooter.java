@@ -21,12 +21,17 @@ import org.firstinspires.ftc.teamcode.util.vars.Var;
 
 public class Shooter {
     private static final SmartFlywheel.Params SHOOTER_PARAMS = new SmartFlywheel.Params(28, 1);
-    public static final DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
-            0.0169037, 0.0, 0.00377037,
-            0.0000, 0.00570009, 0.00666907,
-            30.0000, 1000.00,
-            true, 12.000
-    );
+    DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
+            0.0169966,  // kP
+            0.00000,  // kI
+            0.00668876,  // kD
+            0.549526,  // kS
+            0.00766308,  // kV
+            0.00589096,  // kA
+            30.0000,  // tolerance (ticks/sec)
+            1000.00,  // integralLimit (ticks)
+            true,  // voltageCompensation
+            12.5000); // nominalVoltage (V)
     public SmartFlywheel motor;
 
     public ShotCalculator shotCalculator;

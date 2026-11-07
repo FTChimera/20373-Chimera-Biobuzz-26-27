@@ -112,6 +112,7 @@ public class Robot {
 
     public void update() {
         dt = opModeTimer.dt(TimeUnit.SECONDS);
+        getBatteryVoltage();
         if (setTeleOpDrive) {
             if (holdIfNoInput) {
                 follower.driveOrHold(drivePowers);
@@ -304,13 +305,19 @@ public class Robot {
     public boolean moveToParkZone() {
         Pose2d correctedPose = getPoseCompensatedForVelocity();
         if (field.isRobotOverlappingLoadingZone(correctedPose)) return true;
+        boolean previousHoldEnd = follower.holdEnd.get();
+        boolean previousBrakeAtEnd = Constants.FOLLOWER_BRAKE_AT_END.get();
         follower.holdEnd.set(true); // alliance partner does not push
         Constants.FOLLOWER_BRAKE_AT_END.set(false);
         try {
             follower.follow(field.generatePathToLoadingZoneShortest(correctedPose, 3));// TODO TUNE INNER VAL
+            // Prevent the queued manual command from replacing the path this loop.
+            setTeleOpDrive = false;
             return true;
         } catch (Field.NoRouteException exception) {
             follower.stop();
+            follower.holdEnd.set(previousHoldEnd);
+            Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
             telemetry.addData("Park path unavailable", exception.getMessage());
             return false;
         }

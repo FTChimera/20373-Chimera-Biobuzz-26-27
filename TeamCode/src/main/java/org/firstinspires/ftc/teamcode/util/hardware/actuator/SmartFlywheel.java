@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityCon
 import java.util.function.DoubleUnaryOperator;
 
 public class SmartFlywheel {
-    private static final double MIN_VALID_COMPENSATION_RATIO = 0.65;
+    private static final double MIN_VALID_COMPENSATION_RATIO = 0.75;
     private static final double MAX_VALID_COMPENSATION_RATIO = 1.20;
 
     public CachedMotor motor;

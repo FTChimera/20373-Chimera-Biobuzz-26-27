@@ -502,7 +502,7 @@ public class ShooterPIDSVATuner extends Procedure {
         /** Effective (forward-positive) velocity in ticks/sec. */
         double readVelocity(DcMotorEx motor) {
             double raw = motor.getVelocity();
-            return reversed ? -raw : raw;
+            return reversed ? -1 * raw : 1 * raw;
         }
 
         /** Best available battery voltage, or NaN when no valid sensor reading exists. */
