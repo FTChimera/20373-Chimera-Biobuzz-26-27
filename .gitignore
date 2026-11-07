@@ -42,3 +42,8 @@ google-services.json
 TeamCode/.DS_Store
 
 **/.DS_Store
+
+# <ftcsim:ignore>
+.ftcsim/
+local.properties
+# </ftcsim:ignore>

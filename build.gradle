@@ -38,3 +38,11 @@ allprojects {
 repositories {
     mavenCentral()
 }
+
+// <ftcsim:tasks>
+tasks.register('runSimulator') {
+    group = 'simulation'
+    description = 'Run TeamCode on the desktop FTC SDK'
+    dependsOn ':TeamCodeSim:run'
+}
+// </ftcsim:tasks>

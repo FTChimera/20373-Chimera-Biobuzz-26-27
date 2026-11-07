@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FTC Robot" type="AndroidRunConfigurationType" factoryName="Android App">
+    <module name="20373-Chimera-Biobuzz-26-27.TeamCode" />
+    <option name="DEPLOY" value="true" />
+    <option name="MODE" value="default_activity" />
+    <method v="2">
+      <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>

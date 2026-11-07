@@ -8,3 +8,7 @@ pluginManagement {
 
 include ':FtcRobotController'
 include ':TeamCode'
+
+// <ftcsim:settings>
+include ':TeamCodeSim'
+// </ftcsim:settings>
