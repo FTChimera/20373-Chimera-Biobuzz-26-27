@@ -20,6 +20,8 @@ dependencies {
     implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-core:v1.4.3'
     implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-ftc:v1.4.3'
 
+    implementation 'com.github.shlok-k720.BehaviorArchitectures:ftc:v0.2.0'
+
     implementation 'com.pedropathing:revhub:3.0.2'
     implementation 'com.pedropathing:tuning:1.0.1'
     implementation 'com.pedropathing.ivy:pedro:1.1.1'
