@@ -79,6 +79,7 @@ public class Robot {
         this.allianceColor = color;
         autoAimerCalculator = new AutoAimerCalculator(allianceColor);
         autoAimerCalculator.initializeCorrectedPose(startingPose);
+        autoAimerCalculator.useFollowerHold = true; // IMPORTANT
 
         intake = new Intake(hardwareMap, color);
         transfer = new Transfer(hardwareMap);
