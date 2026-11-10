@@ -68,11 +68,21 @@ public class MainTeleOp extends LinearOpMode {
             if (controls.intakeEject().risingEdge()) {
                 robot.intakeEject();
             }
-            else if (controls.intakeControl().risingEdge()) {
-                robot.setSmartIntakeControl(false);
-            } else if (controls.intakeControl().fallingEdge()) {
+            // Separate ifs (not else-if): the toggle edges are one-cycle
+            // pulses, so chaining them under the eject check would drop a
+            // press made on the same cycle as an eject press.
+            if (controls.intakeControl().risingEdge()) {
+                robot.setSmartIntakeControl(true);
+            }
+            if (controls.intakeControl().fallingEdge()) {
                 robot.setSmartIntakeControl(false);
                 robot.intake.stop();
+            }
+            if (controls.deployer().risingEdge()) {
+                robot.intake.setDeployed(true);
+            }
+            if (controls.deployer().fallingEdge()) {
+                robot.intake.setDeployed(false);
             }
             if (controls.intakeEject().fallingEdge()) robot.restoreIntake();
 

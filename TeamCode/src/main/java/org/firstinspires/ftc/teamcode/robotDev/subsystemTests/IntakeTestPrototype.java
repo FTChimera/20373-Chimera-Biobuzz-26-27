@@ -2,26 +2,18 @@ package org.firstinspires.ftc.teamcode.robotDev.subsystemTests;
 
 
 
-import com.pedropathing.math.Twist;
 import com.pedropathing.revhub.drivetrains.CachedMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.Color;
-import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.Direction;
-import org.firstinspires.ftc.teamcode.util.hardware.sensors.ColorSensor;
 
-import java.util.InvalidPropertiesFormatException;
-
-/** An Intake without the CRServos and only 1 sensor */
+/** An Intake without the CRServos */
 public class IntakeTestPrototype {
     CachedMotor mainMotor;
 
     AllianceColor allianceColor;
-
-    ColorSensor colorSensorRight;
 
     public enum Mode {
         FULL_POWER,
@@ -35,15 +27,12 @@ public class IntakeTestPrototype {
     private Mode mode = Mode.IDLE;
     double customPower=0;
     private boolean modeSwitch = false;
-    private boolean autoEject = false;
     public boolean allowOverrideOverEject = false;
 
     public IntakeTestPrototype(HardwareMap map, AllianceColor color) {
         mainMotor = new CachedMotor(map.get(DcMotorEx.class, "intake"), 0.1);
 
         mainMotor.setDirection(Direction.FORWARD.toMotor());
-
-        colorSensorRight = new ColorSensor(map, "color_sensor", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
         internalSet(0);
         this.allianceColor = color;
     }
@@ -92,14 +81,6 @@ public class IntakeTestPrototype {
         this.mode = mode;
         modeSwitch = true;
     }
-    public void setAutoEject(boolean autoEject) {
-        this.autoEject = autoEject;
-    }
-
-    public boolean isAutoEjectSet() {
-        return autoEject;
-    }
-
     public boolean isEjecting() {return mode== Mode.EJECTING;}
     public Mode prev = null;
     public void forceEject() {
@@ -109,10 +90,6 @@ public class IntakeTestPrototype {
     }
 
     public void update() {//Twist twist) {
-        colorSensorRight.update();
-        if (isAutoEjectSet() && isOpposingAllianceNectar()) {
-            forceEject();
-        }
         //double twistDir = twist.vy;
         switch (mode) {
             case IDLE:
@@ -134,37 +111,13 @@ public class IntakeTestPrototype {
                 break;
             case EJECTING:
                 internalSet(prev== Mode.LOW_POWER? -0.5: -0.7);
-                if (isAutoEjectSet() && !isOpposingAllianceNectar()) {
-                    setMode(prev);
-                }
                 break;
         }
         modeSwitch=false;
     }
 
-    /** Determined if a robot will move significantly from its location; useful if an opposing alliance nectar is intook and ejected then if the velocity is high then we might not intake that same one*/
-    public boolean determineMoved(Twist twist) {
-        return twist.vy<-0.2 || Math.abs(twist.vx) > 0.6; // TODO: Deterimine these values and others. These are assuming clipped from 0-1 but actually are in in/s. Find robots max velocity and divide
-    }
-
     public boolean isModeSwitch() {
         return modeSwitch;
-    }
-
-    public BallCol getCurrentCol() {
-        try {
-            return colorSensorRight.getBallCol();
-        } catch (InvalidPropertiesFormatException e) {
-            return BallCol.UNKNOWN;
-        }
-    }
-
-    public boolean isOpposingAllianceNectar() {
-        return getCurrentCol()==opposingAllianceNectar();
-    }
-
-    public BallCol opposingAllianceNectar() {
-        return allianceColor.isRed() ? BallCol.NECTAR_BLUE: BallCol.NECTAR_RED;
     }
 
     public void internalSet(double power) {
@@ -172,6 +125,6 @@ public class IntakeTestPrototype {
     }
 
     public String getDebugString() {
-        return "Mode, " + mode.toString() + "\n Detected Ball: " + getCurrentCol().toString();
+        return "Mode, " + mode.toString();
     }
 }

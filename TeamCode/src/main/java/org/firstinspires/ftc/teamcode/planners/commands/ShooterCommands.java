@@ -5,6 +5,7 @@ import com.pedropathing.ivy.Command;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.util.Timer;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -12,15 +13,29 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ShooterCommands {
     public static double HIVE_LINEUP_TIMEOUT_SECONDS = 1.5;
-    public static double HIVE_LINEUP_TX_TOLERANCE_DEG = 1.25;
 
-    public static Command waitForHiveLineup(Robot robot) {
+    /**
+     * Hive lineup is about the hive STATE (tipped / untipped), not aiming:
+     * waits until the hive is actually in {@code wantedState} - the state
+     * whose scoring face is on the side the robot is launching from
+     * (garden shoot -> UNTIPPED, loading shoot -> TIPPED, for either
+     * alliance). Each cycle applies Vision's inferred state to the field,
+     * so the shooter and auto-aimer aim at the face that will actually
+     * score. There is no tx check here - tx is for aiming, and aiming is
+     * the auto-aligner's job. If the hive never reaches the wanted state
+     * (or Vision cannot see the tags), the last known state stands and the
+     * command ends on timeout.
+     */
+    public static Command waitForHiveLineup(Robot robot, Field.HiveState wantedState) {
         AtomicReference<Timer> timer = new AtomicReference<>();
         AtomicBoolean done = new AtomicBoolean(false);
         return Command.build()
                 .setStart(() -> {
                     if (robot.vision == null) {
                         throw new IllegalStateException("Robot vision subsystem is required for hive lineup.");
+                    }
+                    if (wantedState == null) {
+                        throw new IllegalArgumentException("A wanted hive state is required for hive lineup.");
                     }
                     timer.set(new Timer(TimeUnit.SECONDS));
                     done.set(false);
@@ -29,11 +44,9 @@ public class ShooterCommands {
                     if (done.get()) {
                         return;
                     }
+                    robot.vision.applyInferredHiveState(robot.field);
                     if (robot.vision.hasReliableLocalization()
-                            && robot.vision.isLineupWithinTolerance(
-                                    robot.field.getHiveState(),
-                                    HIVE_LINEUP_TX_TOLERANCE_DEG
-                            )) {
+                            && robot.field.getHiveState() == wantedState) {
                         done.set(true);
                         return;
                     }
@@ -41,9 +54,9 @@ public class ShooterCommands {
                         done.set(true);
                         robot.telemetry.addData(
                                 "Hive lineup timeout",
-                                "tx=%.2f state=%s",
-                                robot.vision.getBestTx(robot.field.getHiveState()),
-                                robot.field.getHiveState()
+                                "state=%s wanted=%s",
+                                robot.field.getHiveState(),
+                                wantedState
                         );
                     }
                 })
