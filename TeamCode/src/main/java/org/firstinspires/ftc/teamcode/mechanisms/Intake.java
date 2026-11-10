@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 
 
-import com.pedropathing.math.Twist;
 import com.pedropathing.revhub.drivetrains.CachedMotor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -10,12 +9,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.Color;
-import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.Direction;
-import org.firstinspires.ftc.teamcode.util.hardware.sensors.ColorSensor;
-
-import java.util.InvalidPropertiesFormatException;
 
 public class Intake {
     CachedMotor mainMotor;
@@ -29,8 +23,6 @@ public class Intake {
     private boolean deployed = false;
 
     AllianceColor allianceColor;
-
-    //ColorSensor colorSensorLeft, colorSensorRight;
 
     public enum Mode {
         FULL_POWER,
@@ -53,9 +45,6 @@ public class Intake {
 
         deployer = map.get(Servo.class, "deployer");
         setDeployed(false);
-
-        //colorSensorLeft = new ColorSensor(map, "intakeColLeft", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
-        //colorSensorRight = new ColorSensor(map, "intakeColRight", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
         internalSet(0);
         this.allianceColor = color;
     }
@@ -134,8 +123,6 @@ public class Intake {
     }
 
     public void update() {//Twist twist) {
-        //colorSensorRight.update();//todo attach color sensor
-        //colorSensorLeft.update();
         if (mode != Mode.EJECTING) prev = Mode.values()[mode.ordinal()];
         if (prev == Mode.EJECTING) prev = Mode.IDLE;
         //double twistDir = twist.vy;
@@ -164,30 +151,8 @@ public class Intake {
         modeSwitch=false;
     }
 
-    /** Determined if a robot will move significantly from its location; useful if an opposing alliance nectar is intook and ejected then if the velocity is high then we might not intake that same one*/
-    public boolean determineMoved(Twist twist) {
-        return twist.vy<-0.2 || Math.abs(twist.vx) > 0.6; // TODO: Deterimine these values and others. These are assuming clipped from 0-1 but actually are in in/s. Find robots max velocity and divide
-    }
-
     public boolean isModeSwitch() {
         return modeSwitch;
-    }
-
-    public BallCol getCurrentCol() {
-        //try {
-            return BallCol.POLLEN_YELLOW;
-            //return BallCol.compose(colorSensorRight.getBallCol(), colorSensorLeft.getBallCol(), allianceColor);
-//        } catch (InvalidPropertiesFormatException e) {
-//            return BallCol.UNKNOWN;
-//        }
-    }
-
-    public boolean isOpposingAllianceNectar() {
-        return getCurrentCol()==opposingAllianceNectar();
-    }
-
-    public BallCol opposingAllianceNectar() {
-        return allianceColor.isRed() ? BallCol.NECTAR_BLUE: BallCol.NECTAR_RED;
     }
 
     public void internalSet(double power) {
@@ -195,7 +160,7 @@ public class Intake {
     }
 
     public String getDebugString() {
-        return "Mode, " + mode.toString() + "\n Detected Ball: " + getCurrentCol().toString()
+        return "Mode, " + mode.toString()
                 + "\n Deployer: " + (deployed ? "DEPLOYED" : "STOWED");
     }
 }

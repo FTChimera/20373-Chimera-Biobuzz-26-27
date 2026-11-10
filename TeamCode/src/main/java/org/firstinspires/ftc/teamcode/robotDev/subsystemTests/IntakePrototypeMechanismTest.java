@@ -11,7 +11,6 @@ public class IntakePrototypeMechanismTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         IntakeTestPrototype intake = new IntakeTestPrototype(hardwareMap, AllianceColor.RED);
-        intake.setAutoEject(true);
         intake.allowOverrideOverEject = true;
         telemetry = FtcDashboard.getInstance().getTelemetry();
         telemetry.clear();

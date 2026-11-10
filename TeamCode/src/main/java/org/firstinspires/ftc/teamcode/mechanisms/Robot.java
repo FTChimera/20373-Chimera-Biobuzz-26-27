@@ -26,7 +26,6 @@ import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.MatchMode;
 import org.firstinspires.ftc.teamcode.util.RobotMode;
 import org.firstinspires.ftc.teamcode.util.Timer;
-import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
@@ -350,9 +349,6 @@ public class Robot {
     }
 
     /* INTAKE */
-    public BallCol intakeBall() {
-        return intake.getCurrentCol();
-    }
     public void intakeEject() {
         intake.forceEject();
         transfer.reverse();
@@ -362,7 +358,7 @@ public class Robot {
         transfer.stop();
     }
 
-    // smart intake control basically has intake on the whole time except for auto eject and battery voltage low
+    // smart intake control basically has intake on the whole time except while ejecting and battery voltage low
     public void setSmartIntakeControl(boolean set) {
         if (set) intake.setFullPower();
         smartIntakeControl = set;
