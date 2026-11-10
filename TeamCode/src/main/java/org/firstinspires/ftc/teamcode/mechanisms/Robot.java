@@ -399,7 +399,6 @@ public class Robot {
                 getPose(),
                 getVelocity(),
                 field.getHiveState(),
-                transfer.getBallColor(),
                 getDt()
         );
     }

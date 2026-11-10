@@ -5,7 +5,6 @@ package org.firstinspires.ftc.teamcode.util.shotcalc;
 import com.pedropathing.math.Velocity;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
@@ -18,7 +17,6 @@ public class ShotContext {
 
     public Field.HiveState hiveState;
     public AllianceColor allianceColor;
-    public BallCol transferBallCol;
     public boolean sotm;
 
     public double distanceToTarget() {
@@ -63,7 +61,6 @@ public class ShotContext {
         Objects.requireNonNull(robotPose, "Robot pose is required for shot calculation.");
         Objects.requireNonNull(hiveState, "Hive state is required for shot calculation.");
         Objects.requireNonNull(allianceColor, "Alliance color is required for shot calculation.");
-        Objects.requireNonNull(transferBallCol, "Transfer ball color is required for shot calculation.");
     }
 
     public ShotContext copy() {
@@ -72,7 +69,6 @@ public class ShotContext {
         copy.velocity = velocity;
         copy.hiveState = hiveState;
         copy.allianceColor = allianceColor;
-        copy.transferBallCol = transferBallCol;
         copy.sotm = sotm;
         copy.dt = dt;
         return copy;

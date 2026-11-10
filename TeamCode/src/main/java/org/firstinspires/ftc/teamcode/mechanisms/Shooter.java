@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityConstants;
-import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.hardware.actuator.SmartFlywheel;
@@ -69,8 +68,9 @@ public class Shooter {
         motor.update();
         panicking = true;
     }
+
     public void solveAndSetVelocity
-            (Pose2d robotPosition, Velocity velocity, Field.HiveState hiveState, BallCol transferBallCol, double deltaTime)
+            (Pose2d robotPosition, Velocity velocity, Field.HiveState hiveState, double deltaTime)
     {
         panicking = false;
         ShotContext context = new ShotContext();
@@ -79,7 +79,6 @@ public class Shooter {
         context.dt = deltaTime;
         context.hiveState = hiveState;
         context.allianceColor = color;
-        context.transferBallCol = transferBallCol;
         context.sotm = useSotm.get();
         ShotSolution solution = shotCalculator.calculateShot(context);
         setVelocity((int) Math.round(solution.flywheelTicksPerSecond));

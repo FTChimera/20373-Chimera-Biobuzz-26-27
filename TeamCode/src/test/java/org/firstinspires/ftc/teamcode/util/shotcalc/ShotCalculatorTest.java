@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import com.pedropathing.math.Velocity;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.junit.Test;
@@ -66,7 +65,6 @@ public class ShotCalculatorTest {
         context.dt = 0.0;
         context.hiveState = Field.HiveState.UNTIPPED;
         context.allianceColor = AllianceColor.RED;
-        context.transferBallCol = BallCol.POLLEN_YELLOW;
         return context;
     }
 }
