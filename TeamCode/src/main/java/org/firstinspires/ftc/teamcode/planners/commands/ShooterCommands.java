@@ -12,8 +12,16 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ShooterCommands {
     public static double HIVE_LINEUP_TIMEOUT_SECONDS = 1.5;
-    public static double HIVE_LINEUP_TX_TOLERANCE_DEG = 1.25;
 
+    /**
+     * Hive lineup is about the hive STATE (tipped / untipped), not aiming:
+     * waits until Vision has inferred the hive state from the AprilTag
+     * clusters and applied it to the field, so the shooter and auto-aimer
+     * aim at the face that will actually score. There is no tx check here -
+     * tx is for aiming, and aiming is the auto-aligner's job. If Vision
+     * cannot determine the state (no tags visible), the last known state
+     * stands and the command ends on timeout.
+     */
     public static Command waitForHiveLineup(Robot robot) {
         AtomicReference<Timer> timer = new AtomicReference<>();
         AtomicBoolean done = new AtomicBoolean(false);
@@ -29,11 +37,9 @@ public class ShooterCommands {
                     if (done.get()) {
                         return;
                     }
+                    robot.vision.applyInferredHiveState(robot.field);
                     if (robot.vision.hasReliableLocalization()
-                            && robot.vision.isLineupWithinTolerance(
-                                    robot.field.getHiveState(),
-                                    HIVE_LINEUP_TX_TOLERANCE_DEG
-                            )) {
+                            && robot.vision.getInferredHiveState() != null) {
                         done.set(true);
                         return;
                     }
@@ -41,8 +47,7 @@ public class ShooterCommands {
                         done.set(true);
                         robot.telemetry.addData(
                                 "Hive lineup timeout",
-                                "tx=%.2f state=%s",
-                                robot.vision.getBestTx(robot.field.getHiveState()),
+                                "state=%s",
                                 robot.field.getHiveState()
                         );
                     }

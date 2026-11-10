@@ -33,6 +33,7 @@ public class FromStartGardenPose {
         public Command run() {
             return sequential(
                     follow(robot.follower, () -> pathToShoot),
+                    ShooterCommands.waitForHiveLineup(robot),
                     ShooterCommands.shootAllPollen(robot)
             );
         }

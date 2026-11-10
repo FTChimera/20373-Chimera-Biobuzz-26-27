@@ -43,6 +43,7 @@ public class FromShootLoadingPose {
                     parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
                     parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    ShooterCommands.waitForHiveLineup(robot),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
@@ -84,6 +85,7 @@ public class FromShootLoadingPose {
                     parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
                     parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    ShooterCommands.waitForHiveLineup(robot),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
