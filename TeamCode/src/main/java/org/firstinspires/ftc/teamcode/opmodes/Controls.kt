@@ -10,10 +10,13 @@ class Controls(
     val oneController: Boolean
 ) {
 
+    // Starts pressed: MainTeleOp enables smart intake at init, so the toggle
+    // must reflect that or the first press is swallowed (it would "turn on"
+    // what is already on) and the intake takes two presses to stop.
     private val intakeControlButton = GpFancyButton(FancyButton.PressType.Toggle) {
         secondary().x
     }.apply {
-        setPressed(false)
+        setPressed(true)
     }
 
     fun intakeControl(): GpFancyButton = intakeControlButton
