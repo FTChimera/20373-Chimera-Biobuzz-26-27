@@ -111,6 +111,10 @@ object Values {
     const val gardenIntakeMaxPowerSetChangeTValue = 0.7
     // drive powers
     const val gardenIntakeMaxPowerSetChangeNewPower = 0.5
+    // flower intake: deploy the ramp midway to the flower, stow shortly
+    // after leaving it (path-completion t-values, 0-1 along the leg)
+    const val flowerIntakeDeployTValue = 0.5
+    const val flowerIntakeStowTValue = 0.1
 }
 
 object StartPoses {
@@ -131,10 +135,19 @@ object StartPoses {
 object IntakePoses {
     @JvmField val gardenEnd = red(pose(7.0, 5.0, -90.0))
     @JvmField val gardenControl1 = red(pose(18.0, 25.0))
+    // Flower intake poses: the robot center sits 1 in + half the robot
+    // length (17.008 / 2 = 8.504, so 9.504 in) from the flower ring center,
+    // facing the flower head-on - the ramp ends up under the pollen. West
+    // ring center (2.54, 48), north ring center (48, 141.46). Blue sides
+    // are auto-mirrored (east / south flowers).
+    @JvmField val westFlower = red(pose(12.044, 48.0, 180.0))
+    @JvmField val northFlower = red(pose(48.0, 131.956, 90.0))
 
     fun init(color: AllianceColor) {
         gardenEnd.setAllianceColor(color)
         gardenControl1.setAllianceColor(color)
+        westFlower.setAllianceColor(color)
+        northFlower.setAllianceColor(color)
     }
 }
 

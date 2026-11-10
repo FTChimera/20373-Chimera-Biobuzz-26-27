@@ -6,6 +6,7 @@ import com.pedropathing.ivy.groups.Groups;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.commands.Scheduler;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
+import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartGardenPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
@@ -62,6 +63,44 @@ public class PlanBuilder {
             planners.add(new FromShootGardenPose.ToIntakeGarden(robot));
         } else {
             throw new IllegalStateException("Cannot Intake from the Garden from Position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakeFromWestFlower() {
+        if (position==Positions.GARDEN_SHOOT) {
+            planners.add(new FromShootGardenPose.ToIntakeFromWestFlower(robot));
+        } else {
+            throw new IllegalStateException("Cannot Intake from the West Flower from Position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakeFromNorthFlower() {
+        if (position==Positions.LOADING_SHOOT) {
+            planners.add(new FromShootLoadingPose.ToIntakeFromNorthFlower(robot));
+        } else {
+            throw new IllegalStateException("Cannot Intake from the North Flower from Position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakeWestFlowerToGarden() {
+        if (position==Positions.LOADING_SHOOT) {
+            planners.add(new FromShootLoadingPose.ToIntakeWestFlowerToGarden(robot));
+            position=Positions.GARDEN_SHOOT;
+        } else {
+            throw new IllegalStateException("Cannot Intake from the West Flower to Garden from Position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakeNorthFlowerToLoading() {
+        if (position==Positions.GARDEN_SHOOT) {
+            planners.add(new FromShootGardenPose.ToIntakeNorthFlowerToLoading(robot));
+            position=Positions.LOADING_SHOOT;
+        } else {
+            throw new IllegalStateException("Cannot Intake from the North Flower to Loading from Position " + position);
         }
         return this;
     }

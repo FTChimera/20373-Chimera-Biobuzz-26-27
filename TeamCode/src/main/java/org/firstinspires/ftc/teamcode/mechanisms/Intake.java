@@ -6,6 +6,7 @@ import com.pedropathing.math.Twist;
 import com.pedropathing.revhub.drivetrains.CachedMotor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
@@ -18,6 +19,14 @@ import java.util.InvalidPropertiesFormatException;
 
 public class Intake {
     CachedMotor mainMotor;
+
+    // Deployable ramp (deployer) servo positions. TODO: TUNE - positions not
+    // yet set on the robot.
+    public static final double DEPLOYER_DEPLOYED_POSITION = 1.0;
+    public static final double DEPLOYER_STOWED_POSITION = 0.0;
+
+    Servo deployer;
+    private boolean deployed = false;
 
     AllianceColor allianceColor;
 
@@ -42,6 +51,9 @@ public class Intake {
 
         mainMotor.setDirection(Direction.FORWARD.toMotor());
 
+        deployer = map.get(Servo.class, "deployer");
+        setDeployed(false);
+
         //colorSensorLeft = new ColorSensor(map, "intakeColLeft", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
         //colorSensorRight = new ColorSensor(map, "intakeColRight", Color.GRAY, 65.3F, ColorSensor.COST_THRESHOLD_DEFAULT);
         internalSet(0);
@@ -49,6 +61,16 @@ public class Intake {
     }
     public Mode mode() {
         return mode;
+    }
+
+    /** Sets the deployable ramp: true = deployed (ramp down), false = stowed. */
+    public void setDeployed(boolean deployed) {
+        this.deployed = deployed;
+        deployer.setPosition(deployed ? DEPLOYER_DEPLOYED_POSITION : DEPLOYER_STOWED_POSITION);
+    }
+
+    public boolean isDeployed() {
+        return deployed;
     }
     public void setFullPower() {
         if (isEjecting() && !allowOverrideOverEject) return;
@@ -173,6 +195,7 @@ public class Intake {
     }
 
     public String getDebugString() {
-        return "Mode, " + mode.toString() + "\n Detected Ball: " + getCurrentCol().toString();
+        return "Mode, " + mode.toString() + "\n Detected Ball: " + getCurrentCol().toString()
+                + "\n Deployer: " + (deployed ? "DEPLOYED" : "STOWED");
     }
 }

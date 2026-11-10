@@ -51,6 +51,17 @@ class Controls(
 
     fun flipHive(): GpFancyButton = flipHiveButton
 
+    // Deployable intake ramp. Starts stowed, matching Intake's init state.
+    // dpad_left is free on both gamepads, so this does not collide with park
+    // (primary dpad_up/down) in one-controller mode.
+    private val deployerButton = GpFancyButton(FancyButton.PressType.Toggle) {
+        secondary().dpad_left
+    }.apply {
+        setPressed(false)
+    }
+
+    fun deployer(): GpFancyButton = deployerButton
+
     private val runTransferFastButton = GpFancyButton(FancyButton.PressType.Normal) {
         secondary().right_bumper
     }
@@ -96,6 +107,7 @@ class Controls(
         moveToParkZone().update()
         stopPark().update()
         flipHive().update()
+        deployer().update()
         runTransferFast().update()
         runTransferSlow().update()
         panicShoot().update()

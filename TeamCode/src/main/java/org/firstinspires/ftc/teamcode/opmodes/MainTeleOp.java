@@ -78,6 +78,12 @@ public class MainTeleOp extends LinearOpMode {
                 robot.setSmartIntakeControl(false);
                 robot.intake.stop();
             }
+            if (controls.deployer().risingEdge()) {
+                robot.intake.setDeployed(true);
+            }
+            if (controls.deployer().fallingEdge()) {
+                robot.intake.setDeployed(false);
+            }
             if (controls.intakeEject().fallingEdge()) robot.restoreIntake();
 
             if (controls.panicShoot().isPressed()) {
