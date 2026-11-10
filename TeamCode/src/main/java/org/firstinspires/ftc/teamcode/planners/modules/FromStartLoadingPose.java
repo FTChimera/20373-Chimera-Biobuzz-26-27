@@ -12,6 +12,7 @@ import com.pedropathing.paths.Path;
 import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
@@ -34,7 +35,7 @@ public class FromStartLoadingPose {
         public Command run() {
             return sequential(
                     follow(robot.follower, () -> pathToShoot),
-                    ShooterCommands.waitForHiveLineup(robot),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
         }

@@ -11,6 +11,7 @@ import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommand
 import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
@@ -33,7 +34,7 @@ public class FromStartGardenPose {
         public Command run() {
             return sequential(
                     follow(robot.follower, () -> pathToShoot),
-                    ShooterCommands.waitForHiveLineup(robot),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
         }

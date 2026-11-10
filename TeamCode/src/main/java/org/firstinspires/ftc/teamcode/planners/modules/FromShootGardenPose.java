@@ -12,6 +12,7 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
@@ -43,7 +44,7 @@ public class FromShootGardenPose {
                     parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
                     parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    ShooterCommands.waitForHiveLineup(robot),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
@@ -85,7 +86,7 @@ public class FromShootGardenPose {
                     parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
                     parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    ShooterCommands.waitForHiveLineup(robot),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
@@ -128,7 +129,7 @@ public class FromShootGardenPose {
                     parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
                     waitMs(Timings.gardenIntakeTimeMs),
                     follow(robot.follower, () -> back),
-                    ShooterCommands.waitForHiveLineup(robot),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
