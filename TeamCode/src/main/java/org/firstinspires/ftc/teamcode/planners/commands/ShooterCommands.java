@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.planners.commands;
 
 
+import static com.pedropathing.ivy.commands.Commands.instant;
+import static com.pedropathing.ivy.groups.Groups.sequential;
+
 import com.pedropathing.ivy.Command;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
@@ -85,5 +88,14 @@ public class ShooterCommands {
                 .setDone(() -> startShoot.get() && timer.get().past(5000))
                 .setEnd((endCondition) -> robot.transfer.stop());
 
+    }
+
+
+    public static Command shootCmd(Robot robot, Field.HiveState hiveState) {
+        return sequential(
+                instant(() -> robot.follower.hold(robot.getPose().withHeading(robot.autoAimerCalculator.getTargetHeading()))),
+                waitForHiveLineup(robot, hiveState),
+                shootAllPollen(robot)
+        );
     }
 }
