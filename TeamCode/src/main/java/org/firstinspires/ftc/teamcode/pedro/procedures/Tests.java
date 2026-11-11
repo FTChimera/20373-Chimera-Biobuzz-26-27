@@ -28,6 +28,8 @@ import static com.pedropathing.api.Paths.line;
 
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.pedro.EKFPinpoint;
 import org.firstinspires.ftc.teamcode.util.game.BallCol;
 
 public class Tests extends Procedure {
@@ -49,7 +51,9 @@ public class Tests extends Procedure {
         @DisplayName("Pose Test")
         POSE,
         @DisplayName("Color Sensor Test")
-        COLOR_SENSOR
+        COLOR_SENSOR,
+        @DisplayName("EKF Pinpoint Test")
+        EKF_PINPOINT
     }
     Function<HardwareMap, Drivetrain> drivetrainFunction;
     Function<HardwareMap, Localizer> localizerFunction;
@@ -142,6 +146,11 @@ public class Tests extends Procedure {
                 if (!colorSensor)
                     throw new IllegalArgumentException("Color Sensor is required for Color Sensor Test.");
                 completed = runOpMode(new TestsColorSensor(colorSensorV3Function));
+                break;
+            case EKF_PINPOINT:
+                if (!drivetrain)
+                    throw new IllegalArgumentException("Drivetrain is required for EKF Pinpoint Test.");
+                completed = runOpMode(new TestsEKF(drivetrainFunction));
                 break;
         }
 
@@ -322,6 +331,49 @@ class TestsLocalization extends TuningOpMode<Boolean> {
             localizer.update();
             telemetry.addData("Pose", localizer.pose());
             telemetry.update();
+        }
+        return true;
+    }
+}
+
+class TestsEKF extends TuningOpMode<Boolean> {
+    private final Function<HardwareMap, Drivetrain> drivetrainFunction;
+
+    TestsEKF(Function<HardwareMap, Drivetrain> drivetrainFunction) {
+        super(
+                "EKF Pinpoint Test",
+                "Manually drive the robot and compare raw Pinpoint pose with the filtered EKF pose and velocity.",
+                true
+        );
+        this.drivetrainFunction = drivetrainFunction;
+    }
+
+    @Override
+    protected Boolean runTuningOpMode() throws InterruptedException {
+        Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
+        EKFPinpoint localizer = new EKFPinpoint(hardwareMap, Constants.PINPOINT_CONFIG);
+        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(), telemetry);
+
+        Thread.sleep(1000);
+        waitForStart();
+        localizer.setPose(Pose.zero());
+
+        try {
+            while (opModeIsActive()) {
+                drivetrain.drive(
+                        new DrivePowers(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x),
+                        true
+                );
+                localizer.update();
+
+                telemetry.addData("Filtered Pose", localizer.pose());
+                telemetry.addData("Raw Pinpoint Pose", localizer.debug().get("rawPose"));
+                telemetry.addData("Filtered Velocity", localizer.velocity());
+                telemetry.addData("Covariance", localizer.debug().get("covariance"));
+                telemetry.update();
+            }
+        } finally {
+            drivetrain.stop();
         }
         return true;
     }
@@ -537,4 +589,3 @@ class TestsColorSensor extends TuningOpMode<Boolean> {
         return true;
     }
 }
-
