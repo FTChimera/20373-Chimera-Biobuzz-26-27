@@ -225,7 +225,7 @@ class MechanismClassTester extends TuningOpMode<Boolean> {
                 transfer.update();
             }
             if (m.shooter()) {
-                shooter.setVelocity(rpm);
+                shooter.setVelocity(rpm, rpm);
                 shooter.update();
             }
 
