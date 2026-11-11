@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.pedro.procedures.ColorSensorTuner;
+import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ForesightTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.MecanumTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.PinpointTuner;
@@ -27,6 +28,9 @@ public class Tuning {
 
     @Tuner(name = "Pinpoint Tuner")
     public static Procedure pinpointTuner() { return new PinpointTuner(); }
+
+    @Tuner(name = "EKF Pinpoint Tuner")
+    public static Procedure ekfPinpointTuner() { return new EKFPinpointTuner(); }
 
     @Tuner(name = "Foresight Tuner")
     public static Procedure foresightTuner() {
@@ -127,5 +131,4 @@ public class Tuning {
         return colorSensorV3;
     }
 }
-
 

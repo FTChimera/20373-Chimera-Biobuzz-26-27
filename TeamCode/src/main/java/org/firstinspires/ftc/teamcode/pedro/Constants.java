@@ -47,7 +47,7 @@ public class Constants {
             }
     );
 
-    public static PinpointConfig PINPOINT_CONFIG = new PinpointConfig(
+    public static EKFPinpointConfig PINPOINT_CONFIG = new EKFPinpointConfig(
             c -> {
                 c.name.set("pinpoint");
                 c.podType.set(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
@@ -58,6 +58,17 @@ public class Constants {
                 c.globalDistanceUnit.set(DistanceUnit.INCH);
                 c.offsetUnits.set(DistanceUnit.INCH);
                 c.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
+
+                c.initialPositionStandardDeviation.set(0.5);
+                c.initialHeadingStandardDeviation.set(Math.toRadians(5.0));
+                c.initialVelocityStandardDeviation.set(1.0);
+                c.initialAngularVelocityStandardDeviation.set(0.1);
+                
+                c.linearAccelerationStandardDeviation.set(72.0);
+                c.angularAccelerationStandardDeviation.set(8.0);
+                c.positionMeasurementStandardDeviation.set(0.1);
+                c.headingMeasurementStandardDeviation.set(Math.toRadians(1.0));
+
             });
 
     public static ForesightConfig FORESIGHT_CONFIG = new ForesightConfig(
@@ -112,6 +123,14 @@ public class Constants {
     public static org.firstinspires.ftc.teamcode.pedro.Follower createFollower(HardwareMap hardwareMap) {
         return new org.firstinspires.ftc.teamcode.pedro.Follower(
                 new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
+                new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
+                new Foresight(Constants.FORESIGHT_CONFIG)
+        );
+    }
+
+    public static org.firstinspires.ftc.teamcode.pedro.Follower createEKFFollower(HardwareMap hardwareMap) {
+        return new org.firstinspires.ftc.teamcode.pedro.Follower(
+                new EKFPinpoint(hardwareMap, Constants.PINPOINT_CONFIG),
                 new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
                 new Foresight(Constants.FORESIGHT_CONFIG)
         );
