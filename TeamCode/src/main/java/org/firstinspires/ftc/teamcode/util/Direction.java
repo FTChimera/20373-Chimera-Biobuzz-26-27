@@ -28,4 +28,5 @@ public enum Direction {
     public Direction inverted() {
         return this==FORWARD? REVERSE:FORWARD;
     }
+    public boolean forward() {return this==FORWARD;}
 }
