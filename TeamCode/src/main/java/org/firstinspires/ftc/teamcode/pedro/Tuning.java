@@ -55,7 +55,7 @@ public class Tuning {
                 return dcMotorEx;
             },
             hardwareMap -> {
-                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "shooter");
+                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainMotor");
                 dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD); // TODO
                 dcMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 dcMotorEx.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 0, 0, 30));
@@ -76,7 +76,7 @@ public class Tuning {
                 return dcMotorEx;
             },
             hardwareMap -> {
-                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "shooter");
+                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainMotor");
                 dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD); // TODO
                 dcMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 dcMotorEx.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 0, 0, 30));
@@ -93,7 +93,7 @@ public class Tuning {
     public static Procedure shooterPIDSVATuner() {
         return new ShooterPIDSVATuner(
                 hardwareMap -> {
-                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "shooter");
+                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainMotor");
                     dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
                     return dcMotorEx;
                 },
@@ -103,10 +103,29 @@ public class Tuning {
                 28.0);
     }
 
+    @Tuner(name = "CounterRoller PIDSVA Tuner")
+    public static Procedure counterRollerPIDSVATuner() {
+        return new ShooterPIDSVATuner(
+                hardwareMap -> {
+                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "counterRoller");
+                    dcMotorEx.setDirection(DcMotorSimple.Direction.REVERSE);
+                    return dcMotorEx;
+                },
+                // TODO-USER-CONSTANTS: ticks per rev AT THE OUTPUT SHAFT
+                // = encoderCpm * gearRatio (see SmartFlywheel.Params).
+                // Placeholder 28.0 is from robotDev/AutoTuner/TuningConfig.java.
+                // Same motor type as mainMotor (28 ticks/rev).
+                // Note: the tuner's "Reversed" dashboard input stays false --
+                // it reads getVelocity(), which is direction-adjusted, so a
+                // positive power still gives a positive velocity reading.
+                28.0);
+    }
+
     private static RevColorSensorV3 colorSensor(HardwareMap hardwareMap, String name, float gain) {
         RevColorSensorV3 colorSensorV3 = hardwareMap.get(RevColorSensorV3.class, name);
         colorSensorV3.setGain(gain);
         return colorSensorV3;
     }
 }
+
 
