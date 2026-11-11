@@ -27,6 +27,9 @@ public class ShotCalculatorTest {
         ShotSolution solution = ShotCalculator.table().calculateShot(context);
 
         assertEquals(1000.0, solution.flywheelTicksPerSecond, EPSILON);
+        // CounterRoller table is a placeholder copied from the main table
+        // (TODO tune), so it interpolates to the same value for now.
+        assertEquals(1000.0, solution.counterRollerTicksPerSecond, EPSILON);
     }
 
     @Test
@@ -68,3 +71,4 @@ public class ShotCalculatorTest {
         return context;
     }
 }
+

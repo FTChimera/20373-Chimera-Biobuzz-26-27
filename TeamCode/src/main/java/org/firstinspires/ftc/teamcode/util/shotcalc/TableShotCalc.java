@@ -16,6 +16,17 @@ public class TableShotCalc implements ShotCalculator {
         shooterMap.add(new TableEntry(50, 1400));
         //todo tune
     }
+    // TODO: tune — counterRoller table is a placeholder copied from the main
+    // flywheel table. Measure the counterRoller's real distance -> velocity
+    // entries and replace these.
+    public static final List<TableEntry> counterRollerMap = new ArrayList<>();
+    static {
+        counterRollerMap.add(new TableEntry(30, 800));
+        counterRollerMap.add(new TableEntry(40, 1000));
+        counterRollerMap.add(new TableEntry(50, 1400));
+        //todo tune
+    }
+
     @Override
     public ShotSolution calculateShot(ShotContext context) {
         if (context == null) {
@@ -30,31 +41,37 @@ public class TableShotCalc implements ShotCalculator {
         }
         double distanceToTarget = ctx.distanceToTarget();
         debug+=("\ndistanceToTarget: ");debug+=(String.format(Locale.US, "(%.2f)", distanceToTarget));
-        if (distanceToTarget <= shooterMap.get(0).distance) {
-            return recordSolution(new ShotSolution(shooterMap.get(0).flywheelTicksPerSecond));
+        double mainVelocity = interpolate(shooterMap, distanceToTarget);
+        double counterRollerVelocity = interpolate(counterRollerMap, distanceToTarget);
+        return recordSolution(new ShotSolution(mainVelocity, counterRollerVelocity));
+    }
+
+    /** Interpolates a distance -> velocity table, clamping outside its range. */
+    private double interpolate(List<TableEntry> map, double distanceToTarget) {
+        if (distanceToTarget <= map.get(0).distance) {
+            return map.get(0).flywheelTicksPerSecond;
         }
-        for (int i = 1; i < shooterMap.size(); i++) {
-            TableEntry entry = shooterMap.get(i);
+        for (int i = 1; i < map.size(); i++) {
+            TableEntry entry = map.get(i);
             if (distanceToTarget <= entry.distance) {
-                TableEntry last = shooterMap.get(i - 1);
+                TableEntry last = map.get(i - 1);
                 double d0 = last.distance;
                 double d1 = entry.distance;
                 double r0 = last.flywheelTicksPerSecond;
                 double r1 = entry.flywheelTicksPerSecond;
                 double ratio = (distanceToTarget - d0) / (d1 - d0);
 
-                return recordSolution(new ShotSolution(
-                        Interpolate.func(ratio, r0, r1, MathUtils.func.smoothFunc())
-                ));
+                return Interpolate.func(ratio, r0, r1, MathUtils.func.smoothFunc());
             }
         }
 
-        TableEntry last = shooterMap.get(shooterMap.size() - 1);
-        return recordSolution(new ShotSolution(last.flywheelTicksPerSecond));
+        TableEntry last = map.get(map.size() - 1);
+        return last.flywheelTicksPerSecond;
     }
 
     private ShotSolution recordSolution(ShotSolution solution) {
-        debug+=("\nsolution ticks/sec: ");debug+=(solution.flywheelTicksPerSecond);
+        debug+=("\nsolution ticks/sec: main=");debug+=(solution.flywheelTicksPerSecond);
+        debug+=(" counter=");debug+=(solution.counterRollerTicksPerSecond);
         return solution;
     }
 

@@ -18,7 +18,7 @@ public class ShooterPrototype extends LinearOpMode {
     Var<Integer> var = IntVar("Shooter Speed", 700);
     @Override
     public void runOpMode() throws InterruptedException {
-        DcMotorEx prototype = hardwareMap.get(DcMotorEx.class, "shooter");
+        DcMotorEx prototype = hardwareMap.get(DcMotorEx.class, "mainMotor");
         prototype.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         var.section.category = "test";
         var.uploadToFtcDashboard();
@@ -42,3 +42,4 @@ public class ShooterPrototype extends LinearOpMode {
         prototype.setVelocity(0);
     }
 }
+

@@ -8,6 +8,10 @@ package org.firstinspires.ftc.teamcode.util.shotcalc;
 public class IdealShotCalc implements ShotCalculator {
     public static final double POLLEN_BASE_TICKS_PER_SECOND = 200.0;
     public static final double TICKS_PER_SECOND_PER_INCH = 20.0;
+    // TODO: tune — counterRoller linear model copied from the main flywheel.
+    // Measure the counterRoller's real base/slope and replace these.
+    public static final double COUNTER_ROLLER_BASE_TICKS_PER_SECOND = 200.0;
+    public static final double COUNTER_ROLLER_TICKS_PER_SECOND_PER_INCH = 20.0;
 
     @Override
     public ShotSolution calculateShot(ShotContext context) {
@@ -20,8 +24,10 @@ public class IdealShotCalc implements ShotCalculator {
             ctx.robotPose = ctx.poseAtRelease();
         }
 
+        double distance = ctx.distanceToTarget();
         return new ShotSolution(
-                POLLEN_BASE_TICKS_PER_SECOND + TICKS_PER_SECOND_PER_INCH * ctx.distanceToTarget()
+                POLLEN_BASE_TICKS_PER_SECOND + TICKS_PER_SECOND_PER_INCH * distance,
+                COUNTER_ROLLER_BASE_TICKS_PER_SECOND + COUNTER_ROLLER_TICKS_PER_SECOND_PER_INCH * distance
         );
     }
 }

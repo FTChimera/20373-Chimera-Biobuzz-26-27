@@ -121,7 +121,7 @@ public class MainTeleOp extends LinearOpMode {
             robot.setSmartShooterControl(
                     controls.keepShooterOn().isPressed()
             );
-            if (controls.keepShooterOn().fallingEdge()) robot.shooter.setVelocity(0);
+            if (controls.keepShooterOn().fallingEdge()) robot.shooter.setVelocity(0, 0);
 
             robot.setTeleOpDrive(
                     new DriveVector(
@@ -170,3 +170,4 @@ public class MainTeleOp extends LinearOpMode {
         public MainTeleOneController() { this.oneController = true; }
     }
 }
+

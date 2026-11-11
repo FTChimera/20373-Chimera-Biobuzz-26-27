@@ -383,7 +383,7 @@ public class Robot {
     }
     public void endPanicShoot() {
         shooter.panicking = false;
-        shooter.setVelocity(0);
+        shooter.setVelocity(0, 0);
         transfer.stop();
     }
 
@@ -460,3 +460,4 @@ public class Robot {
         autoAimerCalculator.initializeCorrectedPose(visionPose);
     }
 }
+

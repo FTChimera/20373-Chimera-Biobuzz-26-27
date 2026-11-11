@@ -19,7 +19,11 @@ import org.firstinspires.ftc.teamcode.util.shotcalc.ShotSolution;
 import org.firstinspires.ftc.teamcode.util.vars.Var;
 
 public class Shooter {
-    private static final SmartFlywheel.Params SHOOTER_PARAMS = new SmartFlywheel.Params(28, 1);
+    private static final SmartFlywheel.Params MAIN_MOTOR_PARAMS = new SmartFlywheel.Params(28, 1);
+    private static final SmartFlywheel.Params COUNTER_ROLLER_PARAMS = new SmartFlywheel.Params(28, 1);
+    /** Ticks/sec within which a motor counts as up to speed. */
+    private static final double UP_TO_SPEED_TOLERANCE_TICKS_PER_SECOND = 20;
+
     DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
             0.0169966,  // kP
             0.00000,  // kI
@@ -31,41 +35,73 @@ public class Shooter {
             1000.00,  // integralLimit (ticks)
             true,  // voltageCompensation
             12.5000); // nominalVoltage (V)
-    public SmartFlywheel motor;
+
+    // TODO: tune — counterRoller velocity constants copied from the main flywheel.
+    // They may differ from the main motor's, so measure and tune them separately.
+    DoubleFlywheelFullVelocityConstants counterRollerVelocityConstants = new DoubleFlywheelFullVelocityConstants(
+            0.0169966,  // kP
+            0.00000,  // kI
+            0.00668876,  // kD
+            0.549526,  // kS
+            0.00766308,  // kV
+            0.00589096,  // kA
+            30.0000,  // tolerance (ticks/sec)
+            1000.00,  // integralLimit (ticks)
+            true,  // voltageCompensation
+            12.5000); // nominalVoltage (V)
+
+    public SmartFlywheel mainMotor;
+    public SmartFlywheel counterRoller;
 
     public ShotCalculator shotCalculator;
     public AllianceColor color;
     public boolean panicking=false;
-    private int target_velocity = 0;
+    private int target_main_velocity = 0;
+    private int target_counter_velocity = 0;
     public Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
         this.color = color;
-        motor = new SmartFlywheel(
-                hardwareMap.get(DcMotorEx.class, "shooter"),
+        mainMotor = new SmartFlywheel(
+                hardwareMap.get(DcMotorEx.class, "mainMotor"),
                 Controller.doubleFlywheelFullVelocity(shooterVelocityConstants),
-                SHOOTER_PARAMS,
+                MAIN_MOTOR_PARAMS,
                 hardwareMap.voltageSensor
         );
-        motor.motor.setDirection(Direction.FORWARD.toMotor());
-        motor.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        mainMotor.motor.setDirection(Direction.FORWARD.toMotor());
+        mainMotor.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+
+        counterRoller = new SmartFlywheel(
+                hardwareMap.get(DcMotorEx.class, "counterRoller"),
+                Controller.doubleFlywheelFullVelocity(counterRollerVelocityConstants),
+                COUNTER_ROLLER_PARAMS,
+                hardwareMap.voltageSensor
+        );
+        counterRoller.motor.setDirection(Direction.REVERSE.toMotor());
+        counterRoller.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+
         shotCalculator = ShotCalculator.table();
     }
 
-    /** Sets velocity of motor in ticks per second */
-    public void setVelocity(int ticksPerSecond) {
-        if (ticksPerSecond < 0) {
+    /** Sets velocity of both motors in ticks per second */
+    public void setVelocity(int mainTicksPerSecond, int counterRollerTicksPerSecond) {
+        if (mainTicksPerSecond < 0 || counterRollerTicksPerSecond < 0) {
             throw new IllegalArgumentException("Shooter velocity must be nonnegative ticks per second.");
         }
-        motor.setVelocity(ticksPerSecond);
-        motor.update();
-        target_velocity = ticksPerSecond;
+        mainMotor.setVelocity(mainTicksPerSecond);
+        mainMotor.update();
+        counterRoller.setVelocity(counterRollerTicksPerSecond);
+        counterRoller.update();
+        target_main_velocity = mainTicksPerSecond;
+        target_counter_velocity = counterRollerTicksPerSecond;
         panicking = false;
     }
 
     public void panic() {
-        motor.setPower(1);
-        motor.update();
+        mainMotor.setPower(1);
+        mainMotor.update();
+        counterRoller.setPower(1);
+        counterRoller.update();
         panicking = true;
     }
 
@@ -81,29 +117,37 @@ public class Shooter {
         context.allianceColor = color;
         context.sotm = useSotm.get();
         ShotSolution solution = shotCalculator.calculateShot(context);
-        setVelocity((int) Math.round(solution.flywheelTicksPerSecond));
+        setVelocity((int) Math.round(solution.flywheelTicksPerSecond),
+                (int) Math.round(solution.counterRollerTicksPerSecond));
     }
 
     public boolean upToSpeed() {
-        return hasNonzeroVelocityTarget() && Math.abs(target_velocity - motor.getTicksPerSecond()) <= 20;
+        return hasNonzeroVelocityTarget()
+                && Math.abs(target_main_velocity - mainMotor.getTicksPerSecond()) <= UP_TO_SPEED_TOLERANCE_TICKS_PER_SECOND
+                && Math.abs(target_counter_velocity - counterRoller.getTicksPerSecond()) <= UP_TO_SPEED_TOLERANCE_TICKS_PER_SECOND;
     }
 
     public boolean hasNonzeroVelocityTarget() {
-        return target_velocity != 0;
+        return target_main_velocity != 0 && target_counter_velocity != 0;
     }
 
     public void update() {
-        motor.update();
+        mainMotor.update();
+        counterRoller.update();
     }
 
     public String getDebugString() {
-        return "Set Velocity: " + target_velocity+ "\n Get Velocity: " + motor.getTicksPerSecond();
+        return "Set Velocity: main=" + target_main_velocity + " counter=" + target_counter_velocity
+                + "\n Get Velocity: main=" + mainMotor.getTicksPerSecond()
+                + " counter=" + counterRoller.getTicksPerSecond();
     }
 
     public void stopImmediately() {
-        target_velocity = 0;
+        target_main_velocity = 0;
+        target_counter_velocity = 0;
         panicking = false;
-        motor.stopImmediately();
+        mainMotor.stopImmediately();
+        counterRoller.stopImmediately();
     }
 
     public boolean panicking() {
