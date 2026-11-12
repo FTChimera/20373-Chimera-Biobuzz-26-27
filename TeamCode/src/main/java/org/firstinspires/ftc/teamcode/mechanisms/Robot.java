@@ -38,6 +38,7 @@ public class Robot {
     public static boolean AUTO_RELOCALIZE_WITH_VISION = false;
     public static double MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN = 24.0;
     public static double MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG = 40.0;
+    public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 3.0;
 
     public RobotMode robotMode;
     public Follower follower;
@@ -332,12 +333,15 @@ public class Robot {
     public boolean inParkZone() {
         return field.isRobotOverlappingLoadingZone(getPoseCompensatedForVelocity());
     }
+
     public boolean shouldPark() {
-        double timeToGetToPark = 2;
+        return shouldAutomaticallyPark(matchMode, opModeTimeRemaining());
+    }
 
-        // TODO Lets assume for now
-
-        return Math.abs(timeToGetToPark-opModeTimeRemaining())<=1 && matchMode==MatchMode.QUALIFICATIONS;
+    static boolean shouldAutomaticallyPark(MatchMode matchMode, double timeRemaining) {
+        return matchMode == MatchMode.QUALIFICATIONS
+                && timeRemaining > 0.0
+                && timeRemaining <= AUTOMATIC_PARK_START_TIME_REMAINING_SEC;
     }
 
     public void toggleHiveState() {
@@ -406,7 +410,7 @@ public class Robot {
     /* LIGHTS */
 
     private void lightsControl() {
-        if (opModeTimeRemaining() <= 7) {lights.flashRed();}
+        if (opModeTimeRemaining() <= 7.0) {lights.flashRed();}
         else if (opModeTimeRemaining() >= 57 && opModeTimeRemaining() <= 63) {
             lights.oneMinThing();
         } else if (shooter.upToSpeed()) {
@@ -460,4 +464,3 @@ public class Robot {
         autoAimerCalculator.initializeCorrectedPose(visionPose);
     }
 }
-

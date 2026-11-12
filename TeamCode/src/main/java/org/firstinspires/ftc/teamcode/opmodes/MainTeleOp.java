@@ -151,6 +151,13 @@ public class MainTeleOp extends LinearOpMode {
                     parkingInitiated = robot.moveToParkZone();
                 }
             }
+            robot.telemetry.addData(
+                    "Parking",
+                    "requested=%s started=%s auto cancelled=%s",
+                    parkingRequested,
+                    parkingInitiated,
+                    automaticParkingCancelled
+            );
 
             if (robot.opModeTimeRemaining() <=0) {
                 robot.stopEverything();
@@ -170,4 +177,3 @@ public class MainTeleOp extends LinearOpMode {
         public MainTeleOneController() { this.oneController = true; }
     }
 }
-
