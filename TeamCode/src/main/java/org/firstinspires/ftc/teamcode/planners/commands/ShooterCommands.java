@@ -75,12 +75,12 @@ public class ShooterCommands {
                     if (!robot.shooter.hasNonzeroVelocityTarget()) {
                         throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
                     }
-                    robot.intake.setFullPower();
                 })
                 .setExecute(() -> {
                     if (!robot.shooter.upToSpeed() || startShoot.get()) {
                         return;
                     }
+                    robot.intake.setFullPower();
                     robot.transfer.shootAll();
                     startShoot.set(true);
                     timer.set(new Timer());

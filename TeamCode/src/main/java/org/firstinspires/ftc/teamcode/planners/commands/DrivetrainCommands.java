@@ -42,7 +42,7 @@ public class DrivetrainCommands {
                         action.run();
                     }
                 })
-                .setDone(robot.follower::atParametricEnd);
+                .setDone(done::get);
     }
 
     public static Command setMaxPowerOnFly(Robot robot, double tValue, double newPower) {
