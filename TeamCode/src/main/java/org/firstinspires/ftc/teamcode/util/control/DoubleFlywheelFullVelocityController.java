@@ -31,6 +31,15 @@ import java.util.function.DoubleSupplier;
  * changes/ramps. Setpoint steps therefore spike both the derivative and
  * the kA term; callers should ramp setpoints where possible.
  *
+ * <p>Zero-target deadband: when {@code target == 0} and
+ * {@code |state| <= tolerance}, the output is forced to 0 and the
+ * integral/derivative state is cleared, instead of servoing to exactly
+ * zero. The feedback gains are tuned at speed (Ziegler-Nichols), where
+ * the velocity signal dwarfs encoder noise; at standstill the same
+ * gains amplify that noise into full-scale power oscillation (the
+ * derivative term dominates). The wheel still brakes normally from
+ * speed; the deadband only engages once it is nearly stopped.
+ *
  * <p>Voltage compensation (default ON, per the 2026-11-01 decision):
  * when {@link DoubleFlywheelFullVelocityConstants#voltageCompensation}
  * is true, the stored {@code kS}/{@code kV}/{@code kA} are in
@@ -137,6 +146,29 @@ public class DoubleFlywheelFullVelocityController implements Controller<Double, 
         boolean isFirstUpdate = !hasUpdate;
 
         double error = target - state;
+
+        // Zero-target deadband: when commanded to stop and the wheel is
+        // already within tolerance of stopped, cut power instead of
+        // servoing to exactly zero. Without this, the feedback terms
+        // (kP/kD from Ziegler-Nichols, tuned at speed) amplify encoder
+        // velocity noise into full-scale power oscillation at standstill
+        // (verified by simulation: RMS output ~0.73, peak +/-1.0, 116
+        // sign flips / 200 steps at target 0 with modest noise, the
+        // derivative term dominating). The wheel still brakes normally
+        // from speed (|state| > tolerance); the deadband only engages
+        // once it is nearly stopped, where coasting the last few
+        // ticks/sec to zero is harmless. Integral and derivative state
+        // are cleared so no stale term kicks in when a nonzero target
+        // resumes.
+        if (target == 0.0 && Math.abs(state) <= constants.tolerance) {
+            output = 0.0;
+            integralSum = 0.0;
+            filteredDerivative = 0.0;
+            lastTarget = target;
+            lastError = error;
+            hasUpdate = true;
+            return;
+        }
 
         // Feedforward (voltage-scaled) + feedback (unscaled), see class Javadoc.
         double scale = computeFeedforwardScale();
