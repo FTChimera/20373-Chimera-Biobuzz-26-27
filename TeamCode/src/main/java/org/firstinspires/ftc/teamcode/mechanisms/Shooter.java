@@ -24,7 +24,7 @@ public class Shooter {
     /** Ticks/sec within which a motor counts as up to speed. */
     private static final double UP_TO_SPEED_TOLERANCE_TICKS_PER_SECOND = 20;
 
-    DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
+    public final DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
             0.0169966,  // kP
             0.00000,  // kI
             0.00668876,  // kD
@@ -38,7 +38,7 @@ public class Shooter {
 
     // TODO: tune — counterRoller velocity constants copied from the main flywheel.
     // They may differ from the main motor's, so measure and tune them separately.
-    DoubleFlywheelFullVelocityConstants counterRollerVelocityConstants = new DoubleFlywheelFullVelocityConstants(
+    public final DoubleFlywheelFullVelocityConstants counterRollerVelocityConstants = new DoubleFlywheelFullVelocityConstants(
             0.0169966,  // kP
             0.00000,  // kI
             0.00668876,  // kD
