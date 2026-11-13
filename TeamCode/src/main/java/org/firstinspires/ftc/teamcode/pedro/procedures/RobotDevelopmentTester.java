@@ -8,7 +8,6 @@ import com.pedropathing.tuning.autotune.DisplayName;
 import com.pedropathing.tuning.autotune.Inputs;
 import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.TuningOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -20,10 +19,16 @@ import java.util.function.Function;
 
 
 public class RobotDevelopmentTester extends Procedure {
-    Function<HardwareMap, DcMotorEx> shooter, intake, transfer;
-    public RobotDevelopmentTester(Function<HardwareMap, DcMotorEx> intake, Function<HardwareMap, DcMotorEx> outtake, Function<HardwareMap, DcMotorEx> transfer) {
-        super("Robot Development Tester", "Test individual subsystems (transfer, intake, outtake) of the robot");
-        this.shooter = outtake;
+    Function<HardwareMap, Shooter> shooter;
+    Function<HardwareMap, DcMotorEx> intake, transfer;
+
+    public RobotDevelopmentTester(
+            Function<HardwareMap, DcMotorEx> intake,
+            Function<HardwareMap, Shooter> shooter,
+            Function<HardwareMap, DcMotorEx> transfer
+    ) {
+        super("Robot Development Tester", "Test the intake, transfer, and both shooter flywheels.");
+        this.shooter = shooter;
         this.intake = intake;
         this.transfer = transfer;
     }
@@ -56,14 +61,21 @@ class ThreeSubsystemTester extends TuningOpMode<Boolean> {
     private static final double DEFAULT_POWER = 0.8;
     private static final int DEFAULT_RPM = 1000;
 
-    Function<HardwareMap, DcMotorEx> shooter,transfer,intake;
+    Function<HardwareMap, Shooter> shooter;
+    Function<HardwareMap, DcMotorEx> transfer, intake;
     boolean useShooter,useTransfer,useIntake;
     DevelopmentInputType devType;
     private final ValueProvider<Double> powerProvider = new VariableProvider<>(DEFAULT_POWER);
     private final ValueProvider<Integer> rpmProvider = new VariableProvider<>(DEFAULT_RPM);
     private boolean dashboardInputsRegistered = false;
 
-    public ThreeSubsystemTester(Function<HardwareMap, DcMotorEx> shooter, Function<HardwareMap, DcMotorEx> transfer, Function<HardwareMap, DcMotorEx> intake, MechanismUsage mechUsage, DevelopmentInputType developmentInputType) {
+    public ThreeSubsystemTester(
+            Function<HardwareMap, Shooter> shooter,
+            Function<HardwareMap, DcMotorEx> transfer,
+            Function<HardwareMap, DcMotorEx> intake,
+            MechanismUsage mechUsage,
+            DevelopmentInputType developmentInputType
+    ) {
         super("Three Subsystem Tester", "Tests some of the 3 subsystems", true);
         this.shooter = shooter;
         this.transfer = transfer;
@@ -76,13 +88,11 @@ class ThreeSubsystemTester extends TuningOpMode<Boolean> {
 
     @Override
     protected Boolean runTuningOpMode() throws InterruptedException {
-        DcMotorEx intake = null, transfer = null, shooter = null;
+        DcMotorEx intake = null, transfer = null;
+        Shooter shooter = null;
         if (useIntake) intake = this.intake.apply(hardwareMap);
         if (useTransfer) transfer = this.transfer.apply(hardwareMap);
-        if (useShooter) {
-            shooter = this.shooter.apply(hardwareMap);
-            shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+        if (useShooter) shooter = this.shooter.apply(hardwareMap);
 
         configureDashboardInputs();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -106,7 +116,7 @@ class ThreeSubsystemTester extends TuningOpMode<Boolean> {
                 transfer.setPower(power);
             }
             if (useShooter) {
-                shooter.setVelocity(rpm);
+                shooter.setVelocity(rpm, rpm);
             }
 
             telemetry.addData("Development Input", devType);
@@ -119,7 +129,7 @@ class ThreeSubsystemTester extends TuningOpMode<Boolean> {
                 telemetry.addData("Transfer Power", transfer.getPower());
             }
             if (useShooter) {
-                telemetry.addData("Shooter Velocity", shooter.getVelocity());
+                telemetry.addData("Shooter", shooter.getDebugString());
             }
             telemetry.update();
         }
@@ -131,7 +141,7 @@ class ThreeSubsystemTester extends TuningOpMode<Boolean> {
             transfer.setPower(0);
         }
         if (useShooter) {
-            shooter.setVelocity(0);
+            shooter.stopImmediately();
         }
 
         return true;

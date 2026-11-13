@@ -63,7 +63,7 @@ public class Shooter {
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
         this.color = color;
         mainMotor = new SmartFlywheel(
-                hardwareMap.get(DcMotorEx.class, "mainMotor"),
+                hardwareMap.get(DcMotorEx.class, "mainShooter"),
                 Controller.doubleFlywheelFullVelocity(shooterVelocityConstants),
                 MAIN_MOTOR_PARAMS,
                 hardwareMap.voltageSensor
@@ -72,12 +72,12 @@ public class Shooter {
         mainMotor.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         counterRoller = new SmartFlywheel(
-                hardwareMap.get(DcMotorEx.class, "counterRoller"),
+                hardwareMap.get(DcMotorEx.class, "counterShooter"),
                 Controller.doubleFlywheelFullVelocity(counterRollerVelocityConstants),
                 COUNTER_ROLLER_PARAMS,
                 hardwareMap.voltageSensor
         );
-        counterRoller.motor.setDirection(Direction.REVERSE.toMotor());
+        counterRoller.motor.setDirection(Direction.FORWARD.toMotor());
         counterRoller.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         shotCalculator = ShotCalculator.table();

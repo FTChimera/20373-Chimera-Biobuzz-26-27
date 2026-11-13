@@ -6,12 +6,11 @@ import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.Tuner;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ColorSensorTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ForesightTuner;
@@ -20,6 +19,7 @@ import org.firstinspires.ftc.teamcode.pedro.procedures.PinpointTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.RobotDevelopmentTester;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ShooterPIDSVATuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.Tests;
+import org.firstinspires.ftc.teamcode.util.AllianceColor;
 
 public class Tuning {
     // Tuners go here
@@ -59,11 +59,7 @@ public class Tuning {
                 return dcMotorEx;
             },
             hardwareMap -> {
-                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainMotor");
-                dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD); // TODO
-                dcMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                dcMotorEx.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 0, 0, 30));
-                return dcMotorEx;
+                return new Shooter(hardwareMap, AllianceColor.BLUE);
             },
             hardwareMap -> {
                 DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "transfer");
@@ -80,11 +76,7 @@ public class Tuning {
                 return dcMotorEx;
             },
             hardwareMap -> {
-                DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainMotor");
-                dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD); // TODO
-                dcMotorEx.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                dcMotorEx.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 0, 0, 30));
-                return dcMotorEx;
+                return new Shooter(hardwareMap, AllianceColor.BLUE);
             },
             hardwareMap -> {
                 DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "transfer");
@@ -97,7 +89,7 @@ public class Tuning {
     public static Procedure shooterPIDSVATuner() {
         return new ShooterPIDSVATuner(
                 hardwareMap -> {
-                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainMotor");
+                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "mainShooter");
                     dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
                     return dcMotorEx;
                 },
@@ -111,7 +103,7 @@ public class Tuning {
     public static Procedure counterRollerPIDSVATuner() {
         return new ShooterPIDSVATuner(
                 hardwareMap -> {
-                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "counterRoller");
+                    DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "counterShooter");
                     dcMotorEx.setDirection(DcMotorSimple.Direction.REVERSE);
                     return dcMotorEx;
                 },
@@ -131,4 +123,3 @@ public class Tuning {
         return colorSensorV3;
     }
 }
-
