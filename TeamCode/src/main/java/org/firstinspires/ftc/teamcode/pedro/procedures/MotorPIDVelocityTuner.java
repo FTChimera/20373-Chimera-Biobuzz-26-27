@@ -64,22 +64,33 @@ double kF = 0;
                 pidfCoefficients = new PIDFCoefficients(0.3*Ku, 0, 0.3*Ku*Tu/4, kF);
                 break;
             case PD_NO_OVERSHOOT:
+                // Ziegler-Nichols "no overshoot" PD variant (same table as util/autotune/ZieglerNichols).
+                pidfCoefficients = new PIDFCoefficients(0.40*Ku, 0, (0.40*Ku)*(Tu/3.0), kF);
                 break;
             case PD_SOME_OVERSHOOT:
+                pidfCoefficients = new PIDFCoefficients(0.60*Ku, 0, (0.60*Ku)*(Tu/4.0), kF);
                 break;
             case PD_CLASSIC_ZN:
+                pidfCoefficients = new PIDFCoefficients(0.80*Ku, 0, (0.80*Ku)*(Tu/8.0), kF);
                 break;
             case PD_AGGRESSIVE:
+                pidfCoefficients = new PIDFCoefficients(1.20*Ku, 0, (1.20*Ku)*(Tu/8.0), kF);
                 break;
             case PI:
+                // Textbook ZN PI: Kp=0.45 Ku, Ti=Tu/1.2, Ki=Kp/Ti=0.54 Ku/Tu.
+                pidfCoefficients = new PIDFCoefficients(0.45*Ku, 0.54*Ku/Tu, 0, kF);
                 break;
             case PID_NO_OVERSHOOT:
+                pidfCoefficients = new PIDFCoefficients(0.20*Ku, 0.40*Ku/Tu, (0.20*Ku)*(Tu/3.0), kF);
                 break;
             case PID_SOME_OVERSHOOT:
+                pidfCoefficients = new PIDFCoefficients(0.33*Ku, 0.66*Ku/Tu, (0.33*Ku)*(Tu/3.0), kF);
                 break;
             case PID_CLASSIC_ZN:
+                pidfCoefficients = new PIDFCoefficients(0.60*Ku, 1.20*Ku/Tu, (0.60*Ku)*(Tu/8.0), kF);
                 break;
             case PID_PESSEN_AGGRESSIVE:
+                pidfCoefficients = new PIDFCoefficients(0.70*Ku, 1.75*Ku/Tu, (0.70*Ku)*(0.15*Tu), kF);
                 break;
             default:
                 pidfCoefficients = new PIDFCoefficients();

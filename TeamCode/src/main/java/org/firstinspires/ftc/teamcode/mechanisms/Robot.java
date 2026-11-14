@@ -266,7 +266,6 @@ public class Robot {
         this.setTeleOpDrive = true;
     }
 
-    /** TODO Complete*/
     public void setAutoAlign() {
         if (autoAimerCalculator.useFollowerHold) {
             drivePowers.setTurn(follower.algorithm.calculateHold(

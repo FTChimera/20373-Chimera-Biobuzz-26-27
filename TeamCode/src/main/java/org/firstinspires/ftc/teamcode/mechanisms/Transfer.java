@@ -16,7 +16,6 @@ public class Transfer {
     public enum Mode {
         KICK_ONE,
         SHOOT_ALL,
-        SMART_SHOOT,
         SLOW,
         CUSTOM_POWER,
         PANIC_SHOOT,
@@ -45,11 +44,6 @@ public class Transfer {
     Mode prevMode;
     public void kickOne() {
         mode = Mode.KICK_ONE;
-        modeSwitch = true;
-    }
-
-    public void smartShoot() {
-        mode = Mode.SMART_SHOOT;
         modeSwitch = true;
     }
 
@@ -124,10 +118,6 @@ public class Transfer {
                 break;
             case CUSTOM_POWER:
                 transferMotor.setPower(customPower);
-                break;
-            case SMART_SHOOT:
-                // TODO: Not implemented
-                transferMotor.setPower(0);
                 break;
         }
         modeSwitch = false;
