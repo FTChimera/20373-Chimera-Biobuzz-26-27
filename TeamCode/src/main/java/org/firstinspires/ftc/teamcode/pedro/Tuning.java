@@ -104,15 +104,22 @@ public class Tuning {
         return new ShooterPIDSVATuner(
                 hardwareMap -> {
                     DcMotorEx dcMotorEx = hardwareMap.get(DcMotorEx.class, "counterShooter");
-                    dcMotorEx.setDirection(DcMotorSimple.Direction.REVERSE);
+                    // FORWARD, matching production Shooter.java: the counterRoller
+                    // motor is mounted mirrored, so FORWARD on both flywheels
+                    // gives the opposite spin directions the counter-roller
+                    // pair needs. (Was REVERSE here while production was
+                    // FORWARD; the tuner then spun the wheel opposite to
+                    // how it runs in the robot, which corrupted the
+                    // dynamic-phase fit into "kS materially negative".)
+                    dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
                     return dcMotorEx;
                 },
                 // TODO-USER-CONSTANTS: ticks per rev AT THE OUTPUT SHAFT
                 // = encoderCpm * gearRatio (see SmartFlywheel.Params).
                 // Placeholder 28.0 is from robotDev/AutoTuner/TuningConfig.java.
                 // Same motor type as mainMotor (28 ticks/rev).
-                // Note: the tuner's "Reversed" dashboard input stays false --
-                // it reads getVelocity(), which is direction-adjusted, so a
+                // Note: the tuner has no "Reversed" input -- it reads
+                // getVelocity(), which is direction-adjusted, so a
                 // positive power still gives a positive velocity reading.
                 28.0);
     }

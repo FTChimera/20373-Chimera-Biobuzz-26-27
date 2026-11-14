@@ -53,11 +53,13 @@ import java.util.function.Function;
  * The motor is supplied as {@code Function<HardwareMap, DcMotorEx>}
  * (as in the stub) so the same Procedure adapts to different
  * flywheels; no "shooter" hardware name is hard-coded in the tuning
- * math. The {@code reversed} input follows the {@code TuningConfig}
- * convention: true when positive power produces a decreasing encoder
- * reading. Phases never set motor direction; the supplier owns
- * hardware configuration, and phases convert power/velocity signs
- * through the {@code reversed} flag.
+ * math. The motor direction is set by the supplier (FORWARD for
+ * both flywheels, matching production Shooter.java) and
+ * {@code getVelocity()} is direction-adjusted, so positive power
+ * always gives a positive velocity reading -- there is no manual
+ * "Reversed" input. Phases convert power/velocity signs through
+ * the (always false) {@code reversed} flag, kept only for API
+ * compatibility.
  *
  * <p>Safety: every phase sets {@code RUN_WITHOUT_ENCODER} before
  * driving power, polls {@code isStopRequested()} every iteration,
@@ -138,7 +140,6 @@ public class ShooterPIDSVATuner extends Procedure {
         Inputs.Field<Boolean> voltageCompensation = inputs.b("Voltage compensation").withDefault(true);
         Inputs.NumberField<Double> nominalVoltage = inputs.d("Nominal Voltage (volts)")
                 .min(6.0).max(15.0).withDefault(DEFAULT_NOMINAL_VOLTAGE);
-        Inputs.Field<Boolean> reversed = inputs.b("Reversed (positive power decreases encoder reading)").withDefault(false);
 
         awaitInputs(inputs);
 
@@ -156,7 +157,15 @@ public class ShooterPIDSVATuner extends Procedure {
         boolean tuneIntegral = tuneIntegralTerm.get();
         boolean voltageOn = voltageCompensation.get();
         double nominalVolts = nominalVoltage.get();
-        boolean isReversed = reversed.get();
+        // No "Reversed" input: the supplier sets the motor direction
+        // (FORWARD for both flywheels, matching production Shooter.java)
+        // and getVelocity() is direction-adjusted, so positive power
+        // always gives a positive velocity reading. A manual reversal
+        // flag here only invited sign errors -- it spun the wheel
+        // opposite to production and corrupted the dynamic-phase fit
+        // into "kS materially negative". The phases still accept a
+        // reversed flag for API compatibility; it is always false.
+        boolean isReversed = false;
         List<Double> ffPowers;
         try {
             ffPowers = parseFeedforwardPowers(feedforwardTestPowers.get());
