@@ -50,7 +50,6 @@ public class MotorPIDVelocityTuner extends Procedure {
 
         RelayTuningResult result = runOpMode(new MotorPIDAutoTunerOpMode(name.get(), direction.get()));
 double kF = 0;
-        // TODO: Complete Motor PID Velocity Tuner
         // now for the zeiger nichols stuff
         ControlType controlType1 = controlType.get();
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients();
