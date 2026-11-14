@@ -111,7 +111,7 @@ public class Tuning {
                     // FORWARD; the tuner then spun the wheel opposite to
                     // how it runs in the robot, which corrupted the
                     // dynamic-phase fit into "kS materially negative".)
-                    dcMotorEx.setDirection(DcMotorSimple.Direction.FORWARD);
+                    dcMotorEx.setDirection(DcMotorSimple.Direction.REVERSE);
                     return dcMotorEx;
                 },
                 // TODO-USER-CONSTANTS: ticks per rev AT THE OUTPUT SHAFT

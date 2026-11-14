@@ -25,16 +25,16 @@ public class Shooter {
     private static final double UP_TO_SPEED_TOLERANCE_TICKS_PER_SECOND = 20;
 
     public final DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
-            0.0169966,  // kP
+            0.0140986,  // kP
             0.00000,  // kI
-            0.00668876,  // kD
-            0.549526,  // kS
-            0.00766308,  // kV
-            0.00589096,  // kA
+            0.00494255,  // kD
+            0.152969,  // kS
+            0.00470355,  // kV
+            0.00568705,  // kA
             30.0000,  // tolerance (ticks/sec)
             1000.00,  // integralLimit (ticks)
             true,  // voltageCompensation
-            12.5000); // nominalVoltage (V)
+            12.0000); // nominalVoltage (V)
 
     // TODO: tune — counterRoller velocity constants copied from the main flywheel.
     // They may differ from the main motor's, so measure and tune them separately.
