@@ -33,17 +33,23 @@ import java.util.function.Function;
  * until the user approves the draft and supplies the
  * TODO-USER-CONSTANTS values.
  *
- * <p>Phases, in order: (1) breakaway probe for kS, (2) relay test for
- * PID (Ku/Tu via corrected bookkeeping, never Aarav's
- * {@code computeResult()} amplitude), (3) quasistatic stepped holds
- * for kS/kV, (4) dynamic trapezoid ramps for kA (profile acceleration
- * is the regressor), (5) least-squares SVA fit in the Procedure, then
- * (6) live validation of Ziegler-Nichols candidates in order
- * 2 (no overshoot) → 3 → 4, stopping at the first candidate that
- * passes all gates. If a phase fails, times out, or is stopped
- * without usable data, no results are emitted and the Procedure
- * aborts visibly — never with dummy or zero "tuned" values (the
- * {@code MotorPIDVelocityTuner} lesson).
+ * <p>Phases, in order: (0a) manual spin -- the operator spins the
+ * wheel BY HAND in the direction they want it to shoot, then STOPS
+ * the OpMode (like the Pinpoint encoder direction test), which
+ * records the velocity sign for the desired direction; (0b) power
+ * direction check -- a brief +0.3 spin that learns which velocity
+ * sign a positive power produces; (1) breakaway probe for kS,
+ * (2) relay test for PID (Ku/Tu via corrected bookkeeping, never
+ * Aarav's {@code computeResult()} amplitude), (3) quasistatic
+ * stepped holds for kS/kV, (4) dynamic trapezoid ramps for kA
+ * (profile acceleration is the regressor), (5) least-squares SVA
+ * fit in the Procedure, then (6) live validation of
+ * Ziegler-Nichols candidates in order 2 (no overshoot) → 3 → 4,
+ * stopping at the first candidate that passes all gates. If a phase
+ * fails, times out, or is stopped without usable data, no results
+ * are emitted and the Procedure aborts visibly — never with dummy
+ * or zero "tuned" values (the {@code MotorPIDVelocityTuner}
+ * lesson).
  *
  * <p>Units: Procedure inputs are in RPM where labelled; all internal
  * math and controller state are in ticks/sec, seconds, and power
@@ -54,12 +60,16 @@ import java.util.function.Function;
  * (as in the stub) so the same Procedure adapts to different
  * flywheels; no "shooter" hardware name is hard-coded in the tuning
  * math. The motor direction is set by the supplier (FORWARD for
- * both flywheels, matching production Shooter.java) and
- * {@code getVelocity()} is direction-adjusted, so positive power
- * always gives a positive velocity reading -- there is no manual
- * "Reversed" input. Phases convert power/velocity signs through
- * the (always false) {@code reversed} flag, kept only for API
- * compatibility.
+ * both flywheels, matching production Shooter.java). The spin
+ * direction the phases drive is the one the operator chose by hand
+ * in setup OpMode (0a), and the raw power sign that produces it is
+ * learned in setup OpMode (0b) -- so positive effective power
+ * always spins the wheel the way the operator wants, and a positive
+ * recorded velocity always means that direction, regardless of
+ * encoder wiring or whether getVelocity() is direction-adjusted.
+ * Without that, the SVA fit sees opposite-sign (power, velocity)
+ * data and rejects with "kS materially negative" / "kV is not
+ * positive". There is no manual "Reversed" input.
  *
  * <p>Safety: every phase sets {@code RUN_WITHOUT_ENCODER} before
  * driving power, polls {@code isStopRequested()} every iteration,
@@ -157,15 +167,13 @@ public class ShooterPIDSVATuner extends Procedure {
         boolean tuneIntegral = tuneIntegralTerm.get();
         boolean voltageOn = voltageCompensation.get();
         double nominalVolts = nominalVoltage.get();
-        // No "Reversed" input: the supplier sets the motor direction
-        // (FORWARD for both flywheels, matching production Shooter.java)
-        // and getVelocity() is direction-adjusted, so positive power
-        // always gives a positive velocity reading. A manual reversal
-        // flag here only invited sign errors -- it spun the wheel
-        // opposite to production and corrupted the dynamic-phase fit
-        // into "kS materially negative". The phases still accept a
-        // reversed flag for API compatibility; it is always false.
-        boolean isReversed = false;
+        // Direction signs are measured, not configured: the two setup
+        // OpModes at the front of the Procedure find them (manual spin
+        // for the desired direction, +0.3 spin for the power
+        // direction). There is no "Reversed" input -- a manual reversal
+        // flag only invited sign errors, spinning the wheel opposite
+        // to the direction the operator wants and corrupting the
+        // dynamic-phase fit into "kS materially negative".
         List<Double> ffPowers;
         try {
             ffPowers = parseFeedforwardPowers(feedforwardTestPowers.get());
@@ -191,16 +199,37 @@ public class ShooterPIDSVATuner extends Procedure {
 
         confirmation("Flywheel tuning",
                 "Are you ready to start tuning the flywheel? "
-                        + "No balls may be loaded. Keep hands clear of the flywheel and confirm the area is clear. "
+                        + "First you will spin the wheel BY HAND in the direction you want it to shoot, then STOP that OpMode (like the Pinpoint encoder direction test) -- the motor is unpowered for that step. "
+                        + "After that the powered phases run: no balls may be loaded. Keep hands clear of the flywheel and confirm the area is clear. "
                         + "The wheel will spin at up to the target RPM and reverse briefly during the relay test."
                         + safetyWarning);
 
         double targetTicksPerSec = rpmToTicksPerSec(targetRpmValue);
         double hysteresisTicksPerSec = rpmToTicksPerSec(hysteresisRpm);
 
+        // Setup OpMode 1 of 2: manual spin -- the operator spins the
+        // wheel by hand in the desired shoot direction, then stops the
+        // OpMode. Returns the velocity sign for that direction.
+        Integer desiredSign = runOpMode(new ManualSpinPhase(shooterMotorSupplier));
+        if (desiredSign == null) {
+            abort("Manual spin ended without a direction. Spin the flywheel by hand in the direction you want it to shoot, then STOP the OpMode, and try again.");
+            return;
+        }
+
+        // Setup OpMode 2 of 2: brief +0.3 spin -- learns which velocity
+        // sign a positive power produces, so the phases know which raw
+        // power sign drives the wheel in the desired direction.
+        Integer powerSign = runOpMode(new PowerDirectionPhase(shooterMotorSupplier));
+        if (powerSign == null) {
+            abort("Power direction check ended without a result. The wheel did not move at +0.3 power; check the motor and try again.");
+            return;
+        }
+        result("desired velocity sign (manual spin)", desiredSign.toString());
+        result("power velocity sign (+0.3 power)", powerSign.toString());
+
         // Phase 1: breakaway probe for kS.
         Double breakawayPower = runOpMode(new BreakawayPhase(
-                shooterMotorSupplier, ticksPerRev, isReversed, voltageOn, nominalVolts));
+                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts));
         if (breakawayPower == null) {
             abort("Breakaway phase ended without a result. The wheel did not break away or the phase was stopped. Try again.");
             return;
@@ -208,7 +237,7 @@ public class ShooterPIDSVATuner extends Procedure {
 
         // Phase 2: relay test for PID.
         RelayTuner.Result relayResult = runOpMode(new RelayPhase(
-                shooterMotorSupplier, ticksPerRev, isReversed, voltageOn, nominalVolts,
+                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts,
                 targetTicksPerSec, relayAmp, hysteresisTicksPerSec, collect, ignore, relayTimeout));
         if (relayResult == null || !relayResult.success) {
             String detail = relayResult == null ? "no result returned"
@@ -219,7 +248,7 @@ public class ShooterPIDSVATuner extends Procedure {
 
         // Phase 3: quasistatic stepped holds for kS/kV.
         List<SvaFit.Sample> quasistaticSamples = runOpMode(new QuasistaticPhase(
-                shooterMotorSupplier, ticksPerRev, isReversed, voltageOn, nominalVolts, ffPowers, settleSecs));
+                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts, ffPowers, settleSecs));
         if (quasistaticSamples == null || quasistaticSamples.isEmpty()) {
             abort("Quasistatic phase ended without usable samples. Try again.");
             return;
@@ -234,7 +263,7 @@ public class ShooterPIDSVATuner extends Procedure {
         // Phase 4: dynamic trapezoid ramps for kA, following a velocity
         // profile with the preliminary controller.
         List<SvaFit.Sample> dynamicSamples = runOpMode(new DynamicPhase(
-                shooterMotorSupplier, ticksPerRev, isReversed, voltageOn, nominalVolts,
+                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts,
                 preliminaryKs, preliminaryKv, relayResult, tuneIntegral));
         if (dynamicSamples == null || dynamicSamples.isEmpty()) {
             abort("Dynamic phase ended without usable samples. Try again.");
@@ -270,7 +299,7 @@ public class ShooterPIDSVATuner extends Procedure {
             DoubleFlywheelFullVelocityConstants constants = buildConstants(
                     candidate, fit, targetTicksPerSec, tuneIntegral, voltageOn, nominalVolts);
             ValidationResult validation = runOpMode(new ValidationPhase(
-                    shooterMotorSupplier, ticksPerRev, isReversed, voltageOn, nominalVolts,
+                    shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts,
                     constants, targetTicksPerSec, candidate.label));
             if (validation == null) {
                 abort("Validation phase ended without a result for candidate " + candidate.label + ". Try again.");
@@ -474,23 +503,42 @@ public class ShooterPIDSVATuner extends Procedure {
     /**
      * Shared phase base. Subclasses implement the test loop; this base
      * owns motor setup (RUN_WITHOUT_ENCODER, FLOAT), sign conversion
-     * for {@code reversed}, voltage reads, and the stop-on-every-exit
-     * contract. Phases return null when stopped without usable data.
+     * for the two direction signs measured by the setup OpModes
+     * (desiredVelocitySign, powerVelocitySign), voltage reads, and
+     * the stop-on-every-exit contract. Phases return null when
+     * stopped without usable data.
      */
     abstract static class FlywheelPhase<Result> extends TuningOpMode<Result> {
         final Function<HardwareMap, DcMotorEx> supplier;
         final double ticksPerRev;
-        final boolean reversed;
+        // Direction signs, measured once per tuner run by the two setup
+        // OpModes at the front of the Procedure (ManualSpinPhase and
+        // PowerDirectionPhase) and shared by every phase after them:
+        // desiredVelocitySign is the velocity sign for the spin
+        // direction the operator wants (found by spinning the wheel by
+        // hand); powerVelocitySign is the velocity sign that a positive
+        // raw power produces (found by a brief +0.3 spin). Positive
+        // effective power always spins the wheel in the desired
+        // direction, and a positive recorded velocity always means the
+        // desired direction -- regardless of encoder wiring or whether
+        // getVelocity() is direction-adjusted. That is what keeps the
+        // SVA fit from seeing opposite-sign (power, velocity) data and
+        // rejecting with "kS materially negative" / "kV is not
+        // positive".
+        final int desiredVelocitySign;
+        final int powerVelocitySign;
         final boolean voltageCompensation;
         final double nominalVoltage;
 
         FlywheelPhase(String name, String description,
                       Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                      boolean reversed, boolean voltageCompensation, double nominalVoltage) {
+                      int desiredVelocitySign, int powerVelocitySign,
+                      boolean voltageCompensation, double nominalVoltage) {
             super(name, description, true);
             this.supplier = supplier;
             this.ticksPerRev = ticksPerRev;
-            this.reversed = reversed;
+            this.desiredVelocitySign = desiredVelocitySign;
+            this.powerVelocitySign = powerVelocitySign;
             this.voltageCompensation = voltageCompensation;
             this.nominalVoltage = nominalVoltage;
         }
@@ -503,15 +551,26 @@ public class ShooterPIDSVATuner extends Procedure {
             return motor;
         }
 
-        /** Effective (forward-positive) power: sign-converted for {@code reversed}. */
+        /**
+         * Effective (forward-positive) power: positive always spins
+         * the wheel in the desired direction. The raw power applied to
+         * the motor is the effective power times
+         * desiredVelocitySign * powerVelocitySign: since a raw power
+         * of sign s gives a velocity of sign s * powerVelocitySign,
+         * applying s = desiredVelocitySign * powerVelocitySign gives
+         * a velocity of sign desiredVelocitySign, which is the
+         * direction the operator wants.
+         */
         void applyPower(DcMotorEx motor, double effectivePower) {
-            motor.setPower(reversed ? -effectivePower : effectivePower);
+            motor.setPower(effectivePower * desiredVelocitySign * powerVelocitySign);
         }
 
-        /** Effective (forward-positive) velocity in ticks/sec. */
+        /**
+         * Effective (forward-positive) velocity in ticks/sec: positive
+         * always means spinning in the desired direction.
+         */
         double readVelocity(DcMotorEx motor) {
-            double raw = motor.getVelocity();
-            return reversed ? -1 * raw : 1 * raw;
+            return motor.getVelocity() * desiredVelocitySign;
         }
 
         /** Best available battery voltage, or NaN when no valid sensor reading exists. */
@@ -536,6 +595,121 @@ public class ShooterPIDSVATuner extends Procedure {
     }
 
     /** Breakaway probe: slow ramp 0 -> 0.35 over 6 s; power at first sustained motion is the result. */
+    /**
+     * Setup OpMode 1 of 2 (runs first, before any powered phase): the
+     * operator spins the flywheel BY HAND in the direction they want
+     * it to spin for shooting, then STOPS the OpMode -- the same
+     * "you stop it" flow as the Pinpoint tuner forward/strafe encoder
+     * direction tests. The motor is never powered here; this only
+     * reads the velocity encoder. Returns the velocity sign (+1 or
+     * -1) for the desired spin direction, or null when the wheel was
+     * never spun fast enough to tell.
+     */
+    static final class ManualSpinPhase extends TuningOpMode<Integer> {
+        static final double MOTION_THRESHOLD_TICKS_PER_SEC = 50.0;
+        final Function<HardwareMap, DcMotorEx> supplier;
+
+        ManualSpinPhase(Function<HardwareMap, DcMotorEx> supplier) {
+            super("Manual Spin Direction", "Spin the flywheel BY HAND in the direction you want it to shoot, then STOP the OpMode.", true);
+            this.supplier = supplier;
+        }
+
+        @Override
+        protected Integer runTuningOpMode() throws InterruptedException {
+            waitForStart();
+            DcMotorEx motor = supplier.apply(hardwareMap);
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            motor.setPower(0.0);
+            try {
+                double peakVelocity = 0.0;
+                while (!isStopRequested()) {
+                    double velocity = motor.getVelocity();
+                    if (Math.abs(velocity) > Math.abs(peakVelocity)) {
+                        peakVelocity = velocity;
+                    }
+                    telemetry.addData("Spin the wheel by hand (desired shoot direction), then STOP", "");
+                    telemetry.addData("live velocity (ticks/sec)", "%.0f", velocity);
+                    telemetry.addData("peak velocity (ticks/sec)", "%.0f", peakVelocity);
+                    telemetry.addData("detected desired sign", Math.abs(peakVelocity) > MOTION_THRESHOLD_TICKS_PER_SEC
+                            ? (peakVelocity > 0 ? "+1 (positive velocity)" : "-1 (negative velocity)") : "not yet -- spin it faster");
+                    telemetry.update();
+                    sleep(50);
+                }
+                // Stopped by the operator: the peak velocity's sign is
+                // the desired direction.
+                if (Math.abs(peakVelocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
+                    report("manual spin", "no spin detected (peak " + peakVelocity + " ticks/sec); spin the wheel faster and try again");
+                    return null;
+                }
+                int desiredSign = peakVelocity > 0 ? 1 : -1;
+                report("desired velocity sign (manual spin)", desiredSign);
+                report("peak velocity (ticks/sec)", peakVelocity);
+                return desiredSign;
+            } finally {
+                motor.setPower(0.0);
+            }
+        }
+    }
+
+    /**
+     * Setup OpMode 2 of 2 (runs after the manual spin, before any
+     * powered phase): spins the wheel briefly at a raw +0.3 power and
+     * measures which velocity sign a positive power produces. Returns
+     * that sign (+1 or -1), or null when the wheel never moved enough
+     * to tell. Together with the manual spin sign, this tells the
+     * phases which raw power sign drives the wheel in the direction
+     * the operator wants.
+     */
+    static final class PowerDirectionPhase extends TuningOpMode<Integer> {
+        static final double TEST_POWER = 0.3;
+        static final double MOTION_THRESHOLD_TICKS_PER_SEC = 50.0;
+        static final double TIMEOUT_SECONDS = 2.0;
+        final Function<HardwareMap, DcMotorEx> supplier;
+
+        PowerDirectionPhase(Function<HardwareMap, DcMotorEx> supplier) {
+            super("Power Direction Check", "Brief +0.3 spin to learn which velocity sign positive power gives. No balls loaded.", true);
+            this.supplier = supplier;
+        }
+
+        @Override
+        protected Integer runTuningOpMode() throws InterruptedException {
+            waitForStart();
+            DcMotorEx motor = supplier.apply(hardwareMap);
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            motor.setPower(0.0);
+            try {
+                // Raw +0.3, bypassing any sign conversion: the raw
+                // power-to-velocity relationship is what is measured.
+                motor.setPower(TEST_POWER);
+                long start = System.nanoTime();
+                double velocity = 0.0;
+                while (!isStopRequested() && elapsedSeconds(start) < TIMEOUT_SECONDS) {
+                    sleep(50);
+                    velocity = motor.getVelocity();
+                    telemetry.addData("Testing +0.3 power...", "");
+                    telemetry.addData("live velocity (ticks/sec)", "%.0f", velocity);
+                    telemetry.update();
+                    if (Math.abs(velocity) > MOTION_THRESHOLD_TICKS_PER_SEC) {
+                        break;
+                    }
+                }
+                motor.setPower(0.0);
+                if (Math.abs(velocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
+                    report("power direction check", "wheel did not move (velocity " + velocity + " ticks/sec at +0.3); check the motor and try again");
+                    return null;
+                }
+                int powerSign = velocity > 0 ? 1 : -1;
+                report("power velocity sign (+0.3 power)", powerSign);
+                report("velocity at +0.3 (ticks/sec)", velocity);
+                return powerSign;
+            } finally {
+                motor.setPower(0.0);
+            }
+        }
+    }
+
     static final class BreakawayPhase extends FlywheelPhase<Double> {
         static final double RAMP_SECONDS = 6.0;
         static final double PEAK_POWER = 0.35;
@@ -544,9 +718,9 @@ public class ShooterPIDSVATuner extends Procedure {
         static final double TIMEOUT_SECONDS = 10.0;
 
         BreakawayPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                       boolean reversed, boolean voltageCompensation, double nominalVoltage) {
+                       int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage) {
             super("Breakaway Probe", "Slow ramp to find breakaway power (kS). No balls loaded.",
-                    supplier, ticksPerRev, reversed, voltageCompensation, nominalVoltage);
+                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
         }
 
         @Override
@@ -600,11 +774,11 @@ public class ShooterPIDSVATuner extends Procedure {
         private final double timeoutSeconds;
 
         RelayPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                   boolean reversed, boolean voltageCompensation, double nominalVoltage,
+                   int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
                    double targetTicksPerSec, double relayAmplitude, double hysteresisTicksPerSec,
                    int cyclesToCollect, int cyclesToIgnore, double timeoutSeconds) {
             super("Relay Test", "Bang-bang relay test for Ku/Tu. No balls loaded; the wheel oscillates around the target.",
-                    supplier, ticksPerRev, reversed, voltageCompensation, nominalVoltage);
+                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
             this.targetTicksPerSec = targetTicksPerSec;
             this.relayAmplitude = relayAmplitude;
             this.hysteresisTicksPerSec = hysteresisTicksPerSec;
@@ -660,10 +834,10 @@ public class ShooterPIDSVATuner extends Procedure {
         private final double settleSeconds;
 
         QuasistaticPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                         boolean reversed, boolean voltageCompensation, double nominalVoltage,
+                         int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
                          List<Double> powers, double settleSeconds) {
             super("Quasistatic Ramp", "Stepped power holds for kS/kV. No balls loaded.",
-                    supplier, ticksPerRev, reversed, voltageCompensation, nominalVoltage);
+                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
             this.powers = new ArrayList<>(powers);
             this.settleSeconds = settleSeconds;
         }
@@ -766,11 +940,11 @@ public class ShooterPIDSVATuner extends Procedure {
         private final boolean tuneIntegral;
 
         DynamicPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                     boolean reversed, boolean voltageCompensation, double nominalVoltage,
+                     int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
                      double preliminaryKs, double preliminaryKv,
                      RelayTuner.Result relayResult, boolean tuneIntegral) {
             super("Dynamic Ramps", "Trapezoid velocity ramps for kA (profile acceleration is the regressor). No balls loaded.",
-                    supplier, ticksPerRev, reversed, voltageCompensation, nominalVoltage);
+                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
             this.preliminaryKs = preliminaryKs;
             this.preliminaryKv = preliminaryKv;
             this.relayResult = relayResult;
@@ -911,11 +1085,11 @@ public class ShooterPIDSVATuner extends Procedure {
         private final String candidateLabel;
 
         ValidationPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                        boolean reversed, boolean voltageCompensation, double nominalVoltage,
+                        int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
                         DoubleFlywheelFullVelocityConstants constants, double targetTicksPerSec,
                         String candidateLabel) {
             super("Validation: " + candidateLabel, "Live test of candidate " + candidateLabel + " at the target RPM. No balls loaded.",
-                    supplier, ticksPerRev, reversed, voltageCompensation, nominalVoltage);
+                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
             this.constants = constants;
             this.targetTicksPerSec = targetTicksPerSec;
             this.candidateLabel = candidateLabel;
