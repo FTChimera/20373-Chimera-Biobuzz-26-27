@@ -115,6 +115,9 @@ public class Vision {
     public Field.HiveState getInferredHiveState() {
         return inferredHiveState;
     }
+    public boolean anyFiducial() {
+        return !fiducials().isEmpty();
+    }
 
     public void applyInferredHiveState(Field field) {
         if (field == null) {

@@ -29,7 +29,7 @@ public class ShooterCommands {
      * (or Vision cannot see the tags), the last known state stands and the
      * command ends on timeout.
      */
-    public static Command waitForHiveLineup(Robot robot, Field.HiveState wantedState) {
+    public static Command waitForHiveLineupOld(Robot robot, Field.HiveState wantedState) {
         AtomicReference<Timer> timer = new AtomicReference<>();
         AtomicBoolean done = new AtomicBoolean(false);
         return Command.build()
@@ -88,6 +88,25 @@ public class ShooterCommands {
                 .setDone(() -> startShoot.get() && timer.get().past(5000))
                 .setEnd((endCondition) -> robot.transfer.stop());
 
+    }
+
+    public static Command waitForHiveLineup(Robot robot, Field.HiveState unused) {
+        AtomicBoolean done = new AtomicBoolean(false);
+        AtomicReference<Timer> timer = new AtomicReference<>();
+        return Command.build()
+                .setStart(() -> timer.set(new Timer()))
+                .setExecute(() -> {
+                    if (done.get()) {
+                        return;
+                    }
+                    if (robot.vision.anyFiducial()) {
+                        done.set(true);
+                        return;
+                    }
+                    if (timer.get().past(HIVE_LINEUP_TIMEOUT_SECONDS)) {
+                        done.set(true);
+                    }
+                });
     }
 
 
