@@ -31,7 +31,7 @@ public class PrismConfig extends LinearOpMode {
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, animation1);
                 break;
             case ARTBOARD_1:
-                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.rainbow().brightness(40).build());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.rainbow().brightness(30).build());
                 break;
             case ARTBOARD_2:
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.solid().primaryColor(Color.GREEN).build());

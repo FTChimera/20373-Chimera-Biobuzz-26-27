@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 @Utility
-public class testSnakes extends OpMode {
+public class ArtboardTest extends OpMode {
     GoBildaPrismDriver prismDriver;
     /**
      * User-defined init method
@@ -18,7 +18,7 @@ public class testSnakes extends OpMode {
     }
 
     @Override public void start() {
-        prismDriver.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_6);
+        prismDriver.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_3);
     }
     /**
      * User-defined loop method

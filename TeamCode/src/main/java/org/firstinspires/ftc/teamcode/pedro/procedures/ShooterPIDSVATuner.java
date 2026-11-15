@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedro.procedures;
 
+import static org.firstinspires.ftc.teamcode.pedro.procedures.ShooterPIDSVATuner.FlywheelPhase.elapsedSeconds;
+
 import com.pedropathing.tuning.autotune.Inputs;
 import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.TuningOpMode;
@@ -639,12 +641,12 @@ public class ShooterPIDSVATuner extends Procedure {
                 // Stopped by the operator: the peak velocity's sign is
                 // the desired direction.
                 if (Math.abs(peakVelocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
-                    report("manual spin", "no spin detected (peak " + peakVelocity + " ticks/sec); spin the wheel faster and try again");
+                    telemetry.addData("manual spin", "no spin detected (peak " + peakVelocity + " ticks/sec); spin the wheel faster and try again");
                     return null;
                 }
                 int desiredSign = peakVelocity > 0 ? 1 : -1;
-                report("desired velocity sign (manual spin)", desiredSign);
-                report("peak velocity (ticks/sec)", peakVelocity);
+                telemetry.addData("desired velocity sign (manual spin)", desiredSign);
+                telemetry.addData("peak velocity (ticks/sec)", peakVelocity);
                 return desiredSign;
             } finally {
                 motor.setPower(0.0);
@@ -697,12 +699,12 @@ public class ShooterPIDSVATuner extends Procedure {
                 }
                 motor.setPower(0.0);
                 if (Math.abs(velocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
-                    report("power direction check", "wheel did not move (velocity " + velocity + " ticks/sec at +0.3); check the motor and try again");
+                    telemetry.addData("power direction check", "wheel did not move (velocity " + velocity + " ticks/sec at +0.3); check the motor and try again");
                     return null;
                 }
                 int powerSign = velocity > 0 ? 1 : -1;
-                report("power velocity sign (+0.3 power)", powerSign);
-                report("velocity at +0.3 (ticks/sec)", velocity);
+                telemetry.addData("power velocity sign (+0.3 power)", powerSign);
+                telemetry.addData("velocity at +0.3 (ticks/sec)", velocity);
                 return powerSign;
             } finally {
                 motor.setPower(0.0);

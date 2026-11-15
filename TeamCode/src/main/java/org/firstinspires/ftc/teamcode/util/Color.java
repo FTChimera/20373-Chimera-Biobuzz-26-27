@@ -33,7 +33,7 @@ public class Color {
     public static final Color PINK = new Color(255, 20, 128);
     public static final Color WHITE = new Color(255, 255, 255);
     public static final Color GRAY = new Color(128, 128, 128);
-    public static final Color TEAM_COLOR_BLUE = new Color(9, 31, 80);
+    public static final Color TEAM_COLOR_BLUE = new Color(9, 31, 250);
     public static final Color TEAM_COLOR_WHITE = new Color(80, 9, 9);
     public static final Color TRANSPARENT = new Color(0, 0, 0);
 
@@ -62,7 +62,7 @@ public class Color {
     }
 
     public static Color dimColor(Color color) {
-        return dimColor(color, 5.0);
+        return dimColor(color, 2.0);
     }
     public static Color dimColor(Color color, double dimFactor) {
         return new Color((int)(color.red/dimFactor), (int)(color.green/dimFactor), (int)(color.blue/dimFactor));

@@ -16,8 +16,8 @@ public class Intake {
 
     // Deployable ramp (deployer) servo positions. TODO: TUNE - positions not
     // yet set on the robot.
-    public static final double DEPLOYER_DEPLOYED_POSITION = 1.0;
-    public static final double DEPLOYER_STOWED_POSITION = 0.0;
+    public static final double DEPLOYER_DEPLOYED_POSITION = 0.25;
+    public static final double DEPLOYER_STOWED_POSITION = 0.62;
 
     Servo deployer;
     private boolean deployed = false;
@@ -41,7 +41,7 @@ public class Intake {
     public Intake(HardwareMap map, AllianceColor color) {
         mainMotor = new CachedMotor(map.get(DcMotorEx.class, "intake"), 0.1);
 
-        mainMotor.setDirection(Direction.FORWARD.toMotor());
+        mainMotor.setDirection(Direction.REVERSE.toMotor());
 
         deployer = map.get(Servo.class, "deployer");
         setDeployed(false);

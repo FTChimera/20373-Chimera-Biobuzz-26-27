@@ -25,6 +25,8 @@ package org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Utility;
+
 import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.PrismAnimations.*;
 import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.PrismAnimations.AnimationType;
 import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.GoBildaPrismDriver.*;
@@ -48,7 +50,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 
-@TeleOp(name="Prism Configurator", group="Linear OpMode")
+@Utility(name="Prism Configurator")
 //@Disabled
 
 public class GoBildaPrismConfigurator extends LinearOpMode {

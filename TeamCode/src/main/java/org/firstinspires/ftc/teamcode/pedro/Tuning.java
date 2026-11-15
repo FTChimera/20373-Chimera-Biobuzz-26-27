@@ -35,7 +35,7 @@ public class Tuning {
     @Tuner(name = "Foresight Tuner")
     public static Procedure foresightTuner() {
         return new ForesightTuner(
-                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
+                hardwareMap -> new EKFPinpoint(hardwareMap, Constants.PINPOINT_CONFIG),
                 hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG));
     }
 
@@ -46,7 +46,7 @@ public class Tuning {
     public static Procedure tests() {
         return new Tests(
                 hardwareMap -> new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
-                hardwareMap -> new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
+                hardwareMap -> new EKFPinpoint(hardwareMap, Constants.PINPOINT_CONFIG),
                 () -> new Foresight(Constants.FORESIGHT_CONFIG),
                 hardwareMap -> colorSensor(hardwareMap, "color_sensor", 65.3F));
     }

@@ -36,19 +36,17 @@ public class Shooter {
             true,  // voltageCompensation
             12.0000); // nominalVoltage (V)
 
-    // TODO: tune — counterRoller velocity constants copied from the main flywheel.
-    // They may differ from the main motor's, so measure and tune them separately.
     public final DoubleFlywheelFullVelocityConstants counterRollerVelocityConstants = new DoubleFlywheelFullVelocityConstants(
-            0.0169966,  // kP
+            0.0206484,  // kP
             0.00000,  // kI
-            0.00668876,  // kD
-            0.549526,  // kS
-            0.00766308,  // kV
-            0.00589096,  // kA
+            0.00565814,  // kD
+            1.94694,  // kS
+            0.00732318,  // kV
+            0.00636011,  // kA
             30.0000,  // tolerance (ticks/sec)
             1000.00,  // integralLimit (ticks)
             true,  // voltageCompensation
-            12.5000); // nominalVoltage (V)
+            12.0000); // nominalVoltage (V)
 
     public SmartFlywheel mainMotor;
     public SmartFlywheel counterRoller;
@@ -77,7 +75,7 @@ public class Shooter {
                 COUNTER_ROLLER_PARAMS,
                 hardwareMap.voltageSensor
         );
-        counterRoller.motor.setDirection(Direction.FORWARD.toMotor());
+        counterRoller.motor.setDirection(Direction.REVERSE.toMotor());
         counterRoller.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         shotCalculator = ShotCalculator.table();
