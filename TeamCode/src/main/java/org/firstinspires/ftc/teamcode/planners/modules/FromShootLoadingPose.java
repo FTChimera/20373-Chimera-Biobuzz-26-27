@@ -72,32 +72,51 @@ public class FromShootLoadingPose {
      * shoot them at the garden. Rule (G304.G, TU09): a present partner's
      * preloads stay in contact with the partner's robot, so there is
      * nothing to collect here; a NO-SHOW partner's 4 POLLEN are staged
-     * in the loading zone against the perimeter wall, and the robot may
-     * collect them (no rule against picking up a partner's POLLEN; G407
-     * caps possession at 4, so the robot must already have shot its own
-     * preloads). One branch handles both cases: drive to the wall,
-     * intake for 2 s, then garden shoot. If the partner was present the
-     * intake runs empty and the garden shoot finds nothing to shoot.
+     * in the loading zone against the perimeter wall, around the centre
+     * of the zone, and the robot may collect them (no rule against
+     * picking up a partner's POLLEN; G407 caps possession at 4, so the
+     * robot must already have shot its own preloads). One branch handles
+     * both cases: drive to the wall, intake, then garden shoot. If the
+     * partner was present the intake runs empty and the garden shoot
+     * finds nothing to shoot.
      *
-     * Extends ToIntakeWestFlowerToGarden: the run sequence (intake +
-     * deploy, 2 s, return + stow, lineup UNTIPPED, shoot), the lineup
-     * state and the end pose are identical, so only the two legs are
-     * replaced -- the inherited {@code toFlower} field holds the wall
-     * approach and {@code back} the return down the west side.
+     * This is NOT a flower intake: the pollen are just laid out on the
+     * floor, so there is no deployer deploy, no 2 s dwell and no stow --
+     * the garden pattern instead (intake at full power, drive in, a
+     * 300 ms settle, drive back). It keeps its own run() for that
+     * reason and does not extend the flower planners.
      */
-    public static class ToIntakeLoadingToGarden extends ToIntakeWestFlowerToGarden {
+    public static class ToIntakeLoadingToGarden extends PathPlanner {
+        Path toWall;
+        Path toGarden;
         public ToIntakeLoadingToGarden(Robot robot) {
             super(robot);
         }
 
         @Override
+        public Pose2d getEndPose() {
+            return ShootPoses.garden;
+        }
+
+        @Override
+        public Command run() {
+            return sequential(
+                    instant(robot.intake::setFullPower),
+                    follow(robot.follower, () -> toWall),
+                    waitMs(Timings.gardenIntakeTimeMs),
+                    follow(robot.follower, () -> toGarden),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
+                    ShooterCommands.shootAllPollen(robot)
+            );
+        }
+
+        @Override
         public void buildPaths() {
-            super.buildPaths();
             // Loading intake pose: robot center 9.5 in from the west wall
-            // (1 in + half the robot length, same standoff as a flower),
-            // centered in the loading zone (y 96-120), facing the wall.
-            // Short hop west from the loading shoot pose.
-            toFlower = Paths
+            // (1 in + half the robot length), centered in the loading
+            // zone (y 96-120), facing the wall -- the staged pollen sit
+            // around the zone centre against the wall.
+            toWall = Paths
                     .curve(startPose, PathPoses.loadingIntakeApproach, PathPoses.loadingIntake)
                     .heading(CommonKt.fastInterpolationDegraded(PathPoses.loadingIntake.heading(), Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
@@ -106,7 +125,7 @@ public class FromShootLoadingPose {
             // (curve passes (26.4, 48.3) at t=0.5, (41.1, 32.1) at
             // t=0.75). Reverse tangential interpolation, as on the
             // other return legs.
-            back = Paths
+            toGarden = Paths
                     .curve(PathPoses.loadingIntake, PathPoses.loadingToGarden, ShootPoses.garden)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
