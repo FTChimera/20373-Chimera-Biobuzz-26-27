@@ -67,6 +67,16 @@ public class PlanBuilder {
         return this;
     }
 
+    public PlanBuilder intakeGardenToLoading() {
+        if (position==Positions.GARDEN_SHOOT) {
+            planners.add(new FromShootGardenPose.ToIntakeGardenToLoading(robot));
+            position=Positions.LOADING_SHOOT;
+        } else {
+            throw new IllegalStateException("Cannot Intake Garden to Loading from Position " + position);
+        }
+        return this;
+    }
+
     public PlanBuilder intakeFromWestFlower() {
         if (position==Positions.GARDEN_SHOOT) {
             planners.add(new FromShootGardenPose.ToIntakeFromWestFlower(robot));
@@ -81,6 +91,26 @@ public class PlanBuilder {
             planners.add(new FromShootLoadingPose.ToIntakeFromNorthFlower(robot));
         } else {
             throw new IllegalStateException("Cannot Intake from the North Flower from Position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakeLoadingToGarden() {
+        if (position==Positions.LOADING_SHOOT) {
+            planners.add(new FromShootLoadingPose.ToIntakeLoadingToGarden(robot));
+            position=Positions.GARDEN_SHOOT;
+        } else {
+            throw new IllegalStateException("Cannot Intake Loading Preloads to Garden from Position " + position);
+        }
+        return this;
+    }
+
+    public PlanBuilder intakePartnerPreloadsToGarden() {
+        if (position==Positions.LOADING_SHOOT) {
+            planners.add(new FromShootLoadingPose.ToIntakePartnerPreloadsToGarden(robot));
+            position=Positions.GARDEN_SHOOT;
+        } else {
+            throw new IllegalStateException("Cannot Intake Partner Preloads to Garden from Position " + position);
         }
         return this;
     }

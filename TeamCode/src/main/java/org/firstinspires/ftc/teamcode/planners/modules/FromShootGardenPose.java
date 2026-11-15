@@ -110,6 +110,54 @@ public class FromShootGardenPose {
         }
     }
 
+    public static class ToIntakeGardenToLoading extends PathPlanner {
+        Path toGarden;
+        Path toLoading;
+        public ToIntakeGardenToLoading(Robot robot) {
+            super(robot);
+        }
+
+        @Override
+        public Pose2d getEndPose() {
+            return ShootPoses.loading;
+        }
+
+        @Override
+        public Command run() {
+            return sequential(
+                    instant(robot.intake::setFullPower),
+                    parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
+                    waitMs(Timings.gardenIntakeTimeMs),
+                    follow(robot.follower, () -> toLoading),
+                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
+                    ShooterCommands.shootAllPollen(robot)
+            );
+        }
+
+        @Override
+        public void buildPaths() {
+            toGarden = Paths
+                    .curve(startPose, IntakePoses.gardenControl1, IntakePoses.gardenEnd)
+                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.gardenEnd.heading(), Values.gardenIntakeConstantTValue, false));
+            // Up the west side past the hive, then across the top to the
+            // loading shoot pose. Single smooth curve; rect clearance to
+            // the west hive base stays west of x=45 until above y=94
+            // (curve passes (14.4, 51.5) at t=0.25, (25.8, 86) at t=0.5,
+            // (40.9, 108.5) at t=0.75). Reverse tangential interpolation
+            // so the robot backs up the west side instead of spinning
+            // 180 degrees after the garden intake.
+            toLoading = Paths
+                    .curve(IntakePoses.gardenEnd, PoseFactory.of(18.0, 110.0), ShootPoses.loading)
+                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return "From Shoot Garden Pose to Intake Garden to Loading";
+        }
+    }
+
     public static class ToIntakeGarden extends PathPlanner {
         Path toGarden;
         Path back;
