@@ -67,40 +67,27 @@ public class FromShootGardenPose {
         }
     }
 
-    public static class ToIntakeNorthFlowerToLoading extends PathPlanner {
-        Path toFlower;
-        Path back;
+    /**
+     * North flower intake from the garden shoot pose. Extends
+     * ToIntakeFromNorthFlower (loading shoot version): the return leg,
+     * the run sequence, the lineup state (TIPPED) and the end pose are
+     * identical, so only the outbound leg is replaced -- the approach to
+     * the flower goes through the corridor between the hive bases instead
+     * of the short hop from the loading shoot pose.
+     */
+    public static class ToIntakeNorthFlowerToLoading extends FromShootLoadingPose.ToIntakeFromNorthFlower {
         public ToIntakeNorthFlowerToLoading(Robot robot) {
             super(robot);
         }
 
         @Override
-        public Pose2d getEndPose() {
-            return ShootPoses.loading;
-        }
-
-        @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    waitMs(Timings.flowerIntakeTime * 1000),
-                    parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
-                    ShooterCommands.shootAllPollen(robot)
-            );
-        }
-
-        @Override
         public void buildPaths() {
+            super.buildPaths();
             // Through the corridor between the hive bases; rect clearance to
             // the west hive base: 4.2 in out. Return leg clears by 15.3 in.
             toFlower = Paths
                     .curve(startPose, PoseFactory.of(78.0, 72.0), IntakePoses.northFlower)
                     .heading(CommonKt.fastInterpolationDegraded(IntakePoses.northFlower.heading(), Values.gardenIntakeConstantTValue, false));
-            back = Paths
-                    .curve(IntakePoses.northFlower, PoseFactory.of(54.0, 127.0), ShootPoses.loading)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull
@@ -110,9 +97,14 @@ public class FromShootGardenPose {
         }
     }
 
-    public static class ToIntakeGardenToLoading extends PathPlanner {
-        Path toGarden;
-        Path toLoading;
+    /**
+     * Garden intake that ends at the loading shoot pose instead of the
+     * garden one. Extends ToIntakeGarden: the outbound leg, the run
+     * sequence and the power change are identical, so only the return leg
+     * is replaced (the inherited {@code back} field is reused for the
+     * loading return) and the end pose + lineup state are flipped.
+     */
+    public static class ToIntakeGardenToLoading extends ToIntakeGarden {
         public ToIntakeGardenToLoading(Robot robot) {
             super(robot);
         }
@@ -123,22 +115,13 @@ public class FromShootGardenPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
-                    waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> toLoading),
-                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
-                    ShooterCommands.shootAllPollen(robot)
-            );
+        protected Field.HiveState lineupState() {
+            return Field.HiveState.TIPPED;
         }
 
         @Override
         public void buildPaths() {
-            toGarden = Paths
-                    .curve(startPose, IntakePoses.gardenControl1, IntakePoses.gardenEnd)
-                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.gardenEnd.heading(), Values.gardenIntakeConstantTValue, false));
+            super.buildPaths();
             // Up the west side past the hive, then across the top to the
             // loading shoot pose. Single smooth curve; rect clearance to
             // the west hive base stays west of x=45 until above y=94
@@ -146,7 +129,7 @@ public class FromShootGardenPose {
             // (40.9, 108.5) at t=0.75). Reverse tangential interpolation
             // so the robot backs up the west side instead of spinning
             // 180 degrees after the garden intake.
-            toLoading = Paths
+            back = Paths
                     .curve(IntakePoses.gardenEnd, PoseFactory.of(18.0, 110.0), ShootPoses.loading)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
         }
@@ -170,6 +153,15 @@ public class FromShootGardenPose {
             return ShootPoses.garden;
         }
 
+        /**
+         * Hive state to wait for before shooting. The garden shoot wants
+         * UNTIPPED; a subclass that ends at the loading shoot pose
+         * overrides this to TIPPED.
+         */
+        protected Field.HiveState lineupState() {
+            return Field.HiveState.UNTIPPED;
+        }
+
         @Override
         public Command run() {
             return sequential(
@@ -177,7 +169,7 @@ public class FromShootGardenPose {
                     parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
                     waitMs(Timings.gardenIntakeTimeMs),
                     follow(robot.follower, () -> back),
-                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
+                    ShooterCommands.waitForHiveLineup(robot, lineupState()),
                     ShooterCommands.shootAllPollen(robot)
             );
         }

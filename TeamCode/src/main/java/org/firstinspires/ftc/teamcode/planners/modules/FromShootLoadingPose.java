@@ -78,38 +78,26 @@ public class FromShootLoadingPose {
      * preloads). One branch handles both cases: drive to the wall,
      * intake for 2 s, then garden shoot. If the partner was present the
      * intake runs empty and the garden shoot finds nothing to shoot.
+     *
+     * Extends ToIntakeWestFlowerToGarden: the run sequence (intake +
+     * deploy, 2 s, return + stow, lineup UNTIPPED, shoot), the lineup
+     * state and the end pose are identical, so only the two legs are
+     * replaced -- the inherited {@code toFlower} field holds the wall
+     * approach and {@code back} the return down the west side.
      */
-    public static class ToIntakeLoadingToGarden extends PathPlanner {
-        Path toLoading;
-        Path toGarden;
+    public static class ToIntakeLoadingToGarden extends ToIntakeWestFlowerToGarden {
         public ToIntakeLoadingToGarden(Robot robot) {
             super(robot);
         }
 
         @Override
-        public Pose2d getEndPose() {
-            return ShootPoses.garden;
-        }
-
-        @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toLoading), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    waitMs(Timings.flowerIntakeTime * 1000),
-                    parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
-                    ShooterCommands.shootAllPollen(robot)
-            );
-        }
-
-        @Override
         public void buildPaths() {
+            super.buildPaths();
             // Loading intake pose: robot center 9.5 in from the west wall
             // (1 in + half the robot length, same standoff as a flower),
             // centered in the loading zone (y 96-120), facing the wall.
             // Short hop west from the loading shoot pose.
-            toLoading = Paths
+            toFlower = Paths
                     .curve(startPose, PoseFactory.of(30.0, 115.0), PoseFactory.of(9.5, 108.0, 180.0))
                     .heading(CommonKt.fastInterpolationDegraded(180.0, Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
@@ -118,7 +106,7 @@ public class FromShootLoadingPose {
             // (curve passes (26.4, 48.3) at t=0.5, (41.1, 32.1) at
             // t=0.75). Reverse tangential interpolation, as on the
             // other return legs.
-            toGarden = Paths
+            back = Paths
                     .curve(PoseFactory.of(9.5, 108.0, 180.0), PoseFactory.of(18.0, 30.0), ShootPoses.garden)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
@@ -154,6 +142,10 @@ public class FromShootLoadingPose {
      * not aim at individual balls. If the partner parks further south or
      * the row sits elsewhere, move SWEEP_X / SWEEP_END_Y; the 1 in partner
      * gap is the number to re-check on the field.
+     *
+     * Keeps its own run(): unlike the flower planners it has three legs
+     * (approach, sweep, return) and a 300 ms settle instead of a 2 s
+     * dwell, so it does not extend the flower run sequence.
      */
     public static class ToIntakePartnerPreloadsToGarden extends PathPlanner {
         Path toSweepStart;
@@ -212,40 +204,27 @@ public class FromShootLoadingPose {
         }
     }
 
-    public static class ToIntakeWestFlowerToGarden extends PathPlanner {
-        Path toFlower;
-        Path back;
+    /**
+     * West flower intake from the loading shoot pose. Extends
+     * ToIntakeFromWestFlower (garden shoot version): the return leg, the
+     * run sequence, the lineup state (UNTIPPED) and the end pose are
+     * identical, so only the outbound leg is replaced -- the approach
+     * comes down the west side from the loading shoot pose instead of
+     * out from the garden shoot pose.
+     */
+    public static class ToIntakeWestFlowerToGarden extends FromShootGardenPose.ToIntakeFromWestFlower {
         public ToIntakeWestFlowerToGarden(Robot robot) {
             super(robot);
         }
 
         @Override
-        public Pose2d getEndPose() {
-            return ShootPoses.garden;
-        }
-
-        @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    waitMs(Timings.flowerIntakeTime * 1000),
-                    parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
-                    ShooterCommands.shootAllPollen(robot)
-            );
-        }
-
-        @Override
         public void buildPaths() {
+            super.buildPaths();
             // Long diagonal past the north-east corner of the west hive base;
             // rect clearance: 3.8 in out, 12.1 in back.
             toFlower = Paths
                     .curve(startPose, PoseFactory.of(30.0, 108.0), IntakePoses.westFlower)
                     .heading(CommonKt.fastInterpolationDegraded(IntakePoses.westFlower.heading(), Values.gardenIntakeConstantTValue, false));
-            back = Paths
-                    .curve(IntakePoses.westFlower, PoseFactory.of(36.0, 30.0), ShootPoses.garden)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull
