@@ -343,6 +343,10 @@ public class Vision {
         return "OK";
     }
 
+    public static StubVision stub(HardwareMap hardwareMap, AllianceColor allianceColor) {
+        return new StubVision(hardwareMap, allianceColor);
+    }
+
     public static class StubVision extends Vision {
         public StubVision(HardwareMap hardwareMap, AllianceColor allianceColor) {
             super(hardwareMap, allianceColor);
