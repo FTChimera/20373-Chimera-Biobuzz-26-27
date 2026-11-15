@@ -343,4 +343,26 @@ public class Vision {
         return "OK";
     }
 
+    public static class StubVision extends Vision {
+        public StubVision(HardwareMap hardwareMap, AllianceColor allianceColor) {
+            super(hardwareMap, allianceColor);
+        }
+
+        @Override
+        public void start() {}
+
+        @Override
+        public void stop() {}
+
+        @Override
+        public LLResult getLatestResult() { return null; }
+
+        @Override
+        public void update(double robotHeadingRadians) {}
+
+        @Override
+        public boolean hasReliableLocalization() {return false;}
+
+
+    }
 }
