@@ -16,13 +16,13 @@ import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
+import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
-import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 
 public class FromShootGardenPose {
     public static class ToIntakeFromWestFlower extends PathPlanner {
@@ -53,10 +53,10 @@ public class FromShootGardenPose {
         public void buildPaths() {
             // Rect clearance to the west hive base: 9.4 in out, 12.1 in back.
             toFlower = Paths
-                    .curve(startPose, PoseFactory.of(36.0, 36.0), IntakePoses.westFlower)
+                    .curve(startPose, PathPoses.westFlowerFromGarden, IntakePoses.westFlower)
                     .heading(CommonKt.fastInterpolationDegraded(IntakePoses.westFlower.heading(), Values.gardenIntakeConstantTValue, false));
             back = Paths
-                    .curve(IntakePoses.westFlower, PoseFactory.of(36.0, 30.0), ShootPoses.garden)
+                    .curve(IntakePoses.westFlower, PathPoses.westFlowerReturn, ShootPoses.garden)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
@@ -86,7 +86,7 @@ public class FromShootGardenPose {
             // Through the corridor between the hive bases; rect clearance to
             // the west hive base: 4.2 in out. Return leg clears by 15.3 in.
             toFlower = Paths
-                    .curve(startPose, PoseFactory.of(78.0, 72.0), IntakePoses.northFlower)
+                    .curve(startPose, PathPoses.northFlowerFromGarden, IntakePoses.northFlower)
                     .heading(CommonKt.fastInterpolationDegraded(IntakePoses.northFlower.heading(), Values.gardenIntakeConstantTValue, false));
         }
 
@@ -130,7 +130,7 @@ public class FromShootGardenPose {
             // so the robot backs up the west side instead of spinning
             // 180 degrees after the garden intake.
             back = Paths
-                    .curve(IntakePoses.gardenEnd, PoseFactory.of(18.0, 110.0), ShootPoses.loading)
+                    .curve(IntakePoses.gardenEnd, PathPoses.gardenToLoading, ShootPoses.loading)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
         }
 

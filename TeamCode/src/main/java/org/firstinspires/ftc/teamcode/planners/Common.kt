@@ -14,6 +14,7 @@ fun init(color:AllianceColor) {
     StartPoses.init(color)
     IntakePoses.init(color)
     ShootPoses.init(color)
+    PathPoses.init(color)
 }
 fun fastInterpolationDegraded(endHeading: Double, change: Double, reverse: Boolean): Interpolator {
     var tangent = Interpolator.tangent
@@ -158,6 +159,49 @@ object ShootPoses {
     fun init(color: AllianceColor) {
         garden.setAllianceColor(color)
         loading.setAllianceColor(color)
+    }
+}
+
+object PathPoses {
+    // Path control points and intermediate poses for the planners, all in
+    // red coordinates; blue sides are auto-mirrored, like the other pose
+    // tables. Control points carry no heading (only x/y steer the curve).
+    // Headings here go through pose() (degrees), never raw radians.
+    // Flower approach / return controls:
+    @JvmField val westFlowerFromGarden = red(pose(36.0, 36.0))
+    @JvmField val westFlowerFromLoading = red(pose(30.0, 108.0))
+    @JvmField val westFlowerReturn = red(pose(36.0, 30.0))
+    @JvmField val northFlowerFromGarden = red(pose(78.0, 72.0))
+    @JvmField val northFlowerFromLoading = red(pose(54.0, 127.0))
+    // Cross-field return controls (to the shoot poses):
+    @JvmField val gardenToLoading = red(pose(18.0, 110.0))
+    @JvmField val loadingToGarden = red(pose(18.0, 30.0))
+    // Loading-zone preload intake (no-show partner): centre 9.5 in from
+    // the west wall (1 in + half the robot length), facing the wall.
+    @JvmField val loadingIntakeApproach = red(pose(30.0, 115.0))
+    @JvmField val loadingIntake = red(pose(9.5, 108.0, 180.0))
+    // Partner-present preload sweep: straight north up the loading zone,
+    // centre stopping 8 in short of the north tape while the intake
+    // front edge reaches just past it.
+    @JvmField val partnerApproach = red(pose(28.0, 102.0))
+    @JvmField val partnerSweepStart = red(pose(8.0, 96.0, 90.0))
+    @JvmField val partnerSweepMid = red(pose(8.0, 104.0))
+    @JvmField val partnerSweepEnd = red(pose(8.0, 112.0, 90.0))
+
+    fun init(color: AllianceColor) {
+        westFlowerFromGarden.setAllianceColor(color)
+        westFlowerFromLoading.setAllianceColor(color)
+        westFlowerReturn.setAllianceColor(color)
+        northFlowerFromGarden.setAllianceColor(color)
+        northFlowerFromLoading.setAllianceColor(color)
+        gardenToLoading.setAllianceColor(color)
+        loadingToGarden.setAllianceColor(color)
+        loadingIntakeApproach.setAllianceColor(color)
+        loadingIntake.setAllianceColor(color)
+        partnerApproach.setAllianceColor(color)
+        partnerSweepStart.setAllianceColor(color)
+        partnerSweepMid.setAllianceColor(color)
+        partnerSweepEnd.setAllianceColor(color)
     }
 }
 

@@ -16,13 +16,13 @@ import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
+import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
-import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 
 public class FromShootLoadingPose {
     public static class ToIntakeFromNorthFlower extends PathPlanner {
@@ -53,10 +53,10 @@ public class FromShootLoadingPose {
         public void buildPaths() {
             // Short hop north; rect clearance to the west hive base: 15.3 in.
             toFlower = Paths
-                    .curve(startPose, PoseFactory.of(54.0, 127.0), IntakePoses.northFlower)
+                    .curve(startPose, PathPoses.northFlowerFromLoading, IntakePoses.northFlower)
                     .heading(CommonKt.fastInterpolationDegraded(IntakePoses.northFlower.heading(), Values.gardenIntakeConstantTValue, false));
             back = Paths
-                    .curve(IntakePoses.northFlower, PoseFactory.of(54.0, 127.0), ShootPoses.loading)
+                    .curve(IntakePoses.northFlower, PathPoses.northFlowerFromLoading, ShootPoses.loading)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
@@ -98,8 +98,8 @@ public class FromShootLoadingPose {
             // centered in the loading zone (y 96-120), facing the wall.
             // Short hop west from the loading shoot pose.
             toFlower = Paths
-                    .curve(startPose, PoseFactory.of(30.0, 115.0), PoseFactory.of(9.5, 108.0, 180.0))
-                    .heading(CommonKt.fastInterpolationDegraded(180.0, Values.gardenIntakeConstantTValue, false));
+                    .curve(startPose, PathPoses.loadingIntakeApproach, PathPoses.loadingIntake)
+                    .heading(CommonKt.fastInterpolationDegraded(PathPoses.loadingIntake.heading(), Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
             // hive, then east along the bottom. Rect clearance to the
             // west hive base stays west of x=45 until below y=50
@@ -107,7 +107,7 @@ public class FromShootLoadingPose {
             // t=0.75). Reverse tangential interpolation, as on the
             // other return legs.
             back = Paths
-                    .curve(PoseFactory.of(9.5, 108.0, 180.0), PoseFactory.of(18.0, 30.0), ShootPoses.garden)
+                    .curve(PathPoses.loadingIntake, PathPoses.loadingToGarden, ShootPoses.garden)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
@@ -179,21 +179,21 @@ public class FromShootLoadingPose {
             // north for the sweep. Disc clearance to the west hive base:
             // 7.1 in; to the partner: 13.6 in.
             toSweepStart = Paths
-                    .curve(startPose, PoseFactory.of(28.0, 102.0), PoseFactory.of(8.0, 96.0, 90.0))
-                    .heading(CommonKt.fastInterpolationDegraded(90.0, Values.gardenIntakeConstantTValue, false));
+                    .curve(startPose, PathPoses.partnerApproach, PathPoses.partnerSweepStart)
+                    .heading(CommonKt.fastInterpolationDegraded(PathPoses.partnerSweepStart.heading(), Values.gardenIntakeConstantTValue, false));
             // Straight north up the zone, intake deployed. Centre stops at
             // y = 112; front edge reaches y = 120.5 (past the north tape,
             // 1 in short of the partner's assumed south face). Disc
             // clearance to the partner at the end of the sweep: 1.0 in.
             sweep = Paths
-                    .curve(PoseFactory.of(8.0, 96.0, 90.0), PoseFactory.of(8.0, 104.0), PoseFactory.of(8.0, 112.0, 90.0))
-                    .heading(CommonKt.fastInterpolationDegraded(90.0, Values.gardenIntakeConstantTValue, false));
+                    .curve(PathPoses.partnerSweepStart, PathPoses.partnerSweepMid, PathPoses.partnerSweepEnd)
+                    .heading(CommonKt.fastInterpolationDegraded(PathPoses.partnerSweepEnd.heading(), Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
             // hive, then east along the bottom. Disc clearance to the west
             // hive base: 7.4 in. Reverse tangential interpolation, as on
             // the other return legs.
             toGarden = Paths
-                    .curve(PoseFactory.of(8.0, 112.0, 90.0), PoseFactory.of(18.0, 30.0), ShootPoses.garden)
+                    .curve(PathPoses.partnerSweepEnd, PathPoses.loadingToGarden, ShootPoses.garden)
                     .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
         }
 
@@ -223,7 +223,7 @@ public class FromShootLoadingPose {
             // Long diagonal past the north-east corner of the west hive base;
             // rect clearance: 3.8 in out, 12.1 in back.
             toFlower = Paths
-                    .curve(startPose, PoseFactory.of(30.0, 108.0), IntakePoses.westFlower)
+                    .curve(startPose, PathPoses.westFlowerFromLoading, IntakePoses.westFlower)
                     .heading(CommonKt.fastInterpolationDegraded(IntakePoses.westFlower.heading(), Values.gardenIntakeConstantTValue, false));
         }
 
