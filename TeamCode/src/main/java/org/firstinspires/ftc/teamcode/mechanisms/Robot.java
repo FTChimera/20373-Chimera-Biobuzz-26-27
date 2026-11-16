@@ -86,7 +86,7 @@ public class Robot {
         shooter = new Shooter(hardwareMap, color);
         lights = new Lights(hardwareMap, color);
         vision = new Vision(hardwareMap, color);
-        field = new Field(color, 13.835, 17.008);
+        field = new Field(color, 14, 16.461);
         this.robotMode = robotMode;
         voltageSensors = hardwareMap.voltageSensor;
 

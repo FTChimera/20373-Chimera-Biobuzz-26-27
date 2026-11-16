@@ -18,7 +18,7 @@ enum class AllianceColor {
     }
 
     fun fieldCentricOffset(): Double {
-        if (isBlue()) return 0.0;
+        if (isRed()) return 0.0;
         return 180.0;
     }
 

@@ -108,7 +108,7 @@ public class Transfer {
                 transferMotor.setPower(1);
                 break;
             case SLOW:
-                transferMotor.setPower(0.4);
+                transferMotor.setPower(0.7);
                 break;
             case REVERSE_EJECT:
                 transferMotor.setPower(-0.8);

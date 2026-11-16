@@ -101,6 +101,9 @@ fun reversingTangent(
 object Timings {
     const val gardenIntakeTimeMs = 300
     const val flowerIntakeTime = 2
+    const val shootingTimeMs = 500
+    const val upToSpeedShooterTimeoutTimeMs = 1000
+    const val hiveLineupTimeoutTime = 1 //TODO change to 10, this for testing
 }
 
 object Values {
@@ -154,7 +157,7 @@ object IntakePoses {
 
 object ShootPoses {
     @JvmField val garden = red(pose(60.0, 10.0, 90.0))
-    @JvmField val loading = red(pose(60.0, 119.0, 270.0))
+    @JvmField val loading = red(pose(60.0, 109.0, 270.0))
 
     fun init(color: AllianceColor) {
         garden.setAllianceColor(color)

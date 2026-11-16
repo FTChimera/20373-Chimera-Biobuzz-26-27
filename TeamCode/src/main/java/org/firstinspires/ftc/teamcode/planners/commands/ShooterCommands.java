@@ -10,6 +10,7 @@ import com.pedropathing.ivy.behaviors.ConflictBehavior;
 import com.pedropathing.ivy.behaviors.InterruptedBehavior;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 
@@ -18,7 +19,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ShooterCommands {
-    public static double HIVE_LINEUP_TIMEOUT_SECONDS = 1.5;
 
     /**
      * Hive lineup is about the hive STATE (tipped / untipped), not aiming:
@@ -56,7 +56,7 @@ public class ShooterCommands {
                         done.set(true);
                         return;
                     }
-                    if (timer.get().past(HIVE_LINEUP_TIMEOUT_SECONDS)) {
+                    if (timer.get().past(Timings.hiveLineupTimeoutTime)) {
                         done.set(true);
                         robot.telemetry.addData(
                                 "Hive lineup timeout",
@@ -81,25 +81,16 @@ public class ShooterCommands {
                     timer.set(new Timer());
                 })
                 .setExecute(() -> {
-                    // Fire exactly once: when up to speed, or 1 s after the
-                    // command started even if upToSpeed() never passes (so
-                    // a bad constant can never stall the auto here). The
-                    // already-fired case must return first: without it the
-                    // command re-fires every second, resets its own timer,
-                    // and timer.past(5000) is never true, so the shoot step
-                    // never completes.
-                    if (startShoot.get()) {
+                    if (!robot.shooter.upToSpeed() && !timer.get().past(Timings.upToSpeedShooterTimeoutTimeMs)) {
                         return;
                     }
-                    if (!robot.shooter.upToSpeed() && !timer.get().past(1000)) {
-                        return;
-                    }
+                    if (startShoot.get()) return;
                     robot.intake.setFullPower();
                     robot.transfer.shootAll();
-                    startShoot.set(true);
                     timer.set(new Timer());
+                    startShoot.set(true);
                 })
-                .setDone(() -> startShoot.get() && timer.get().past(5000))
+                .setDone(() -> startShoot.get() && timer.get().past(Timings.shootingTimeMs))
                 .setEnd((endCondition) -> robot.transfer.stop());
 
     }
@@ -108,7 +99,7 @@ public class ShooterCommands {
         AtomicBoolean done = new AtomicBoolean(false);
         AtomicReference<Timer> timer = new AtomicReference<>();
         return Command.build()
-                .setStart(() -> timer.set(new Timer()))
+                .setStart(() -> timer.set(new Timer(TimeUnit.SECONDS)))
                 .setExecute(() -> {
                     if (done.get()) {
                         return;
@@ -117,7 +108,7 @@ public class ShooterCommands {
                         done.set(true);
                         return;
                     }
-                    if (timer.get().past(HIVE_LINEUP_TIMEOUT_SECONDS)) {
+                    if (timer.get().past(Timings.hiveLineupTimeoutTime)) {
                         done.set(true);
                     }
                 })
