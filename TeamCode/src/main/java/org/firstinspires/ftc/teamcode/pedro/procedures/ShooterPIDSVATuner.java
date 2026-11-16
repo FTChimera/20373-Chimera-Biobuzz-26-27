@@ -23,78 +23,34 @@ import java.util.Locale;
 import java.util.function.Function;
 
 /**
- * Pedro Pathing AutoTune Procedure that tunes PIDSVA values for a
- * single-motor flywheel.
+ * PIDSVA tuner for one or two shooter flywheels. With a single motor it
+ * behaves exactly like the original single-motor tuner; with two motors
+ * (main + counter roller) it runs both at the same time through the same
+ * algorithm and reports a set of constants for each.
  *
- * <p>DRAFT ONLY — not yet applied to any repository. Completes the
- * stub at HEAD 31b4a45 (which collected inputs but discarded its
- * constructor arguments, constructed all-zero constants, and never
- * emitted results or code). Registration is a separate draft snippet
- * (see the draft README): one {@code @Tuner} factory in
- * {@code pedro/Tuning.java}. This file must not be copied into a repo
- * until the user approves the draft and supplies the
- * TODO-USER-CONSTANTS values.
+ * <p>Phases, in order: (0a) manual spin direction, (0b) power direction
+ * check, (1) breakaway probe for a preliminary kS, (2) relay test for
+ * Ku/Tu and the PID candidates, (3) quasistatic stepped holds for kS/kV,
+ * (4) dynamic trapezoid ramps for kA, (5) a three-parameter least-squares
+ * fit of kS/kV/kA per motor, and (6) live validation of the
+ * Ziegler-Nichols candidates in order 2 (no overshoot) -&gt; 3 -&gt; 4,
+ * the first passing candidate winning per motor.
  *
- * <p>Phases, in order: (0a) manual spin -- the operator spins the
- * wheel BY HAND in the direction they want it to shoot, then STOPS
- * the OpMode (like the Pinpoint encoder direction test), which
- * records the velocity sign for the desired direction; (0b) power
- * direction check -- a brief +0.3 spin that learns which velocity
- * sign a positive power produces; (1) breakaway probe for kS,
- * (2) relay test for PID (Ku/Tu via corrected bookkeeping, never
- * Aarav's {@code computeResult()} amplitude), (3) quasistatic
- * stepped holds for kS/kV, (4) dynamic trapezoid ramps for kA
- * (profile acceleration is the regressor), (5) least-squares SVA
- * fit in the Procedure, then (6) live validation of
- * Ziegler-Nichols candidates in order 2 (no overshoot) → 3 → 4,
- * stopping at the first candidate that passes all gates. If a phase
- * fails, times out, or is stopped without usable data, no results
- * are emitted and the Procedure aborts visibly — never with dummy
- * or zero "tuned" values (the {@code MotorPIDVelocityTuner}
- * lesson).
+ * <p>Direction signs are measured, not configured: the two setup OpModes
+ * at the front of the Procedure find them per motor (manual spin for the
+ * desired direction, +0.3 spin for the power direction), so the phases
+ * work regardless of encoder wiring or whether getVelocity() is
+ * direction-adjusted. A wrong hand-spin direction is harmless: the fit
+ * is invariant to flipping both the recorded power and velocity signs.
  *
- * <p>Units: Procedure inputs are in RPM where labelled; all internal
- * math and controller state are in ticks/sec, seconds, and power
- * units, except that the SVA fit stores kS/kV/kA in volts when
- * voltage compensation is on. Conversion happens once, at the
- * Procedure boundary: {@code ticks/sec = RPM * ticksPerRev / 60}.
- * The motor is supplied as {@code Function<HardwareMap, DcMotorEx>}
- * (as in the stub) so the same Procedure adapts to different
- * flywheels; no "shooter" hardware name is hard-coded in the tuning
- * math. The motor direction is set by the supplier (FORWARD for
- * both flywheels, matching production Shooter.java). The spin
- * direction the phases drive is the one the operator chose by hand
- * in setup OpMode (0a), and the raw power sign that produces it is
- * learned in setup OpMode (0b) -- so positive effective power
- * always spins the wheel the way the operator wants, and a positive
- * recorded velocity always means that direction, regardless of
- * encoder wiring or whether getVelocity() is direction-adjusted.
- * Without that, the SVA fit sees opposite-sign (power, velocity)
- * data and rejects with "kS materially negative" / "kV is not
- * positive". There is no manual "Reversed" input.
- *
- * <p>Safety: every phase sets {@code RUN_WITHOUT_ENCODER} before
- * driving power, polls {@code isStopRequested()} every iteration,
- * enforces an elapsed-time timeout and an overspeed abort, and stops
- * the motor in a {@code finally} block on every exit path. No balls
- * may be loaded; the Procedure requires a confirmation screen before
- * spinning hardware and re-states the requirement in each phase
- * description. Live data during a phase is visible only via Driver
- * Station / FTC Dashboard telemetry — the AutoTune UI shows no live
- * values (Checkpoint finding C2).
- *
- * <p>Voltage compensation (default ON, decided 2026-11-01): the flag
- * is a Procedure input defaulting to {@code true} and a constants
- * field defaulting to {@code true}. When on, the SVA fit converts
- * each sample with its concurrent battery-voltage reading (kS/kV/kA
- * stored in volts) and the controller divides the feedforward voltage
- * by the fresh measured battery voltage each loop
- * ({@code u_ff = V_ff / Vbatt}); feedback is not divided. When the
- * reading is unavailable or implausible, the controller divides by
- * the nominal voltage for that cycle (see the controller Javadoc for
- * the exact validity range and fallback). When off, the fit is in
- * power units and the constants are valid only near the recorded
- * battery voltage.
+ * <p>Dual-motor notes: both wheels spin together in every powered phase
+ * (same power profile / velocity profile / target), each with its own
+ * preliminary controller, relay tuner, samples, fit, and validation
+ * candidates. The manual-spin setup tracks both wheels' peaks in one
+ * OpMode (spin the main by hand, then the counter roller by hand, then
+ * stop it); the power-direction check spins both at +0.3 at once.
+ * Validation picks each motor's first passing candidate independently,
+ * so the two motors can end up on different candidates.
  */
 public class ShooterPIDSVATuner extends Procedure {
 
@@ -113,20 +69,69 @@ public class ShooterPIDSVATuner extends Procedure {
     static final double VELOCITY_FILTER_TAU_SECONDS = 0.04;
     static final double OVERSPEED_MARGIN_TICKS_PER_SEC = 300.0;
 
-    private final Function<HardwareMap, DcMotorEx> shooterMotorSupplier;
+    /** One flywheel to tune: a name for labels/results and the motor supplier. */
+    public static final class MotorSpec {
+        public final String name;
+        public final Function<HardwareMap, DcMotorEx> supplier;
+
+        public MotorSpec(String name, Function<HardwareMap, DcMotorEx> supplier) {
+            if (name == null || supplier == null) {
+                throw new IllegalArgumentException("MotorSpec name and supplier must not be null.");
+            }
+            this.name = name;
+            this.supplier = supplier;
+        }
+    }
+
+    /** A motor being tuned: its spec plus the per-run direction signs and the opened motor. */
+    static final class MotorChannel {
+        final String name;
+        final Function<HardwareMap, DcMotorEx> supplier;
+        int desiredVelocitySign;
+        int powerVelocitySign;
+        DcMotorEx motor;
+
+        MotorChannel(MotorSpec spec) {
+            this.name = spec.name;
+            this.supplier = spec.supplier;
+        }
+    }
+
+    private final List<MotorChannel> channels;
     private final double ticksPerRev;
 
+    /** Single-motor tuner (keeps the original behaviour and result keys). */
     public ShooterPIDSVATuner(Function<HardwareMap, DcMotorEx> shooterMotorSupplier, double ticksPerRev) {
+        this(List.of(new MotorSpec("", shooterMotorSupplier)), ticksPerRev);
+    }
+
+    /** Multi-motor tuner: tunes every listed motor at the same time, same algorithm. */
+    public ShooterPIDSVATuner(List<MotorSpec> motorSpecs, double ticksPerRev) {
         super("Shooter PIDSVA Tuner", "Tunes PIDSVA values for the shooter");
-        if (shooterMotorSupplier == null) {
-            throw new IllegalArgumentException("shooterMotorSupplier must not be null.");
+        if (motorSpecs == null || motorSpecs.isEmpty()) {
+            throw new IllegalArgumentException("At least one motor is required.");
         }
         if (!Double.isFinite(ticksPerRev) || ticksPerRev <= 0.0) {
             throw new IllegalArgumentException("ticksPerRev must be finite and > 0.");
         }
-        // FIX (stub defect): the stub discarded both constructor arguments.
-        this.shooterMotorSupplier = shooterMotorSupplier;
+        this.channels = new ArrayList<>();
+        for (MotorSpec spec : motorSpecs) {
+            if (spec == null) {
+                throw new IllegalArgumentException("MotorSpec must not be null.");
+            }
+            this.channels.add(new MotorChannel(spec));
+        }
         this.ticksPerRev = ticksPerRev;
+    }
+
+    /** True when more than one motor is being tuned (result keys are then prefixed per motor). */
+    boolean isDual() {
+        return channels.size() > 1;
+    }
+
+    /** Result key: unprefixed for a single motor, "name.key" for a dual run. */
+    String key(MotorChannel channel, String base) {
+        return isDual() ? channel.name + "." + base : base;
     }
 
     @Override
@@ -199,9 +204,13 @@ public class ShooterPIDSVATuner extends Procedure {
                 ? " WARNING: relay amplitude " + relayAmp + " is aggressive (typical flywheel range 0.5-0.7). Consider stopping and lowering it for a first run."
                 : "";
 
+        String motorWord = isDual() ? "both flywheels" : "the flywheel";
+        String spinWord = isDual()
+                ? "First spin the main flywheel BY HAND in the direction you want it to shoot, then spin the counter roller BY HAND in its shoot direction, then STOP that OpMode (like the Pinpoint encoder direction test) -- the motors are unpowered for that step. "
+                : "First you will spin the wheel BY HAND in the direction you want it to shoot, then STOP that OpMode (like the Pinpoint encoder direction test) -- the motor is unpowered for that step. ";
         confirmation("Flywheel tuning",
-                "Are you ready to start tuning the flywheel? "
-                        + "First you will spin the wheel BY HAND in the direction you want it to shoot, then STOP that OpMode (like the Pinpoint encoder direction test) -- the motor is unpowered for that step. "
+                "Are you ready to start tuning " + motorWord + "? "
+                        + spinWord
                         + "After that the powered phases run: no balls may be loaded. Keep hands clear of the flywheel and confirm the area is clear. "
                         + "The wheel will spin at up to the target RPM and reverse briefly during the relay test."
                         + safetyWarning);
@@ -209,167 +218,270 @@ public class ShooterPIDSVATuner extends Procedure {
         double targetTicksPerSec = rpmToTicksPerSec(targetRpmValue);
         double hysteresisTicksPerSec = rpmToTicksPerSec(hysteresisRpm);
 
-        // Setup OpMode 1 of 2: manual spin -- the operator spins the
-        // wheel by hand in the desired shoot direction, then stops the
-        // OpMode. Returns the velocity sign for that direction.
-        Integer desiredSign = runOpMode(new ManualSpinPhase(shooterMotorSupplier));
-        if (desiredSign == null) {
-            abort("Manual spin ended without a direction. Spin the flywheel by hand in the direction you want it to shoot, then STOP the OpMode, and try again.");
+        // Setup OpMode 1 of 2: manual spin -- the operator spins each
+        // wheel by hand in its desired shoot direction, then stops the
+        // OpMode. Returns the velocity sign per motor.
+        List<Integer> desiredSigns = runOpMode(new ManualSpinPhase(channels));
+        if (desiredSigns == null) {
+            abort("Manual spin ended without a direction for every motor. Spin each flywheel by hand in the direction you want it to shoot, then STOP the OpMode, and try again.");
             return;
+        }
+        for (int i = 0; i < channels.size(); i++) {
+            channels.get(i).desiredVelocitySign = desiredSigns.get(i);
         }
 
         // Setup OpMode 2 of 2: brief +0.3 spin -- learns which velocity
-        // sign a positive power produces, so the phases know which raw
-        // power sign drives the wheel in the desired direction.
-        Integer powerSign = runOpMode(new PowerDirectionPhase(shooterMotorSupplier));
-        if (powerSign == null) {
-            abort("Power direction check ended without a result. The wheel did not move at +0.3 power; check the motor and try again.");
+        // sign a positive power produces per motor, so the phases know
+        // which raw power sign drives each wheel in its desired direction.
+        List<Integer> powerSigns = runOpMode(new PowerDirectionPhase(channels));
+        if (powerSigns == null) {
+            abort("Power direction check ended without a result for every motor. A wheel did not move at +0.3 power; check the motor and try again.");
             return;
         }
-        result("desired velocity sign (manual spin)", desiredSign.toString());
-        result("power velocity sign (+0.3 power)", powerSign.toString());
-
-        // Phase 1: breakaway probe for kS.
-        Double breakawayPower = runOpMode(new BreakawayPhase(
-                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts));
-        if (breakawayPower == null) {
-            abort("Breakaway phase ended without a result. The wheel did not break away or the phase was stopped. Try again.");
-            return;
+        for (int i = 0; i < channels.size(); i++) {
+            channels.get(i).powerVelocitySign = powerSigns.get(i);
+        }
+        for (MotorChannel ch : channels) {
+            result(key(ch, "desired velocity sign (manual spin)"), Integer.toString(ch.desiredVelocitySign));
+            result(key(ch, "power velocity sign (+0.3 power)"), Integer.toString(ch.powerVelocitySign));
         }
 
-        // Phase 2: relay test for PID.
-        RelayTuner.Result relayResult = runOpMode(new RelayPhase(
-                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts,
+        // Phase 1: breakaway probe for kS, per motor.
+        List<Double> breakawayPowers = runOpMode(new BreakawayPhase(
+                channels, ticksPerRev, voltageOn, nominalVolts));
+        if (breakawayPowers == null) {
+            abort("Breakaway phase ended without a result. A wheel did not break away or the phase was stopped. Try again.");
+            return;
+        }
+        for (int i = 0; i < channels.size(); i++) {
+            if (breakawayPowers.get(i) == null) {
+                abort("Breakaway phase: motor '" + channels.get(i).name + "' did not break away. Try again.");
+                return;
+            }
+        }
+
+        // Phase 2: relay test for PID, per motor.
+        List<RelayTuner.Result> relayResults = runOpMode(new RelayPhase(
+                channels, ticksPerRev, voltageOn, nominalVolts,
                 targetTicksPerSec, relayAmp, hysteresisTicksPerSec, collect, ignore, relayTimeout));
-        if (relayResult == null || !relayResult.success) {
-            String detail = relayResult == null ? "no result returned"
-                    : relayResult.failure + ": " + relayResult.failureDetail;
-            abort("Relay phase failed (" + detail + "). No Ku/Tu issued. Adjust relay amplitude, hysteresis, or target RPM and try again.");
+        if (relayResults == null) {
+            abort("Relay phase ended without a result. No Ku/Tu issued. Adjust relay amplitude, hysteresis, or target RPM and try again.");
             return;
         }
+        for (int i = 0; i < channels.size(); i++) {
+            RelayTuner.Result r = relayResults.get(i);
+            if (r == null || !r.success) {
+                String detail = r == null ? "no result returned"
+                        : r.failure + ": " + r.failureDetail;
+                abort("Relay phase failed for motor '" + channels.get(i).name + "' (" + detail + "). No Ku/Tu issued. Adjust relay amplitude, hysteresis, or target RPM and try again.");
+                return;
+            }
+        }
 
-        // Phase 3: quasistatic stepped holds for kS/kV.
-        List<SvaFit.Sample> quasistaticSamples = runOpMode(new QuasistaticPhase(
-                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts, ffPowers, settleSecs));
-        if (quasistaticSamples == null || quasistaticSamples.isEmpty()) {
+        // Phase 3: quasistatic stepped holds for kS/kV, per motor.
+        List<List<SvaFit.Sample>> quasistaticSamples = runOpMode(new QuasistaticPhase(
+                channels, ticksPerRev, voltageOn, nominalVolts, ffPowers, settleSecs));
+        if (quasistaticSamples == null) {
             abort("Quasistatic phase ended without usable samples. Try again.");
             return;
         }
+        for (int i = 0; i < channels.size(); i++) {
+            if (quasistaticSamples.get(i) == null || quasistaticSamples.get(i).isEmpty()) {
+                abort("Quasistatic phase ended without usable samples for motor '" + channels.get(i).name + "'. Try again.");
+                return;
+            }
+        }
 
-        // Preliminary kS/kV (breakaway + quasistatic line, intercept fixed
-        // at kS) so the dynamic phase can follow a velocity profile.
-        double[] preliminary = preliminaryKsKv(quasistaticSamples, breakawayPower, voltageOn, nominalVolts);
-        double preliminaryKs = preliminary[0];
-        double preliminaryKv = preliminary[1];
+        // Preliminary kS/kV per motor (breakaway + quasistatic line,
+        // intercept fixed at kS) so the dynamic phase can follow a
+        // velocity profile.
+        List<Double> preliminaryKs = new ArrayList<>();
+        List<Double> preliminaryKv = new ArrayList<>();
+        for (int i = 0; i < channels.size(); i++) {
+            double[] preliminary = preliminaryKsKv(quasistaticSamples.get(i), breakawayPowers.get(i), voltageOn, nominalVolts);
+            preliminaryKs.add(preliminary[0]);
+            preliminaryKv.add(preliminary[1]);
+        }
 
-        // Phase 4: dynamic trapezoid ramps for kA, following a velocity
-        // profile with the preliminary controller.
-        List<SvaFit.Sample> dynamicSamples = runOpMode(new DynamicPhase(
-                shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts,
-                preliminaryKs, preliminaryKv, relayResult, tuneIntegral));
-        if (dynamicSamples == null || dynamicSamples.isEmpty()) {
+        // Phase 4: dynamic trapezoid ramps for kA, per motor, following
+        // a velocity profile with the preliminary controller.
+        List<List<SvaFit.Sample>> dynamicSamples = runOpMode(new DynamicPhase(
+                channels, ticksPerRev, voltageOn, nominalVolts,
+                preliminaryKs, preliminaryKv, relayResults, tuneIntegral));
+        if (dynamicSamples == null) {
             abort("Dynamic phase ended without usable samples. Try again.");
             return;
         }
-
-        // Fit in the Procedure (pure math, no hardware).
-        List<SvaFit.Sample> allSamples = new ArrayList<>(quasistaticSamples);
-        allSamples.addAll(dynamicSamples);
-        SvaFit.FitResult fit = SvaFit.fit(allSamples, voltageOn);
-        if (!fit.accepted) {
-            abort("SVA fit rejected: " + fit.rejectReason + " Re-run the missing phase; no constants are reported.");
-            return;
-        }
-        if (fit.kARejected) {
-            abort("SVA fit rejected the dynamic phase (kA materially negative). kA is not reported; re-run the dynamic phase.");
-            return;
-        }
-
-        // Holding-power cross-check against the quasistatic level nearest the target.
-        String holdCheck = holdingPowerCheck(quasistaticSamples, fit, targetTicksPerSec, voltageOn);
-
-        // Candidates and validation, in order 2 -> 3 -> 4.
-        List<ZieglerNichols.Candidate> candidates =
-                ZieglerNichols.computeCandidates(relayResult.ku, relayResult.tuSeconds, tuneIntegral);
-        int[] tryOrder = new int[]{2, 3, 4};
-        List<ValidationResult> validationResults = new ArrayList<>();
-        ZieglerNichols.Candidate chosenCandidate = null;
-        DoubleFlywheelFullVelocityConstants chosenConstants = null;
-        ValidationResult chosenValidation = null;
-        for (int index : tryOrder) {
-            ZieglerNichols.Candidate candidate = candidates.get(index);
-            DoubleFlywheelFullVelocityConstants constants = buildConstants(
-                    candidate, fit, targetTicksPerSec, tuneIntegral, voltageOn, nominalVolts);
-            ValidationResult validation = runOpMode(new ValidationPhase(
-                    shooterMotorSupplier, ticksPerRev, desiredSign, powerSign, voltageOn, nominalVolts,
-                    constants, targetTicksPerSec, candidate.label));
-            if (validation == null) {
-                abort("Validation phase ended without a result for candidate " + candidate.label + ". Try again.");
+        for (int i = 0; i < channels.size(); i++) {
+            if (dynamicSamples.get(i) == null || dynamicSamples.get(i).isEmpty()) {
+                abort("Dynamic phase ended without usable samples for motor '" + channels.get(i).name + "'. Try again.");
                 return;
             }
-            validationResults.add(validation);
-            if (chosenCandidate == null) {
-                chosenCandidate = candidate;
-                chosenConstants = constants;
-                chosenValidation = validation;
+        }
+
+        // Fit per motor (pure math, no hardware).
+        List<SvaFit.FitResult> fits = new ArrayList<>();
+        for (int i = 0; i < channels.size(); i++) {
+            List<SvaFit.Sample> allSamples = new ArrayList<>(quasistaticSamples.get(i));
+            allSamples.addAll(dynamicSamples.get(i));
+            SvaFit.FitResult fit = SvaFit.fit(allSamples, voltageOn);
+            if (!fit.accepted) {
+                abort("SVA fit rejected for motor '" + channels.get(i).name + "': " + fit.rejectReason + " Re-run the missing phase; no constants are reported.");
+                return;
             }
-            if (validation.passed) {
-                chosenCandidate = candidate;
-                chosenConstants = constants;
-                chosenValidation = validation;
+            if (fit.kARejected) {
+                abort("SVA fit rejected the dynamic phase for motor '" + channels.get(i).name + "' (kA materially negative). kA is not reported; re-run the dynamic phase.");
+                return;
+            }
+            fits.add(fit);
+        }
+
+        // Holding-power cross-check per motor, against the quasistatic
+        // level nearest the target.
+        List<String> holdChecks = new ArrayList<>();
+        for (int i = 0; i < channels.size(); i++) {
+            holdChecks.add(holdingPowerCheck(quasistaticSamples.get(i), fits.get(i), targetTicksPerSec, voltageOn));
+        }
+
+        // Candidates and validation, in order 2 -> 3 -> 4, per motor.
+        // Each motor picks its first passing candidate independently.
+        List<List<ZieglerNichols.Candidate>> candidatesPerMotor = new ArrayList<>();
+        for (int i = 0; i < channels.size(); i++) {
+            candidatesPerMotor.add(ZieglerNichols.computeCandidates(relayResults.get(i).ku, relayResults.get(i).tuSeconds, tuneIntegral));
+        }
+        int[] tryOrder = new int[]{2, 3, 4};
+        List<ZieglerNichols.Candidate> chosenCandidates = new ArrayList<>();
+        List<DoubleFlywheelFullVelocityConstants> chosenConstantsList = new ArrayList<>();
+        List<ValidationResult> chosenValidations = new ArrayList<>();
+        List<Boolean> passedFlags = new ArrayList<>();
+        List<ValidationResult> firstValidations = new ArrayList<>();
+        for (int i = 0; i < channels.size(); i++) {
+            chosenCandidates.add(null);
+            chosenConstantsList.add(null);
+            chosenValidations.add(null);
+            passedFlags.add(false);
+            firstValidations.add(null);
+        }
+        for (int round = 0; round < tryOrder.length; round++) {
+            int index = tryOrder[round];
+            boolean anyUnpassed = false;
+            for (int i = 0; i < channels.size(); i++) {
+                if (!passedFlags.get(i)) {
+                    anyUnpassed = true;
+                    break;
+                }
+            }
+            if (!anyUnpassed) {
                 break;
             }
+            // Constants for this round: the candidate at this index for
+            // motors still unpassed, the already-chosen constants for
+            // motors that passed (they spin along; their result is ignored).
+            List<DoubleFlywheelFullVelocityConstants> roundConstants = new ArrayList<>();
+            for (int i = 0; i < channels.size(); i++) {
+                if (passedFlags.get(i)) {
+                    roundConstants.add(chosenConstantsList.get(i));
+                } else {
+                    roundConstants.add(buildConstants(
+                            candidatesPerMotor.get(i).get(index), fits.get(i), targetTicksPerSec,
+                            tuneIntegral, voltageOn, nominalVolts));
+                }
+            }
+            List<ValidationResult> roundResults = runOpMode(new ValidationPhase(
+                    channels, ticksPerRev, voltageOn, nominalVolts,
+                    roundConstants, targetTicksPerSec,
+                    "candidate " + candidatesPerMotor.get(0).get(index).label));
+            if (roundResults == null) {
+                abort("Validation phase ended without a result for candidate index " + index + ". Try again.");
+                return;
+            }
+            for (int i = 0; i < channels.size(); i++) {
+                if (passedFlags.get(i)) {
+                    continue;
+                }
+                ValidationResult validation = roundResults.get(i);
+                if (validation == null) {
+                    abort("Validation phase ended without a result for motor '" + channels.get(i).name + "' at candidate index " + index + ". Try again.");
+                    return;
+                }
+                if (round == 0) {
+                    firstValidations.set(i, validation);
+                }
+                if (validation.passed) {
+                    chosenCandidates.set(i, candidatesPerMotor.get(i).get(index));
+                    chosenConstantsList.set(i, roundConstants.get(i));
+                    chosenValidations.set(i, validation);
+                    passedFlags.set(i, true);
+                }
+            }
         }
-        if (chosenCandidate == null || chosenConstants == null || chosenValidation == null) {
-            abort("Validation produced no candidate. No constants are reported.");
-            return;
+        // Fallback for motors that never passed: the first tried candidate
+        // (index 2) with its validation result, matching the single-motor tuner.
+        for (int i = 0; i < channels.size(); i++) {
+            if (!passedFlags.get(i)) {
+                chosenCandidates.set(i, candidatesPerMotor.get(i).get(tryOrder[0]));
+                chosenConstantsList.set(i, buildConstants(
+                        candidatesPerMotor.get(i).get(tryOrder[0]), fits.get(i), targetTicksPerSec,
+                        tuneIntegral, voltageOn, nominalVolts));
+                chosenValidations.set(i, firstValidations.get(i));
+            }
+            if (chosenCandidates.get(i) == null || chosenConstantsList.get(i) == null || chosenValidations.get(i) == null) {
+                abort("Validation produced no candidate for motor '" + channels.get(i).name + "'. No constants are reported.");
+                return;
+            }
         }
-        boolean validationPassed = chosenValidation.passed;
 
-        // Results: always at least two entries (Checkpoint finding C5).
+        // Results per motor: always at least two entries (Checkpoint finding C5).
         // Every value reported here was measured or fitted; nothing is a
         // placeholder or dummy (the MotorPIDVelocityTuner lesson).
-        result("kP", format(chosenConstants.kP));
-        result("kI", format(chosenConstants.kI));
-        result("kD", format(chosenConstants.kD));
-        result("kS", format(chosenConstants.kS));
-        result("kV", format(chosenConstants.kV));
-        result("kA", format(chosenConstants.kA));
-        result("tolerance (ticks/sec)", format(chosenConstants.tolerance));
-        result("integralLimit (ticks)", format(chosenConstants.integralLimit));
-        result("voltageCompensation", Boolean.toString(voltageOn));
-        result("nominalVoltage (V)", format(nominalVolts));
-        result("fitUnits", fit.fittedInVolts ? "volts" : "power");
-        result("Ku", format(relayResult.ku));
-        result("Tu (s)", format(relayResult.tuSeconds));
-        result("relayOscillationAmplitude", format(relayResult.amplitudeTicksPerSec));
-        result("relayPeriodCv", format(relayResult.periodCv));
-        result("relayAmplitudeCv", format(relayResult.amplitudeCv));
-        result("relaySwitches", Integer.toString(relayResult.switchCount));
-        result("relayDiscardedCycles", Integer.toString(relayResult.discardedCycleCount));
-        result("relayWarnings", relayResult.warnings.isEmpty() ? "none" : String.join("; ", relayResult.warnings));
-        result("breakawayPower", format(breakawayPower));
-        result("preliminaryKs", format(preliminaryKs));
-        result("preliminaryKv", format(preliminaryKv));
-        result("fitRmse", format(fit.rmse));
-        result("fitRSquared", format(fit.rSquared));
-        result("fitScaledCondition", format(fit.scaledConditionNumber));
-        result("fitSamplesUsed", Integer.toString(fit.samplesUsed));
-        result("fitSamplesExcluded", Integer.toString(fit.samplesExcluded));
-        result("fitWarnings", fit.warnings.isEmpty() ? "none" : String.join("; ", fit.warnings));
-        result("holdCheck", holdCheck);
-        result("targetRpm", Integer.toString(targetRpmValue));
-        result("ticksPerRev", format(ticksPerRev));
-        result("chosenCandidate", chosenCandidate.label);
-        result("validationPassed", Boolean.toString(validationPassed));
-        result("validationSpinUpSeconds", format(chosenValidation.spinUpSeconds));
-        result("validationOvershootFraction", format(chosenValidation.overshootFraction));
-        result("validationSettleSeconds", format(chosenValidation.settleSeconds));
-        result("validationSteadyMeanError", format(chosenValidation.steadyMeanErrorTicksPerSec));
-        result("validationSteadyStd", format(chosenValidation.steadyStdTicksPerSec));
-        result("validationGates", chosenValidation.gateDetail.isEmpty() ? "all passed" : String.join("; ", chosenValidation.gateDetail));
+        for (int i = 0; i < channels.size(); i++) {
+            MotorChannel ch = channels.get(i);
+            DoubleFlywheelFullVelocityConstants constants = chosenConstantsList.get(i);
+            SvaFit.FitResult fit = fits.get(i);
+            RelayTuner.Result relayResult = relayResults.get(i);
+            ValidationResult validation = chosenValidations.get(i);
+            result(key(ch, "kP"), format(constants.kP));
+            result(key(ch, "kI"), format(constants.kI));
+            result(key(ch, "kD"), format(constants.kD));
+            result(key(ch, "kS"), format(constants.kS));
+            result(key(ch, "kV"), format(constants.kV));
+            result(key(ch, "kA"), format(constants.kA));
+            result(key(ch, "tolerance (ticks/sec)"), format(constants.tolerance));
+            result(key(ch, "integralLimit (ticks)"), format(constants.integralLimit));
+            result(key(ch, "voltageCompensation"), Boolean.toString(voltageOn));
+            result(key(ch, "nominalVoltage (V)"), format(nominalVolts));
+            result(key(ch, "fitUnits"), fit.fittedInVolts ? "volts" : "power");
+            result(key(ch, "Ku"), format(relayResult.ku));
+            result(key(ch, "Tu (s)"), format(relayResult.tuSeconds));
+            result(key(ch, "relayOscillationAmplitude"), format(relayResult.amplitudeTicksPerSec));
+            result(key(ch, "relayPeriodCv"), format(relayResult.periodCv));
+            result(key(ch, "relayAmplitudeCv"), format(relayResult.amplitudeCv));
+            result(key(ch, "relaySwitches"), Integer.toString(relayResult.switchCount));
+            result(key(ch, "relayDiscardedCycles"), Integer.toString(relayResult.discardedCycleCount));
+            result(key(ch, "relayWarnings"), relayResult.warnings.isEmpty() ? "none" : String.join("; ", relayResult.warnings));
+            result(key(ch, "breakawayPower"), format(breakawayPowers.get(i)));
+            result(key(ch, "preliminaryKs"), format(preliminaryKs.get(i)));
+            result(key(ch, "preliminaryKv"), format(preliminaryKv.get(i)));
+            result(key(ch, "fitRmse"), format(fit.rmse));
+            result(key(ch, "fitRSquared"), format(fit.rSquared));
+            result(key(ch, "fitScaledCondition"), format(fit.scaledConditionNumber));
+            result(key(ch, "fitSamplesUsed"), Integer.toString(fit.samplesUsed));
+            result(key(ch, "fitSamplesExcluded"), Integer.toString(fit.samplesExcluded));
+            result(key(ch, "fitWarnings"), fit.warnings.isEmpty() ? "none" : String.join("; ", fit.warnings));
+            result(key(ch, "holdCheck"), holdChecks.get(i));
+            result(key(ch, "targetRpm"), Integer.toString(targetRpmValue));
+            result(key(ch, "ticksPerRev"), format(ticksPerRev));
+            result(key(ch, "chosenCandidate"), chosenCandidates.get(i).label);
+            result(key(ch, "validationPassed"), Boolean.toString(validation.passed));
+            result(key(ch, "validationSpinUpSeconds"), format(validation.spinUpSeconds));
+            result(key(ch, "validationOvershootFraction"), format(validation.overshootFraction));
+            result(key(ch, "validationSettleSeconds"), format(validation.settleSeconds));
+            result(key(ch, "validationSteadyMeanError"), format(validation.steadyMeanErrorTicksPerSec));
+            result(key(ch, "validationSteadyStd"), format(validation.steadyStdTicksPerSec));
+            result(key(ch, "validationGates"), validation.gateDetail.isEmpty() ? "all passed" : String.join("; ", validation.gateDetail));
+        }
 
-        code(Language.JAVA, generatedConstantsCode(chosenConstants, relayResult, fit, targetRpmValue, voltageOn));
+        code(Language.JAVA, generatedConstantsCode(chosenConstantsList, relayResults, fits, targetRpmValue, voltageOn));
     }
 
     // ------------------------------------------------------------------
@@ -470,31 +582,42 @@ public class ShooterPIDSVATuner extends Procedure {
         return String.format(Locale.US, "%.6g", value);
     }
 
-    static String generatedConstantsCode(DoubleFlywheelFullVelocityConstants constants,
-                                         RelayTuner.Result relayResult, SvaFit.FitResult fit,
-                                         int targetRpm, boolean voltageOn) {
+    /** Generated constants for every tuned motor, one block per motor. */
+    String generatedConstantsCode(List<DoubleFlywheelFullVelocityConstants> constantsList,
+                                  List<RelayTuner.Result> relayResults, List<SvaFit.FitResult> fits,
+                                  int targetRpm, boolean voltageOn) {
         StringBuilder sb = new StringBuilder();
         sb.append("// Generated by the Shooter PIDSVA Tuner (Pedro AutoTune Procedure).\n");
-        sb.append("// Target: ").append(targetRpm).append(" RPM. Ku=").append(format(relayResult.ku));
-        sb.append(", Tu=").append(format(relayResult.tuSeconds)).append(" s.\n");
-        sb.append("// SVA fit: RMSE=").append(format(fit.rmse));
-        sb.append(fit.fittedInVolts ? " V" : " power");
-        sb.append(", R^2=").append(format(fit.rSquared));
-        sb.append(", samples=").append(fit.samplesUsed).append(".\n");
-        sb.append("// kS/kV/kA are in ").append(fit.fittedInVolts ? "volts" : "power units");
-        sb.append(" (voltage compensation ").append(voltageOn ? "ON" : "OFF").append(").\n");
-        sb.append("// TODO-USER-CONSTANTS: verify ticksPerRev and the shot table before use.\n");
-        sb.append("DoubleFlywheelFullVelocityConstants constants = new DoubleFlywheelFullVelocityConstants(\n");
-        sb.append("        ").append(format(constants.kP)).append(",  // kP\n");
-        sb.append("        ").append(format(constants.kI)).append(",  // kI\n");
-        sb.append("        ").append(format(constants.kD)).append(",  // kD\n");
-        sb.append("        ").append(format(constants.kS)).append(",  // kS\n");
-        sb.append("        ").append(format(constants.kV)).append(",  // kV\n");
-        sb.append("        ").append(format(constants.kA)).append(",  // kA\n");
-        sb.append("        ").append(format(constants.tolerance)).append(",  // tolerance (ticks/sec)\n");
-        sb.append("        ").append(format(constants.integralLimit)).append(",  // integralLimit (ticks)\n");
-        sb.append("        ").append(constants.voltageCompensation).append(",  // voltageCompensation\n");
-        sb.append("        ").append(format(constants.nominalVoltage)).append("); // nominalVoltage (V)\n");
+        sb.append("// Target: ").append(targetRpm).append(" RPM.\n");
+        for (int i = 0; i < channels.size(); i++) {
+            MotorChannel ch = channels.get(i);
+            DoubleFlywheelFullVelocityConstants constants = constantsList.get(i);
+            RelayTuner.Result relayResult = relayResults.get(i);
+            SvaFit.FitResult fit = fits.get(i);
+            String label = isDual() ? ch.name : "shooter";
+            sb.append("// ---- ").append(label).append(" ----\n");
+            sb.append("// Ku=").append(format(relayResult.ku));
+            sb.append(", Tu=").append(format(relayResult.tuSeconds)).append(" s.\n");
+            sb.append("// SVA fit: RMSE=").append(format(fit.rmse));
+            sb.append(fit.fittedInVolts ? " V" : " power");
+            sb.append(", R^2=").append(format(fit.rSquared));
+            sb.append(", samples=").append(fit.samplesUsed).append(".\n");
+            sb.append("// kS/kV/kA are in ").append(fit.fittedInVolts ? "volts" : "power units");
+            sb.append(" (voltage compensation ").append(voltageOn ? "ON" : "OFF").append(").\n");
+            sb.append("// TODO-USER-CONSTANTS: verify ticksPerRev and the shot table before use.\n");
+            sb.append("DoubleFlywheelFullVelocityConstants ").append(isDual() ? ch.name + "Constants" : "constants");
+            sb.append(" = new DoubleFlywheelFullVelocityConstants(\n");
+            sb.append("        ").append(format(constants.kP)).append(",  // kP\n");
+            sb.append("        ").append(format(constants.kI)).append(",  // kI\n");
+            sb.append("        ").append(format(constants.kD)).append(",  // kD\n");
+            sb.append("        ").append(format(constants.kS)).append(",  // kS\n");
+            sb.append("        ").append(format(constants.kV)).append(",  // kV\n");
+            sb.append("        ").append(format(constants.kA)).append(",  // kA\n");
+            sb.append("        ").append(format(constants.tolerance)).append(",  // tolerance (ticks/sec)\n");
+            sb.append("        ").append(format(constants.integralLimit)).append(",  // integralLimit (ticks)\n");
+            sb.append("        ").append(constants.voltageCompensation).append(",  // voltageCompensation\n");
+            sb.append("        ").append(format(constants.nominalVoltage)).append("); // nominalVoltage (V)\n");
+        }
         return sb.toString();
     }
 
@@ -511,7 +634,7 @@ public class ShooterPIDSVATuner extends Procedure {
      * stopped without usable data.
      */
     abstract static class FlywheelPhase<Result> extends TuningOpMode<Result> {
-        final Function<HardwareMap, DcMotorEx> supplier;
+        final List<MotorChannel> channels;
         final double ticksPerRev;
         // Direction signs, measured once per tuner run by the two setup
         // OpModes at the front of the Procedure (ManualSpinPhase and
@@ -527,30 +650,40 @@ public class ShooterPIDSVATuner extends Procedure {
         // SVA fit from seeing opposite-sign (power, velocity) data and
         // rejecting with "kS materially negative" / "kV is not
         // positive".
-        final int desiredVelocitySign;
-        final int powerVelocitySign;
         final boolean voltageCompensation;
         final double nominalVoltage;
 
         FlywheelPhase(String name, String description,
-                      Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                      int desiredVelocitySign, int powerVelocitySign,
+                      List<MotorChannel> channels, double ticksPerRev,
                       boolean voltageCompensation, double nominalVoltage) {
             super(name, description, true);
-            this.supplier = supplier;
+            this.channels = channels;
             this.ticksPerRev = ticksPerRev;
-            this.desiredVelocitySign = desiredVelocitySign;
-            this.powerVelocitySign = powerVelocitySign;
             this.voltageCompensation = voltageCompensation;
             this.nominalVoltage = nominalVoltage;
         }
 
-        DcMotorEx openMotor() {
-            DcMotorEx motor = supplier.apply(hardwareMap);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            motor.setPower(0.0);
-            return motor;
+        /** Opens every channel's motor (RUN_WITHOUT_ENCODER, FLOAT, power 0). */
+        List<DcMotorEx> openMotors() {
+            List<DcMotorEx> motors = new ArrayList<>();
+            for (MotorChannel ch : channels) {
+                DcMotorEx motor = ch.supplier.apply(hardwareMap);
+                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                motor.setPower(0.0);
+                ch.motor = motor;
+                motors.add(motor);
+            }
+            return motors;
+        }
+
+        /** Stops every channel's motor. */
+        void stopMotors() {
+            for (MotorChannel ch : channels) {
+                if (ch.motor != null) {
+                    ch.motor.setPower(0.0);
+                }
+            }
         }
 
         /**
@@ -563,16 +696,16 @@ public class ShooterPIDSVATuner extends Procedure {
          * a velocity of sign desiredVelocitySign, which is the
          * direction the operator wants.
          */
-        void applyPower(DcMotorEx motor, double effectivePower) {
-            motor.setPower(effectivePower * desiredVelocitySign * powerVelocitySign);
+        void applyPower(MotorChannel channel, double effectivePower) {
+            channel.motor.setPower(effectivePower * channel.desiredVelocitySign * channel.powerVelocitySign);
         }
 
         /**
          * Effective (forward-positive) velocity in ticks/sec: positive
          * always means spinning in the desired direction.
          */
-        double readVelocity(DcMotorEx motor) {
-            return motor.getVelocity() * desiredVelocitySign;
+        double readVelocity(MotorChannel channel) {
+            return channel.motor.getVelocity() * channel.desiredVelocitySign;
         }
 
         /** Best available battery voltage, or NaN when no valid sensor reading exists. */
@@ -596,144 +729,205 @@ public class ShooterPIDSVATuner extends Procedure {
         }
     }
 
-    /** Breakaway probe: slow ramp 0 -> 0.35 over 6 s; power at first sustained motion is the result. */
     /**
      * Setup OpMode 1 of 2 (runs first, before any powered phase): the
-     * operator spins the flywheel BY HAND in the direction they want
+     * operator spins each flywheel BY HAND in the direction they want
      * it to spin for shooting, then STOPS the OpMode -- the same
      * "you stop it" flow as the Pinpoint tuner forward/strafe encoder
-     * direction tests. The motor is never powered here; this only
-     * reads the velocity encoder. Returns the velocity sign (+1 or
-     * -1) for the desired spin direction, or null when the wheel was
-     * never spun fast enough to tell.
+     * direction tests. The motors are never powered here; this only
+     * reads the velocity encoders. Returns the velocity sign (+1 or
+     * -1) per motor, or null when a wheel was never spun fast enough
+     * to tell. For a dual run, spin the main wheel, then the counter
+     * roller, then stop the OpMode; both peaks are tracked at once.
      */
-    static final class ManualSpinPhase extends TuningOpMode<Integer> {
+    static final class ManualSpinPhase extends TuningOpMode<List<Integer>> {
         static final double MOTION_THRESHOLD_TICKS_PER_SEC = 50.0;
-        final Function<HardwareMap, DcMotorEx> supplier;
+        final List<MotorChannel> channels;
 
-        ManualSpinPhase(Function<HardwareMap, DcMotorEx> supplier) {
-            super("Manual Spin Direction", "Spin the flywheel BY HAND in the direction you want it to shoot, then STOP the OpMode.", true);
-            this.supplier = supplier;
+        ManualSpinPhase(List<MotorChannel> channels) {
+            super("Manual Spin Direction", "Spin each flywheel BY HAND in the direction you want it to shoot, then STOP the OpMode.", true);
+            this.channels = channels;
         }
 
         @Override
-        protected Integer runTuningOpMode() throws InterruptedException {
+        protected List<Integer> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = supplier.apply(hardwareMap);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            motor.setPower(0.0);
+            List<DcMotorEx> motors = new ArrayList<>();
+            for (MotorChannel ch : channels) {
+                DcMotorEx motor = ch.supplier.apply(hardwareMap);
+                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                motor.setPower(0.0);
+                ch.motor = motor;
+                motors.add(motor);
+            }
             try {
-                double peakVelocity = 0.0;
+                List<Double> peakVelocities = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    peakVelocities.add(0.0);
+                }
                 while (!isStopRequested()) {
-                    double velocity = motor.getVelocity();
-                    if (Math.abs(velocity) > Math.abs(peakVelocity)) {
-                        peakVelocity = velocity;
+                    for (int i = 0; i < channels.size(); i++) {
+                        double velocity = motors.get(i).getVelocity();
+                        if (Math.abs(velocity) > Math.abs(peakVelocities.get(i))) {
+                            peakVelocities.set(i, velocity);
+                        }
+                        String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                        telemetry.addData(label + " live velocity (ticks/sec)", "%.0f", velocity);
+                        telemetry.addData(label + " peak velocity (ticks/sec)", "%.0f", peakVelocities.get(i));
+                        telemetry.addData(label + " detected desired sign",
+                                Math.abs(peakVelocities.get(i)) > MOTION_THRESHOLD_TICKS_PER_SEC
+                                        ? (peakVelocities.get(i) > 0 ? "+1 (positive velocity)" : "-1 (negative velocity)")
+                                        : "not yet -- spin it faster");
                     }
-                    telemetry.addData("Spin the wheel by hand (desired shoot direction), then STOP", "");
-                    telemetry.addData("live velocity (ticks/sec)", "%.0f", velocity);
-                    telemetry.addData("peak velocity (ticks/sec)", "%.0f", peakVelocity);
-                    telemetry.addData("detected desired sign", Math.abs(peakVelocity) > MOTION_THRESHOLD_TICKS_PER_SEC
-                            ? (peakVelocity > 0 ? "+1 (positive velocity)" : "-1 (negative velocity)") : "not yet -- spin it faster");
+                    telemetry.addData("Spin each wheel by hand (desired shoot direction), then STOP", "");
                     telemetry.update();
                     sleep(50);
                 }
-                // Stopped by the operator: the peak velocity's sign is
-                // the desired direction.
-                if (Math.abs(peakVelocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
-                    telemetry.addData("manual spin", "no spin detected (peak " + peakVelocity + " ticks/sec); spin the wheel faster and try again");
-                    return null;
+                // Stopped by the operator: each peak velocity's sign is
+                // that motor's desired direction.
+                List<Integer> signs = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    double peak = peakVelocities.get(i);
+                    if (Math.abs(peak) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
+                        String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                        telemetry.addData("manual spin", "no spin detected for " + label + " (peak " + peak + " ticks/sec); spin the wheel faster and try again");
+                        return null;
+                    }
+                    signs.add(peak > 0 ? 1 : -1);
                 }
-                int desiredSign = peakVelocity > 0 ? 1 : -1;
-                telemetry.addData("desired velocity sign (manual spin)", desiredSign);
-                telemetry.addData("peak velocity (ticks/sec)", peakVelocity);
-                return desiredSign;
+                for (int i = 0; i < channels.size(); i++) {
+                    String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                    telemetry.addData(label + " desired velocity sign (manual spin)", signs.get(i));
+                    telemetry.addData(label + " peak velocity (ticks/sec)", peakVelocities.get(i));
+                }
+                return signs;
             } finally {
-                motor.setPower(0.0);
+                for (DcMotorEx motor : motors) {
+                    motor.setPower(0.0);
+                }
             }
         }
     }
 
     /**
      * Setup OpMode 2 of 2 (runs after the manual spin, before any
-     * powered phase): spins the wheel briefly at a raw +0.3 power and
-     * measures which velocity sign a positive power produces. Returns
-     * that sign (+1 or -1), or null when the wheel never moved enough
-     * to tell. Together with the manual spin sign, this tells the
-     * phases which raw power sign drives the wheel in the direction
-     * the operator wants.
+     * powered phase): spins every wheel briefly at a raw +0.3 power and
+     * measures which velocity sign a positive power produces per motor.
+     * Returns that sign (+1 or -1) per motor, or null when a wheel
+     * never moved enough to tell. Together with the manual spin sign,
+     * this tells the phases which raw power sign drives each wheel in
+     * the direction the operator wants.
      */
-    static final class PowerDirectionPhase extends TuningOpMode<Integer> {
+    static final class PowerDirectionPhase extends TuningOpMode<List<Integer>> {
         static final double TEST_POWER = 0.3;
         static final double MOTION_THRESHOLD_TICKS_PER_SEC = 50.0;
         static final double TIMEOUT_SECONDS = 2.0;
-        final Function<HardwareMap, DcMotorEx> supplier;
+        final List<MotorChannel> channels;
 
-        PowerDirectionPhase(Function<HardwareMap, DcMotorEx> supplier) {
+        PowerDirectionPhase(List<MotorChannel> channels) {
             super("Power Direction Check", "Brief +0.3 spin to learn which velocity sign positive power gives. No balls loaded.", true);
-            this.supplier = supplier;
+            this.channels = channels;
         }
 
         @Override
-        protected Integer runTuningOpMode() throws InterruptedException {
+        protected List<Integer> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = supplier.apply(hardwareMap);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            motor.setPower(0.0);
+            List<DcMotorEx> motors = new ArrayList<>();
+            for (MotorChannel ch : channels) {
+                DcMotorEx motor = ch.supplier.apply(hardwareMap);
+                motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                motor.setPower(0.0);
+                ch.motor = motor;
+                motors.add(motor);
+            }
             try {
-                // Raw +0.3, bypassing any sign conversion: the raw
-                // power-to-velocity relationship is what is measured.
-                motor.setPower(TEST_POWER);
+                // Raw +0.3 on every motor at once, bypassing any sign
+                // conversion: the raw power-to-velocity relationship is
+                // what is measured.
+                for (DcMotorEx motor : motors) {
+                    motor.setPower(TEST_POWER);
+                }
                 long start = System.nanoTime();
-                double velocity = 0.0;
+                List<Double> velocities = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    velocities.add(0.0);
+                }
                 while (!isStopRequested() && elapsedSeconds(start) < TIMEOUT_SECONDS) {
                     sleep(50);
-                    velocity = motor.getVelocity();
+                    boolean allMoved = true;
+                    for (int i = 0; i < channels.size(); i++) {
+                        double velocity = motors.get(i).getVelocity();
+                        velocities.set(i, velocity);
+                        String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                        telemetry.addData(label + " live velocity (ticks/sec)", "%.0f", velocity);
+                        if (Math.abs(velocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
+                            allMoved = false;
+                        }
+                    }
                     telemetry.addData("Testing +0.3 power...", "");
-                    telemetry.addData("live velocity (ticks/sec)", "%.0f", velocity);
                     telemetry.update();
-                    if (Math.abs(velocity) > MOTION_THRESHOLD_TICKS_PER_SEC) {
+                    if (allMoved) {
                         break;
                     }
                 }
-                motor.setPower(0.0);
-                if (Math.abs(velocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
-                    telemetry.addData("power direction check", "wheel did not move (velocity " + velocity + " ticks/sec at +0.3); check the motor and try again");
-                    return null;
+                for (DcMotorEx motor : motors) {
+                    motor.setPower(0.0);
                 }
-                int powerSign = velocity > 0 ? 1 : -1;
-                telemetry.addData("power velocity sign (+0.3 power)", powerSign);
-                telemetry.addData("velocity at +0.3 (ticks/sec)", velocity);
-                return powerSign;
+                List<Integer> signs = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    double velocity = velocities.get(i);
+                    if (Math.abs(velocity) <= MOTION_THRESHOLD_TICKS_PER_SEC) {
+                        String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                        telemetry.addData("power direction check", label + " did not move (velocity " + velocity + " ticks/sec at +0.3); check the motor and try again");
+                        return null;
+                    }
+                    signs.add(velocity > 0 ? 1 : -1);
+                }
+                for (int i = 0; i < channels.size(); i++) {
+                    String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                    telemetry.addData(label + " power velocity sign (+0.3 power)", signs.get(i));
+                    telemetry.addData(label + " velocity at +0.3 (ticks/sec)", velocities.get(i));
+                }
+                return signs;
             } finally {
-                motor.setPower(0.0);
+                for (DcMotorEx motor : motors) {
+                    motor.setPower(0.0);
+                }
             }
         }
     }
 
-    static final class BreakawayPhase extends FlywheelPhase<Double> {
+    /** Breakaway probe: slow ramp 0 -> 0.35 over 6 s; power at first sustained motion is the result, per motor. */
+    static final class BreakawayPhase extends FlywheelPhase<List<Double>> {
         static final double RAMP_SECONDS = 6.0;
         static final double PEAK_POWER = 0.35;
         static final double MOTION_THRESHOLD_TICKS_PER_SEC = 50.0;
         static final double MOTION_SUSTAIN_SECONDS = 0.2;
         static final double TIMEOUT_SECONDS = 10.0;
 
-        BreakawayPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                       int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage) {
+        BreakawayPhase(List<MotorChannel> channels, double ticksPerRev,
+                       boolean voltageCompensation, double nominalVoltage) {
             super("Breakaway Probe", "Slow ramp to find breakaway power (kS). No balls loaded.",
-                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
+                    channels, ticksPerRev, voltageCompensation, nominalVoltage);
         }
 
         @Override
-        protected Double runTuningOpMode() throws InterruptedException {
+        protected List<Double> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = openMotor();
+            List<DcMotorEx> motors = openMotors();
             try {
-                VelocityFilter filter = new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS);
+                List<VelocityFilter> filters = new ArrayList<>();
+                List<Double> breakawayPowers = new ArrayList<>();
+                List<Long> motionStarts = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    filters.add(new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS));
+                    breakawayPowers.add(null);
+                    motionStarts.add(-1L);
+                }
                 long start = System.nanoTime();
                 long previous = start;
-                long motionStart = -1;
                 while (!isStopRequested()) {
                     long now = System.nanoTime();
                     double dt = Math.max((now - previous) / 1e9, 1e-3);
@@ -743,31 +937,42 @@ public class ShooterPIDSVATuner extends Procedure {
                         break;
                     }
                     double power = PEAK_POWER * Math.min(1.0, elapsed / RAMP_SECONDS);
-                    applyPower(motor, power);
-                    double velocity = filter.update(readVelocity(motor), dt);
-                    report("power", power);
-                    report("velocity (ticks/s)", velocity);
-                    telemetry.update();
-                    if (velocity > MOTION_THRESHOLD_TICKS_PER_SEC) {
-                        if (motionStart < 0) {
-                            motionStart = System.nanoTime();
-                        } else if ((System.nanoTime() - motionStart) / 1e9 >= MOTION_SUSTAIN_SECONDS) {
-                            return power;
+                    boolean allFound = true;
+                    for (int i = 0; i < channels.size(); i++) {
+                        if (breakawayPowers.get(i) != null) {
+                            continue;
                         }
-                    } else {
-                        motionStart = -1;
+                        allFound = false;
+                        applyPower(channels.get(i), power);
+                        double velocity = filters.get(i).update(readVelocity(channels.get(i)), dt);
+                        String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                        report(label + " power", power);
+                        report(label + " velocity (ticks/s)", velocity);
+                        if (velocity > MOTION_THRESHOLD_TICKS_PER_SEC) {
+                            if (motionStarts.get(i) < 0) {
+                                motionStarts.set(i, System.nanoTime());
+                            } else if ((System.nanoTime() - motionStarts.get(i)) / 1e9 >= MOTION_SUSTAIN_SECONDS) {
+                                breakawayPowers.set(i, power);
+                            }
+                        } else {
+                            motionStarts.set(i, -1L);
+                        }
+                    }
+                    telemetry.update();
+                    if (allFound) {
+                        break;
                     }
                     sleep(10);
                 }
-                return null;
+                return breakawayPowers;
             } finally {
-                motor.setPower(0.0);
+                stopMotors();
             }
         }
     }
 
-    /** Relay test: bang-bang relay around the target, with corrected per-interval extrema bookkeeping. */
-    static final class RelayPhase extends FlywheelPhase<RelayTuner.Result> {
+    /** Relay test: bang-bang relay around the target, with corrected per-interval extrema bookkeeping, per motor. */
+    static final class RelayPhase extends FlywheelPhase<List<RelayTuner.Result>> {
         private final double targetTicksPerSec;
         private final double relayAmplitude;
         private final double hysteresisTicksPerSec;
@@ -775,12 +980,12 @@ public class ShooterPIDSVATuner extends Procedure {
         private final int cyclesToIgnore;
         private final double timeoutSeconds;
 
-        RelayPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                   int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
+        RelayPhase(List<MotorChannel> channels, double ticksPerRev,
+                   boolean voltageCompensation, double nominalVoltage,
                    double targetTicksPerSec, double relayAmplitude, double hysteresisTicksPerSec,
                    int cyclesToCollect, int cyclesToIgnore, double timeoutSeconds) {
             super("Relay Test", "Bang-bang relay test for Ku/Tu. No balls loaded; the wheel oscillates around the target.",
-                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
+                    channels, ticksPerRev, voltageCompensation, nominalVoltage);
             this.targetTicksPerSec = targetTicksPerSec;
             this.relayAmplitude = relayAmplitude;
             this.hysteresisTicksPerSec = hysteresisTicksPerSec;
@@ -790,13 +995,17 @@ public class ShooterPIDSVATuner extends Procedure {
         }
 
         @Override
-        protected RelayTuner.Result runTuningOpMode() throws InterruptedException {
+        protected List<RelayTuner.Result> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = openMotor();
+            List<DcMotorEx> motors = openMotors();
             try {
-                RelayTuner tuner = new RelayTuner(targetTicksPerSec, relayAmplitude, hysteresisTicksPerSec,
-                        cyclesToCollect, cyclesToIgnore, timeoutSeconds, 3.0);
-                VelocityFilter filter = new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS);
+                List<RelayTuner> tuners = new ArrayList<>();
+                List<VelocityFilter> filters = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    tuners.add(new RelayTuner(targetTicksPerSec, relayAmplitude, hysteresisTicksPerSec,
+                            cyclesToCollect, cyclesToIgnore, timeoutSeconds, 3.0));
+                    filters.add(new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS));
+                }
                 long start = System.nanoTime();
                 long previous = start;
                 while (!isStopRequested()) {
@@ -804,52 +1013,66 @@ public class ShooterPIDSVATuner extends Procedure {
                     double dt = (now - previous) / 1e9;
                     previous = now;
                     double elapsed = (now - start) / 1e9;
-                    double velocity = filter.update(readVelocity(motor), Math.max(dt, 1e-3));
-                    double power = tuner.update(velocity, elapsed);
-                    if (power > 1.0) {
-                        power = 1.0;
-                    } else if (power < 0.0) {
-                        power = 0.0;
+                    boolean allFinished = true;
+                    for (int i = 0; i < channels.size(); i++) {
+                        double velocity = filters.get(i).update(readVelocity(channels.get(i)), Math.max(dt, 1e-3));
+                        double power = tuners.get(i).update(velocity, elapsed);
+                        if (power > 1.0) {
+                            power = 1.0;
+                        } else if (power < 0.0) {
+                            power = 0.0;
+                        }
+                        applyPower(channels.get(i), power);
+                        String label = channels.size() > 1 ? channels.get(i).name : "wheel";
+                        report(label + " target (ticks/s)", targetTicksPerSec);
+                        report(label + " velocity (ticks/s)", velocity);
+                        report(label + " power", power);
+                        report(label + " switches", tuners.get(i).getSwitchCount());
+                        if (!tuners.get(i).isFinished()) {
+                            allFinished = false;
+                        }
                     }
-                    applyPower(motor, power);
-                    report("target (ticks/s)", targetTicksPerSec);
-                    report("velocity (ticks/s)", velocity);
-                    report("power", power);
-                    report("switches", tuner.getSwitchCount());
                     report("battery (V)", readBatteryVoltage());
                     telemetry.update();
-                    if (tuner.isFinished()) {
+                    if (allFinished) {
                         break;
                     }
                     sleep(5);
                 }
-                return tuner.computeResult();
+                List<RelayTuner.Result> results = new ArrayList<>();
+                for (RelayTuner tuner : tuners) {
+                    results.add(tuner.computeResult());
+                }
+                return results;
             } finally {
-                motor.setPower(0.0);
+                stopMotors();
             }
         }
     }
 
-    /** Quasistatic stepped holds: one settled mean sample per power level (plus a descending re-check). */
-    static final class QuasistaticPhase extends FlywheelPhase<List<SvaFit.Sample>> {
+    /** Quasistatic stepped holds: one settled mean sample per power level (plus a descending re-check), per motor. */
+    static final class QuasistaticPhase extends FlywheelPhase<List<List<SvaFit.Sample>>> {
         private final List<Double> powers;
         private final double settleSeconds;
 
-        QuasistaticPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                         int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
+        QuasistaticPhase(List<MotorChannel> channels, double ticksPerRev,
+                         boolean voltageCompensation, double nominalVoltage,
                          List<Double> powers, double settleSeconds) {
             super("Quasistatic Ramp", "Stepped power holds for kS/kV. No balls loaded.",
-                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
+                    channels, ticksPerRev, voltageCompensation, nominalVoltage);
             this.powers = new ArrayList<>(powers);
             this.settleSeconds = settleSeconds;
         }
 
         @Override
-        protected List<SvaFit.Sample> runTuningOpMode() throws InterruptedException {
+        protected List<List<SvaFit.Sample>> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = openMotor();
+            List<DcMotorEx> motors = openMotors();
             try {
-                List<SvaFit.Sample> samples = new ArrayList<>();
+                List<List<SvaFit.Sample>> allSamples = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    allSamples.add(new ArrayList<>());
+                }
                 // Ascending sweep, then a descending re-check of the upper levels.
                 List<Double> levels = new ArrayList<>(powers);
                 int[] descending = new int[]{powers.size() - 2, powers.size() - 3, powers.size() - 4};
@@ -861,9 +1084,14 @@ public class ShooterPIDSVATuner extends Procedure {
                 for (int i = 0; i < levels.size(); i++) {
                     double power = levels.get(i);
                     String phaseLabel = i < powers.size() ? "quasistatic" : "quasistatic-descending";
-                    VelocityFilter filter = new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS);
-                    List<Double> windowVelocities = new ArrayList<>();
-                    List<Double> windowVoltages = new ArrayList<>();
+                    List<VelocityFilter> filters = new ArrayList<>();
+                    List<List<Double>> windowVelocities = new ArrayList<>();
+                    List<List<Double>> windowVoltages = new ArrayList<>();
+                    for (int c = 0; c < channels.size(); c++) {
+                        filters.add(new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS));
+                        windowVelocities.add(new ArrayList<>());
+                        windowVoltages.add(new ArrayList<>());
+                    }
                     long start = System.nanoTime();
                     long previous = start;
                     while (!isStopRequested()) {
@@ -874,61 +1102,66 @@ public class ShooterPIDSVATuner extends Procedure {
                         if (elapsed >= settleSeconds) {
                             break;
                         }
-                        applyPower(motor, power);
-                        double velocity = filter.update(readVelocity(motor), dt);
-                        if (elapsed >= settleSeconds - 0.5) {
-                            windowVelocities.add(velocity);
-                            double vBatt = readBatteryVoltage();
-                            if (Double.isFinite(vBatt) && vBatt > 0.0) {
-                                windowVoltages.add(vBatt);
+                        for (int c = 0; c < channels.size(); c++) {
+                            applyPower(channels.get(c), power);
+                            double velocity = filters.get(c).update(readVelocity(channels.get(c)), dt);
+                            if (elapsed >= settleSeconds - 0.5) {
+                                windowVelocities.get(c).add(velocity);
+                                double vBatt = readBatteryVoltage();
+                                if (Double.isFinite(vBatt) && vBatt > 0.0) {
+                                    windowVoltages.get(c).add(vBatt);
+                                }
                             }
                         }
                         report("power", power);
-                        report("velocity (ticks/s)", velocity);
-                        report("battery (V)", readBatteryVoltage());
                         telemetry.update();
                         sleep(10);
                     }
                     if (isStopRequested()) {
                         break;
                     }
-                    if (!windowVelocities.isEmpty()) {
+                    for (int c = 0; c < channels.size(); c++) {
+                        List<Double> window = windowVelocities.get(c);
+                        if (window.isEmpty()) {
+                            continue;
+                        }
                         double mean = 0.0;
-                        for (double v : windowVelocities) {
+                        for (double v : window) {
                             mean += v;
                         }
-                        mean /= windowVelocities.size();
+                        mean /= window.size();
                         double variance = 0.0;
-                        for (double v : windowVelocities) {
+                        for (double v : window) {
                             variance += (v - mean) * (v - mean);
                         }
-                        double std = Math.sqrt(variance / windowVelocities.size());
+                        double std = Math.sqrt(variance / window.size());
                         double meanVoltage = nominalVoltage;
-                        if (!windowVoltages.isEmpty()) {
+                        if (!windowVoltages.get(c).isEmpty()) {
                             double sum = 0.0;
-                            for (double v : windowVoltages) {
+                            for (double v : windowVoltages.get(c)) {
                                 sum += v;
                             }
-                            meanVoltage = sum / windowVoltages.size();
+                            meanVoltage = sum / windowVoltages.get(c).size();
                         }
                         // Valid only if the wheel is actually moving and settled.
                         if (mean > 50.0 && std < 0.05 * mean) {
-                            samples.add(new SvaFit.Sample(mean, 0.0, power, meanVoltage, phaseLabel));
+                            allSamples.get(c).add(new SvaFit.Sample(mean, 0.0, power, meanVoltage, phaseLabel));
                         } else {
-                            report("skipped level (unsettled/stalled)", power);
+                            String label = channels.size() > 1 ? channels.get(c).name : "wheel";
+                            report(label + " skipped level (unsettled/stalled)", power);
                             telemetry.update();
                         }
                     }
                 }
-                return samples;
+                return allSamples;
             } finally {
-                motor.setPower(0.0);
+                stopMotors();
             }
         }
     }
 
     /** Dynamic trapezoid ramps: follows a velocity profile with the preliminary controller; regressor is profile acceleration. */
-    static final class DynamicPhase extends FlywheelPhase<List<SvaFit.Sample>> {
+    static final class DynamicPhase extends FlywheelPhase<List<List<SvaFit.Sample>>> {
         private static final double FAST_ACCEL_TICKS_PER_SEC_SQ = 2000.0;
         private static final double FAST_CEILING_TICKS_PER_SEC = 1000.0;
         private static final double SLOW_ACCEL_TICKS_PER_SEC_SQ = 100.0;
@@ -936,41 +1169,47 @@ public class ShooterPIDSVATuner extends Procedure {
         private static final int FAST_REPEATS = 3;
         private static final double OVERSPEED_LIMIT_TICKS_PER_SEC = 1600.0;
 
-        private final double preliminaryKs;
-        private final double preliminaryKv;
-        private final RelayTuner.Result relayResult;
+        private final List<Double> preliminaryKs;
+        private final List<Double> preliminaryKv;
+        private final List<RelayTuner.Result> relayResults;
         private final boolean tuneIntegral;
 
-        DynamicPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                     int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
-                     double preliminaryKs, double preliminaryKv,
-                     RelayTuner.Result relayResult, boolean tuneIntegral) {
+        DynamicPhase(List<MotorChannel> channels, double ticksPerRev,
+                     boolean voltageCompensation, double nominalVoltage,
+                     List<Double> preliminaryKs, List<Double> preliminaryKv,
+                     List<RelayTuner.Result> relayResults, boolean tuneIntegral) {
             super("Dynamic Ramps", "Trapezoid velocity ramps for kA (profile acceleration is the regressor). No balls loaded.",
-                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
-            this.preliminaryKs = preliminaryKs;
-            this.preliminaryKv = preliminaryKv;
-            this.relayResult = relayResult;
+                    channels, ticksPerRev, voltageCompensation, nominalVoltage);
+            this.preliminaryKs = new ArrayList<>(preliminaryKs);
+            this.preliminaryKv = new ArrayList<>(preliminaryKv);
+            this.relayResults = new ArrayList<>(relayResults);
             this.tuneIntegral = tuneIntegral;
         }
 
         @Override
-        protected List<SvaFit.Sample> runTuningOpMode() throws InterruptedException {
+        protected List<List<SvaFit.Sample>> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = openMotor();
+            List<DcMotorEx> motors = openMotors();
             try {
-                List<ZieglerNichols.Candidate> candidates =
-                        ZieglerNichols.computeCandidates(relayResult.ku, relayResult.tuSeconds, tuneIntegral);
-                ZieglerNichols.Candidate candidate = candidates.get(2);
-                double kI = tuneIntegral ? candidate.kI : 0.0;
-                double integralLimit = kI != 0.0 ? 0.25 / Math.abs(kI) : DEFAULT_INTEGRAL_LIMIT_TICKS;
-                DoubleFlywheelFullVelocityConstants preliminary = new DoubleFlywheelFullVelocityConstants(
-                        candidate.kP, kI, candidate.kD,
-                        preliminaryKs, preliminaryKv, 0.0,
-                        DEFAULT_TOLERANCE_TICKS_PER_SEC, integralLimit,
-                        voltageCompensation, nominalVoltage);
-                DoubleFlywheelFullVelocityController controller =
-                        new DoubleFlywheelFullVelocityController(preliminary);
-                controller.setVoltageSupplier(this::readBatteryVoltage);
+                List<DoubleFlywheelFullVelocityController> controllers = new ArrayList<>();
+                List<VelocityFilter> filters = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    List<ZieglerNichols.Candidate> candidates =
+                            ZieglerNichols.computeCandidates(relayResults.get(i).ku, relayResults.get(i).tuSeconds, tuneIntegral);
+                    ZieglerNichols.Candidate candidate = candidates.get(2);
+                    double kI = tuneIntegral ? candidate.kI : 0.0;
+                    double integralLimit = kI != 0.0 ? 0.25 / Math.abs(kI) : DEFAULT_INTEGRAL_LIMIT_TICKS;
+                    DoubleFlywheelFullVelocityConstants preliminary = new DoubleFlywheelFullVelocityConstants(
+                            candidate.kP, kI, candidate.kD,
+                            preliminaryKs.get(i), preliminaryKv.get(i), 0.0,
+                            DEFAULT_TOLERANCE_TICKS_PER_SEC, integralLimit,
+                            voltageCompensation, nominalVoltage);
+                    DoubleFlywheelFullVelocityController controller =
+                            new DoubleFlywheelFullVelocityController(preliminary);
+                    controller.setVoltageSupplier(this::readBatteryVoltage);
+                    controllers.add(controller);
+                    filters.add(new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS));
+                }
 
                 // Segment table: duration, start velocity, end velocity, label.
                 List<double[]> segments = new ArrayList<>();
@@ -988,8 +1227,10 @@ public class ShooterPIDSVATuner extends Procedure {
                 addSegment(segments, labels, fastUp * (SLOW_CEILING_TICKS_PER_SEC / FAST_CEILING_TICKS_PER_SEC),
                         SLOW_CEILING_TICKS_PER_SEC, 0.0, "slow-ramp-down");
 
-                List<SvaFit.Sample> samples = new ArrayList<>();
-                VelocityFilter filter = new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS);
+                List<List<SvaFit.Sample>> allSamples = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    allSamples.add(new ArrayList<>());
+                }
                 long start = System.nanoTime();
                 long previous = start;
                 int segmentIndex = 0;
@@ -1008,36 +1249,48 @@ public class ShooterPIDSVATuner extends Procedure {
                     double fraction = segment[0] > 0.0 ? segmentElapsed / segment[0] : 1.0;
                     double profileVelocity = segment[1] + (segment[2] - segment[1]) * fraction;
                     double profileAccel = segment[0] > 0.0 ? (segment[2] - segment[1]) / segment[0] : 0.0;
-                    double velocity = filter.update(readVelocity(motor), dt);
-                    controller.setTarget(profileVelocity);
-                    controller.update(velocity, dt);
-                    double power = controller.getOutput();
-                    applyPower(motor, power);
-                    if (velocity > OVERSPEED_LIMIT_TICKS_PER_SEC) {
-                        report("overspeed abort", velocity);
+                    boolean overspeed = false;
+                    for (int i = 0; i < channels.size(); i++) {
+                        double velocity = filters.get(i).update(readVelocity(channels.get(i)), dt);
+                        controllers.get(i).setTarget(profileVelocity);
+                        controllers.get(i).update(velocity, dt);
+                        double power = controllers.get(i).getOutput();
+                        applyPower(channels.get(i), power);
+                        if (velocity > OVERSPEED_LIMIT_TICKS_PER_SEC) {
+                            overspeed = true;
+                        }
+                        // Exclude the first 0.10 s after a segment (direction) change: the
+                        // filtered velocity is still catching up and the acceleration
+                        // estimate is not representative of the profile.
+                        // Rest segments are not characterisation data: the wheel is only
+                        // braking to a stop there (target velocity 0, still spinning
+                        // from ramp-down lag, controller power negative, profile
+                        // acceleration 0). Those samples contradict the plant model
+                        // and drag the fitted kS negative -- in simulation 30 of them
+                        // move kS from +0.15 to -0.28, matching the -0.33 seen on the
+                        // robot. Skip them.
+                        String segmentLabel = labels.get(segmentIndex);
+                        if (segmentElapsed >= 0.10 && !segmentLabel.contains("rest")) {
+                            double vBatt = readBatteryVoltage();
+                            if (!Double.isFinite(vBatt) || vBatt <= 0.0) {
+                                vBatt = nominalVoltage;
+                            }
+                            allSamples.get(i).add(new SvaFit.Sample(velocity, profileAccel, power, vBatt, segmentLabel));
+                        }
+                    }
+                    if (overspeed) {
+                        report("overspeed abort", "a wheel exceeded " + OVERSPEED_LIMIT_TICKS_PER_SEC + " ticks/sec");
                         telemetry.update();
                         break;
                     }
-                    // Exclude the first 0.10 s after a segment (direction) change: the
-                    // filtered velocity is still catching up and the acceleration
-                    // estimate is not representative of the profile.
-                    if (segmentElapsed >= 0.10) {
-                        double vBatt = readBatteryVoltage();
-                        if (!Double.isFinite(vBatt) || vBatt <= 0.0) {
-                            vBatt = nominalVoltage;
-                        }
-                        samples.add(new SvaFit.Sample(velocity, profileAccel, power, vBatt, labels.get(segmentIndex)));
-                    }
                     report("target (ticks/s)", profileVelocity);
-                    report("velocity (ticks/s)", velocity);
-                    report("power", power);
                     report("segment", labels.get(segmentIndex));
                     telemetry.update();
                     sleep(5);
                 }
-                return samples;
+                return allSamples;
             } finally {
-                motor.setPower(0.0);
+                stopMotors();
             }
         }
 
@@ -1076,45 +1329,58 @@ public class ShooterPIDSVATuner extends Procedure {
         }
     }
 
-    /** Live validation: ramp to the target, hold 5 s, ramp down; checks spin-up, overshoot, settle, and steady-state gates. */
-    static final class ValidationPhase extends FlywheelPhase<ValidationResult> {
+    /** Live validation: ramp to the target, hold 5 s, ramp down; checks spin-up, overshoot, settle, and steady-state gates, per motor. */
+    static final class ValidationPhase extends FlywheelPhase<List<ValidationResult>> {
         private static final double RAMP_ACCEL_TICKS_PER_SEC_SQ = 2000.0;
         private static final double HOLD_SECONDS = 5.0;
         private static final double STEADY_WINDOW_SECONDS = 3.0;
 
-        private final DoubleFlywheelFullVelocityConstants constants;
+        private final List<DoubleFlywheelFullVelocityConstants> constantsList;
         private final double targetTicksPerSec;
         private final String candidateLabel;
 
-        ValidationPhase(Function<HardwareMap, DcMotorEx> supplier, double ticksPerRev,
-                        int desiredVelocitySign, int powerVelocitySign, boolean voltageCompensation, double nominalVoltage,
-                        DoubleFlywheelFullVelocityConstants constants, double targetTicksPerSec,
+        ValidationPhase(List<MotorChannel> channels, double ticksPerRev,
+                        boolean voltageCompensation, double nominalVoltage,
+                        List<DoubleFlywheelFullVelocityConstants> constantsList, double targetTicksPerSec,
                         String candidateLabel) {
             super("Validation: " + candidateLabel, "Live test of candidate " + candidateLabel + " at the target RPM. No balls loaded.",
-                    supplier, ticksPerRev, desiredVelocitySign, powerVelocitySign, voltageCompensation, nominalVoltage);
-            this.constants = constants;
+                    channels, ticksPerRev, voltageCompensation, nominalVoltage);
+            this.constantsList = new ArrayList<>(constantsList);
             this.targetTicksPerSec = targetTicksPerSec;
             this.candidateLabel = candidateLabel;
         }
 
         @Override
-        protected ValidationResult runTuningOpMode() throws InterruptedException {
+        protected List<ValidationResult> runTuningOpMode() throws InterruptedException {
             waitForStart();
-            DcMotorEx motor = openMotor();
+            List<DcMotorEx> motors = openMotors();
             try {
-                DoubleFlywheelFullVelocityController controller =
-                        new DoubleFlywheelFullVelocityController(constants);
-                controller.setVoltageSupplier(this::readBatteryVoltage);
-                VelocityFilter filter = new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS);
-                double tolerance = Math.max(constants.tolerance, 30.0);
+                List<DoubleFlywheelFullVelocityController> controllers = new ArrayList<>();
+                List<VelocityFilter> filters = new ArrayList<>();
+                List<Double> tolerances = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    DoubleFlywheelFullVelocityController controller =
+                            new DoubleFlywheelFullVelocityController(constantsList.get(i));
+                    controller.setVoltageSupplier(this::readBatteryVoltage);
+                    controllers.add(controller);
+                    filters.add(new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS));
+                    tolerances.add(Math.max(constantsList.get(i).tolerance, 30.0));
+                }
                 double rampSeconds = targetTicksPerSec / RAMP_ACCEL_TICKS_PER_SEC_SQ;
                 double totalSeconds = rampSeconds + HOLD_SECONDS + rampSeconds;
 
-                List<Double> errors = new ArrayList<>();
-                List<Double> times = new ArrayList<>();
-                double maxVelocity = 0.0;
-                double firstBandTime = Double.NaN;
-                double lastOutOfBandTime = Double.NaN;
+                List<List<Double>> errorsPerMotor = new ArrayList<>();
+                List<List<Double>> timesPerMotor = new ArrayList<>();
+                List<Double> maxVelocities = new ArrayList<>();
+                List<Double> firstBandTimes = new ArrayList<>();
+                List<Double> lastOutOfBandTimes = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    errorsPerMotor.add(new ArrayList<>());
+                    timesPerMotor.add(new ArrayList<>());
+                    maxVelocities.add(0.0);
+                    firstBandTimes.add(Double.NaN);
+                    lastOutOfBandTimes.add(Double.NaN);
+                }
                 long start = System.nanoTime();
                 long previous = start;
                 while (!isStopRequested()) {
@@ -1134,116 +1400,123 @@ public class ShooterPIDSVATuner extends Procedure {
                         double downElapsed = elapsed - rampSeconds - HOLD_SECONDS;
                         profileVelocity = targetTicksPerSec * Math.max(0.0, 1.0 - downElapsed / rampSeconds);
                     }
-                    double velocity = filter.update(readVelocity(motor), dt);
-                    controller.setTarget(profileVelocity);
-                    controller.update(velocity, dt);
-                    applyPower(motor, controller.getOutput());
-                    if (velocity > maxVelocity) {
-                        maxVelocity = velocity;
-                    }
-                    if (elapsed >= rampSeconds && elapsed < rampSeconds + HOLD_SECONDS) {
-                        double error = targetTicksPerSec - velocity;
-                        errors.add(error);
-                        times.add(elapsed - rampSeconds);
-                        if (Math.abs(error) <= tolerance) {
-                            if (Double.isNaN(firstBandTime)) {
-                                firstBandTime = elapsed - rampSeconds;
+                    for (int i = 0; i < channels.size(); i++) {
+                        double velocity = filters.get(i).update(readVelocity(channels.get(i)), dt);
+                        controllers.get(i).setTarget(profileVelocity);
+                        controllers.get(i).update(velocity, dt);
+                        applyPower(channels.get(i), controllers.get(i).getOutput());
+                        if (velocity > maxVelocities.get(i)) {
+                            maxVelocities.set(i, velocity);
+                        }
+                        if (elapsed >= rampSeconds && elapsed < rampSeconds + HOLD_SECONDS) {
+                            double error = targetTicksPerSec - velocity;
+                            errorsPerMotor.get(i).add(error);
+                            timesPerMotor.get(i).add(elapsed - rampSeconds);
+                            if (Math.abs(error) <= tolerances.get(i)) {
+                                if (Double.isNaN(firstBandTimes.get(i))) {
+                                    firstBandTimes.set(i, elapsed - rampSeconds);
+                                }
+                            } else {
+                                lastOutOfBandTimes.set(i, elapsed - rampSeconds);
                             }
-                        } else {
-                            lastOutOfBandTime = elapsed - rampSeconds;
                         }
                     }
                     report("target (ticks/s)", profileVelocity);
-                    report("velocity (ticks/s)", velocity);
-                    report("power", controller.getOutput());
                     telemetry.update();
                     sleep(5);
                 }
-                double spinUp = Double.isNaN(firstBandTime) ? Double.NaN : firstBandTime;
-                double overshoot = targetTicksPerSec > 0.0 ? Math.max(0.0, maxVelocity / targetTicksPerSec - 1.0) : Double.NaN;
-                // Settle: 0.5 s of continuous in-band after the last out-of-band sample; NaN if never settled.
-                double settle = Double.NaN;
-                if (!Double.isNaN(lastOutOfBandTime)) {
-                    settle = lastOutOfBandTime + 0.5;
-                    if (settle > HOLD_SECONDS) {
-                        settle = Double.NaN;
-                    }
-                } else if (!errors.isEmpty()) {
-                    settle = 0.0;
-                }
-                // Steady-state window: last STEADY_WINDOW_SECONDS of the hold.
-                List<Double> steadyErrors = new ArrayList<>();
-                for (int i = 0; i < errors.size(); i++) {
-                    if (times.get(i) >= HOLD_SECONDS - STEADY_WINDOW_SECONDS) {
-                        steadyErrors.add(errors.get(i));
-                    }
-                }
-                double meanError = Double.NaN;
-                double std = Double.NaN;
-                double maxExcursion = Double.NaN;
-                if (!steadyErrors.isEmpty()) {
-                    double sum = 0.0;
-                    for (double e : steadyErrors) {
-                        sum += e;
-                    }
-                    meanError = sum / steadyErrors.size();
-                    double variance = 0.0;
-                    for (double e : steadyErrors) {
-                        variance += (e - meanError) * (e - meanError);
-                    }
-                    std = Math.sqrt(variance / steadyErrors.size());
-                    maxExcursion = 0.0;
-                    for (double e : steadyErrors) {
-                        maxExcursion = Math.max(maxExcursion, Math.abs(e));
-                    }
-                }
-                // Ringing: zero-crossings of the error in the 2 s after settle.
-                int crossings = 0;
-                double settleStart = Double.isNaN(settle) ? 0.0 : settle;
-                Double previousError = null;
-                for (int i = 0; i < errors.size(); i++) {
-                    if (times.get(i) >= settleStart && times.get(i) <= settleStart + 2.0) {
-                        double e = errors.get(i);
-                        if (previousError != null && Math.signum(e) != Math.signum(previousError) && e != 0.0) {
-                            crossings++;
+                List<ValidationResult> results = new ArrayList<>();
+                for (int i = 0; i < channels.size(); i++) {
+                    List<Double> errors = errorsPerMotor.get(i);
+                    List<Double> times = timesPerMotor.get(i);
+                    double tolerance = tolerances.get(i);
+                    double spinUp = Double.isNaN(firstBandTimes.get(i)) ? Double.NaN : firstBandTimes.get(i);
+                    double overshoot = targetTicksPerSec > 0.0 ? Math.max(0.0, maxVelocities.get(i) / targetTicksPerSec - 1.0) : Double.NaN;
+                    // Settle: 0.5 s of continuous in-band after the last out-of-band sample; NaN if never settled.
+                    double settle = Double.NaN;
+                    if (!Double.isNaN(lastOutOfBandTimes.get(i))) {
+                        settle = lastOutOfBandTimes.get(i) + 0.5;
+                        if (settle > HOLD_SECONDS) {
+                            settle = Double.NaN;
                         }
-                        previousError = e;
+                    } else if (!errors.isEmpty()) {
+                        settle = 0.0;
                     }
+                    // Steady-state window: last STEADY_WINDOW_SECONDS of the hold.
+                    List<Double> steadyErrors = new ArrayList<>();
+                    for (int j = 0; j < errors.size(); j++) {
+                        if (times.get(j) >= HOLD_SECONDS - STEADY_WINDOW_SECONDS) {
+                            steadyErrors.add(errors.get(j));
+                        }
+                    }
+                    double meanError = Double.NaN;
+                    double std = Double.NaN;
+                    double maxExcursion = Double.NaN;
+                    if (!steadyErrors.isEmpty()) {
+                        double sum = 0.0;
+                        for (double e : steadyErrors) {
+                            sum += e;
+                        }
+                        meanError = sum / steadyErrors.size();
+                        double variance = 0.0;
+                        for (double e : steadyErrors) {
+                            variance += (e - meanError) * (e - meanError);
+                        }
+                        std = Math.sqrt(variance / steadyErrors.size());
+                        maxExcursion = 0.0;
+                        for (double e : steadyErrors) {
+                            maxExcursion = Math.max(maxExcursion, Math.abs(e));
+                        }
+                    }
+                    // Ringing: zero-crossings of the error in the 2 s after settle.
+                    int crossings = 0;
+                    double settleStart = Double.isNaN(settle) ? 0.0 : settle;
+                    Double previousError = null;
+                    for (int j = 0; j < errors.size(); j++) {
+                        if (times.get(j) >= settleStart && times.get(j) <= settleStart + 2.0) {
+                            double e = errors.get(j);
+                            if (previousError != null && Math.signum(e) != Math.signum(previousError) && e != 0.0) {
+                                crossings++;
+                            }
+                            previousError = e;
+                        }
+                    }
+                    List<String> gateDetail = new ArrayList<>();
+                    boolean passed = true;
+                    if (!(spinUp <= 1.5)) {
+                        passed = false;
+                        gateDetail.add("spin-up " + format(spinUp) + " s exceeds 1.5 s");
+                    }
+                    if (!(overshoot <= 0.05)) {
+                        passed = false;
+                        gateDetail.add("overshoot " + format(overshoot) + " exceeds 5%");
+                    }
+                    if (!(settle <= 2.0)) {
+                        passed = false;
+                        gateDetail.add("settle " + format(settle) + " s exceeds 2.0 s (or never settled)");
+                    }
+                    if (!Double.isFinite(meanError) || Math.abs(meanError) > tolerance) {
+                        passed = false;
+                        gateDetail.add("steady mean error " + format(meanError) + " outside tolerance " + format(tolerance));
+                    }
+                    if (!(std <= 0.015 * targetTicksPerSec)) {
+                        passed = false;
+                        gateDetail.add("steady std " + format(std) + " exceeds 1.5% of target");
+                    }
+                    if (!(maxExcursion <= 0.03 * targetTicksPerSec)) {
+                        passed = false;
+                        gateDetail.add("max excursion " + format(maxExcursion) + " exceeds 3% of target");
+                    }
+                    if (crossings > 4) {
+                        passed = false;
+                        gateDetail.add("ringing: " + crossings + " zero-crossings in 2 s after settle (limit 4)");
+                    }
+                    results.add(new ValidationResult(passed, spinUp, overshoot, settle, meanError, std,
+                            maxExcursion, crossings, gateDetail));
                 }
-                List<String> gateDetail = new ArrayList<>();
-                boolean passed = true;
-                if (!(spinUp <= 1.5)) {
-                    passed = false;
-                    gateDetail.add("spin-up " + format(spinUp) + " s exceeds 1.5 s");
-                }
-                if (!(overshoot <= 0.05)) {
-                    passed = false;
-                    gateDetail.add("overshoot " + format(overshoot) + " exceeds 5%");
-                }
-                if (!(settle <= 2.0)) {
-                    passed = false;
-                    gateDetail.add("settle " + format(settle) + " s exceeds 2.0 s (or never settled)");
-                }
-                if (!Double.isFinite(meanError) || Math.abs(meanError) > tolerance) {
-                    passed = false;
-                    gateDetail.add("steady mean error " + format(meanError) + " outside tolerance " + format(tolerance));
-                }
-                if (!(std <= 0.015 * targetTicksPerSec)) {
-                    passed = false;
-                    gateDetail.add("steady std " + format(std) + " exceeds 1.5% of target");
-                }
-                if (!(maxExcursion <= 0.03 * targetTicksPerSec)) {
-                    passed = false;
-                    gateDetail.add("max excursion " + format(maxExcursion) + " exceeds 3% of target");
-                }
-                if (crossings > 4) {
-                    passed = false;
-                    gateDetail.add("ringing: " + crossings + " zero-crossings in 2 s after settle (limit 4)");
-                }
-                return new ValidationResult(passed, spinUp, overshoot, settle, meanError, std,
-                        maxExcursion, crossings, gateDetail);
+                return results;
             } finally {
-                motor.setPower(0.0);
+                stopMotors();
             }
         }
     }

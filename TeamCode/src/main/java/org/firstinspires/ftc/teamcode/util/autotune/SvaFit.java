@@ -120,6 +120,17 @@ public final class SvaFit {
                 excluded++;
                 continue;
             }
+            // Steady-state (a=0) samples whose power does not have the same
+            // sign as the velocity are not plant data: at a=0 the model
+            // requires power*V = kS + kV*v, which has the sign of v. Such
+            // samples come from braking to a stop (rest segments), and
+            // they drag the fitted kS negative -- in simulation 30 of
+            // them move kS from +0.15 to -0.28. Exclude them.
+            if (Math.abs(s.accelerationTicksPerSecSq) <= 1e-9
+                    && s.power * s.velocityTicksPerSec <= 0.0) {
+                excluded++;
+                continue;
+            }
             if (voltageCompensationOn && (!Double.isFinite(s.batteryVoltage) || s.batteryVoltage <= 0.0)) {
                 excluded++;
                 continue;
