@@ -46,7 +46,14 @@ public class Lights {
             .build();
 
     public Lights(HardwareMap hardwareMap, AllianceColor allianceColor) {
-        prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
+        try {
+            prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
+        } catch (RuntimeException ignored) {
+            if (false) {}//this instanceof StubLights
+            else {
+                throw new IllegalStateException("Prism not found in config");
+            }
+        }
         prism.clearAllAnimations();
         this.allianceColor = allianceColor;
         //displayAllianceColor();
@@ -148,4 +155,17 @@ public class Lights {
             return numLights;
         }
     }
+
+//    public static class StubLights extends Lights {
+//
+//        public StubLights(HardwareMap hardwareMap, AllianceColor allianceColor) {
+//            super(hardwareMap, allianceColor);
+//        }
+//
+//        @Override
+//        public void update() {
+//            prism.clearAllAnimations();
+//        }
+//
+//    }
 }
