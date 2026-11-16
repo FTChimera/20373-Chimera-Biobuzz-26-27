@@ -81,7 +81,17 @@ public class ShooterCommands {
                     timer.set(new Timer());
                 })
                 .setExecute(() -> {
-                    if ((!robot.shooter.upToSpeed() || startShoot.get()) && !timer.get().past(1000)) {
+                    // Fire exactly once: when up to speed, or 1 s after the
+                    // command started even if upToSpeed() never passes (so
+                    // a bad constant can never stall the auto here). The
+                    // already-fired case must return first: without it the
+                    // command re-fires every second, resets its own timer,
+                    // and timer.past(5000) is never true, so the shoot step
+                    // never completes.
+                    if (startShoot.get()) {
+                        return;
+                    }
+                    if (!robot.shooter.upToSpeed() && !timer.get().past(1000)) {
                         return;
                     }
                     robot.intake.setFullPower();
