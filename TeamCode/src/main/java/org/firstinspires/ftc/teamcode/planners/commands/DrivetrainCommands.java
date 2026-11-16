@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.planners.commands;
 
 import com.pedropathing.ivy.Command;
+import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
@@ -22,6 +23,24 @@ public class DrivetrainCommands {
                 .requiring(follower)
                 .setStart(() -> follower.follow(Objects.requireNonNull(pathSupplier.get(), "Path supplier returned null")))
                 .setDone(follower::atParametricEnd);
+    }
+
+    /**
+     * Turns the robot in place to face {@code targetHeadingRadians},
+     * holding its current position. Done when the follower's hold
+     * completes (heading within tolerance and stopped). Put this before
+     * a constant-heading follow so the robot is already facing the drive
+     * direction instead of turning while it drives, and after one to
+     * face the next action (e.g. the shoot pose) before it starts.
+     */
+    public static Command turnToHeading(Follower follower, double targetHeadingRadians) {
+        return Command.build()
+                .requiring(follower)
+                .setStart(() -> {
+                    Pose current = follower.localizer.pose();
+                    follower.hold(new Pose(current.x(), current.y(), targetHeadingRadians));
+                })
+                .setDone(() -> !follower.isBusy());
     }
 
     /**

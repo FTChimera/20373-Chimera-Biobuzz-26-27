@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.pedropathing.api.Paths;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.Path;
+import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -41,9 +42,16 @@ public class FromShootLoadingPose {
         public Command run() {
             return sequential(
                     instant(robot.intake::setFullPower),
+                    // Turn in place from -90 (south) to 90 (north) first,
+                    // then drive with a constant north heading -- no
+                    // tangent sweep, no heading snap.
+                    DrivetrainCommands.turnToHeading(robot.follower, IntakePoses.northFlower.heading()),
                     parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
+                    // Drive back still facing north, then turn in place
+                    // to -90 (south) for the shoot.
                     parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeading(robot.follower, ShootPoses.loading.heading()),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -52,12 +60,16 @@ public class FromShootLoadingPose {
         @Override
         public void buildPaths() {
             // Short hop north; rect clearance to the west hive base: 15.3 in.
+            // Both legs hold a CONSTANT north heading (90 deg): the turns
+            // to 90 and back to -90 are separate turn-in-place steps in
+            // run(), so the heading never sweeps with the path tangent and
+            // never snaps at t=0.8 the way fastInterpolationDegraded did.
             toFlower = Paths
                     .curve(startPose, PathPoses.northFlowerFromLoading, IntakePoses.northFlower)
-                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.northFlower.heading(), Values.gardenIntakeConstantTValue, false));
+                    .heading(Interpolator.constant(IntakePoses.northFlower.heading()));
             back = Paths
                     .curve(IntakePoses.northFlower, PathPoses.northFlowerFromLoading, ShootPoses.loading)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
+                    .heading(Interpolator.constant(IntakePoses.northFlower.heading()));
         }
 
         @NonNull
@@ -241,9 +253,11 @@ public class FromShootLoadingPose {
             super.buildPaths();
             // Long diagonal past the north-east corner of the west hive base;
             // rect clearance: 3.8 in out, 12.1 in back.
+            // Constant west heading -- the inherited run() already turns to
+            // 180 (west) before this leg, so no tangent sweep here either.
             toFlower = Paths
                     .curve(startPose, PathPoses.westFlowerFromLoading, IntakePoses.westFlower)
-                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.westFlower.heading(), Values.gardenIntakeConstantTValue, false));
+                    .heading(Interpolator.constant(IntakePoses.westFlower.heading()));
         }
 
         @NonNull
