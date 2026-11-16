@@ -14,9 +14,7 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 public class Intake {
     CachedMotor mainMotor;
 
-    // Deployable ramp (deployer) servo positions. TODO: TUNE - positions not
-    // yet set on the robot.
-    public static final double DEPLOYER_DEPLOYED_POSITION = 0.25;
+    public static final double DEPLOYER_DEPLOYED_POSITION = 0.267;
     public static final double DEPLOYER_STOWED_POSITION = 0.62;
 
     Servo deployer;

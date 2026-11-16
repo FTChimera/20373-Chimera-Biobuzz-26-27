@@ -12,8 +12,8 @@ public class TableShotCalc implements ShotCalculator {
     public static final List<TableEntry> shooterMap = new ArrayList<>();
     static {
         shooterMap.add(new TableEntry(30, 800));
-        shooterMap.add(new TableEntry(40, 1000));
-        shooterMap.add(new TableEntry(50, 1400));
+        shooterMap.add(new TableEntry(40, 890));
+        shooterMap.add(new TableEntry(50, 920));
         //todo tune
     }
     // TODO: tune — counterRoller table is a placeholder copied from the main

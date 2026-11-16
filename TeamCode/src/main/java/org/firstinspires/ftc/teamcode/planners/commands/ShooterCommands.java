@@ -5,6 +5,9 @@ import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.behaviors.BlockedBehavior;
+import com.pedropathing.ivy.behaviors.ConflictBehavior;
+import com.pedropathing.ivy.behaviors.InterruptedBehavior;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.util.Timer;
@@ -75,9 +78,10 @@ public class ShooterCommands {
                     if (!robot.shooter.hasNonzeroVelocityTarget()) {
                         throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
                     }
+                    timer.set(new Timer());
                 })
                 .setExecute(() -> {
-                    if (!robot.shooter.upToSpeed() || startShoot.get()) {
+                    if ((!robot.shooter.upToSpeed() || startShoot.get()) && !timer.get().past(1000)) {
                         return;
                     }
                     robot.intake.setFullPower();
@@ -106,7 +110,8 @@ public class ShooterCommands {
                     if (timer.get().past(HIVE_LINEUP_TIMEOUT_SECONDS)) {
                         done.set(true);
                     }
-                });
+                })
+                .setDone(done::get);
     }
 
 

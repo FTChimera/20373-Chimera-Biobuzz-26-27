@@ -25,12 +25,12 @@ public class Shooter {
     private static final double UP_TO_SPEED_TOLERANCE_TICKS_PER_SECOND = 20;
 
     public final DoubleFlywheelFullVelocityConstants shooterVelocityConstants = new DoubleFlywheelFullVelocityConstants(
-            0.0140986,  // kP
+            0.0133854,  // kP
             0.00000,  // kI
-            0.00494255,  // kD
-            0.152969,  // kS
-            0.00470355,  // kV
-            0.00568705,  // kA
+            0.00521765,  // kD
+            0.00000,  // kS
+            0.00485416,  // kV
+            0.00589212,  // kA
             30.0000,  // tolerance (ticks/sec)
             1000.00,  // integralLimit (ticks)
             true,  // voltageCompensation

@@ -153,7 +153,7 @@ object IntakePoses {
 }
 
 object ShootPoses {
-    @JvmField val garden = red(pose(60.0, 25.0, 90.0))
+    @JvmField val garden = red(pose(60.0, 10.0, 90.0))
     @JvmField val loading = red(pose(60.0, 119.0, 270.0))
 
     fun init(color: AllianceColor) {
