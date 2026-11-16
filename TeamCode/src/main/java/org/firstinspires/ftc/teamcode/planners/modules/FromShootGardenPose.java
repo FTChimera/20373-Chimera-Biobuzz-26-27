@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import com.pedropathing.api.Paths;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.Path;
+import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -41,9 +42,15 @@ public class FromShootGardenPose {
         public Command run() {
             return sequential(
                     instant(robot.intake::setFullPower),
+                    // Turn in place to 180 (west) first, then drive with a
+                    // constant west heading -- no tangent sweep, no snap.
+                    DrivetrainCommands.turnToHeading(robot.follower, IntakePoses.westFlower.heading()),
                     parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
+                    // Drive back still facing west, then turn in place
+                    // to 90 (north) for the garden shoot.
                     parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeading(robot.follower, ShootPoses.garden.heading()),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -54,10 +61,10 @@ public class FromShootGardenPose {
             // Rect clearance to the west hive base: 9.4 in out, 12.1 in back.
             toFlower = Paths
                     .curve(startPose, PathPoses.westFlowerFromGarden, IntakePoses.westFlower)
-                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.westFlower.heading(), Values.gardenIntakeConstantTValue, false));
+                    .heading(Interpolator.constant(IntakePoses.westFlower.heading()));
             back = Paths
                     .curve(IntakePoses.westFlower, PathPoses.westFlowerReturn, ShootPoses.garden)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
+                    .heading(Interpolator.constant(IntakePoses.westFlower.heading()));
         }
 
         @NonNull
@@ -85,9 +92,11 @@ public class FromShootGardenPose {
             super.buildPaths();
             // Through the corridor between the hive bases; rect clearance to
             // the west hive base: 4.2 in out. Return leg clears by 15.3 in.
+            // Constant north heading -- the parent's run() already turns to
+            // 90 (north) before this leg, so no tangent sweep here either.
             toFlower = Paths
                     .curve(startPose, PathPoses.northFlowerFromGarden, IntakePoses.northFlower)
-                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.northFlower.heading(), Values.gardenIntakeConstantTValue, false));
+                    .heading(Interpolator.constant(IntakePoses.northFlower.heading()));
         }
 
         @NonNull
