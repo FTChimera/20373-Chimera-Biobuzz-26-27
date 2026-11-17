@@ -23,7 +23,7 @@ public class FollowerTurningTest extends LinearOpMode {
     @Override
     public void runOpMode() {
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createEKFFollower(hardwareMap);
         CommonKt.init(AllianceColor.RED);
         follower.localizer.setPose(PoseFactory.deg(0));
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());

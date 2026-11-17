@@ -72,7 +72,7 @@ public class Robot {
         CommonKt.init(color);
         Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
         Constants.FOLLOWER_BRAKE_AT_END.set(true);
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createEKFFollower(hardwareMap);
         follower.holdEnd.set(false);
         follower.localizer.setPose(startingPose);
 

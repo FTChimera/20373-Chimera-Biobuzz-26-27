@@ -53,7 +53,7 @@ public class ParkAuto extends LinearOpMode {
                         ? AllianceColor.RED
                         : AllianceColor.BLUE;
 
-        Follower follower = Constants.createFollower(hardwareMap).withLogger(followerLog -> telemetry.addLine(followerLog.toString()));
+        Follower follower = Constants.createEKFFollower(hardwareMap).withLogger(followerLog -> telemetry.addLine(followerLog.toString()));
         Pose2d parkPose = ParkAutoStartPoses.destination(alliance);
         follower.localizer.setPose(selectedPose.pose);
         if (isStopRequested()) return;

@@ -23,7 +23,7 @@ public class FollowerTest extends OpMode {
     @Override
     public void init() {
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
-        follower = Constants.createFollower(hardwareMap);
+        follower = Constants.createEKFFollower(hardwareMap);
         follower.holdEnd.set(false);
         follower.localizer.setPose(PoseFactory.zero());
     }
