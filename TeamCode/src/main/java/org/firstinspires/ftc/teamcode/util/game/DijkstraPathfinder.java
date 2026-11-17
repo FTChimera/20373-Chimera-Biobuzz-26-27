@@ -61,24 +61,26 @@ public class DijkstraPathfinder {
         uniquePoints.add(startCoord);
         uniquePoints.add(endCoord);
 
+        // 3x3 lattice of fixed waypoints, pulled 6 in closer to the field edge
+        // (18 / 72 / 126 instead of 24 / 72 / 120) so park routes keep a wider
+        // berth around the hive instead of cutting through the central band.
         for (int j = 1; j <= 3; j++) {
-            double coordinateX = 48.0 * j - 24.0;
+            double coordinateX = 54.0 * j - 36.0;
             for (int k = 1; k <= 3; k++) {
-            double coordinateY = 48.0 * k - 24.0;
+            double coordinateY = 54.0 * k - 36.0;
             Coordinate fixedPoint = new Coordinate(coordinateX, coordinateY);
             if (!uniquePoints.contains(fixedPoint)) {
                 uniquePoints.add(fixedPoint);
             }}
         }
 
-        // Add coordinates from the boundaries of all inflated obstacles
-        if (forbiddenSpace != null) {
-            for (Coordinate c : forbiddenSpace.getCoordinates()) {
-                if (!uniquePoints.contains(c)) {
-                    uniquePoints.add(c);
-                }
-            }
-        }
+        // NOTE: obstacle corners are deliberately NOT added as graph nodes.
+        // The forbidden-space boundary coordinates used to be in the graph,
+        // and Dijkstra routed through the hive corners (the shortest path),
+        // which put the robot's body within the 5-inch safety buffer and
+        // clipped the hive. With only start, end, and the 9 lattice points,
+        // routes are forced out to the lattice and stay clear of the hive.
+        // The forbidden space is still used for line-of-sight checks.
 
         // Map raw JTS coordinates to Node structures
         Map<Coordinate, Node> nodeMap = new HashMap<>();
