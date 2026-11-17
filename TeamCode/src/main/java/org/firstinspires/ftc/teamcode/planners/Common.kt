@@ -63,7 +63,10 @@ fun fastInterpolation(pos1: Pose2d, pos2: Pose2d, startTValue: Double, endTValue
 // facing the reversed final tangent, so there is no spin at the end
 // either.
 //
-// The reversal decision is latched on the first evaluation and must not be
+// The reversal decision is made from the curve's INITIAL tangent
+// (t = 0), not from whichever t the interpolator is first evaluated
+// at — PathTracker evaluates it at t = 1.0 during construction, which
+// used to latch the decision onto the final tangent. It must not be
 // shared across paths: construct one interpolator per path.
 fun reversingTangent(
     startHeading: Double,
@@ -81,7 +84,13 @@ fun reversingTangent(
                 return if (d.magnitude() < 1e-9) startHeading else d.theta()
             }
             if (reversed == null) {
-                reversed = abs(MathUtils.units.headingError(startHeading, tangentAt(t), MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.CENTERED_AT_ZERO)) > Math.PI / 2
+                // Decide from the INITIAL tangent (t = 0) explicitly. The
+                // interpolator is evaluated at t = 1.0 during PathTracker
+                // construction, so latching on tangentAt(t) would lock the
+                // decision onto the FINAL tangent and flip the reversal
+                // from central poses, where the initial and final tangents
+                // disagree.
+                reversed = abs(MathUtils.units.headingError(startHeading, tangentAt(0.0), MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.CENTERED_AT_ZERO)) > Math.PI / 2
             }
             fun facing(heading: Double): Double =
                 if (reversed == true) MathUtils.units.normalizeHeading(heading + Math.PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE) else MathUtils.units.normalizeHeading(heading, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE)
