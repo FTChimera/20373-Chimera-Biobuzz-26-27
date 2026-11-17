@@ -47,3 +47,5 @@ TeamCode/.DS_Store
 .ftcsim/
 local.properties
 # </ftcsim:ignore>
+
+.run
