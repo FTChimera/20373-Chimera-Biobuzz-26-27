@@ -5,6 +5,7 @@ import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.Tuner;
+import com.pedropathing.tuning.autotune.TunerRegistrar;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -20,6 +21,8 @@ import org.firstinspires.ftc.teamcode.pedro.procedures.RobotDevelopmentTester;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ShooterPIDSVATuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.Tests;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
+
+import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoop;
 
 public class Tuning {
     // Tuners go here

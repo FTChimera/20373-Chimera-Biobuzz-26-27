@@ -58,13 +58,13 @@ public class Constants {
                 c.offsetUnits.set(DistanceUnit.INCH);
                 c.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
 
-                c.initialPositionStandardDeviation.set(0.5);
-                c.initialHeadingStandardDeviation.set(Math.toRadians(5.0));
-                c.initialVelocityStandardDeviation.set(1.0);
-                c.initialAngularVelocityStandardDeviation.set(0.1);
+                c.initialPositionStandardDeviation.set(0.50000000);
+                c.initialHeadingStandardDeviation.set(0.08726646);
+                c.initialVelocityStandardDeviation.set(1.00000000);
+                c.initialAngularVelocityStandardDeviation.set(0.10000000);
 
-                c.linearAccelerationStandardDeviation.set(114.45805962);
-                c.angularAccelerationStandardDeviation.set(9.08384779);//this is the problem todo
+                c.linearAccelerationStandardDeviation.set(7.88529869);
+                c.angularAccelerationStandardDeviation.set(1.37624425);
                 c.positionMeasurementStandardDeviation.set(0.10000000);
                 c.headingMeasurementStandardDeviation.set(0.01745329);
 

@@ -111,7 +111,7 @@ object Timings {
     const val gardenIntakeTimeMs = 700
     const val flowerIntakeTime = 2
     const val shootingTimeMs = 700
-    const val upToSpeedShooterTimeoutTimeMs = 1000
+    const val upToSpeedShooterTimeoutTimeMs = 1500
     const val hiveLineupTimeoutTime = 10
 }
 
@@ -132,7 +132,7 @@ object Values {
 
 object StartPoses {
     @JvmField val gardenArea = red(pose(9.0, 25.0, 0.0))
-    @JvmField val loadingArea = red(pose(60.0, 135.0, -90.0))
+    @JvmField val loadingArea = red(pose(60.0, 119.0, -90.0))
     @JvmField val visionAnchorGarden = red(pose(66.0, 27.0, 190.0))
     @JvmField val visionAnchorLoading = red(pose(60.0, 105.0, 142.0))
 
@@ -154,7 +154,7 @@ object IntakePoses {
     // ring center (2.54, 48), north ring center (48, 141.46). Blue sides
     // are auto-mirrored (east / south flowers).
     @JvmField val westFlower = red(pose(12.044, 48.0, 180.0))
-    @JvmField val northFlower = red(pose(48.0, 131.956, 90.0))
+    @JvmField val northFlower = red(pose(48.0, 120.0, 90.0))
 
     fun init(color: AllianceColor) {
         gardenEnd.setAllianceColor(color)
@@ -166,7 +166,7 @@ object IntakePoses {
 
 object ShootPoses {
     @JvmField val garden = red(pose(60.0, 10.0, 90.0))
-    @JvmField val loading = red(pose(60.0, 109.0, 270.0))
+    @JvmField val loading = red(pose(60.0, 99.0, 270.0))
 
     fun init(color: AllianceColor) {
         garden.setAllianceColor(color)
@@ -191,7 +191,7 @@ object PathPoses {
     // Loading-zone preload intake (no-show partner): centre 9.5 in from
     // the west wall (1 in + half the robot length), facing the wall.
     @JvmField val loadingIntakeApproach = red(pose(30.0, 115.0))
-    @JvmField val loadingIntake = red(pose(9.5, 108.0, 180.0))
+    @JvmField val loadingIntake = red(pose(14.0, 108.0, 180.0))
     // Partner-present preload sweep: straight north up the loading zone,
     // centre stopping 8 in short of the north tape while the intake
     // front edge reaches just past it.

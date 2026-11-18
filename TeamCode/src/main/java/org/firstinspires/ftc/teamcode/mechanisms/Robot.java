@@ -267,7 +267,7 @@ public class Robot {
                     follower.localizer.state(),
                     false, // Use hold scaling
                     getDt() // in seconds
-            ).turn());
+            ).turn()*0.35); // a dampening factor
         } else {
             drivePowers.setTurn(autoAimerCalculator.calculateTurningPower(getHeading()));
         }
