@@ -102,7 +102,7 @@ public class Transfer {
                 }
                 break;
             case SHOOT_ALL:
-                transferMotor.setPower(1);
+                transferMotor.setPower(0.7); //decreased for accuracy
                 break;
             case PANIC_SHOOT:
                 transferMotor.setPower(1);
