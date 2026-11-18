@@ -64,7 +64,7 @@ public class Constants {
                 c.initialAngularVelocityStandardDeviation.set(0.1);
 
                 c.linearAccelerationStandardDeviation.set(114.45805962);
-                c.angularAccelerationStandardDeviation.set(9.08384779);
+                c.angularAccelerationStandardDeviation.set(9.08384779);//this is the problem todo
                 c.positionMeasurementStandardDeviation.set(0.10000000);
                 c.headingMeasurementStandardDeviation.set(0.01745329);
 

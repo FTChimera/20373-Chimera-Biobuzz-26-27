@@ -79,7 +79,7 @@ public class Robot {
         shooter = new Shooter(hardwareMap, color);
         lights = new Lights(hardwareMap, color);
         vision = new Vision(hardwareMap, color);
-        field = new Field(color, 14, 16.461);
+        field = new Field(color, 17, 17);
         this.robotMode = robotMode;
         voltageSensors = hardwareMap.voltageSensor;
 
@@ -254,7 +254,7 @@ public class Robot {
         if (fieldCentric) {
             this.drivePowers.fieldCentric(getHeading(), allianceColor);
         }
-        this.drivePowers.scale(!isBatteryLowPower ? 0.8 : 0.4);
+        this.drivePowers.scale(!isBatteryLowPower ? 1 : 0.5);
         this.holdIfNoInput = holdIfNoInput;
         this.setTeleOpDrive = true;
     }

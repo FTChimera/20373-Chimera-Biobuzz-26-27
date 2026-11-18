@@ -13,9 +13,9 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.util.RobotMode;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 
-@TeleOp(name = NAME, group = Constants.COMPETITION_GROUP)
+@TeleOp(name = "Main TeleOp", group = Constants.COMPETITION_GROUP)
 public class MainTeleOp extends LinearOpMode {
-    public static final String NAME = "Main TeleOp";
+    public static final String NAME = "Main TeleOp (One Controller)";
 
     private Controls controls;
     private Robot robot;
@@ -176,7 +176,7 @@ public class MainTeleOp extends LinearOpMode {
         }
 
     }
-    @TeleOp(name = NAME + " (One Controller)", group = Constants.COMPETITION_GROUP)
+    @TeleOp(name = "Main TeleOp (One Controller)", group = Constants.COMPETITION_GROUP)
     public static class MainTeleOneController extends MainTeleOp {
         public MainTeleOneController() { this.oneController = true; }
     }
