@@ -27,12 +27,6 @@ class Controls(
 
     fun intakeEject(): GpFancyButton = intakeEjectButton
 
-    private val reZeroVisionButton = GpFancyButton(FancyButton.PressType.LongPress) {
-        secondary().start
-    }
-
-    fun reZeroVision(): GpFancyButton = reZeroVisionButton
-
     private val moveToParkZoneButton = GpFancyButton(FancyButton.PressType.Normal) {
         primary().dpad_up
     }
@@ -44,12 +38,6 @@ class Controls(
     }
 
     fun stopPark(): GpFancyButton = stopParkButton
-
-    private val flipHiveButton = GpFancyButton(FancyButton.PressType.RisingEdge) {
-        secondary().dpad_right
-    }
-
-    fun flipHive(): GpFancyButton = flipHiveButton
 
     // Deployable intake ramp. Starts stowed, matching Intake's init state.
     // dpad_left is free on both gamepads, so this does not collide with park
@@ -103,10 +91,8 @@ class Controls(
     fun update() {
         intakeControl().update()
         intakeEject().update()
-        reZeroVision().update()
         moveToParkZone().update()
         stopPark().update()
-        flipHive().update()
         deployer().update()
         runTransferFast().update()
         runTransferSlow().update()

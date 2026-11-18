@@ -48,11 +48,6 @@ public class MainTeleOp extends LinearOpMode {
         robot.setSmartShooterControl(false);
 
         controls = new Controls(gamepad1, gamepad2, oneController);
-        controls.reZeroVision().declareActionOnPress((fancyButton) -> {
-            if (fancyButton.risingEdge() && !MainTeleOp.this.robot.reZeroVision()) {
-                MainTeleOp.this.robot.telemetry.addLine("Vision re-zero skipped: " + MainTeleOp.this.robot.vision.getLocalizationReliabilityReason());
-            }
-        });
 
 
         waitForStart();
@@ -61,10 +56,6 @@ public class MainTeleOp extends LinearOpMode {
 
         while (opModeIsActive()) {
             controls.update();
-
-            if (controls.flipHive().isPressed()) {
-                robot.toggleHiveState();
-            }
 
             if (controls.intakeEject().risingEdge()) {
                 robot.intakeEject();

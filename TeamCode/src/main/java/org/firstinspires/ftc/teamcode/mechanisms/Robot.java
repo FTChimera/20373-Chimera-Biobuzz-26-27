@@ -16,7 +16,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
-import org.firstinspires.ftc.teamcode.util.localization.VisionLocalizationMath;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
@@ -32,9 +31,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Robot {
-    public static boolean AUTO_RELOCALIZE_WITH_VISION = false;
-    public static double MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN = 24.0;
-    public static double MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG = 40.0;
     public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 3.0;
 
     public RobotMode robotMode;
@@ -121,10 +117,7 @@ public class Robot {
         }
 
         vision.update(getHeading());
-        vision.applyInferredHiveState(field);
-        if (AUTO_RELOCALIZE_WITH_VISION && vision.hasReliableLocalization()) {
-            applyVisionLocalizationIfWithinBounds();
-        }
+        updateHiveStateFromClosestHivePose();
 
         autoAimerCalculator.setHiveState(field.getHiveState());
         autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt);
@@ -145,6 +138,9 @@ public class Robot {
         telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ opModeTimer.get()+ "\n Time Remaining (sec): " + opModeTimeRemaining() + "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
         telemetry.addData("=== FOLLOWER DEBUG ===", follower.debug().toString());
         telemetry.addData("Pose", getPose().toString());
+        telemetry.addData("Hive state (closest hive pose)", field.getHiveState()
+                + " (untipped " + String.format("%.1f", getPose().distance(new Pose2d(Field.HiveState.UNTIPPED.goalPose(allianceColor))))
+                + " in, tipped " + String.format("%.1f", getPose().distance(new Pose2d(Field.HiveState.TIPPED.goalPose(allianceColor)))) + " in)");
         telemetry.addData("=== INTAKE DEBUG ===", "\n"+intake.getDebugString());
         telemetry.addData("=== TRANSFER DEBUG ===", "\n"+transfer.getDebugString());
         telemetry.addData("=== SHOOTER DEBUG ===", "\n"+shooter.getDebugString());
@@ -340,12 +336,21 @@ public class Robot {
                 && timeRemaining <= AUTOMATIC_PARK_START_TIME_REMAINING_SEC;
     }
 
-    public void toggleHiveState() {
-        Field.HiveState nextHiveState = field.getHiveState() == Field.HiveState.TIPPED
+    /** Hive state from whichever hive pose the robot is closest to: the
+     * untipped hive goal means the hive is UNTIPPED, the tipped hive goal
+     * means TIPPED. The hive goals are the target points on the hive itself
+     * (Field.HiveState.goalPose, alliance-correct), so this follows the face
+     * the robot is actually nearest. This is the sole source of the hive
+     * state — vision never writes it, and there is no manual flip to be
+     * undone. Ties go to the untipped goal (UNTIPPED), matching the field's
+     * initial state. */
+    private void updateHiveStateFromClosestHivePose() {
+        Pose2d pose = getPose();
+        double untippedDistance = pose.distance(new Pose2d(Field.HiveState.UNTIPPED.goalPose(allianceColor)));
+        double tippedDistance = pose.distance(new Pose2d(Field.HiveState.TIPPED.goalPose(allianceColor)));
+        field.setHiveState(untippedDistance <= tippedDistance
                 ? Field.HiveState.UNTIPPED
-                : Field.HiveState.TIPPED;
-        field.setHiveState(nextHiveState);
-        telemetry.addData("Hive state", nextHiveState);
+                : Field.HiveState.TIPPED);
     }
 
     /* INTAKE */
@@ -420,47 +425,11 @@ public class Robot {
         }
     }
 
-    /* VISION */
-    public boolean reZeroVision() {
-        if (!vision.hasReliableLocalization()) {
-            telemetry.addData("Vision re-zero rejected", vision.getLocalizationReliabilityReason());
-            return false;
-        }
-        Pose2d visionPose = vision.getFieldPoseEstimate();
-        follower.localizer.setPose(visionPose);
-        autoAimerCalculator.initializeCorrectedPose(visionPose);
-        telemetry.addData("Vision re-zero applied", visionPose);
-        return true;
-    }
-
-    private void applyVisionLocalizationIfWithinBounds() {
-        Pose2d currentPose = getPose();
-        Pose2d visionPose = vision.getFieldPoseEstimate();
-
-        double positionDelta = currentPose.distance(visionPose);
-        double headingDeltaDeg = Math.abs(AngleUnit.DEGREES.fromRadians(
-                VisionLocalizationMath.normalizeRadians(currentPose.heading() - visionPose.heading())
-        ));
-
-        if (positionDelta > MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN) {
-            telemetry.addData(
-                    "Vision auto relocalize skipped",
-                    "Position delta %.2f in exceeds %.2f in",
-                    positionDelta,
-                    MAX_AUTO_RELOCALIZE_POSITION_DELTA_IN
-            );
-            return;
-        }
-        if (headingDeltaDeg > MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG) {
-            telemetry.addData(
-                    "Vision auto relocalize skipped",
-                    "Heading delta %.2f deg exceeds %.2f deg",
-                    headingDeltaDeg,
-                    MAX_AUTO_RELOCALIZE_HEADING_DELTA_DEG
-            );
-            return;
-        }
-        follower.localizer.setPose(visionPose);
-        autoAimerCalculator.initializeCorrectedPose(visionPose);
-    }
+    /* VISION
+     * Vision runs every loop (Limelight pipeline, tag detection, hive lineup)
+     * but it never moves the robot's pose: there is no vision relocalization,
+     * automatic or manual. The pose comes only from the Pinpoint localizer
+     * (plus the driver's manual corner re-zeros, which set fixed poses, not
+     * vision estimates). The hive state likewise comes from the robot's pose
+     * (updateHiveStateFromClosestHivePose), not from vision. */
 }
