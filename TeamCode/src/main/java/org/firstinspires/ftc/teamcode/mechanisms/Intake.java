@@ -120,6 +120,14 @@ public class Intake {
         modeSwitch = true;
     }
 
+    /** End an eject by going to the given mode (e.g. the mode the intake
+     * toggle button currently selects), instead of restoring the mode
+     * saved when the eject started. */
+    public void stopEjecting(Mode mode) {
+        this.mode = mode;
+        modeSwitch = true;
+    }
+
     public void update() {//Twist twist) {
         if (mode != Mode.EJECTING) prev = Mode.values()[mode.ordinal()];
         if (prev == Mode.EJECTING) prev = Mode.IDLE;

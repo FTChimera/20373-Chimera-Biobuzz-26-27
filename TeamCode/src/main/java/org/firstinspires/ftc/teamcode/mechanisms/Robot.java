@@ -356,8 +356,12 @@ public class Robot {
         intake.forceEject();
         transfer.reverse();
     }
-    public void restoreIntake() {
-        intake.stopEjecting();
+    /** End an eject: the intake goes to the given mode (taken from the
+     * intake toggle button in teleop) instead of the mode saved when the
+     * eject started, so toggling the intake off mid-eject actually stops
+     * it instead of restoring full power. */
+    public void restoreIntake(Intake.Mode mode) {
+        intake.stopEjecting(mode);
         transfer.stop();
     }
 

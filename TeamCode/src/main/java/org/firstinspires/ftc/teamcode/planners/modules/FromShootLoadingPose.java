@@ -252,7 +252,10 @@ public class FromShootLoadingPose {
         public void buildPaths() {
             super.buildPaths();
             // Long diagonal past the north-east corner of the west hive base;
-            // rect clearance: 3.8 in out, 12.1 in back.
+            // rect clearance: 3.6 in out (verified in sim with the physical
+            // 17.008 in robot; the old (30, 108) control point overlapped
+            // the hive by ~1.8 in). The back leg is inherited and uses
+            // westFlowerReturn, not this control point.
             // Constant west heading -- the inherited run() already turns to
             // 180 (west) before this leg, so no tangent sweep here either.
             toFlower = Paths

@@ -181,7 +181,7 @@ object PathPoses {
     // Headings here go through pose() (degrees), never raw radians.
     // Flower approach / return controls:
     @JvmField val westFlowerFromGarden = red(pose(36.0, 36.0))
-    @JvmField val westFlowerFromLoading = red(pose(30.0, 108.0))
+    @JvmField val westFlowerFromLoading = red(pose(22.0, 118.0))
     @JvmField val westFlowerReturn = red(pose(36.0, 30.0))
     @JvmField val northFlowerFromGarden = red(pose(78.0, 72.0))
     @JvmField val northFlowerFromLoading = red(pose(54.0, 127.0))
@@ -328,3 +328,4 @@ private fun mirrorPose(red: Pose2d) = mirrorFactory.create(red)
 private fun red(red: Pose2d): AlliancePose2d {
     return AlliancePose2d(red, mirrorPose(red), AllianceColor.RED)
 }
+

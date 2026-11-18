@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
+import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
@@ -84,7 +85,12 @@ public class MainTeleOp extends LinearOpMode {
             if (controls.deployer().fallingEdge()) {
                 robot.intake.setDeployed(false);
             }
-            if (controls.intakeEject().fallingEdge()) robot.restoreIntake();
+            // Restore the intake to the mode the toggle button selects:
+            // full power if the toggle is on, stopped if it is off.
+            if (controls.intakeEject().fallingEdge()) robot.restoreIntake(
+                    controls.intakeControl().isPressed()
+                            ? Intake.Mode.FULL_POWER
+                            : Intake.Mode.IDLE);
 
             if (controls.panicShoot().isPressed()) {
                 if (controls.panicShoot().risingEdge()) robot.panic();
@@ -111,17 +117,24 @@ public class MainTeleOp extends LinearOpMode {
                         || controls.autoAlignAndStartShoot().fallingEdge())
                         && !controls.runTransferFast().isPressed()
                         && !controls.runTransferSlow().isPressed()
-                        && !controls.autoAlignAndStartShoot().isPressed()) {
+                        && !controls.autoAlignAndStartShoot().isPressed()
+                        && robot.transfer.mode() != Transfer.Mode.REVERSE_EJECT) {
                     robot.transfer.stop();
                 }
 
                 if (controls.panicShoot().fallingEdge()) robot.endPanicShoot();
             }
 
+            // Y (auto-align) also spins the shooter up while held, so Y
+            // alone can shoot; A is the latching toggle for the same.
             robot.setSmartShooterControl(
                     controls.keepShooterOn().isPressed()
+                            || controls.autoAlignAndStartShoot().isPressed()
             );
-            if (controls.keepShooterOn().fallingEdge()) robot.shooter.setVelocity(0, 0);
+            if (controls.keepShooterOn().fallingEdge()
+                    && !controls.autoAlignAndStartShoot().isPressed()) robot.shooter.setVelocity(0, 0);
+            if (controls.autoAlignAndStartShoot().fallingEdge()
+                    && !controls.keepShooterOn().isPressed()) robot.shooter.setVelocity(0, 0);
 
             robot.setTeleOpDrive(
                     new DriveVector(
