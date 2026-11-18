@@ -14,14 +14,12 @@ public class TableShotCalc implements ShotCalculator {
         shooterMap.add(new TableEntry(36.9, 800));
         shooterMap.add(new TableEntry(49.5, 820));
         shooterMap.add(new TableEntry(69.5, 880));
-        //todo tune
     }
     public static final List<TableEntry> counterRollerMap = new ArrayList<>();
     static {
         counterRollerMap.add(new TableEntry(30, 600));
         counterRollerMap.add(new TableEntry(40, 940));
         counterRollerMap.add(new TableEntry(69.5, 880));
-        //todo tune
     }
 
     @Override
