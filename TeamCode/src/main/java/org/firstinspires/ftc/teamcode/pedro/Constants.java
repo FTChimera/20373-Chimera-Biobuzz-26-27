@@ -9,7 +9,6 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.pedropathing.revhub.drivetrains.MecanumConfig;
-import com.pedropathing.revhub.localizers.PinpointConfig;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -124,14 +123,6 @@ public class Constants {
     public static org.firstinspires.ftc.teamcode.pedro.Follower createFollower(HardwareMap hardwareMap) {
         return new org.firstinspires.ftc.teamcode.pedro.Follower(
                 new PinpointLocalizer(hardwareMap, Constants.PINPOINT_CONFIG),
-                new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
-                new Foresight(Constants.FORESIGHT_CONFIG)
-        );
-    }
-
-    public static org.firstinspires.ftc.teamcode.pedro.Follower createEKFFollower(HardwareMap hardwareMap) {
-        return new org.firstinspires.ftc.teamcode.pedro.Follower(
-                new EKFPinpoint(hardwareMap, Constants.PINPOINT_CONFIG),
                 new Mecanum(hardwareMap, Constants.MECANUM_CONFIG),
                 new Foresight(Constants.FORESIGHT_CONFIG)
         );

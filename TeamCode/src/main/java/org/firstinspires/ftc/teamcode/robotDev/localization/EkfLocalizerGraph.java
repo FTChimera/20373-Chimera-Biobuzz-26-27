@@ -22,7 +22,7 @@ import java.util.Map;
  * Streams the EKF localizer to FTCDashboard so it can be graphed
  * (Dashboard -> graph: add each series by name).
  *
- * <p>This uses {@link Constants#createEKFFollower}, which wraps the
+ * <p>This uses {@link Constants#createFollower}, which wraps the
  * Pinpoint odometry in {@code EKFPinpoint} — a constant-velocity
  * Extended Kalman Filter (state [x, y, heading, vx, vy, omega]) that
  * smooths the raw Pinpoint pose. Drive the robot with the gamepad
@@ -54,7 +54,7 @@ public class EkfLocalizerGraph extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        Follower follower = Constants.createEKFFollower(hardwareMap);
+        Follower follower = Constants.createFollower(hardwareMap);
         follower.localizer.setPose(UtilityPoses.cornerGardenArea);
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());

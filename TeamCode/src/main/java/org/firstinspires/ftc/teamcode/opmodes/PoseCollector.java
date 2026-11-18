@@ -20,7 +20,7 @@ public class PoseCollector extends LinearOpMode {
     ArrayList<Pose> poses = new ArrayList<>();
     @Override
     public void runOpMode() throws InterruptedException {
-        follower = Constants.createEKFFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         follower.localizer.setPose(UtilityPoses.cornerGardenArea);
         telemetry.addLine("Start at Corner Garden Area");
         waitForStart();

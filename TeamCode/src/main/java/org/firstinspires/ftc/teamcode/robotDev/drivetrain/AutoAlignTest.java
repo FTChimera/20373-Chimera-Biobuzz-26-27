@@ -44,7 +44,7 @@ public class AutoAlignTest extends LinearOpMode {
     public void runOpMode() {
         autoAimerCalculator = new AutoAimerCalculator(AllianceColor.RED);
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
-        follower = Constants.createEKFFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         CommonKt.init(AllianceColor.RED);
         follower.localizer.setPose(StartPoses.gardenArea);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());

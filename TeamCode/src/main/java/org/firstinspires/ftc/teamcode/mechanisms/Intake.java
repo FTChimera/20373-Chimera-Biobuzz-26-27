@@ -14,8 +14,8 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 public class Intake {
     CachedMotor mainMotor;
 
-    public static final double DEPLOYER_DEPLOYED_POSITION = 0.267;
-    public static final double DEPLOYER_STOWED_POSITION = 0.62;
+    public static final double DEPLOYER_DEPLOYED_POSITION = 0.22;
+    public static final double DEPLOYER_STOWED_POSITION = 0.6;
 
     Servo deployer;
     private boolean deployed = false;

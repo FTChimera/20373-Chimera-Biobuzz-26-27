@@ -20,7 +20,6 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
 import org.firstinspires.ftc.teamcode.util.vars.Var;
-import org.firstinspires.ftc.teamcode.util.vars.Variables;
 
 import java.util.concurrent.TimeUnit;
 
@@ -34,7 +33,7 @@ public class AutoAlignFollowerHoldingTest extends LinearOpMode {
     public void runOpMode() {
         autoAimerCalculator = new AutoAimerCalculator(AllianceColor.RED);
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
-        follower = Constants.createEKFFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         CommonKt.init(AllianceColor.RED);
         follower.localizer.setPose(StartPoses.gardenArea);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());

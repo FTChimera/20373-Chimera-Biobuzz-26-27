@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 
-import androidx.annotation.NonNull;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.localization.MotionState;
@@ -29,7 +27,6 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
-import org.firstinspires.ftc.teamcode.util.vars.Variables;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +69,7 @@ public class Robot {
         CommonKt.init(color);
         Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
         Constants.FOLLOWER_BRAKE_AT_END.set(true);
-        follower = Constants.createEKFFollower(hardwareMap);
+        follower = Constants.createFollower(hardwareMap);
         follower.holdEnd.set(false);
         follower.localizer.setPose(startingPose);
 

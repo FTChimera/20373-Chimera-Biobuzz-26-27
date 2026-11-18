@@ -11,19 +11,16 @@ public class TableShotCalc implements ShotCalculator {
     String debug = "";
     public static final List<TableEntry> shooterMap = new ArrayList<>();
     static {
-        shooterMap.add(new TableEntry(30, 800));
-        shooterMap.add(new TableEntry(40, 890));
-        shooterMap.add(new TableEntry(50, 920));
+        shooterMap.add(new TableEntry(36.9, 800));
+        shooterMap.add(new TableEntry(49.5, 820));
+        shooterMap.add(new TableEntry(69.5, 880));
         //todo tune
     }
-    // TODO: tune — counterRoller table is a placeholder copied from the main
-    // flywheel table. Measure the counterRoller's real distance -> velocity
-    // entries and replace these.
     public static final List<TableEntry> counterRollerMap = new ArrayList<>();
     static {
-        counterRollerMap.add(new TableEntry(30, 800));
-        counterRollerMap.add(new TableEntry(40, 1000));
-        counterRollerMap.add(new TableEntry(50, 1400));
+        counterRollerMap.add(new TableEntry(30, 600));
+        counterRollerMap.add(new TableEntry(40, 940));
+        counterRollerMap.add(new TableEntry(69.5, 880));
         //todo tune
     }
 

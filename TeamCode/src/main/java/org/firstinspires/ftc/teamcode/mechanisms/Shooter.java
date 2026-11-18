@@ -66,6 +66,7 @@ public class Shooter {
     public boolean panicking=false;
     private int target_main_velocity = 0;
     private int target_counter_velocity = 0;
+    double distToGoal = 0;
     public Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
@@ -124,6 +125,7 @@ public class Shooter {
         context.hiveState = hiveState;
         context.allianceColor = color;
         context.sotm = useSotm.get();
+        distToGoal = context.distanceToTarget();
         ShotSolution solution = shotCalculator.calculateShot(context);
         setVelocity((int) Math.round(solution.flywheelTicksPerSecond),
                 (int) Math.round(solution.counterRollerTicksPerSecond));
@@ -131,8 +133,8 @@ public class Shooter {
 
     public boolean upToSpeed() {
         return hasNonzeroVelocityTarget()
-                && Math.abs(target_main_velocity - mainMotor.getTicksPerSecond()) <= 100
-                && Math.abs(target_counter_velocity - counterRoller.getTicksPerSecond()) <= 60;
+                && Math.abs(target_main_velocity - mainMotor.getTicksPerSecond()) <= 40
+                && Math.abs(target_counter_velocity - counterRoller.getTicksPerSecond()) <= 40;
     }
 
     public boolean hasNonzeroVelocityTarget() {
@@ -147,7 +149,8 @@ public class Shooter {
     public String getDebugString() {
         return "Set Velocity: main=" + target_main_velocity + " counter=" + target_counter_velocity
                 + "\n Get Velocity: main=" + mainMotor.getTicksPerSecond()
-                + " counter=" + counterRoller.getTicksPerSecond();
+                + " counter=" + counterRoller.getTicksPerSecond()
+                + "\n distance to goal=" + distToGoal;
     }
 
     public void stopImmediately() {

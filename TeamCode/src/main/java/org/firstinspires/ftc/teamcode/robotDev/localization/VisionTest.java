@@ -32,7 +32,7 @@ public class VisionTest extends LinearOpMode {
         CommonKt.init(allianceColor);
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
 
-        Follower follower = Constants.createEKFFollower(hardwareMap);
+        Follower follower = Constants.createFollower(hardwareMap);
         follower.localizer.setPose(StartPoses.gardenArea);
         Vision vision = new Vision(hardwareMap, allianceColor);
         Field field = new Field(allianceColor, 13.835, 17.008);
