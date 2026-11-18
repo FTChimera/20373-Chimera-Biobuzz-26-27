@@ -110,7 +110,7 @@ fun reversingTangent(
 object Timings {
     const val gardenIntakeTimeMs = 700
     const val flowerIntakeTime = 2
-    const val shootingTimeMs = 500
+    const val shootingTimeMs = 700
     const val upToSpeedShooterTimeoutTimeMs = 1000
     const val hiveLineupTimeoutTime = 1 //TODO change to 10, this for testing
 }
