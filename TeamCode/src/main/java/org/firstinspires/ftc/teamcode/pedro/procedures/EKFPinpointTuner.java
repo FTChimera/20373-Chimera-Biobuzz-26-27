@@ -27,6 +27,14 @@ public class EKFPinpointTuner extends Procedure {
     private static final double MIN_HEADING_STANDARD_DEVIATION = Math.toRadians(1.0);
     private static final double MIN_LINEAR_ACCELERATION_STANDARD_DEVIATION = 5.0;
     private static final double MIN_ANGULAR_ACCELERATION_STANDARD_DEVIATION = 0.25;
+    // The estimator must not ring faster than this. Above ~1 Hz the estimator's
+    // wobble is fast enough for the follower to turn it into physical swaying;
+    // below it the robot's inertia filters it out.
+    private static final double MAX_ESTIMATOR_RING_FREQUENCY_HZ = 1.0;
+    // Loop period the ring-frequency cap is computed at. The cap is nearly
+    // insensitive to this (it moves by under 1% from 10 ms to 50 ms), so a
+    // nominal 20 ms loop is fine.
+    private static final double NOMINAL_LOOP_DT_SECONDS = 0.02;
 
     public EKFPinpointTuner() {
         super(
@@ -95,19 +103,47 @@ public class EKFPinpointTuner extends Procedure {
                 MIN_HEADING_STANDARD_DEVIATION,
                 Math.sqrt(stationary.headingVariance())
         );
-        double linearAccelerationStandardDeviation = accelerationStandardDeviation(
+        double measuredLinearAccelerationStandardDeviation = accelerationStandardDeviation(
                 average(forward.linearAccelerationMeanSquare(), strafe.linearAccelerationMeanSquare()),
                 stationary.linearAccelerationMeanSquare(),
                 MIN_LINEAR_ACCELERATION_STANDARD_DEVIATION
         );
-        double angularAccelerationStandardDeviation = accelerationStandardDeviation(
+        double measuredAngularAccelerationStandardDeviation = accelerationStandardDeviation(
                 turn.angularAccelerationMeanSquare(),
                 stationary.angularAccelerationMeanSquare(),
                 MIN_ANGULAR_ACCELERATION_STANDARD_DEVIATION
         );
+        // The measured RMS acceleration is dominated by the spin-up/spin-down
+        // transients of the driven stages, so it overestimates the process noise
+        // for normal driving. An oversized process noise makes the estimator
+        // underdamped: it rings at a few Hz, and the follower turns that wobble
+        // into physical swaying (the heading estimator rang at ~2.6 Hz with the
+        // measured 9.08 rad/s^2, and the position estimator at ~3.8 Hz with the
+        // measured 114.46 in/s^2). Cap both process-noise terms so the
+        // estimator's ring frequency stays below MAX_ESTIMATOR_RING_FREQUENCY_HZ.
+        // The cap is computed from the measured measurement noise, so it adapts;
+        // the measured values are reported alongside the capped ones. If the
+        // robot lags on fast moves after this, raise the capped value toward
+        // the measured one.
+        double linearAccelerationStandardDeviation = Math.min(
+                measuredLinearAccelerationStandardDeviation,
+                EKFPinpointTuningMath.maxAccelerationStandardDeviation(
+                        positionMeasurementStandardDeviation,
+                        NOMINAL_LOOP_DT_SECONDS,
+                        MAX_ESTIMATOR_RING_FREQUENCY_HZ)
+        );
+        double angularAccelerationStandardDeviation = Math.min(
+                measuredAngularAccelerationStandardDeviation,
+                EKFPinpointTuningMath.maxAccelerationStandardDeviation(
+                        headingMeasurementStandardDeviation,
+                        NOMINAL_LOOP_DT_SECONDS,
+                        MAX_ESTIMATOR_RING_FREQUENCY_HZ)
+        );
 
         result("positionMeasurementStandardDeviation", positionMeasurementStandardDeviation);
         result("headingMeasurementStandardDeviation", headingMeasurementStandardDeviation);
+        result("measuredLinearAccelerationStandardDeviation", measuredLinearAccelerationStandardDeviation);
+        result("measuredAngularAccelerationStandardDeviation", measuredAngularAccelerationStandardDeviation);
         result("linearAccelerationStandardDeviation", linearAccelerationStandardDeviation);
         result("angularAccelerationStandardDeviation", angularAccelerationStandardDeviation);
         result("stationarySamples", stationary.sampleCount());
@@ -446,5 +482,94 @@ final class EKFPinpointTuningMath {
             squaredErrorSum += error * error;
         }
         return squaredErrorSum / (values.size() - 1);
+    }
+
+    /**
+     * Steady-state ring frequency (Hz) of a 2-state constant-velocity
+     * (alpha-beta) estimator with the given acceleration process noise and
+     * measurement noise, at the given loop period. The heading/omega block
+     * and each position/velocity block of the EKF are decoupled 2-state
+     * filters with exactly this structure (same F and white-noise-acceleration
+     * Q as EKFPinpoint.ConstantVelocityDynamics), so this is exact for both
+     * axes. Returns 0.0 when the estimator poles are real (no ringing). A
+     * ring frequency above ~1 Hz is visible on the robot: the follower turns
+     * the estimator's wobble into oscillating drive power.
+     */
+    static double ringFrequencyHz(
+            double accelerationStandardDeviation,
+            double measurementStandardDeviation,
+            double dtSeconds) {
+        double dt = dtSeconds;
+        double dt2 = dt * dt;
+        double dt3 = dt2 * dt;
+        double dt4 = dt2 * dt2;
+        double accelerationVariance = accelerationStandardDeviation * accelerationStandardDeviation;
+        double q00 = dt4 * accelerationVariance / 4.0;
+        double q01 = dt3 * accelerationVariance / 2.0;
+        double q11 = dt2 * accelerationVariance;
+        double r = measurementStandardDeviation * measurementStandardDeviation;
+
+        // Iterate the discrete Riccati equation to steady state.
+        // F = [[1, dt], [0, 1]], H = [1, 0].
+        double p00 = 1.0;
+        double p01 = 0.0;
+        double p11 = 1.0;
+        double k0 = 0.0;
+        double k1 = 0.0;
+        for (int i = 0; i < 500; i++) {
+            double pp00 = p00 + 2.0 * dt * p01 + dt2 * p11 + q00;
+            double pp01 = p01 + dt * p11 + q01;
+            double pp11 = p11 + q11;
+            double s = pp00 + r;
+            k0 = pp00 / s;
+            k1 = pp01 / s;
+            p00 = pp00 - k0 * pp00;
+            p01 = pp01 - k0 * pp01;
+            p11 = pp11 - k1 * pp01;
+        }
+
+        // Closed-loop poles of A = (I - K H) F.
+        double a00 = 1.0 - k0;
+        double a01 = (1.0 - k0) * dt;
+        double a10 = -k1;
+        double a11 = 1.0 - k1 * dt;
+        double trace = a00 + a11;
+        double det = a00 * a11 - a01 * a10;
+        double discriminant = trace * trace / 4.0 - det;
+        if (discriminant >= 0.0) {
+            return 0.0;
+        }
+        double real = trace / 2.0;
+        double imag = Math.sqrt(-discriminant);
+        return Math.abs(Math.atan2(imag, real)) / (2.0 * Math.PI * dt);
+    }
+
+    /**
+     * Largest acceleration standard deviation that keeps the estimator's ring
+     * frequency at or below {@code maxRingFrequencyHz}. The ring frequency
+     * grows monotonically with the process noise, so this binary-searches for
+     * the boundary.
+     */
+    static double maxAccelerationStandardDeviation(
+            double measurementStandardDeviation,
+            double dtSeconds,
+            double maxRingFrequencyHz) {
+        double low = 0.0;
+        double high = 1.0;
+        while (ringFrequencyHz(high, measurementStandardDeviation, dtSeconds) <= maxRingFrequencyHz) {
+            high *= 2.0;
+            if (high > 1.0e6) {
+                return high;
+            }
+        }
+        for (int i = 0; i < 60; i++) {
+            double mid = (low + high) / 2.0;
+            if (ringFrequencyHz(mid, measurementStandardDeviation, dtSeconds) <= maxRingFrequencyHz) {
+                low = mid;
+            } else {
+                high = mid;
+            }
+        }
+        return low;
     }
 }
