@@ -112,7 +112,7 @@ object Timings {
     const val flowerIntakeTime = 2
     const val shootingTimeMs = 700
     const val upToSpeedShooterTimeoutTimeMs = 1000
-    const val hiveLineupTimeoutTime = 1 //TODO change to 10, this for testing
+    const val hiveLineupTimeoutTime = 10
 }
 
 object Values {
