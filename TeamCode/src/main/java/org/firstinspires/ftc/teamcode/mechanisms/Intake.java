@@ -14,8 +14,10 @@ import org.firstinspires.ftc.teamcode.util.Direction;
 public class Intake {
     CachedMotor mainMotor;
 
-    public static final double DEPLOYER_DEPLOYED_POSITION = 0.22;
-    public static final double DEPLOYER_STOWED_POSITION = 0.6;
+    public static double DEPLOYER_GROUND_POSITION = 0.20313725590705872;
+    public static double DEPLOYER_TRANSLATION_FACTOR = 0.0;
+    public static double DEPLOYER_DEPLOYED_POSITION = 0.26;
+    public static double DEPLOYER_STOWED_POSITION = 0.6666666680574418;
 
     Servo deployer;
     private boolean deployed = false;
@@ -53,7 +55,8 @@ public class Intake {
     /** Sets the deployable ramp: true = deployed (ramp down), false = stowed. */
     public void setDeployed(boolean deployed) {
         this.deployed = deployed;
-        deployer.setPosition(deployed ? DEPLOYER_DEPLOYED_POSITION : DEPLOYER_STOWED_POSITION);
+        double basePosition = deployed ? DEPLOYER_DEPLOYED_POSITION : DEPLOYER_STOWED_POSITION;
+        deployer.setPosition(basePosition + DEPLOYER_TRANSLATION_FACTOR);
     }
 
     public boolean isDeployed() {

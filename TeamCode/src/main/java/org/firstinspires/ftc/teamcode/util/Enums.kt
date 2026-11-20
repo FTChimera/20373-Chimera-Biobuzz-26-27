@@ -50,3 +50,8 @@ enum class MatchMode {
     PLAYOFFS, // maximize points
     QUALIFICATIONS // maximize ranking points
 }
+
+object CompTeleNames {
+    const val ONE_DRIVER = "Main TeleOp: One Controller"
+    const val TWO_DRIVERS = "Main TeleOp: Two Controllers"
+}

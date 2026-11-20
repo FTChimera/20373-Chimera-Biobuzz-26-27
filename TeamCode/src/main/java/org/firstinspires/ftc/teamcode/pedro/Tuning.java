@@ -13,6 +13,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ColorSensorTuner;
+import org.firstinspires.ftc.teamcode.pedro.procedures.DeployerManualTuner;
+import org.firstinspires.ftc.teamcode.pedro.procedures.DeployerTranslationTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ForesightTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.MecanumTuner;
@@ -44,6 +46,12 @@ public class Tuning {
 
     @Tuner(name = "Color Sensor Tuner")
     public static Procedure colorSensorTuner() { return new ColorSensorTuner(); }
+
+    @Tuner(name = "Deployer Translation Tuner")
+    public static Procedure deployerTranslationTuner() { return new DeployerTranslationTuner(); }
+
+    @Tuner(name = "Deployer Manual Tuner")
+    public static Procedure deployerManualTuner() { return new DeployerManualTuner(); }
 
     @Tuner(name = "Tests")
     public static Procedure tests() {

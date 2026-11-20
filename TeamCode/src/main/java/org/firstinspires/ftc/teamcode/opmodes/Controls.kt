@@ -39,11 +39,21 @@ class Controls(
 
     fun stopPark(): GpFancyButton = stopParkButton
 
-    // Deployable intake ramp. Starts stowed, matching Intake's init state.
-    // dpad_left is free on both gamepads, so this does not collide with park
-    // (primary dpad_up/down) in one-controller mode.
-    private val deployerButton = GpFancyButton(FancyButton.PressType.Toggle) {
+    private val reZeroGardenButton = GpFancyButton(FancyButton.PressType.LongPress) {
+        secondary().dpad_right
+    }
+
+    fun reZeroGarden(): GpFancyButton = reZeroGardenButton
+
+    private val reZeroLoadingButton = GpFancyButton(FancyButton.PressType.LongPress) {
         secondary().dpad_left
+    }
+
+    fun reZeroLoading(): GpFancyButton = reZeroLoadingButton
+
+    // Deployable intake ramp. Starts stowed, matching Intake's init state.
+    private val deployerButton = GpFancyButton(FancyButton.PressType.Toggle) {
+        secondary().start
     }.apply {
         setPressed(false)
     }
@@ -93,6 +103,8 @@ class Controls(
         intakeEject().update()
         moveToParkZone().update()
         stopPark().update()
+        reZeroGarden().update()
+        reZeroLoading().update()
         deployer().update()
         runTransferFast().update()
         runTransferSlow().update()

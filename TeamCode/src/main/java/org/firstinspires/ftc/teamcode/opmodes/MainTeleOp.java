@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import static org.firstinspires.ftc.teamcode.opmodes.MainTeleOp.NAME;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,12 +8,13 @@ import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.util.CompTeleNames;
 import org.firstinspires.ftc.teamcode.util.RobotMode;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 
-@TeleOp(name = "Main TeleOp", group = Constants.COMPETITION_GROUP)
+@TeleOp(name = CompTeleNames.TWO_DRIVERS, group = Constants.COMPETITION_GROUP)
 public class MainTeleOp extends LinearOpMode {
-    public static final String NAME = "Main TeleOp (One Controller)";
+    public static final String NAME = CompTeleNames.ONE_DRIVER;
 
     private Controls controls;
     private Robot robot;
@@ -137,6 +136,13 @@ public class MainTeleOp extends LinearOpMode {
             );
             if (controls.autoAlignAndStartShoot().isPressed()) { robot.setAutoAlign(); }
 
+            if (controls.reZeroGarden().risingEdge()) {
+                robot.reZeroGarden();
+            }
+            if (controls.reZeroLoading().risingEdge()) {
+                robot.reZeroCornerNextToLoadingZone();
+            }
+
             if (controls.stopPark().risingEdge()) {
                 robot.cancelPark();
                 parkingRequested = false;
@@ -176,7 +182,7 @@ public class MainTeleOp extends LinearOpMode {
         }
 
     }
-    @TeleOp(name = "Main TeleOp (One Controller)", group = Constants.COMPETITION_GROUP)
+    @TeleOp(name = CompTeleNames.ONE_DRIVER, group = Constants.COMPETITION_GROUP)
     public static class MainTeleOneController extends MainTeleOp {
         public MainTeleOneController() { this.oneController = true; }
     }

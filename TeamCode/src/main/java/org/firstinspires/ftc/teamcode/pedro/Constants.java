@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedro;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.pedropathing.algorithm.Foresight;
 import com.pedropathing.algorithm.ForesightConfig;
 import com.pedropathing.config.ConfigVar;
@@ -19,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.util.Tuple;
 import org.firstinspires.ftc.teamcode.util.Direction;
 
+@Config
 public class Constants {
     public static Tuple<String, Direction> FRONT_LEFT_MOTOR = new Tuple<>("frontLeft", Direction.REVERSE);
     public static Tuple<String, Direction> BACK_LEFT_MOTOR = new Tuple<>("backLeft", Direction.FORWARD);

@@ -165,7 +165,7 @@ object IntakePoses {
 }
 
 object ShootPoses {
-    @JvmField val garden = red(pose(60.0, 10.0, 90.0))
+    @JvmField val garden = red(pose(52.0, 10.0, 90.0))
     @JvmField val loading = red(pose(60.0, 99.0, 270.0))
 
     fun init(color: AllianceColor) {
@@ -218,8 +218,8 @@ object PathPoses {
 }
 
 object UtilityPoses {
-    @JvmField val cornerLoadingArea = red(pose(9.0, 135.0, 180.0)) //face driver
-    @JvmField val cornerGardenArea = red(pose(9.0, 9.0, 180.0)) //face driver
+    @JvmField val cornerLoadingArea = red(pose(9.0, 130.0, 0.0)) //face away from driver
+    @JvmField val cornerGardenArea = red(pose(9.0, 2.0, 0.0)) //face away from driver
 
     private const val PLACEHOLDER_EPSILON = 1e-6
 

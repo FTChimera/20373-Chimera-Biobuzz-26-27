@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
@@ -21,7 +22,7 @@ public class PoseCollector extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         follower = Constants.createFollower(hardwareMap);
-        follower.localizer.setPose(UtilityPoses.cornerGardenArea);
+        follower.localizer.setPose(StartPoses.gardenArea);
         telemetry.addLine("Start at Corner Garden Area");
         waitForStart();
         while (opModeIsActive()) {
