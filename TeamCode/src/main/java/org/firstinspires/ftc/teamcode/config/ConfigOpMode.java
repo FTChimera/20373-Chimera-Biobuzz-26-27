@@ -1,20 +1,16 @@
 package org.firstinspires.ftc.teamcode.config;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.Utility;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.MatchMode;
 
-@Utility
+@TeleOp
 public class ConfigOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
-        telemetry.clearAll();
         telemetry.addLine("==== CONFIGURATION UTILITY OPMODE (use Gp 1) ====");
         telemetry.addData("Controls", "Press A for Red Alliance, B for Blue Alliance");
         telemetry.addLine("Press Back to save and end, just stop the opmode to not save");
