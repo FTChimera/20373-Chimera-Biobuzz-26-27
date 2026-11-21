@@ -271,6 +271,7 @@ public class Robot {
         } else {
             drivePowers.setTurn(autoAimerCalculator.calculateTurningPower(getHeading()));
         }
+        this.setTeleOpDrive = true;
     }
 
     public boolean reZeroCornerNextToLoadingZone() {
