@@ -13,6 +13,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
@@ -24,6 +25,10 @@ import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class FromShootGardenPose {
     public static class ToIntakeFromWestFlower extends PathPlanner {
@@ -176,12 +181,25 @@ public class FromShootGardenPose {
             return sequential(
                     instant(robot.intake::setFullPower),
                     //parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
-                    follow(robot.follower, () -> toGarden),
+                    deadline(timeout(), follow(robot.follower, () -> toGarden)),
                     waitMs(Timings.gardenIntakeTimeMs),
                     follow(robot.follower, () -> back),
                     ShooterCommands.waitForHiveLineup(robot, lineupState()),
                     ShooterCommands.shootAllPollen(robot)
             );
+        }
+
+        protected Command timeout() {
+            AtomicReference<Timer> timer = new AtomicReference<>(new Timer(TimeUnit.MILLISECONDS));
+            AtomicBoolean done = new AtomicBoolean(false);
+            return Command.build()
+                    .setStart(timer.get()::reset)
+                    .setExecute(() -> {
+                        if (!done.get() && timer.get().past(Timings.gardenIntakeTimeoutMs)) {
+                            done.set(true);
+                        }
+                    })
+                    .setDone(done::get);
         }
 
         @Override

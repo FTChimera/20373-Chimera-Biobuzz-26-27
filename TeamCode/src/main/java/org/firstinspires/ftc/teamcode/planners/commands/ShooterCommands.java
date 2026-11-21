@@ -113,7 +113,10 @@ public class ShooterCommands {
                         done.set(true);
                     }
                 })
-                .setDone(done::get);
+                .setDone(done::get)
+                .then(Command.build()
+                        .setStart(() -> timer.set(new Timer(TimeUnit.SECONDS)))
+                        .setDone(() -> timer.get().past(Timings.hiveLineupExtraTimeSec)));
     }
 
     public static Command autoAlignCommand(Robot robot) {

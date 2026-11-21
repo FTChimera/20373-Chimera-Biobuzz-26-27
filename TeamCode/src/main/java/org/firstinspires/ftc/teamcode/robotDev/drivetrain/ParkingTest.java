@@ -38,7 +38,7 @@ public class ParkingTest extends LinearOpMode {
         FAILED
     }
 
-    public static boolean USE_OPMODE_STORAGE = true;
+    public static boolean USE_OPMODE_STORAGE = false;
     public static boolean RED_ALLIANCE = false;
     public static StartPosePreset START_POSE_PRESET = StartPosePreset.GARDEN;
     public static boolean USE_CUSTOM_START_POSE = false;
