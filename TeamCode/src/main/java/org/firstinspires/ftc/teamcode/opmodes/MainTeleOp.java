@@ -58,22 +58,27 @@ public class MainTeleOp extends LinearOpMode {
 
             if (controls.intakeEject().risingEdge()) {
                 robot.intakeEject();
+                robot.lights.onEjectStart();
             }
             // Separate ifs (not else-if): the toggle edges are one-cycle
             // pulses, so chaining them under the eject check would drop a
             // press made on the same cycle as an eject press.
             if (controls.intakeControl().risingEdge()) {
                 robot.setSmartIntakeControl(true);
+                robot.lights.onIntakeOn();
             }
             if (controls.intakeControl().fallingEdge()) {
                 robot.setSmartIntakeControl(false);
                 robot.intake.stop();
+                robot.lights.onIntakeOff();
             }
             if (controls.deployer().risingEdge()) {
                 robot.intake.setDeployed(true);
+                robot.lights.onDeployerToggle(true);
             }
             if (controls.deployer().fallingEdge()) {
                 robot.intake.setDeployed(false);
+                robot.lights.onDeployerToggle(false);
             }
             // Restore the intake to the mode the toggle button selects:
             // full power if the toggle is on, stopped if it is off.
@@ -83,7 +88,10 @@ public class MainTeleOp extends LinearOpMode {
                             : Intake.Mode.IDLE);
 
             if (controls.panicShoot().isPressed()) {
-                if (controls.panicShoot().risingEdge()) robot.panic();
+                if (controls.panicShoot().risingEdge()) {
+                    robot.panic();
+                    robot.lights.onPanicStart();
+                }
             } else {
                 if (controls.runTransferFast().isPressed()
                         && robot.shooter.upToSpeed()
@@ -135,7 +143,11 @@ public class MainTeleOp extends LinearOpMode {
                     true, false
             );
             if (controls.autoAlignAndStartShoot().isPressed()) { robot.setAutoAlign(); }
+            if (controls.autoAlignAndStartShoot().risingEdge()) robot.lights.onShootStart();
+            if (controls.keepShooterOn().risingEdge()) robot.lights.onShootStart();
 
+            if (controls.reZeroGarden().risingEdge()) robot.lights.onReZero();
+            if (controls.reZeroLoading().risingEdge()) robot.lights.onReZero();
             if (controls.reZeroGarden().isPressed()) {
                 robot.reZeroGarden();
             }
@@ -159,6 +171,7 @@ public class MainTeleOp extends LinearOpMode {
                 if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
                     lastParkAttemptTimeSec = now;
                     parkingInitiated = robot.moveToParkZone();
+                    if (parkingInitiated) robot.lights.onParkStart();
                 }
             }
             robot.telemetry.addData(
