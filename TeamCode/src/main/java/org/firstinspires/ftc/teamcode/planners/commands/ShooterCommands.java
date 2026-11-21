@@ -8,6 +8,7 @@ import com.pedropathing.ivy.Command;
 import com.pedropathing.ivy.behaviors.BlockedBehavior;
 import com.pedropathing.ivy.behaviors.ConflictBehavior;
 import com.pedropathing.ivy.behaviors.InterruptedBehavior;
+import com.pedropathing.utils.Angle;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.Timings;
@@ -111,6 +112,23 @@ public class ShooterCommands {
                     if (timer.get().past(Timings.hiveLineupTimeoutTime)) {
                         done.set(true);
                     }
+                })
+                .setDone(done::get);
+    }
+
+    public static Command autoAlignCommand(Robot robot) {
+        AtomicBoolean done = new AtomicBoolean(false);
+        AtomicReference<Timer> timer = new AtomicReference<>();
+        return Command.build()
+                .setStart(
+                        () -> timer.set(new Timer(TimeUnit.SECONDS))
+                )
+                .setExecute(() -> {
+                    if (timer.get().past(Timings.autoAlignTimeoutTime) || Angle.smallestDifference(robot.getPose().getHeading(), robot.autoAimerCalculator.getTargetHeading())<=1) {
+                        done.set(true);
+                        return;
+                    }
+                    robot.setAutoAlign();
                 })
                 .setDone(done::get);
     }

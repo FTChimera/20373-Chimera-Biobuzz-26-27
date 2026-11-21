@@ -113,6 +113,7 @@ object Timings {
     const val shootingTimeMs = 700
     const val upToSpeedShooterTimeoutTimeMs = 1500
     const val hiveLineupTimeoutTime = 10
+    const val autoAlignTimeoutTime = 2
 }
 
 object Values {
@@ -126,8 +127,8 @@ object Values {
     const val gardenIntakeMaxPowerSetChangeNewPower = 0.5
     // flower intake: deploy the ramp midway to the flower, stow shortly
     // after leaving it (path-completion t-values, 0-1 along the leg)
-    const val flowerIntakeDeployTValue = 0.5
-    const val flowerIntakeStowTValue = 0.1
+    const val flowerIntakeDeployTValue = 0.1
+    const val flowerIntakeStowTValue = 0.5
 }
 
 object StartPoses {
@@ -153,8 +154,8 @@ object IntakePoses {
     // facing the flower head-on - the ramp ends up under the pollen. West
     // ring center (2.54, 48), north ring center (48, 141.46). Blue sides
     // are auto-mirrored (east / south flowers).
-    @JvmField val westFlower = red(pose(12.044, 48.0, 180.0))
-    @JvmField val northFlower = red(pose(48.0, 120.0, 90.0))
+    @JvmField val westFlower = red(pose(15.044, 37.0, 180.0))
+    @JvmField val northFlower = red(pose(48.0, 118.0, 90.0))
 
     fun init(color: AllianceColor) {
         gardenEnd.setAllianceColor(color)
@@ -165,7 +166,7 @@ object IntakePoses {
 }
 
 object ShootPoses {
-    @JvmField val garden = red(pose(40.0, 10.0, 70.0))
+    @JvmField val garden = red(pose(40.0, 10.0, 75.0))
     @JvmField val loading = red(pose(40.0, 99.0, -90.0))
 
     fun init(color: AllianceColor) {
