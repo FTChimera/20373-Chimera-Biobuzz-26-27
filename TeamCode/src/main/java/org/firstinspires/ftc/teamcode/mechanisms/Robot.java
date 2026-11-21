@@ -275,10 +275,10 @@ public class Robot {
     }
 
     public boolean reZeroCornerNextToLoadingZone() {
-        if (!UtilityPoses.isCornerLoadingAreaConfigured()) {
-            telemetry.addLine("Corner loading re-zero rejected: configure UtilityPoses.cornerLoadingArea.");
-            return false;
-        }
+//        if (!UtilityPoses.isCornerLoadingAreaConfigured()) {
+//            telemetry.addLine("Corner loading re-zero rejected: configure UtilityPoses.cornerLoadingArea.");
+//            return false;
+//        }
         follower.localizer.setPose(UtilityPoses.cornerLoadingArea);
         autoAimerCalculator.initializeCorrectedPose(UtilityPoses.cornerLoadingArea);
         telemetry.addData("Corner loading re-zero applied", UtilityPoses.cornerLoadingArea);
@@ -286,10 +286,10 @@ public class Robot {
     }
 
     public boolean reZeroGarden() {
-        if (!UtilityPoses.isCornerGardenAreaConfigured()) {
-            telemetry.addLine("Garden corner re-zero rejected: configure UtilityPoses.cornerGardenArea.");
-            return false;
-        }
+//        if (!UtilityPoses.isCornerGardenAreaConfigured()) {
+//            telemetry.addLine("Garden corner re-zero rejected: configure UtilityPoses.cornerGardenArea.");
+//            return false;
+//        }
         follower.localizer.setPose(UtilityPoses.cornerGardenArea);
         autoAimerCalculator.initializeCorrectedPose(UtilityPoses.cornerGardenArea);
         telemetry.addData("Garden corner re-zero applied", UtilityPoses.cornerGardenArea);

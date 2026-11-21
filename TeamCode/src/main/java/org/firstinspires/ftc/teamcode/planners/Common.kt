@@ -15,6 +15,7 @@ fun init(color:AllianceColor) {
     IntakePoses.init(color)
     ShootPoses.init(color)
     PathPoses.init(color)
+    UtilityPoses.init(color)
 }
 fun fastInterpolationDegraded(endHeading: Double, change: Double, reverse: Boolean): Interpolator {
     var tangent = Interpolator.tangent
@@ -237,6 +238,11 @@ object UtilityPoses {
         return !(abs(pose.x()) < PLACEHOLDER_EPSILON
                 && abs(pose.y()) < PLACEHOLDER_EPSILON
                 && abs(pose.heading()) < PLACEHOLDER_EPSILON)
+    }
+
+    fun init(color: AllianceColor) {
+        cornerGardenArea.setAllianceColor(color)
+        cornerLoadingArea.setAllianceColor(color)
     }
 }
 

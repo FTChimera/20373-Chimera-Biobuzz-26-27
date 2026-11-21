@@ -39,13 +39,13 @@ class Controls(
 
     fun stopPark(): GpFancyButton = stopParkButton
 
-    private val reZeroGardenButton = GpFancyButton(FancyButton.PressType.LongPress) {
+    private val reZeroGardenButton = GpFancyButton(FancyButton.PressType.Normal) {
         secondary().dpad_right
     }
 
     fun reZeroGarden(): GpFancyButton = reZeroGardenButton
 
-    private val reZeroLoadingButton = GpFancyButton(FancyButton.PressType.LongPress) {
+    private val reZeroLoadingButton = GpFancyButton(FancyButton.PressType.Normal) {
         secondary().dpad_left
     }
 
