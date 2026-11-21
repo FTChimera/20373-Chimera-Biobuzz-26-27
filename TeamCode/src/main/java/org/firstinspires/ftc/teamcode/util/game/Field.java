@@ -135,27 +135,45 @@ public class Field {
         if (isRobotOverlappingLoadingZone(robotPose)) {
             throw new NoRouteException("Robot already overlaps the loading zone; no park path is required");
         }
-        // FLAGGED CHANGE: use the closest point PAIR: [0] is on the loading zone,
-        // [1] is on the robot rectangle (JTS DistanceOp.nearestPoints contract).
-        // The robot only needs its closest point to reach innerVal past the zone
-        // boundary; its center no longer has to drive all the way inside.
-        Coordinate[] nearest = DistanceOp.nearestPoints(loadingZone, createRobotGeom(robotPose));
-        Coordinate closestPtOnLoadingZone = nearest[0];
-        Coordinate closestPtOnRobot = nearest[1];
-        double gap = closestPtOnLoadingZone.distance(closestPtOnRobot);
-        double theta;
-        if (gap < 1e-9) {
-            // Touching (zero gap): fall back to the center-based direction.
-            theta = Vector2D.cartesian(
-                    closestPtOnLoadingZone.x - robotPose.x,
-                    closestPtOnLoadingZone.y - robotPose.y).theta();
-        } else {
-            theta = Vector2D.cartesian(
-                    closestPtOnLoadingZone.x - closestPtOnRobot.x,
-                    closestPtOnLoadingZone.y - closestPtOnRobot.y).theta();
+        // Park target: aim the robot CENTER at a point inside the zone. The
+        // old target (closest body point moved innerVal past the boundary
+        // along the approach direction) left most of the robot outside the
+        // zone on diagonal approaches, because the body trails back along
+        // the approach diagonal. Now: from the closest boundary point, move
+        // toward the zone centroid by innerVal plus the body's extent along
+        // that direction, so the leading face ends innerVal inside the
+        // boundary; clamp the center so the body never targets through a
+        // field wall.
+        Coordinate closestPtOnLoadingZone = DistanceOp.nearestPoints(
+                loadingZone, geometryFactory.createPoint(robotPose.toCoordinate()))[0];
+        Coordinate centroid = loadingZone.getCentroid().getCoordinate();
+        double inwardX = centroid.x - closestPtOnLoadingZone.x;
+        double inwardY = centroid.y - closestPtOnLoadingZone.y;
+        double inwardLen = Math.hypot(inwardX, inwardY);
+        if (inwardLen < 1e-9) {
+            // Closest point is the centroid (robot center inside the zone):
+            // fall back to the direction from the robot to that point.
+            inwardX = closestPtOnLoadingZone.x - robotPose.x;
+            inwardY = closestPtOnLoadingZone.y - robotPose.y;
+            inwardLen = Math.hypot(inwardX, inwardY);
         }
-        Vector2D travel = Vector2D.polar(gap + innerVal, theta);
-        Pose2d aLittleInwardPose = PoseFactory.of(robotPose.x, robotPose.y, 0).plus(travel.toPose());
+        double targetX = closestPtOnLoadingZone.x;
+        double targetY = closestPtOnLoadingZone.y;
+        if (inwardLen >= 1e-9) {
+            double dirX = inwardX / inwardLen;
+            double dirY = inwardY / inwardLen;
+            // Extent of the (axis-aligned) robot rectangle along the inward
+            // direction: how far the leading face is from the center.
+            double halfExtent = (botLength / 2.0) * Math.abs(dirX) + (botWidth / 2.0) * Math.abs(dirY);
+            double dist = Math.min(innerVal + halfExtent, inwardLen);
+            targetX += dirX * dist;
+            targetY += dirY * dist;
+        }
+        // Keep the whole body on the field: the center stays half a robot
+        // from each wall (the red zone is against the west/north walls).
+        targetX = Math.max(botLength / 2.0, Math.min(144.0 - botLength / 2.0, targetX));
+        targetY = Math.max(botWidth / 2.0, Math.min(144.0 - botWidth / 2.0, targetY));
+        Pose2d aLittleInwardPose = PoseFactory.of(targetX, targetY, 0);
 
         // Convert Pedro Pathing Poses
         Pose2d startPose = PoseFactory.of(robotPose.x, robotPose.y, robotPose.heading);

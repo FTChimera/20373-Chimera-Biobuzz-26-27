@@ -119,16 +119,21 @@ public class Vision {
         return !fiducials().isEmpty();
     }
 
+    /**
+     * True when any AprilTag from OUR alliance's hive is visible. The hive
+     * carries two tag clusters (one per face), and which face the camera
+     * sees depends on whether the hive is tipped, so both clusters count.
+     * Tags from the other alliance's hive do not count: the far hive is
+     * visible from some shoot poses and must not end the lineup wait.
+     */
     public boolean anyAllianceFiducial() {
-        if (!anyFiducial()) return false;
-        boolean result = false;
-        for (LLResultTypes.FiducialResult fiducialResult: fiducials()) {
-            if (fiducialResult.getFiducialId() == tags.alliance.getMidTwoTags()[0] || fiducialResult.getFiducialId() == tags.alliance.getMidTwoTags()[1]) {
-                result = true;
-                break;
+        for (LLResultTypes.FiducialResult fiducialResult : fiducials()) {
+            int id = fiducialResult.getFiducialId();
+            if (contains(tags.alliance, id) || contains(tags.opposite, id)) {
+                return true;
             }
         }
-        return result;
+        return false;
     }
     public void applyInferredHiveState(Field field) {
         if (field == null) {
