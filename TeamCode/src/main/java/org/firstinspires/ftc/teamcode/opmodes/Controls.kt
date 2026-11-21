@@ -61,13 +61,13 @@ class Controls(
     fun deployer(): GpFancyButton = deployerButton
 
     private val runTransferFastButton = GpFancyButton(FancyButton.PressType.Normal) {
-        secondary().right_bumper
+        secondary().right_trigger>=0.5
     }
 
     fun runTransferFast(): GpFancyButton = runTransferFastButton
 
     private val runTransferSlowButton = GpFancyButton(FancyButton.PressType.Normal) {
-        secondary().left_bumper
+        secondary().left_trigger>=0.5
     }
 
     fun runTransferSlow(): GpFancyButton = runTransferSlowButton
