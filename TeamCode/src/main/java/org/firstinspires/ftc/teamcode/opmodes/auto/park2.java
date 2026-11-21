@@ -34,7 +34,7 @@ public class park2 extends OpMode {
         robot.debug = true;
         robot.setSmartShooterControl(true);
         plan = PlanBuilder.startLoading(robot)
-                .customPath(Paths.line(ParkAutoStartPoses.redUntippedStart(), PoseFactory.deg(14.26, 96, 90)).constant(0))
+                .customPath(Paths.line(ParkAutoStartPoses.blueUntippedStart(), PoseFactory.deg(129.74, 48, 90)).constant(-90))
                 .schedule();
     }
 

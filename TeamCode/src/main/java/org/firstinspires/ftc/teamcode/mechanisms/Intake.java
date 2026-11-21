@@ -54,6 +54,7 @@ public class Intake {
 
     /** Sets the deployable ramp: true = deployed (ramp down), false = stowed. */
     public void setDeployed(boolean deployed) {
+        if (deployed) return;
         this.deployed = deployed;
         double basePosition = deployed ? DEPLOYER_DEPLOYED_POSITION : DEPLOYER_STOWED_POSITION;
         deployer.setPosition(basePosition + DEPLOYER_TRANSLATION_FACTOR);
