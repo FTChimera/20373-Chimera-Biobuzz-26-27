@@ -16,7 +16,7 @@ public class Intake {
 
     public static double DEPLOYER_GROUND_POSITION = 0.20313725590705872;
     public static double DEPLOYER_TRANSLATION_FACTOR = -0.043725488781929;
-    public static double DEPLOYER_DEPLOYED_POSITION = 0.26;
+    public static double DEPLOYER_DEPLOYED_POSITION = 0.25;
     public static double DEPLOYER_STOWED_POSITION = 0.6666666680574418;
 
     Servo deployer;
