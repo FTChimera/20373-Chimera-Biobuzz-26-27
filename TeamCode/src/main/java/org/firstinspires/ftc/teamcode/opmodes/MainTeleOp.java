@@ -136,10 +136,10 @@ public class MainTeleOp extends LinearOpMode {
             );
             if (controls.autoAlignAndStartShoot().isPressed()) { robot.setAutoAlign(); }
 
-            if (controls.reZeroGarden().risingEdge()) {
+            if (controls.reZeroGarden().isPressed()) {
                 robot.reZeroGarden();
             }
-            if (controls.reZeroLoading().risingEdge()) {
+            if (controls.reZeroLoading().isPressed()) {
                 robot.reZeroCornerNextToLoadingZone();
             }
 

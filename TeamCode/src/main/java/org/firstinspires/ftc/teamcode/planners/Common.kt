@@ -146,8 +146,8 @@ object StartPoses {
 }
 
 object IntakePoses {
-    @JvmField val gardenEnd = red(pose(7.0, 5.0, -90.0))
-    @JvmField val gardenControl1 = red(pose(18.0, 25.0))
+    @JvmField val gardenEnd = red(pose(7.0, 3.0, -90.0))
+    @JvmField val gardenControl1 = red(pose(30.0, 40.0))
     // Flower intake poses: the robot center sits 1 in + half the robot
     // length (17.008 / 2 = 8.504, so 9.504 in) from the flower ring center,
     // facing the flower head-on - the ramp ends up under the pollen. West
@@ -165,8 +165,8 @@ object IntakePoses {
 }
 
 object ShootPoses {
-    @JvmField val garden = red(pose(52.0, 10.0, 90.0))
-    @JvmField val loading = red(pose(60.0, 99.0, 270.0))
+    @JvmField val garden = red(pose(40.0, 10.0, 70.0))
+    @JvmField val loading = red(pose(40.0, 99.0, -90.0))
 
     fun init(color: AllianceColor) {
         garden.setAllianceColor(color)
@@ -186,8 +186,8 @@ object PathPoses {
     @JvmField val northFlowerFromGarden = red(pose(78.0, 72.0))
     @JvmField val northFlowerFromLoading = red(pose(54.0, 127.0))
     // Cross-field return controls (to the shoot poses):
-    @JvmField val gardenToLoading = red(pose(18.0, 110.0))
-    @JvmField val loadingToGarden = red(pose(18.0, 30.0))
+    @JvmField val gardenToLoading = red(pose(50.0, 110.0))
+    @JvmField val loadingToGarden = red(pose(50.0, 30.0))
     // Loading-zone preload intake (no-show partner): centre 9.5 in from
     // the west wall (1 in + half the robot length), facing the wall.
     @JvmField val loadingIntakeApproach = red(pose(30.0, 115.0))

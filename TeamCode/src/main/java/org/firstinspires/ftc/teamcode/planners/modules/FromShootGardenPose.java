@@ -175,7 +175,8 @@ public class FromShootGardenPose {
         public Command run() {
             return sequential(
                     instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
+                    //parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
+                    follow(robot.follower, () -> toGarden),
                     waitMs(Timings.gardenIntakeTimeMs),
                     follow(robot.follower, () -> back),
                     ShooterCommands.waitForHiveLineup(robot, lineupState()),
