@@ -92,6 +92,15 @@ class Controls(
 
     fun keepShooterOn(): GpFancyButton = keepShooterOnButton
 
+    // Reverse the outtake to clear a jammed ball. Left stick button is free
+    // in both one- and two-controller modes (dpad up/down are park on the
+    // primary gamepad, which is also the secondary in one-controller mode).
+    private val reverseOuttakeButton = GpFancyButton(FancyButton.PressType.Normal) {
+        secondary().left_stick_button
+    }
+
+    fun reverseOuttake(): GpFancyButton = reverseOuttakeButton
+
     fun primary(): Gamepad = gamepad1
 
     fun secondary(): Gamepad {
@@ -111,5 +120,6 @@ class Controls(
         panicShoot().update()
         autoAlignAndStartShoot().update()
         keepShooterOn().update()
+        reverseOuttake().update()
     }
 }

@@ -87,7 +87,15 @@ public class MainTeleOp extends LinearOpMode {
                             ? Intake.Mode.FULL_POWER
                             : Intake.Mode.IDLE);
 
-            if (controls.panicShoot().isPressed()) {
+            if (controls.reverseOuttake().risingEdge()) {
+                robot.reverseOuttake();
+                robot.lights.onReverseOuttakeStart();
+            }
+            if (controls.reverseOuttake().fallingEdge()) robot.endReverseOuttake();
+
+            if (controls.reverseOuttake().isPressed()) {
+                // Reversing the outtake to clear a jam: feed buttons are ignored.
+            } else if (controls.panicShoot().isPressed()) {
                 if (controls.panicShoot().risingEdge()) {
                     robot.panic();
                     robot.lights.onPanicStart();

@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.PrismAnimatio
  *    when the status actually changes, not every loop.
  *  - Event feedback: short one-shot animations inserted on the top layer
  *    (LAYER_9) when the driver does something in teleop (re-zero, intake
- *    toggle, deployer, eject, shoot, panic, park). Black is transparent on
+ *    toggle, deployer, eject, shoot, panic, reverse outtake, park). Black is transparent on
  *    the Prism, so the base status shows through between flashes. Each event
  *    animation expires after a fixed time and is replaced with a transparent
  *    solid. A base-status change (artboard load) also ends any event.
@@ -260,6 +260,18 @@ public class Lights {
                 .period(100)
                 .indexes(0, lightStrips.numLights() - 1)
                 .build(), 800);
+    }
+
+    /** Reverse outtake (jam clear): magenta strobe. */
+    public void onReverseOuttakeStart() {
+        playEventAnimation(PrismAnimations
+                .blink()
+                .primaryColor(Color.MAGENTA)
+                .secondaryColor(Color.TRANSPARENT)
+                .period(200)
+                .primaryColorPeriod(100)
+                .indexes(0, lightStrips.numLights() - 1)
+                .build(), 1000);
     }
 
     /** Panic shoot: police lights. */

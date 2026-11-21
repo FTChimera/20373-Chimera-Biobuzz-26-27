@@ -64,6 +64,7 @@ public class Shooter {
     public ShotCalculator shotCalculator;
     public AllianceColor color;
     public boolean panicking=false;
+    public boolean reversing=false;
     private int target_main_velocity = 0;
     private int target_counter_velocity = 0;
     double distToGoal = 0;
@@ -104,6 +105,7 @@ public class Shooter {
         target_main_velocity = mainTicksPerSecond;
         target_counter_velocity = counterRollerTicksPerSecond;
         panicking = false;
+        reversing = false;
     }
 
     public void panic() {
@@ -112,12 +114,29 @@ public class Shooter {
         counterRoller.setPower(1);
         counterRoller.update();
         panicking = true;
+        reversing = false;
+    }
+
+    /**
+     * Runs both outtake motors in reverse at full power to clear a ball
+     * jammed against the flywheel. Hold-to-run: call setVelocity(0, 0) (via
+     * Robot.endReverseOuttake) to stop. Smart shooter updates are skipped
+     * while reversing, same as panicking.
+     */
+    public void reverseOuttake() {
+        mainMotor.setPower(-1);
+        mainMotor.update();
+        counterRoller.setPower(-1);
+        counterRoller.update();
+        reversing = true;
+        panicking = false;
     }
 
     public void solveAndSetVelocity
             (Pose2d robotPosition, Velocity velocity, Field.HiveState hiveState, double deltaTime)
     {
         panicking = false;
+        reversing = false;
         ShotContext context = new ShotContext();
         context.robotPose = robotPosition;
         context.velocity = velocity;
@@ -157,11 +176,16 @@ public class Shooter {
         target_main_velocity = 0;
         target_counter_velocity = 0;
         panicking = false;
+        reversing = false;
         mainMotor.stopImmediately();
         counterRoller.stopImmediately();
     }
 
     public boolean panicking() {
         return panicking;
+    }
+
+    public boolean reversing() {
+        return reversing;
     }
 }

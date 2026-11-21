@@ -396,6 +396,16 @@ public class Robot {
         shooter.setVelocity(0, 0);
         transfer.stop();
     }
+    /** Reverse both outtake motors to clear a jammed ball; stop the transfer so nothing feeds into the jam. */
+    public void reverseOuttake() {
+        shooter.reverseOuttake();
+        transfer.stop();
+    }
+    public void endReverseOuttake() {
+        shooter.reversing = false;
+        shooter.setVelocity(0, 0);
+        transfer.stop();
+    }
 
     /* SHOOTER */
 
@@ -404,7 +414,7 @@ public class Robot {
     }
 
     public void smartShooterUpdate() {
-        if (shooter.panicking) return;
+        if (shooter.panicking || shooter.reversing) return;
         shooter.solveAndSetVelocity(
                 getPose(),
                 getVelocity(),
