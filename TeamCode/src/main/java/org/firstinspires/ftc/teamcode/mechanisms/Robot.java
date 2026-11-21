@@ -254,7 +254,7 @@ public class Robot {
         if (fieldCentric) {
             this.drivePowers.fieldCentric(getHeading(), allianceColor);
         }
-        this.drivePowers.scale(!isBatteryLowPower ? 0.7 : 0.7);
+        this.drivePowers.scale(!isBatteryLowPower ? 1 : 1);
         this.holdIfNoInput = holdIfNoInput;
         this.setTeleOpDrive = true;
     }
