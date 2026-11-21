@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,6 +75,11 @@ public class PlanBuilder {
         } else {
             throw new IllegalStateException("Cannot Intake Garden to Loading from Position " + position);
         }
+        return this;
+    }
+
+    public PlanBuilder customPath(com.pedropathing.paths.Path path) {
+        planners.add(new Utils.CustomPath(robot, path));
         return this;
     }
 

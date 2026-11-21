@@ -119,6 +119,17 @@ public class Vision {
         return !fiducials().isEmpty();
     }
 
+    public boolean anyAllianceFiducial() {
+        if (!anyFiducial()) return false;
+        boolean result = false;
+        for (LLResultTypes.FiducialResult fiducialResult: fiducials()) {
+            if (fiducialResult.getFiducialId() == tags.alliance.getMidTwoTags()[0] || fiducialResult.getFiducialId() == tags.alliance.getMidTwoTags()[1]) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
     public void applyInferredHiveState(Field field) {
         if (field == null) {
             throw new IllegalArgumentException("Field is required to apply inferred hive state.");

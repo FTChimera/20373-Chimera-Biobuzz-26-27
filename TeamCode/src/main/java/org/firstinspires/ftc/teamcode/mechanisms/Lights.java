@@ -206,11 +206,11 @@ public class Lights {
                 .build(), 600);
     }
 
-    /** Intake toggled on: green pulse. */
+    /** Intake toggled on: cyan pulse. */
     public void onIntakeOn() {
         playEventAnimation(PrismAnimations
                 .pulse()
-                .primaryColor(Color.GREEN)
+                .primaryColor(Color.CYAN)
                 .secondaryColor(Color.TRANSPARENT)
                 .period(600)
                 .indexes(0, lightStrips.numLights() - 1)

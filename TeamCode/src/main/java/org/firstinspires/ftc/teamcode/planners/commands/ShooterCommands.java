@@ -105,7 +105,7 @@ public class ShooterCommands {
                     if (done.get()) {
                         return;
                     }
-                    if (robot.vision.anyFiducial()) {
+                    if (robot.vision.anyAllianceFiducial()) {
                         done.set(true);
                         return;
                     }

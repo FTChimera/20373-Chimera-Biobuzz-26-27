@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Robot {
-    public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 3.0;
+    public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 5;
 
     public RobotMode robotMode;
     public Follower follower;
