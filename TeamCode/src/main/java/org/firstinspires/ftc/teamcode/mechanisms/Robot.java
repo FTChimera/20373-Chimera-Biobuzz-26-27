@@ -416,7 +416,7 @@ public class Robot {
 
     private void lightsControl() {
         if (opModeTimeRemaining() <= 7.0) {lights.flashRed();}
-        else if (opModeTimeRemaining() >= 57 && opModeTimeRemaining() <= 63) {
+        else if (opModeTimeRemaining() >= 58 && opModeTimeRemaining() <= 61) {
             lights.oneMinThing();
         } else if (shooter.upToSpeed()) {
             lights.displayGreen();

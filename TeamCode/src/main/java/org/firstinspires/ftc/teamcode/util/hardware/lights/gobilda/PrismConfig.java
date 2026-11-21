@@ -46,10 +46,10 @@ public class PrismConfig extends LinearOpMode {
                 prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.RainbowSnakes());
                 break;
             case ARTBOARD_6:
-                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.Snakes());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, PrismAnimations.snakes().colors(Color.TEAM_COLOR_BLUE, Color.TEAM_COLOR_WHITE, Color.TEAM_COLOR_BLUE, Color.TEAM_COLOR_WHITE).build());
                 break;
             case ARTBOARD_7:
-                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0   , new PrismAnimations.SineWave());
+                prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, new PrismAnimations.SineWave());
                 break;
         }
 

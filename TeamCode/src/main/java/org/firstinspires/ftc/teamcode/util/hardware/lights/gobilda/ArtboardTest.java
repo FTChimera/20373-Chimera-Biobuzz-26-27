@@ -18,7 +18,7 @@ public class ArtboardTest extends OpMode {
     }
 
     @Override public void start() {
-        prismDriver.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_3);
+        prismDriver.loadAnimationsFromArtboard(GoBildaPrismDriver.Artboard.ARTBOARD_6);
     }
     /**
      * User-defined loop method
