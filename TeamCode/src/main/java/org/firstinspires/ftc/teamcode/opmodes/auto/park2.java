@@ -34,7 +34,10 @@ public class park2 extends OpMode {
         robot.debug = true;
         robot.setSmartShooterControl(true);
         plan = PlanBuilder.startLoading(robot)
-                .customPath(Paths.line(ParkAutoStartPoses.blueUntippedStart(), PoseFactory.deg(129.74, 48, 90)).constant(-90))
+                // Path must start at the robot's actual start pose
+                // (loadingArea); starting it at blueUntippedStart made the
+                // follower drive toward a path that begins across the field.
+                .customPath(Paths.line(StartPoses.loadingArea, PoseFactory.deg(129.74, 48, 90)).constant(-90))
                 .schedule();
     }
 

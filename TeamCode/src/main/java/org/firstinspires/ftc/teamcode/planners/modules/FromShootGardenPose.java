@@ -49,13 +49,13 @@ public class FromShootGardenPose {
                     instant(robot.intake::setFullPower),
                     // Turn in place to 180 (west) first, then drive with a
                     // constant west heading -- no tangent sweep, no snap.
-                    DrivetrainCommands.turnToHeading(robot.follower, IntakePoses.westFlower.heading()),
-                    parallel(follow(robot.follower, () -> toFlower), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
+                    parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     waitMs(Timings.flowerIntakeTime * 1000),
                     // Drive back still facing west, then turn in place
                     // to 90 (north) for the garden shoot.
-                    parallel(follow(robot.follower, () -> back), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeading(robot.follower, ShootPoses.garden.heading()),
+                    parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );

@@ -111,6 +111,10 @@ fun reversingTangent(
 object Timings {
     const val gardenIntakeTimeMs = 700
     const val flowerIntakeTime = 2
+    // Flower legs get timeouts so a robot wedged at the flower (deployer
+    // disabled) cannot hang the whole auto on one follow/turn.
+    const val flowerFollowTimeoutMs = 3500
+    const val flowerTurnTimeoutMs = 2500
     const val shootingTimeMs = 900
     const val upToSpeedShooterTimeoutTimeMs = 1500
     const val hiveLineupTimeoutTime = 10

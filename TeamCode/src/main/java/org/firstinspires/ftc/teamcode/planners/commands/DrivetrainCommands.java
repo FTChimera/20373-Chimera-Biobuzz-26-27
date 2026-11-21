@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.pedro.Follower;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
@@ -23,6 +24,26 @@ public class DrivetrainCommands {
                 .requiring(follower)
                 .setStart(() -> follower.follow(Objects.requireNonNull(pathSupplier.get(), "Path supplier returned null")))
                 .setDone(follower::atParametricEnd);
+    }
+
+    /**
+     * Like {@link #follow}, but also finishes after {@code timeoutMs} even if
+     * the path end was never reached. Use for legs where the robot may be
+     * physically blocked from the path end (e.g. pushing into a flower with
+     * the deployer disabled): without this, one blocked leg hangs the whole
+     * auto. The follower keeps driving during whatever step comes next
+     * until that step replaces the follow, which is fine for an intake dwell.
+     */
+    public static Command followWithTimeout(Follower follower, Supplier<Path> pathSupplier, double timeoutMs) {
+        AtomicLong startNanos = new AtomicLong(0);
+        return Command.build()
+                .requiring(follower)
+                .setStart(() -> {
+                    startNanos.set(System.nanoTime());
+                    follower.follow(Objects.requireNonNull(pathSupplier.get(), "Path supplier returned null"));
+                })
+                .setDone(() -> follower.atParametricEnd()
+                        || (System.nanoTime() - startNanos.get()) / 1_000_000.0 >= timeoutMs);
     }
 
     /**
@@ -41,6 +62,25 @@ public class DrivetrainCommands {
                     follower.hold(new Pose(current.x(), current.y(), targetHeadingRadians));
                 })
                 .setDone(() -> !follower.isBusy());
+    }
+
+    /**
+     * Like {@link #turnToHeading}, but also finishes after {@code timeoutMs}
+     * even if the hold never settles (e.g. the robot is wedged against a
+     * flower and cannot reach the heading tolerance). The next follow's
+     * heading interpolator corrects any leftover heading error.
+     */
+    public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians, double timeoutMs) {
+        AtomicLong startNanos = new AtomicLong(0);
+        return Command.build()
+                .requiring(follower)
+                .setStart(() -> {
+                    startNanos.set(System.nanoTime());
+                    Pose current = follower.localizer.pose();
+                    follower.hold(new Pose(current.x(), current.y(), targetHeadingRadians));
+                })
+                .setDone(() -> !follower.isBusy()
+                        || (System.nanoTime() - startNanos.get()) / 1_000_000.0 >= timeoutMs);
     }
 
     /**
