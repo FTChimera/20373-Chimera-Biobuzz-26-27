@@ -287,9 +287,11 @@ object FieldCoordinates {
         Coordinate(0.0, 96.0), Coordinate(0.0, 120.0)
     )
 
+    // Point-mirror of red (144-x, 144-y), matching the official field:
+    // red is x 0-12, y 96-120 (12x24), so blue is x 132-144, y 24-48.
     @JvmStatic fun blueLoadingZone(): Array<Coordinate> = arrayOf(
-        Coordinate(130.0, 10.0), Coordinate(106.0, 10.0), Coordinate(106.0, 34.0),
-        Coordinate(130.0, 34.0), Coordinate(130.0, 10.0)
+        Coordinate(144.0, 24.0), Coordinate(132.0, 24.0), Coordinate(132.0, 48.0),
+        Coordinate(144.0, 48.0), Coordinate(144.0, 24.0)
     )
 
     @JvmStatic fun westHiveBase(): Array<Coordinate> = arrayOf(

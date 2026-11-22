@@ -53,6 +53,7 @@ public class Robot {
     public DriveVector drivePowers;
     public boolean holdIfNoInput;
     public boolean setTeleOpDrive;
+    private boolean autoAlignRequested = false;
 
     public Timer opModeTimer;
     double dt = 1;
@@ -122,7 +123,11 @@ public class Robot {
         autoAimerCalculator.setHiveState(field.getHiveState());
         autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt);
 
+        // Y released (setAutoAlign not called this loop): drop the
+        // shoot-on-the-move heading override before the follower runs.
+        if (!autoAlignRequested) follower.headingOverride = null;
         follower.update(dt);
+        autoAlignRequested = false;
         if (smartIntakeControl) smartIntakeUpdate();
         if (smartShooterControl) smartShooterUpdate();
         intake.update(/*follower.twist()*/);
@@ -260,6 +265,16 @@ public class Robot {
     }
 
     public void setAutoAlign() {
+        autoAlignRequested = true;
+        if (follower.following()) {
+            // Shoot-on-the-move: keep following the path (calculatePath
+            // still drives translation), but face the goal instead of the
+            // path's heading interpolator. Must NOT set setTeleOpDrive --
+            // that switches to manual() and cancels the follow (the old
+            // Y-cancels-park bug).
+            follower.headingOverride = autoAimerCalculator.getTargetHeading();
+            return;
+        }
         if (autoAimerCalculator.useFollowerHold) {
             drivePowers.setTurn(follower.algorithm.calculateHold(
                     follower.drivetrain,

@@ -35,6 +35,15 @@ public class Follower {
     public PathTracker pathTracker = null;
     public Pose holdPose = null;
     public DrivePowers manualPowers = null;
+    /**
+     * Shoot-on-the-move heading override (radians). When non-null during
+     * FOLLOW, the path's turn power is replaced with a hold turn toward
+     * this heading: the robot keeps driving the path but faces the
+     * override heading instead of the path interpolator's heading.
+     * Cleared by clearState() (follow/hold/manual/stop) so it never leaks
+     * into a new path.
+     */
+    public Double headingOverride = null;
     public Mode mode;
     public long previousNanoTime;
     public boolean useHoldScaling;
@@ -89,6 +98,11 @@ public class Follower {
                     this.pathTracker = null;
                 } else {
                     DrivePowers powers = this.algorithm.calculatePath(this.drivetrain, this.pathTracker, this.localizer.state(), deltaTime);
+                    if (this.headingOverride != null) {
+                        Pose current = this.localizer.pose();
+                        double turn = this.algorithm.calculateHold(this.drivetrain, new Pose(current.x(), current.y(), this.headingOverride), this.localizer.state(), false, deltaTime).turn();
+                        powers = new DrivePowers(powers.forward(), powers.strafe(), turn);
+                    }
                     this.drivetrain.drive(powers, false);
                 }
                 break;
@@ -141,6 +155,7 @@ public class Follower {
         this.pathTracker = null;
         this.holdPose = null;
         this.manualPowers = null;
+        this.headingOverride = null;
         this.useHoldScaling = true;
     }
 
