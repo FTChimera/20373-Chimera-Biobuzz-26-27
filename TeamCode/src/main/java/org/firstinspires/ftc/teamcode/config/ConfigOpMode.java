@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.util.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.MatchMode;
 
@@ -39,6 +40,7 @@ public class ConfigOpMode extends LinearOpMode {
             }
             if (gamepad1.backWasPressed()) {
                 OpModeStorage.allianceColor = color;
+                CommonKt.init(color);
                 OpModeStorage.matchMode = matchMode;
                 requestOpModeStop();
             }
