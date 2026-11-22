@@ -157,9 +157,12 @@ public class Vision {
     }
 
     public String getDebugString() {
-        return "Pipeline=" + getActivePipelineIndex()
+        return "Alliance=" + allianceColor
+                + " Pipeline=" + getActivePipelineIndex()
                 + " DesiredPipeline=" + getDesiredPipelineIndex()
                 + " TagCount=" + camTransform.getTagCount()
+                + " VisibleTagIds=" + visibleTagIds()
+                + " AnyAllianceTag=" + anyAllianceFiducial()
                 + " Ambiguity(m)=" + camTransform.getAmbiguity()
                 + " Staleness(ms)=" + (latestResult == null ? -1 : latestResult.getStaleness())
                 + " Hive=" + inferredHiveState
@@ -277,6 +280,16 @@ public class Vision {
         return lastTxAvgIndicator;
     }
 
+
+    /** Comma-separated IDs of every fiducial in the latest frame, for pit debugging. */
+    public String visibleTagIds() {
+        StringBuilder ids = new StringBuilder();
+        for (LLResultTypes.FiducialResult fiducial : fiducials()) {
+            if (ids.length() > 0) ids.append(",");
+            ids.append(fiducial.getFiducialId());
+        }
+        return ids.length() == 0 ? "none" : ids.toString();
+    }
 
     public List<LLResultTypes.FiducialResult> fiducials() {
         if (latestResult == null || latestResult.getFiducialResults() == null) {
