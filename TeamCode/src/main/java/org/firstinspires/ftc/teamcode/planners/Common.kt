@@ -117,10 +117,10 @@ object Timings {
     const val flowerTurnTimeoutMs = 2500
     const val shootingTimeMs = 900
     const val upToSpeedShooterTimeoutTimeMs = 1500
+    const val hiveLineupTimeoutTime = 2
     // Cut 10 -> 3 (2026-11-21): if no alliance tag is ever seen (wrong
     // alliance saved, camera pipeline, tag IDs), a 10 s wait burns a third
     // of auto before shooting blind anyway. Tags normally appear in <1 s.
-    const val hiveLineupTimeoutTime = 3
     const val autoAlignTimeoutTime = 2
     const val gardenIntakeTimeoutMs = 5000
     const val hiveLineupExtraTimeSec = 2
