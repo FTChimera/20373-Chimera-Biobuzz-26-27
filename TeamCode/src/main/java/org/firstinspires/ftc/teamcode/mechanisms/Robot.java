@@ -115,32 +115,62 @@ public class Robot {
 
     /**
      * One loop of robot work: ticks the FTCUtils daemon registry once.
-     * All periodic work runs in {@link #robotDaemon()} (plus
+     * All periodic work runs in the per-step daemons below (plus
      * ClockManager's time snapshot, which nothing here depends on).
      */
     public void update() {
         DaemonManager.unmodifiable().forEach(d -> d.daemon.execute());
     }
 
-    /**
-     * Daemon entry point (registered by Sloth scanning): runs the live
-     * Robot's full per-loop sequence. A single ordered daemon — rather
-     * than one daemon per step — because DaemonManager executes in
-     * scan order with no priority API, and these steps have hard order
-     * dependencies (dt before follower, teleop drive before follower,
-     * hive state before aimer, smart control before mechanism updates).
+    /*
+     * Per-step daemon entry points (registered by Sloth scanning), one
+     * per step of the per-loop sequence, declared in execution order.
+     *
+     * ORDERING CAVEAT: DaemonManager executes daemons in registry
+     * order, which is Sloth scan order (Class.getDeclaredMethods()
+     * order), and @FTCDaemon has no priority attribute (checked in
+     * FTCUtils source: the annotation carries only name()). These
+     * steps have hard order dependencies — dt before follower, teleop
+     * drive before follower, hive state before aimer, smart control
+     * before mechanism updates — so the order below is load-bearing.
+     * Declaring the methods in order is the best available proxy for
+     * scan order, but it is a convention, not a guarantee: if a future
+     * Sloth/ART change reorders method scanning, the steps will run
+     * out of order. Verify on-robot that the robot still drives and
+     * shoots correctly after this split.
      */
-    @FTCDaemon(name = "robot-update")
-    public static void robotDaemon() {
+
+    /** Step 1: advance the loop clock and cache dt for this loop. */
+    @FTCDaemon(name = "robot-clock")
+    public static void clockDaemon() {
         Robot robot = current;
-        if (robot != null) robot.updateDaemons();
+        if (robot != null) robot.stepClock();
     }
 
-    /** The per-loop sequence, in the exact order update() used to run. */
-    private void updateDaemons() {
+    private void stepClock() {
         clockHelper.update();
         dt = clockHelper.dtSeconds();
+    }
+
+    /** Step 2: refresh the cached battery voltage (300 ms cache). */
+    @FTCDaemon(name = "robot-battery")
+    public static void batteryDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepBattery();
+    }
+
+    private void stepBattery() {
         getBatteryVoltage();
+    }
+
+    /** Step 3: apply this loop's teleop drive input, if any. */
+    @FTCDaemon(name = "robot-teleop-drive")
+    public static void teleOpDriveDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepTeleOpDrive();
+    }
+
+    private void stepTeleOpDrive() {
         if (setTeleOpDrive) {
             if (holdIfNoInput) {
                 follower.driveOrHold(drivePowers);
@@ -149,25 +179,105 @@ public class Robot {
             }
             setTeleOpDrive = false;
         }
+    }
 
+    /** Step 4: update vision with the current heading. */
+    @FTCDaemon(name = "robot-vision")
+    public static void visionDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepVision();
+    }
+
+    private void stepVision() {
         vision.update(getHeading());
-        updateHiveStateFromClosestHivePose();
+    }
 
+    /** Step 5: refresh the hive tip state from the closest hive pose. */
+    @FTCDaemon(name = "robot-hive-state")
+    public static void hiveStateDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepHiveState();
+    }
+
+    private void stepHiveState() {
+        updateHiveStateFromClosestHivePose();
+    }
+
+    /** Step 6: feed the hive state and pose to the auto-aimer. */
+    @FTCDaemon(name = "robot-aimer")
+    public static void aimerDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepAimer();
+    }
+
+    private void stepAimer() {
         autoAimerCalculator.setHiveState(field.getHiveState());
         autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt);
+    }
 
+    /** Step 7: run the follower (path following / teleop drive). */
+    @FTCDaemon(name = "robot-follower")
+    public static void followerDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepFollower();
+    }
+
+    private void stepFollower() {
         // Y released (setAutoAlign not called this loop): drop the
         // shoot-on-the-move heading override before the follower runs.
         if (!autoAlignRequested) follower.headingOverride = null;
         follower.update(dt);
         autoAlignRequested = false;
+    }
+
+    /**
+     * Step 8: automatic intake/shooter control. Manual overrides
+     * (panic / reverse outtake) still win inside smartShooterUpdate.
+     */
+    @FTCDaemon(name = "robot-smart-control")
+    public static void smartControlDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepSmartControl();
+    }
+
+    private void stepSmartControl() {
         if (smartIntakeControl) smartIntakeUpdate();
         if (smartShooterControl) smartShooterUpdate();
+    }
+
+    /** Step 9: per-loop mechanism updates. */
+    @FTCDaemon(name = "robot-mechanisms")
+    public static void mechanismsDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepMechanisms();
+    }
+
+    private void stepMechanisms() {
         intake.update(/*follower.twist()*/);
         transfer.update();
         shooter.update();
+    }
+
+    /** Step 10: lights state machine + LED output. */
+    @FTCDaemon(name = "robot-lights")
+    public static void lightsDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepLights();
+    }
+
+    private void stepLights() {
         lightsControl();
         lights.update();
+    }
+
+    /** Step 11: debug telemetry, when enabled. */
+    @FTCDaemon(name = "robot-debug")
+    public static void debugDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.stepDebug();
+    }
+
+    private void stepDebug() {
         if (debug) debug();
     }
 
