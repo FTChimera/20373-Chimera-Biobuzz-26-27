@@ -70,7 +70,7 @@ public class GardenSoloAutoPartner extends ArchitecturalOpMode {
             robot.start();
             started = true;
         }
-        if (robot.opModeTimeRemaining() <= 0 || robot.inParkZone()) {
+        if (robot.opModeTimeRemaining() <= 0) {
             stopAutonomous();
             return;
         }
