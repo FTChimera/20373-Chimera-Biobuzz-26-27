@@ -199,6 +199,13 @@ object PathPoses {
     // Cross-field return controls (to the shoot poses):
     @JvmField val gardenToLoading = red(pose(35.0, 125.0))
     @JvmField val loadingToGarden = red(pose(50.0, 30.0))
+    // Under-hive corridor waypoints for the tree auto's side switch: a
+    // straight line between them passes under the west hive base
+    // (x 45..51, y 50..94) with ~2 in of body clearance and stays west
+    // of the x=72 midpoint. Used with a constant corridor heading
+    // (90 deg red / -90 deg blue, derived from the waypoint direction).
+    @JvmField val underHiveSouth = red(pose(61.0, 32.0))
+    @JvmField val underHiveNorth = red(pose(61.0, 112.0))
     // Loading-zone preload intake (no-show partner): centre 9.5 in from
     // the west wall (1 in + half the robot length), facing the wall.
     @JvmField val loadingIntakeApproach = red(pose(30.0, 115.0))
@@ -219,6 +226,8 @@ object PathPoses {
         northFlowerFromLoading.setAllianceColor(color)
         gardenToLoading.setAllianceColor(color)
         loadingToGarden.setAllianceColor(color)
+        underHiveSouth.setAllianceColor(color)
+        underHiveNorth.setAllianceColor(color)
         loadingIntakeApproach.setAllianceColor(color)
         loadingIntake.setAllianceColor(color)
         partnerApproach.setAllianceColor(color)

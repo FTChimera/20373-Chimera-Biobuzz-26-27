@@ -4,6 +4,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.RobotParkingTest;
 import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuningMathTest;
 import org.firstinspires.ftc.teamcode.planners.UtilityPosesTest;
 import org.firstinspires.ftc.teamcode.planners.modules.NullPlannerTest;
+import org.firstinspires.ftc.teamcode.planners.tree.TreeStateTest;
 import org.firstinspires.ftc.teamcode.util.autotune.SvaFitTest;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityControllerTest;
 import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilterConvergenceTest;
@@ -23,6 +24,7 @@ import org.junit.runners.Suite;
         EKFPinpointTuningMathTest.class,
         UtilityPosesTest.class,
         NullPlannerTest.class,
+        TreeStateTest.class,
         SvaFitTest.class,
         DoubleFlywheelFullVelocityControllerTest.class,
         ExtendedKalmanFilterConvergenceTest.class,
