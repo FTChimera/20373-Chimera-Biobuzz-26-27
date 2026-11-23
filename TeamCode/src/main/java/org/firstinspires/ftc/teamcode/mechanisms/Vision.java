@@ -22,7 +22,7 @@ import java.util.List;
 public class Vision {
     public static String LIMELIGHT_NAME = "limelight";
     public static int RED_PIPELINE_INDEX = 0;
-    public static int BLUE_PIPELINE_INDEX = 1;
+    public static int BLUE_PIPELINE_INDEX = 0;
     public static boolean USE_MEGATAG2_ORIENTATION = false;
 
     public static int MIN_TAGS_FOR_LOCALIZATION = 1;
