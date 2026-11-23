@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.planners.tree;
 import com.rmsftc.utils.blackboard.Blackboard;
 
 import org.firstinspires.ftc.teamcode.planners.Position;
+import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands.ShotOutcome;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
@@ -17,17 +18,18 @@ import java.util.Set;
  *
  * <p>Blackboard keys (enum {@link Key}):
  * <ul>
- *   <li>{@code POSITION} — {@link Position}: where the robot currently is
+ *   <li>{@code POSITION} — {@link Position}: last verified route position
  *       (starts GARDEN_START; updated by the shoot step to the side actually
  *       shot from, and by the reposition command).</li>
- *   <li>{@code CYCLES_COMPLETED} — Integer: shoots completed so far.</li>
+ *   <li>{@code CYCLES_COMPLETED} — Integer: timed batch attempts completed,
+ *       not confirmed scores.</li>
  *   <li>{@code PREDICTED_HIVE_STATE} — {@link Field.HiveState} from the tip
  *       model (stored so telemetry can show it; recomputed on every shot).</li>
  *   <li>{@code INTAKES_DONE} — {@code EnumSet<IntakeArea>}: intake areas
  *       already collected from.</li>
  * </ul>
  *
- * <p>Tip model (assumes 100% accuracy): the preload shoot is cycle 1. The
+ * <p>Tip model (an unverified all-shots-score hypothesis): the preload attempt is cycle 1. The
  * hive tips after cycles 1, 3, 5, ... (first cycle, then every 2), and tips
  * alternate direction starting from UNTIPPED (garden side). So
  * tips = (cyclesCompleted + 1) / 2 and the predicted state is TIPPED when
@@ -58,7 +60,12 @@ public final class TreeState {
         POSITION,
         CYCLES_COMPLETED,
         PREDICTED_HIVE_STATE,
-        INTAKES_DONE
+        INTAKES_DONE,
+        LAST_SHOT_OUTCOME,
+        LAST_SHOT_SETTLED,
+        LAST_SHOT_TAG_CONFIRMED,
+        PREDICTION_UNCERTAIN,
+        CONTROL_PATH_FAILURE
     }
 
     /**
@@ -156,6 +163,11 @@ public final class TreeState {
         board.set(Key.CYCLES_COMPLETED, 0);
         board.set(Key.PREDICTED_HIVE_STATE, Field.HiveState.UNTIPPED);
         board.set(Key.INTAKES_DONE, EnumSet.noneOf(IntakeArea.class));
+        board.set(Key.LAST_SHOT_OUTCOME, ShotOutcome.NOT_STARTED);
+        board.set(Key.LAST_SHOT_SETTLED, false);
+        board.set(Key.LAST_SHOT_TAG_CONFIRMED, false);
+        board.set(Key.PREDICTION_UNCERTAIN, false);
+        board.set(Key.CONTROL_PATH_FAILURE, "");
     }
 
     public Position position() {
@@ -166,8 +178,45 @@ public final class TreeState {
         board.set(Key.POSITION, position);
     }
 
+    /** Compatibility name: these are completed timed attempts, not scored batches. */
     public int cyclesCompleted() {
+        return attemptedBatches();
+    }
+
+    public int attemptedBatches() {
         return board.getOrDefault(Key.CYCLES_COMPLETED, Integer.class, 0);
+    }
+
+    public ShotOutcome lastShotOutcome() {
+        return board.getOrDefault(Key.LAST_SHOT_OUTCOME, ShotOutcome.class, ShotOutcome.NOT_STARTED);
+    }
+
+    public boolean lastShotSettled() {
+        return board.getOrDefault(Key.LAST_SHOT_SETTLED, Boolean.class, false);
+    }
+
+    public boolean lastShotTagConfirmed() {
+        return board.getOrDefault(Key.LAST_SHOT_TAG_CONFIRMED, Boolean.class, false);
+    }
+
+    public boolean predictionUncertain() {
+        return board.getOrDefault(Key.PREDICTION_UNCERTAIN, Boolean.class, false);
+    }
+
+    public String controlPathFailure() {
+        return board.getOrDefault(Key.CONTROL_PATH_FAILURE, String.class, "");
+    }
+
+    public boolean controlPathAborted() {
+        return !controlPathFailure().isEmpty();
+    }
+
+    /** Latches failure until initialize; never launch another leg from an invented pose. */
+    public void abortControlPath(String reason) {
+        if (reason == null || reason.isEmpty()) {
+            throw new IllegalArgumentException("A control-path failure reason is required");
+        }
+        board.set(Key.CONTROL_PATH_FAILURE, reason);
     }
 
     public Field.HiveState predictedHiveState() {
@@ -186,26 +235,40 @@ public final class TreeState {
         board.set(Key.INTAKES_DONE, done);
     }
 
-    /** True once the preload shot and all four intakes are done. */
+    /** True once a batch was attempted and all four intakes were visited. */
     public boolean sequenceComplete() {
         return cyclesCompleted() > 0 && intakesDone().size() == IntakeArea.values().length;
     }
 
     /**
-     * Records a completed shoot from {@code shotFrom}: increments the cycle
-     * count, recomputes the predicted hive state, and sets the position to
-     * the side actually shot from (which may differ from the leg's planned
-     * side after a camera-forced switch).
+     * Advances sequence progress only for a completed timed batch attempt.
+     * Neither speed readiness nor tag visibility confirms scored pollen;
+     * the tip prediction becomes uncertain even for a non-degraded attempt.
+     * Position changes only when measured arrival was verified.
      */
-    public void recordShot(Position shotFrom) {
-        int cycles = cyclesCompleted() + 1;
+    public void recordAttempt(Position shotFrom, ShotOutcome outcome, boolean settled,
+                              boolean freshTag, boolean positionVerified) {
+        if (outcome != ShotOutcome.ATTEMPTED && outcome != ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT) {
+            throw new IllegalArgumentException("Only a completed feed counts as a batch attempt");
+        }
+        otherShootPosition(shotFrom);
+        int cycles = attemptedBatches() + 1;
         board.set(Key.CYCLES_COMPLETED, cycles);
         board.set(Key.PREDICTED_HIVE_STATE, predictHiveState(cycles));
-        board.set(Key.POSITION, shotFrom);
+        board.set(Key.PREDICTION_UNCERTAIN, true);
+        board.set(Key.LAST_SHOT_OUTCOME, outcome);
+        board.set(Key.LAST_SHOT_SETTLED, settled);
+        board.set(Key.LAST_SHOT_TAG_CONFIRMED, freshTag);
+        if (positionVerified) {
+            board.set(Key.POSITION, shotFrom);
+        } else {
+            abortControlPath("Batch attempted without verified arrival at " + shotFrom);
+        }
     }
 
     /** The leg (or reposition/none) the tree should run next. */
     public Selection selectLeg() {
+        if (controlPathAborted()) return Selection.NONE;
         return selectLeg(position(), cyclesCompleted(), intakesDone());
     }
 

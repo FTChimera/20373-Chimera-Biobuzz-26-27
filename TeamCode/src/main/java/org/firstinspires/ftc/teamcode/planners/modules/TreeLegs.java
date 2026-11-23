@@ -5,18 +5,16 @@ import androidx.annotation.NonNull;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
-import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
-
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeShooterCommands;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeState;
+import org.firstinspires.ftc.teamcode.planners.tree.IntakeArea;
 
 /**
  * Tree-auto versions of the shared planner legs. Each subclass reuses its
@@ -24,8 +22,9 @@ import org.firstinspires.ftc.teamcode.planners.tree.TreeState;
  * {@code buildCommand()}: the pre-shoot steps are the parent's, but the
  * ending {@code waitForHiveLineup + shootAllPollen} is replaced by the
  * tree shoot step ({@link TreeShooterCommands#shoot}), which checks the
- * camera once and switches sides under the hive if no alliance fiducial
- * is visible. The shared modules (and the autos that use them) are
+ * camera after bounded physical settling and a fresh-frame wait. At most
+ * one measured side switch is allowed; blind attempts remain explicit.
+ * The shared modules (and the autos that use them) are
  * untouched.
  *
  * <p>These live in {@code planners.modules} rather than
@@ -33,6 +32,7 @@ import org.firstinspires.ftc.teamcode.planners.tree.TreeState;
  * package-private.
  */
 public final class TreeLegs {
+    private static final double SHOOT_APPROACH_TIMEOUT_MS = 5000;
 
     private TreeLegs() {
     }
@@ -62,7 +62,7 @@ public final class TreeLegs {
         @Override
         protected Command buildCommand() {
             return Commands.sequence(
-                    follow(robot.follower, () -> pathToShoot),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> pathToShoot, SHOOT_APPROACH_TIMEOUT_MS),
                     TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT));
         }
 
@@ -85,10 +85,9 @@ public final class TreeLegs {
         protected Command buildCommand() {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    follow(robot.follower, () -> toGarden).withTimeout(Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> back),
-                    TreeShooterCommands.shoot(robot, state, Position.LOADING_SHOOT));
+                    DrivetrainCommands.followForIntake(robot.follower, () -> toGarden, Timings.gardenIntakeTimeoutMs, Timings.gardenIntakeTimeMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, SHOOT_APPROACH_TIMEOUT_MS),
+                    TreeShooterCommands.shoot(robot, state, Position.LOADING_SHOOT, IntakeArea.GARDEN));
         }
 
         @NonNull
@@ -110,10 +109,9 @@ public final class TreeLegs {
         protected Command buildCommand() {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    follow(robot.follower, () -> toGarden).withTimeout(Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> back),
-                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT));
+                    DrivetrainCommands.followForIntake(robot.follower, () -> toGarden, Timings.gardenIntakeTimeoutMs, Timings.gardenIntakeTimeMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, SHOOT_APPROACH_TIMEOUT_MS),
+                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT, IntakeArea.GARDEN));
         }
 
         @NonNull
@@ -136,11 +134,10 @@ public final class TreeLegs {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    Commands.waitMs(Timings.flowerIntakeTime * 1000L),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
-                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT));
+                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT, IntakeArea.WEST_FLOWER))
+                    .finallyDo(() -> robot.intake.setDeployed(false));
         }
 
         @NonNull
@@ -163,11 +160,10 @@ public final class TreeLegs {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.northFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    Commands.waitMs(Timings.flowerIntakeTime * 1000L),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.loading.heading(), Timings.flowerTurnTimeoutMs),
-                    TreeShooterCommands.shoot(robot, state, Position.LOADING_SHOOT));
+                    TreeShooterCommands.shoot(robot, state, Position.LOADING_SHOOT, IntakeArea.NORTH_FLOWER))
+                    .finallyDo(() -> robot.intake.setDeployed(false));
         }
 
         @NonNull
@@ -189,10 +185,9 @@ public final class TreeLegs {
         protected Command buildCommand() {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    follow(robot.follower, () -> toWall),
-                    Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> toGarden),
-                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT));
+                    DrivetrainCommands.followForIntake(robot.follower, () -> toWall, Timings.gardenIntakeTimeoutMs, Timings.gardenIntakeTimeMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, SHOOT_APPROACH_TIMEOUT_MS),
+                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT, IntakeArea.LOADING_PRELOADS));
         }
 
         @NonNull
@@ -215,11 +210,10 @@ public final class TreeLegs {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    Commands.waitMs(Timings.flowerIntakeTime * 1000L),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
-                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT));
+                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT, IntakeArea.WEST_FLOWER))
+                    .finallyDo(() -> robot.intake.setDeployed(false));
         }
 
         @NonNull

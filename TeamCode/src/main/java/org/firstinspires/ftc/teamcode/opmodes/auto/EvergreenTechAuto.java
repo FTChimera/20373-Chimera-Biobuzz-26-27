@@ -22,9 +22,7 @@ import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import com.rmsftc.utils.RobotMode;
 
 /**
- * Garden start, shoot preloads (4), garden intake and shoot (4), west
- * flower intake and shoot (4), then park. All three shoots are at the
- * garden shoot pose with the hive UNTIPPED, so no cross-field legs.
+ * Red loading start: shoot preloads, then follow a body-clear parking route.
  */
 
 @Autonomous(name = "Evergreen Tech A-trons Auto RED", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
@@ -51,7 +49,8 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
     protected void build(ArchitectureManager manager) {
         plan = Plan.sequence(Position.LOADING_START, StartPoses.loadingArea,
                 new FromStartLoadingPose.ShootPreloads(robot),
-                new Utils.CustomPath(robot, Paths.line(ShootPoses.loading, PoseFactory.deg(14.26, 96, 90)).constant(90)));
+                new Utils.CustomPath(robot,
+                        robot.field.generatePathToLoadingZoneShortest(ShootPoses.loading, 3)));
         manager.schedule(plan);
     }
 
@@ -79,7 +78,7 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
             if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
                 lastParkAttemptTimeSec = now;
                 cancelPlan();
-                //                startParked = robot.moveToParkZone();
+                startParked = robot.moveToParkZone();
             }
         }
     }

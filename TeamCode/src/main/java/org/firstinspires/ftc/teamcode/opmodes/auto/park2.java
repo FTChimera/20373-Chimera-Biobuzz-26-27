@@ -40,10 +40,8 @@ public class park2 extends ArchitecturalOpMode {
     @Override
     protected void build(ArchitectureManager manager) {
         plan = Plan.sequence(Position.LOADING_START, StartPoses.loadingArea,
-                // Path must start at the robot's actual start pose
-                // (loadingArea); starting it at blueUntippedStart made the
-                // follower drive toward a path that begins across the field.
-                new Utils.CustomPath(robot, Paths.line(StartPoses.loadingArea, PoseFactory.deg(129.74, 48, 90)).constant(-90)));
+                new Utils.CustomPath(robot,
+                        robot.field.generatePathToLoadingZoneShortest(StartPoses.loadingArea, 3)));
         manager.schedule(plan);
     }
 

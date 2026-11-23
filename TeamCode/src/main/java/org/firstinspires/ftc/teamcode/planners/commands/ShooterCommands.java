@@ -5,6 +5,7 @@ import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
+import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.util.Timer;
@@ -13,6 +14,52 @@ import org.firstinspires.ftc.teamcode.util.game.Field;
 import java.util.concurrent.TimeUnit;
 
 public class ShooterCommands {
+
+    /** A completed timed feed is an attempted batch, never a confirmed score. */
+    public enum ShotOutcome {
+        NOT_STARTED,
+        WAITING_FOR_SPEED,
+        FEEDING,
+        ATTEMPTED,
+        ATTEMPTED_SPINUP_TIMEOUT,
+        INTERRUPTED
+    }
+
+    static final class ShotLifecycle {
+        private ShotOutcome outcome = ShotOutcome.NOT_STARTED;
+        private boolean spinupTimedOut;
+
+        ShotOutcome outcome() {
+            return outcome;
+        }
+
+        boolean attempted() {
+            return outcome == ShotOutcome.ATTEMPTED
+                    || outcome == ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT;
+        }
+
+        void start() {
+            outcome = ShotOutcome.WAITING_FOR_SPEED;
+            spinupTimedOut = false;
+        }
+
+        void feed(boolean timedOut) {
+            if (outcome != ShotOutcome.WAITING_FOR_SPEED) {
+                throw new IllegalStateException("Feeding requires waiting for shooter speed");
+            }
+            spinupTimedOut = timedOut;
+            outcome = ShotOutcome.FEEDING;
+        }
+
+        void end(boolean interrupted) {
+            if (attempted() || outcome == ShotOutcome.INTERRUPTED) {
+                return;
+            }
+            outcome = !interrupted && outcome == ShotOutcome.FEEDING
+                    ? (spinupTimedOut ? ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT : ShotOutcome.ATTEMPTED)
+                    : ShotOutcome.INTERRUPTED;
+        }
+    }
 
     /**
      * Hive lineup is about the hive STATE (tipped / untipped), not aiming:
@@ -76,55 +123,93 @@ public class ShooterCommands {
         };
     }
 
-    public static Command shootAllPollen(Robot robot) {
-        return new Command() {
-            private Timer timer;
-            private boolean startShoot;
+    public static ShotCommand shootAllPollen(Robot robot) {
+        return new ShotCommand(robot);
+    }
 
-            {
-                addRequirements(robot.shooter, robot.transfer, robot.intake);
+    public static final class ShotCommand extends Command {
+        private final Robot robot;
+        private final ShotLifecycle lifecycle = new ShotLifecycle();
+        private Timer timer;
+
+        private ShotCommand(Robot robot) {
+            this.robot = robot;
+            addRequirements(robot.shooter, robot.transfer, robot.intake);
+        }
+
+        public ShotOutcome outcome() {
+            return lifecycle.outcome();
+        }
+
+        /** True only after a full timed feed, not proof that any pollen scored. */
+        public boolean attempted() {
+            return lifecycle.attempted();
+        }
+
+        @Override
+        public void start() {
+            lifecycle.start();
+            if (!robot.shooter.hasNonzeroVelocityTarget()) {
+                throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
             }
+            timer = new Timer();
+        }
 
-            @Override
-            public void start() {
-                if (!robot.shooter.hasNonzeroVelocityTarget()) {
-                    throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
+        @Override
+        public void loop() {
+            if (outcome() == ShotOutcome.FEEDING) {
+                if (timer.past(Timings.shootingTimeMs)) {
+                    lifecycle.end(false);
                 }
-                timer = new Timer();
-                startShoot = false;
+                return;
             }
+            if (outcome() != ShotOutcome.WAITING_FOR_SPEED) {
+                return;
+            }
+            boolean upToSpeed = robot.shooter.upToSpeed();
+            if (!upToSpeed && !timer.past(Timings.upToSpeedShooterTimeoutTimeMs)) {
+                return;
+            }
+            if (!upToSpeed) {
+                robot.telemetry.addData("Shooter spinup timeout",
+                        "WARNING: feeding without speed confirmation; batch attempt only");
+            }
+            robot.intake.setFullPower();
+            robot.transfer.shootAll();
+            timer = new Timer();
+            lifecycle.feed(!upToSpeed);
+        }
 
-            @Override
-            public void loop() {
-                if (!robot.shooter.upToSpeed() && !timer.past(Timings.upToSpeedShooterTimeoutTimeMs)) {
-                    return;
-                }
-                if (startShoot) return;
-                robot.intake.setFullPower();
-                robot.transfer.shootAll();
-                timer = new Timer();
-                startShoot = true;
-            }
+        @Override
+        public Status status() {
+            return Status.of(!attempted() && outcome() != ShotOutcome.INTERRUPTED);
+        }
 
-            @Override
-            public Status status() {
-                return Status.of(!(startShoot && timer.past(Timings.shootingTimeMs)));
+        @Override
+        public void end(EndCondition endCondition) {
+            lifecycle.end(endCondition != EndCondition.NATURALLY);
+            try {
+                robot.transfer.stopImmediately();
+            } finally {
+                // Clear eject mode too, so its override guard cannot restart intake next update.
+                robot.intake.stopEjecting(Intake.Mode.IDLE);
+                robot.intake.stopImmediately();
             }
-
-            @Override
-            public void end(EndCondition endCondition) {
-                robot.transfer.stop();
-            }
-        };
+        }
     }
 
     public static Command waitForHiveLineup(Robot robot, Field.HiveState unused) {
         Command waitForTag = new Command() {
             private Timer timer;
             private boolean done;
+            private long nanoBoundary;
 
             @Override
             public void start() {
+                nanoBoundary = System.nanoTime();
+                if (robot.vision == null) {
+                    throw new IllegalStateException("Robot vision subsystem is required for hive lineup.");
+                }
                 timer = new Timer(TimeUnit.SECONDS);
                 done = false;
             }
@@ -134,12 +219,14 @@ public class ShooterCommands {
                 if (done) {
                     return;
                 }
-                if (robot.vision.anyAllianceFiducial()) {
+                if (robot.vision.anyAllianceFiducialAfter(nanoBoundary)) {
                     done = true;
                     return;
                 }
                 if (timer.past(Timings.hiveLineupTimeoutTime)) {
                     done = true;
+                    robot.telemetry.addData("Hive lineup timeout",
+                            "WARNING: no fresh post-start alliance frame; continuing blind");
                 }
             }
 

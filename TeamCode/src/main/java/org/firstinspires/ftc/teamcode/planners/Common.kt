@@ -267,7 +267,7 @@ object ParkAutoStartPoses {
     private val redTippedStart = pose(32.0, 134.0, 0.0)
     private val blueUntippedStart = pose(84.0, 130.0, 180.0)
     private val blueTippedStart = pose(112.0, 10.0, 180.0)
-    private val redDestination = pose(8.0, 104.0, 0.0)
+    private val redDestination = pose(9.0, 104.0, 0.0)
     private val blueDestination = pose(135.0, 38.0, 180.0)
 
     @JvmStatic fun redUntippedStart(): Pose2d = redUntippedStart.copy()
@@ -355,4 +355,3 @@ private fun mirrorPose(red: Pose2d) = mirrorFactory.create(red)
 private fun red(red: Pose2d): AlliancePose2d {
     return AlliancePose2d(red, mirrorPose(red), AllianceColor.RED)
 }
-

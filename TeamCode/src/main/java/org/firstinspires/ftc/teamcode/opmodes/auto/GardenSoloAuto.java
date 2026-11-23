@@ -31,12 +31,12 @@ import java.util.List;
 /**
  * Garden solo auto, behavior-tree version: garden start, shoot preloads,
  * then repeatedly pick the next intake leg from the blackboard state
- * (position, cycles completed, predicted hive state, intakes done) and
+ * (verified position, attempted batches, hypothetical hive state, intakes done) and
  * park when time runs low or everything is done.
  *
  * <p>Tree shape: a reactive selector root with two branches. The park
  * branch (highest priority) fires when {@code robot.shouldPark()} or the
- * sequence is complete, preempting whatever leg is running. The main
+ * sequence is complete or a control path aborts, preempting whatever leg is running. The main
  * branch is a reactive selector with one branch per leg plus a
  * reposition branch; each leg branch is a sequence of [selection
  * condition, leg command as a node]. Selection and the hive tip model
@@ -44,10 +44,13 @@ import java.util.List;
  * on schedule) the tree reproduces the old fixed order — ShootPreloads,
  * ToIntakeGardenToLoading, ToIntakeFromNorthFlower,
  * ToIntakeLoadingToGarden, ToIntakeFromWestFlower, park. Each leg's
- * shoot step checks the camera once and switches sides under the hive
- * if no alliance fiducial is visible (see {@link TreeShooterCommands});
- * the blackboard position then reflects the side actually shot from, so
- * selection continues from reality.
+ * shoot step waits boundedly for physical settling and a post-approach
+ * frame before one side-switch decision (see {@link TreeShooterCommands}).
+ * A verified switch gets another fresh-frame wait. Missing confirmation
+ * still permits an explicitly degraded attempt, never a confirmed score.
+ * Unsafe traversal latches a control-path failure and disables further
+ * legs and immediately selects parking from the measured robot pose.
+ * The blackboard never commits an unverified destination.
  *
  * <p>Node semantics that matter here: {@code SequenceNode} has memory —
  * once a leg branch passes its condition it stays on the leg node until
@@ -84,7 +87,8 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
         // onLoop() calls robot.start() (shouldPark reads the match timer).
         BehaviorNode parkBranch = new SequenceNode("Park", board, Arrays.asList(
                 new ConditionNode("ShouldPark", board,
-                        () -> started && (robot.shouldPark() || state.sequenceComplete())),
+                        () -> started && (robot.shouldPark() || state.sequenceComplete()
+                                || state.controlPathAborted())),
                 new ParkNode("Park", board, robot)));
 
         List<BehaviorNode> legBranches = new ArrayList<>();
@@ -131,8 +135,14 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
 
         robot.update();
         telemetry.addData("GardenSolo tree position", state.position());
-        telemetry.addData("GardenSolo tree predicted hive", state.predictedHiveState());
-        telemetry.addData("GardenSolo tree cycles", state.cyclesCompleted());
+        telemetry.addData("GardenSolo tree hypothetical hive", state.predictedHiveState());
+        telemetry.addData("GardenSolo tree attempted batches", state.attemptedBatches());
+        telemetry.addData("GardenSolo tree score confirmation", "UNAVAILABLE (timed feeds only)");
+        telemetry.addData("GardenSolo tree prediction uncertain", state.predictionUncertain());
+        telemetry.addData("GardenSolo tree last batch outcome", state.lastShotOutcome());
+        telemetry.addData("GardenSolo tree last pose settled", state.lastShotSettled());
+        telemetry.addData("GardenSolo tree last fresh tag", state.lastShotTagConfirmed());
+        telemetry.addData("GardenSolo tree control-path failure", state.controlPathFailure());
         telemetry.addData("GardenSolo tree intakes done", state.intakesDone());
         telemetry.addData("GardenSolo tree next", state.selectLeg());
         telemetry.addData("GardenSolo follower mode", robot.follower.mode());

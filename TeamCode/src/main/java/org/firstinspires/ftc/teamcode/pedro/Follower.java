@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class Follower {
@@ -49,6 +50,13 @@ public class Follower {
     public boolean useHoldScaling;
     public final List<Consumer<FollowerLog>> loggers;
     public FollowerLog debug;
+    private long pathRunId;
+    private boolean pathProgressReady;
+    private boolean pathRunFinished = true;
+    private double pathCompletion;
+    private double pathParametricCompletion;
+    private boolean pathAtParametricEnd;
+    private boolean controlUpdated;
 
     public Follower(com.pedropathing.follower.Follower follower) {
         this(follower.localizer, follower.drivetrain, follower.algorithm());
@@ -98,17 +106,24 @@ public class Follower {
                     this.pathTracker = null;
                 } else {
                     DrivePowers powers = this.algorithm.calculatePath(this.drivetrain, this.pathTracker, this.localizer.state(), deltaTime);
+                    this.pathProgressReady = true;
+                    this.pathCompletion = this.pathTracker.done() ? 1.0 : this.algorithm.completion();
+                    this.pathParametricCompletion = this.pathTracker.done() ? 1.0 : this.algorithm.parametricCompletion();
+                    this.pathAtParametricEnd = this.pathTracker.done()
+                            || (this.pathTracker.remainingPaths() == 1 && this.algorithm.atParametricEnd());
                     if (this.headingOverride != null) {
                         Pose current = this.localizer.pose();
                         double turn = this.algorithm.calculateHold(this.drivetrain, new Pose(current.x(), current.y(), this.headingOverride), this.localizer.state(), false, deltaTime).turn();
                         powers = new DrivePowers(powers.forward(), powers.strafe(), turn);
                     }
                     this.drivetrain.drive(powers, false);
+                    this.controlUpdated = true;
                 }
                 break;
             case 1:
                 DrivePowers powers = this.algorithm.calculateHold(this.drivetrain, this.holdPose, this.localizer.state(), this.useHoldScaling, deltaTime);
                 this.drivetrain.drive(powers, false);
+                this.controlUpdated = true;
                 break;
             case 2:
                 this.drivetrain.drive(this.manualPowers, true);
@@ -148,6 +163,8 @@ public class Follower {
     }
 
     public void clearState() {
+        this.pathRunFinished = true;
+        this.controlUpdated = false;
         if (this.pathTracker != null) {
             this.pathTracker.release();
         }
@@ -160,10 +177,24 @@ public class Follower {
     }
 
     public void follow(Path path) {
+        Objects.requireNonNull(path, "Path is required");
         this.clearState();
+        this.mode = Follower.Mode.IDLE;
+        boolean initialized = false;
+        try {
+            this.pathTracker = new PathTracker(path);
+            this.algorithm.reset();
+            initialized = true;
+        } finally {
+            if (!initialized) this.stop();
+        }
+        this.pathRunId++;
+        this.pathProgressReady = false;
+        this.pathRunFinished = false;
+        this.pathCompletion = 0;
+        this.pathParametricCompletion = 0;
+        this.pathAtParametricEnd = false;
         this.mode = Follower.Mode.FOLLOW;
-        this.pathTracker = new PathTracker(path);
-        this.algorithm.reset();
     }
 
     public void hold(Pose pose) {
@@ -171,10 +202,19 @@ public class Follower {
     }
 
     public void hold(Pose pose, boolean useScaling) {
+        Objects.requireNonNull(pose, "Hold pose is required");
         this.clearState();
-        this.mode = Follower.Mode.HOLD;
+        this.mode = Follower.Mode.IDLE;
+        boolean initialized = false;
+        try {
+            this.algorithm.reset();
+            initialized = true;
+        } finally {
+            if (!initialized) this.stop();
+        }
         this.holdPose = pose;
         this.useHoldScaling = useScaling;
+        this.mode = Follower.Mode.HOLD;
     }
 
     public void manual(DrivePowers powers) {
@@ -232,6 +272,7 @@ public class Follower {
     public void stop() {
         this.clearState();
         this.mode = Follower.Mode.IDLE;
+        this.drivetrain.stop();
     }
     public double distanceToEndpoint() {
         return this.pathTracker == null ? (double)0.0F : this.currentPath().endPose().distance(this.localizer.pose());
@@ -264,12 +305,65 @@ public class Follower {
         } else if (this.pathTracker == null) {
             return true;
         } else {
-            return this.pathTracker.remainingPaths() > 1 ? false : this.algorithm.atParametricEnd();
+            return this.pathTracker.done() || (this.pathProgressReady && this.pathAtParametricEnd);
         }
     }
 
     public double completion() {
-        return this.algorithm.completion();
+        return this.pathCompletion;
+    }
+
+    public long pathRunId() {
+        return this.pathRunId;
+    }
+
+    public boolean hasPathProgress() {
+        return this.pathProgressReady;
+    }
+
+    public boolean pathRunFinished() {
+        return this.pathRunFinished;
+    }
+
+    /** Marks command completion even when the controller intentionally continues an intake push. */
+    public void finishPathCommand(long runId) {
+        if (runId == this.pathRunId) this.pathRunFinished = true;
+    }
+
+    public boolean hasControlUpdate() {
+        return this.controlUpdated;
+    }
+
+    /** Measured readiness; independent of Foresight's busy flag and internal timeout. */
+    public boolean isPoseSettled(Pose target, double positionTolerance, double headingTolerance,
+                                 double linearVelocityTolerance, double angularVelocityTolerance) {
+        Objects.requireNonNull(target, "Target pose is required");
+        if (!Double.isFinite(target.x()) || !Double.isFinite(target.y())) {
+            throw new IllegalArgumentException("Target position must be finite");
+        }
+        requireTolerance(positionTolerance);
+        boolean headingSettled = isHeadingSettled(target.heading(), headingTolerance,
+                linearVelocityTolerance, angularVelocityTolerance);
+        return headingSettled && this.localizer.pose().distance(target) <= positionTolerance;
+    }
+
+    public boolean isHeadingSettled(double heading, double headingTolerance,
+                                    double linearVelocityTolerance, double angularVelocityTolerance) {
+        if (!Double.isFinite(heading)) throw new IllegalArgumentException("Heading must be finite");
+        requireTolerance(headingTolerance);
+        requireTolerance(linearVelocityTolerance);
+        requireTolerance(angularVelocityTolerance);
+        double error = heading - this.localizer.pose().heading();
+        Velocity velocity = this.localizer.velocity();
+        return Math.abs(Math.atan2(Math.sin(error), Math.cos(error))) <= headingTolerance
+                && velocity.linSpeed() <= linearVelocityTolerance
+                && Math.abs(velocity.omega) <= angularVelocityTolerance;
+    }
+
+    private static void requireTolerance(double tolerance) {
+        if (!Double.isFinite(tolerance) || tolerance < 0) {
+            throw new IllegalArgumentException("Tolerance must be finite and nonnegative");
+        }
     }
 
     public Vector2D closestTangent() {
@@ -289,7 +383,7 @@ public class Follower {
     }
 
     public double parametricCompletion() {
-        return this.algorithm.parametricCompletion();
+        return this.pathParametricCompletion;
     }
 
     public double remainingDistance() {

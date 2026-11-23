@@ -48,6 +48,7 @@ public class Vision {
 
     private double lastTxAvgIndicator;
     private LLResult latestResult;
+    private final FrameFreshness frameFreshness = new FrameFreshness();
     private Pose2d fieldPoseEstimate = Pose2d.ZERO;
     private Field.HiveState inferredHiveState;
     private String localizationReliabilityReason = "Vision update has not run yet.";
@@ -95,6 +96,17 @@ public class Vision {
         }
         camTransform.update();
         latestResult = limelight3A.getLatestResult();
+        if (latestResult == null) {
+            frameFreshness.invalidate();
+        } else {
+            // Read wall-clock staleness after sampling the monotonic clock, conservatively.
+            long observedNanos = System.nanoTime();
+            frameFreshness.observe(
+                    latestResult.isValid(), latestResult.getPipelineIndex(), latestResult.getTimestamp(),
+                    latestResult.getStaleness(), latestResult.getCaptureLatency(),
+                    latestResult.getTargetingLatency(), latestResult.getParseLatency(), observedNanos
+            );
+        }
         inferredHiveState = inferFieldHiveStateFromTags(inferredHiveState);
         refreshFieldPoseEstimate();
         localizationReliabilityReason = evaluateLocalizationReliability();
@@ -120,13 +132,41 @@ public class Vision {
     }
 
     /**
-     * True when any AprilTag from OUR alliance's hive is visible. The hive
+     * True when a valid, current-pipeline frame within {@link #MAX_RESULT_STALENESS_MS}
+     * of estimated capture contains any AprilTag from OUR alliance's hive. The hive
      * carries two tag clusters (one per face), and which face the camera
      * sees depends on whether the hive is tipped, so both clusters count.
      * Tags from the other alliance's hive do not count: the far hive is
      * visible from some shoot poses and must not end the lineup wait.
      */
     public boolean anyAllianceFiducial() {
+        if (!frameFreshness.isFresh(
+                getDesiredPipelineIndex(), System.nanoTime(), MAX_RESULT_STALENESS_MS)) {
+            return false;
+        }
+        return containsAllianceFiducial();
+    }
+
+    /**
+     * As {@link #anyAllianceFiducial()}, additionally requiring estimated capture strictly
+     * after {@code notBeforeNanos}, sampled with {@link System#nanoTime()} at settle end.
+     * Call {@link #update()} as usual before querying; this method does not poll the camera.
+     *
+     * Capture is conservatively estimated at first observation minus SDK staleness,
+     * capture, targeting and parse latencies, plus a 1 ms wall-clock quantization guard.
+     * Repeated camera timestamps never advance that estimate. Unreported network latency
+     * cannot be recovered from the SDK, so this is not a synchronized exposure timestamp.
+     */
+    public boolean anyAllianceFiducialAfter(long notBeforeNanos) {
+        if (!frameFreshness.isFreshAfter(
+                getDesiredPipelineIndex(), System.nanoTime(), MAX_RESULT_STALENESS_MS,
+                notBeforeNanos)) {
+            return false;
+        }
+        return containsAllianceFiducial();
+    }
+
+    private boolean containsAllianceFiducial() {
         for (LLResultTypes.FiducialResult fiducialResult : fiducials()) {
             int id = fiducialResult.getFiducialId();
             if (contains(tags.alliance, id) || contains(tags.opposite, id)) {
@@ -134,6 +174,63 @@ public class Vision {
             }
         }
         return false;
+    }
+
+    /** Monotonic freshness bookkeeping, kept independent of SDK hardware for unit tests. */
+    static final class FrameFreshness {
+        private boolean observed;
+        private boolean valid;
+        private int pipeline;
+        private double timestamp;
+        private long observedNanos;
+        private double captureAgeMs;
+
+        void invalidate() {
+            valid = false;
+        }
+
+        void observe(boolean frameValid, int framePipeline, double frameTimestamp,
+                     long stalenessMs, double captureMs, double targetingMs, double parseMs,
+                     long nowNanos) {
+            valid = false;
+            if (!frameValid || !Double.isFinite(frameTimestamp) || frameTimestamp <= 0
+                    || stalenessMs < 0 || !nonnegativeFinite(captureMs)
+                    || !nonnegativeFinite(targetingMs) || !nonnegativeFinite(parseMs)) {
+                return;
+            }
+            double ageMs = stalenessMs + captureMs + targetingMs + parseMs + 1.0;
+            if (!Double.isFinite(ageMs)) {
+                return;
+            }
+            if (!observed || frameTimestamp != timestamp) {
+                observed = true;
+                timestamp = frameTimestamp;
+                observedNanos = nowNanos;
+                captureAgeMs = ageMs;
+            } else {
+                // Later receipts may make the estimate older, never newer.
+                captureAgeMs = Math.max(captureAgeMs, ageMs - (nowNanos - observedNanos) / 1e6);
+            }
+            pipeline = framePipeline;
+            valid = true;
+        }
+
+        boolean isFresh(int desiredPipeline, long nowNanos, double maxAgeMs) {
+            long elapsedNanos = nowNanos - observedNanos;
+            return valid && pipeline == desiredPipeline && nonnegativeFinite(maxAgeMs)
+                    && elapsedNanos >= 0
+                    && captureAgeMs + elapsedNanos / 1e6 <= maxAgeMs;
+        }
+
+        boolean isFreshAfter(int desiredPipeline, long nowNanos, double maxAgeMs,
+                             long notBeforeNanos) {
+            return isFresh(desiredPipeline, nowNanos, maxAgeMs)
+                    && (observedNanos - notBeforeNanos) / 1e6 > captureAgeMs;
+        }
+
+        private static boolean nonnegativeFinite(double value) {
+            return Double.isFinite(value) && value >= 0;
+        }
     }
     public void applyInferredHiveState(Field field) {
         if (field == null) {

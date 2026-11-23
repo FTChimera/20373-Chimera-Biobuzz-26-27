@@ -110,7 +110,7 @@ public class FromStartGardenPose {
         @Override
         protected void buildPaths() {
             super.buildPaths();
-            toLoading = Paths.line(ShootPoses.garden, ShootPoses.loading).linear(ShootPoses.garden, ShootPoses.loading);
+            toLoading = robot.field.generateTransitPath(ShootPoses.garden, ShootPoses.loading);
         }
 
         @Override

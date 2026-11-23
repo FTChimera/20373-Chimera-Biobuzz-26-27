@@ -5,88 +5,147 @@ import com.pedropathing.paths.Path;
 import com.rmsftc.cmdlib.EndCondition;
 import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
-import com.rmsftc.cmdlib.cmd.FunctionalCommand;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
-/**
- * Drivetrain commands on BehaviorArchitectures. The follower is the
- * requirement token for drive commands (as in the Ivy versions).
- * Follow/turn commands are fire-and-forget into the follower: their
- * {@code end()} deliberately does NOT stop the follower, so a timeout
- * or interrupt leaves the follower driving its last path until the
- * next follow/hold/stop replaces it — exactly what the Ivy versions
- * did (they had no end action).
- */
+/** Drive commands own the follower until completion; cancellation stops it immediately. */
 public class DrivetrainCommands {
+    // Inches, radians, inches/sec, radians/sec. Caller-supplied tolerances are
+    // available for measured robot/route-specific settling requirements.
+    public static final double POSITION_TOLERANCE = 0.1;
+    public static final double HEADING_TOLERANCE = 0.007;
+    public static final double LINEAR_VELOCITY_TOLERANCE = 0.1;
+    public static final double ANGULAR_VELOCITY_TOLERANCE = 0.1;
 
-    /** Follows a path until the follower reaches its parametric end. */
-    private static class FollowCommand extends Command {
+    static class FollowCommand extends Command {
         private final Follower follower;
         private final Supplier<Path> pathSupplier;
+        private final double timeoutMs;
+        private final double dwellMs;
+        private final boolean stopOnCompletion;
+        private final boolean strict;
+        private final double[] tolerances;
+        private final LongSupplier clock;
+        private Pose target;
+        private long runId;
+        private long started;
+        private long dwellStarted;
+        private boolean dwelling;
+        private boolean done;
 
-        FollowCommand(Follower follower, Supplier<Path> pathSupplier) {
-            this.follower = follower;
-            this.pathSupplier = pathSupplier;
+        FollowCommand(Follower follower, Supplier<Path> pathSupplier, double timeoutMs,
+                      double dwellMs, boolean stopOnCompletion, boolean strict,
+                      double[] tolerances, LongSupplier clock) {
+            this.follower = Objects.requireNonNull(follower);
+            this.pathSupplier = Objects.requireNonNull(pathSupplier);
+            this.timeoutMs = timeoutMs;
+            this.dwellMs = dwellMs;
+            this.stopOnCompletion = stopOnCompletion;
+            this.strict = strict;
+            this.tolerances = tolerances;
+            this.clock = Objects.requireNonNull(clock);
             addRequirements(follower);
         }
 
-        @Override
-        public void start() {
-            follower.follow(Objects.requireNonNull(pathSupplier.get(), "Path supplier returned null"));
+        @Override public void start() {
+            done = false;
+            dwelling = false;
+            started = clock.getAsLong();
+            boolean initialized = false;
+            try {
+                Path path = Objects.requireNonNull(pathSupplier.get(), "Path supplier returned null");
+                target = path.endPose();
+                follower.follow(path);
+                runId = follower.pathRunId();
+                initialized = true;
+            } finally {
+                if (!initialized) follower.stop();
+            }
         }
 
-        @Override
-        public void loop() {
+        @Override public void loop() {
+            if (done) return;
+            boolean pathCompleted = follower.hasPathProgress() && follower.completion() >= 1;
+            if (follower.pathRunId() != runId || follower.manual() || (follower.idle() && !pathCompleted)) {
+                follower.stop();
+                throw new IllegalStateException("Path control was replaced before command completion");
+            }
+            if (strict && follower.idle() && pathCompleted) follower.hold(target);
+            long now = clock.getAsLong();
+            if (!dwelling) {
+                boolean ready = follower.hasPathProgress() && follower.atParametricEnd()
+                        && (!strict || follower.isPoseSettled(target,
+                        tolerances[0], tolerances[1], tolerances[2], tolerances[3]));
+                if (!ready && elapsedMs(now, started) < timeoutMs) return;
+                if (!ready && strict) {
+                    follower.stop();
+                    throw new IllegalStateException("Path did not settle before timeout at " + target);
+                }
+                dwelling = true;
+                dwellStarted = now;
+            }
+            done = elapsedMs(now, dwellStarted) >= dwellMs;
         }
 
-        @Override
-        public Status status() {
-            return Status.of(!follower.atParametricEnd());
-        }
+        @Override public Status status() { return Status.of(!done); }
 
-        @Override
-        public void end(EndCondition endCondition) {
-            // No-op: the follower keeps its last follow() call.
+        @Override public void end(EndCondition condition) {
+            follower.finishPathCommand(runId);
+            if (condition == EndCondition.INTERRUPTED || stopOnCompletion
+                    || !follower.atParametricEnd()) {
+                follower.stop();
+            } else if (strict) {
+                follower.hold(target);
+            }
         }
     }
 
-    /** Holds the current position while turning to a heading. */
-    private static class TurnCommand extends Command {
+    static class TurnCommand extends Command {
         private final Follower follower;
-        private final double targetHeadingRadians;
+        private final double heading;
+        private final double timeoutMs;
+        private final double[] tolerances;
+        private final LongSupplier clock;
+        private long started;
+        private boolean ready;
 
-        TurnCommand(Follower follower, double targetHeadingRadians) {
-            this.follower = follower;
-            this.targetHeadingRadians = targetHeadingRadians;
+        TurnCommand(Follower follower, double heading, double timeoutMs,
+                    double[] tolerances, LongSupplier clock) {
+            this.follower = Objects.requireNonNull(follower);
+            if (!Double.isFinite(heading)) throw new IllegalArgumentException("Heading must be finite");
+            this.heading = heading;
+            this.timeoutMs = timeoutMs;
+            this.tolerances = tolerances;
+            this.clock = Objects.requireNonNull(clock);
             addRequirements(follower);
         }
 
-        @Override
-        public void start() {
+        @Override public void start() {
+            ready = false;
+            started = clock.getAsLong();
             Pose current = follower.localizer.pose();
-            follower.hold(new Pose(current.x(), current.y(), targetHeadingRadians));
+            follower.hold(new Pose(current.x(), current.y(), heading));
         }
 
-        @Override
-        public void loop() {
+        @Override public void loop() {
+            ready = follower.holding() && follower.hasControlUpdate()
+                    && follower.isHeadingSettled(heading, tolerances[0], tolerances[1], tolerances[2]);
+            if (!ready && elapsedMs(clock.getAsLong(), started) >= timeoutMs) {
+                follower.stop();
+                throw new IllegalStateException("Turn did not settle before timeout; target heading=" + heading);
+            }
         }
 
-        @Override
-        public Status status() {
-            return Status.of(follower.isBusy());
-        }
+        @Override public Status status() { return Status.of(!ready); }
 
-        @Override
-        public void end(EndCondition endCondition) {
-            // No-op: the follower keeps its last hold() call.
+        @Override public void end(EndCondition condition) {
+            if (condition == EndCondition.INTERRUPTED) follower.stop();
         }
     }
 
@@ -94,82 +153,160 @@ public class DrivetrainCommands {
         return follow(follower, () -> path);
     }
 
+    /** Parametric completion only, not a safety-critical settled-pose gate. */
     public static Command follow(Follower follower, Supplier<Path> pathSupplier) {
-        return new FollowCommand(follower, pathSupplier);
+        return new FollowCommand(follower, pathSupplier, Double.POSITIVE_INFINITY,
+                0, false, false, null, System::nanoTime);
     }
 
-    /**
-     * Like {@link #follow}, but also finishes after {@code timeoutMs} even if
-     * the path end was never reached. Use for legs where the robot may be
-     * physically blocked from the path end (e.g. pushing into a flower with
-     * the deployer disabled): without this, one blocked leg hangs the whole
-     * auto. The follower keeps driving during whatever step comes next
-     * until that step replaces the follow, which is fine for an intake dwell.
-     */
+    /** Best-effort path: stops on timeout. For continued pushing use {@link #followForIntake}. */
     public static Command followWithTimeout(Follower follower, Supplier<Path> pathSupplier, double timeoutMs) {
-        return follow(follower, pathSupplier).withTimeout((long) timeoutMs);
+        requireDuration(timeoutMs);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, false, null, System::nanoTime);
     }
 
     /**
-     * Turns the robot in place to face {@code targetHeadingRadians},
-     * holding its current position. Done when the follower's hold
-     * completes (heading within tolerance and stopped). Put this before
-     * a constant-heading follow so the robot is already facing the drive
-     * direction instead of turning while it drives, and after one to
-     * face the next action (e.g. the shoot pose) before it starts.
+     * Keeps path control during a bounded approach and subsequent intake dwell.
+     * The dwell begins on parametric completion or approach timeout. Owns the
+     * follower throughout; both cancellation and dwell completion stop motion.
      */
+    public static Command followForIntake(Follower follower, Supplier<Path> pathSupplier,
+                                         double timeoutMs, double dwellMs) {
+        return followForIntake(follower, pathSupplier, timeoutMs, dwellMs, System::nanoTime);
+    }
+
+    static Command followForIntake(Follower follower, Supplier<Path> pathSupplier,
+                                  double timeoutMs, double dwellMs, LongSupplier clock) {
+        requireDuration(timeoutMs);
+        requireDuration(dwellMs);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, dwellMs, true, false, null, clock);
+    }
+
+    /** Fails explicitly and stops on timeout; never authorizes a side switch on timeout alone. */
+    public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
+                                                   double timeoutMs) {
+        return followSettledWithTimeout(follower, pathSupplier, timeoutMs, POSITION_TOLERANCE,
+                HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE);
+    }
+
+    public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
+                                                   double timeoutMs, double positionTolerance,
+                                                   double headingTolerance, double linearVelocityTolerance,
+                                                   double angularVelocityTolerance) {
+        requireDuration(timeoutMs);
+        double[] tolerances = tolerances(positionTolerance, headingTolerance,
+                linearVelocityTolerance, angularVelocityTolerance);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, true, tolerances, System::nanoTime);
+    }
+
     public static Command turnToHeading(Follower follower, double targetHeadingRadians) {
-        return new TurnCommand(follower, targetHeadingRadians);
+        return new TurnCommand(follower, targetHeadingRadians, Double.POSITIVE_INFINITY,
+                tolerances(HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE),
+                System::nanoTime);
+    }
+
+    /** Measured heading and both velocities must settle; timeout stops and throws. */
+    public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
+                                                   double timeoutMs) {
+        return turnToHeadingWithTimeout(follower, targetHeadingRadians, timeoutMs,
+                HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE);
+    }
+
+    public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
+                                                   double timeoutMs, double headingTolerance,
+                                                   double linearVelocityTolerance, double angularVelocityTolerance) {
+        requireDuration(timeoutMs);
+        return new TurnCommand(follower, targetHeadingRadians, timeoutMs,
+                tolerances(headingTolerance, linearVelocityTolerance, angularVelocityTolerance), System::nanoTime);
     }
 
     /**
-     * Like {@link #turnToHeading}, but also finishes after {@code timeoutMs}
-     * even if the hold never settles (e.g. the robot is wedged against a
-     * flower and cannot reach the heading tolerance). The next follow's
-     * heading interpolator corrects any leftover heading error.
-     */
-    public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians, double timeoutMs) {
-        return turnToHeading(follower, targetHeadingRadians).withTimeout((long) timeoutMs);
-    }
-
-    /**
-     * Runs {@code action} once when the follower's path completion reaches
-     * {@code tValue} (0-1 along the current path), while a {@link #follow}
-     * command drives the path in parallel. Ends when the path ends. Like
-     * {@link #setMaxPowerOnFly}, this does not require the follower, so it
-     * can run in parallel with a follow command. List the follow command
-     * first in the parallel group so the path is started before this first
-     * executes.
+     * List follow first in a parallel group. A missed threshold is skipped when
+     * that path command ends (including timeout), rather than blocking the group.
      */
     public static Command runAtCompletion(Robot robot, double tValue, Runnable action) {
-        AtomicBoolean done = new AtomicBoolean(false);
-        return new FunctionalCommand(
-                () -> {
-                },
-                () -> {
-                    if (!done.get() && robot.follower.completion() >= tValue) {
-                        done.set(true);
+        return runAtCompletion(robot.follower, tValue, action);
+    }
+
+    public static Command runAtCompletion(Follower follower, double tValue, Runnable action) {
+        Objects.requireNonNull(follower);
+        Objects.requireNonNull(action);
+        if (!Double.isFinite(tValue) || tValue < 0 || tValue > 1) {
+            throw new IllegalArgumentException("Path completion threshold must be in [0, 1]");
+        }
+        return new Command() {
+            private boolean done;
+            private long runId;
+
+            @Override public void start() {
+                done = false;
+                runId = follower.pathRunId();
+            }
+
+            @Override public void loop() {
+                if (done) return;
+                if (runId != follower.pathRunId()) {
+                    done = true;
+                    return;
+                }
+                if (follower.hasPathProgress() && follower.completion() >= tValue) {
+                    done = true;
+                    boolean completed = false;
+                    try {
                         action.run();
+                        completed = true;
+                    } finally {
+                        if (!completed) follower.stop();
                     }
-                },
-                () -> Status.of(!done.get()),
-                endCondition -> {
-                });
+                } else if (follower.pathRunFinished()) {
+                    done = true;
+                }
+            }
+
+            @Override public Status status() { return Status.of(!done); }
+            @Override public void end(EndCondition condition) { }
+        };
     }
 
     public static Command setMaxPowerOnFly(Robot robot, double tValue, double newPower) {
-        AtomicReference<Double> previousPower = new AtomicReference<>();
-        return new FunctionalCommand(
-                () -> previousPower.set(Constants.FOLLOWER_MAX_PATH_SPEED.get()),
-                () -> {
-                    if (robot.follower.completion() >= tValue) Constants.FOLLOWER_MAX_PATH_SPEED.set(newPower);
-                },
-                () -> Status.of(!robot.follower.atParametricEnd()),
-                endCondition -> {
-                    Double priorSpeed = previousPower.get();
-                    if (priorSpeed != null) {
-                        Constants.FOLLOWER_MAX_PATH_SPEED.set(priorSpeed);
-                    }
-                });
+        if (!Double.isFinite(newPower) || newPower < 0 || newPower > 1) {
+            throw new IllegalArgumentException("Path power must be in [0, 1]");
+        }
+        return new Command() {
+            private Double previousPower;
+            private Command trigger;
+
+            @Override public void start() {
+                previousPower = Constants.FOLLOWER_MAX_PATH_SPEED.get();
+                trigger = runAtCompletion(robot.follower, tValue,
+                        () -> Constants.FOLLOWER_MAX_PATH_SPEED.set(newPower));
+            }
+
+            @Override public void loop() {
+                if (trigger != null && !trigger.execute().isRunning()) trigger = null;
+            }
+
+            @Override public Status status() {
+                return Status.of(trigger != null || !robot.follower.pathRunFinished());
+            }
+
+            @Override public void end(EndCondition condition) {
+                if (trigger != null) trigger.invalidate();
+                if (previousPower != null) Constants.FOLLOWER_MAX_PATH_SPEED.set(previousPower);
+            }
+        };
+    }
+
+    private static double elapsedMs(long now, long then) { return (now - then) / 1_000_000.0; }
+
+    private static void requireDuration(double duration) {
+        if (!Double.isFinite(duration) || duration < 0) {
+            throw new IllegalArgumentException("Duration must be finite and nonnegative");
+        }
+    }
+
+    private static double[] tolerances(double... values) {
+        for (double value : values) requireDuration(value);
+        return values;
     }
 }

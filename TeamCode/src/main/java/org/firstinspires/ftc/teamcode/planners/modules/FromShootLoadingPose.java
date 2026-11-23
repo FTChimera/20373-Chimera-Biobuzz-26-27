@@ -56,15 +56,14 @@ public class FromShootLoadingPose {
                     // then drive with a constant north heading -- no
                     // tangent sweep, no heading snap.
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.northFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    Commands.waitMs(Timings.flowerIntakeTime * 1000L),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     // Drive back still facing north, then turn in place
                     // to -90 (south) for the shoot.
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.loading.heading(), Timings.flowerTurnTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
-            );
+            ).finallyDo(() -> robot.intake.setDeployed(false));
         }
 
         @Override

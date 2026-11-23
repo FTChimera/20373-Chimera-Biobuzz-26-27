@@ -66,12 +66,7 @@ public class Field {
     private Geometry obstacles;
     private Geometry flowerObstacles;
 
-    // Manual safety buffer (inches) applied to the hive bases only when
-    // building the forbidden space. Replaces the half-diagonal formula
-    // (hypot(botLength, botWidth) / 2 + 1.5 = 12.46 in), which left only a
-    // 17.1-in corridor between the hives and made the whole central band
-    // unparkable-from. Flowers join the forbidden space raw, unbuffered.
-    private static final double SAFETY_RADIUS_INCHES = 5.0;
+    private static final double TRANSIT_CLEARANCE_INCHES = 1.0;
 
     // Defined loading zones using 24x24 inch floor tiles corners on standard 144x144 field layout
     public static final Coordinate[] RED_LOADING_ZONE = FieldCoordinates.redLoadingZone();
@@ -179,39 +174,48 @@ public class Field {
         Pose2d startPose = PoseFactory.of(robotPose.x, robotPose.y, robotPose.heading);
         Pose2d endPose = PoseFactory.of(aLittleInwardPose.x, aLittleInwardPose.y, aLittleInwardPose.heading);
 
-        // Inflate the hive bases by the manual safety buffer (flowers join raw, unbuffered)
-        double safetyRadius = SAFETY_RADIUS_INCHES;
-        BufferParameters bufParams = new BufferParameters();
-        bufParams.setJoinStyle(BufferParameters.JOIN_MITRE);
-        Geometry forbiddenSpace = BufferOp.bufferOp(obstacles, safetyRadius, bufParams)
-                .union(flowerObstacles);
-        List<Pose2d> poses = pathfinder.findPath(startPose, endPose, forbiddenSpace);
+        endPose.heading = roundToCardinal(Math.atan2(endPose.y - startPose.y, endPose.x - startPose.x));
+        return generateTransitPath(startPose, endPose);
+    }
 
-        if (poses.isEmpty()) {
-            throw new NoRouteException("No collision-free path to the loading zone");
+    /** Collision-checked transit with clearance for the body at every heading. */
+    public Path generateTransitPath(Pose2d startPose, Pose2d endPose) {
+        return transitSegments(transitWaypoints(startPose, endPose));
+    }
+
+    private List<Pose2d> transitWaypoints(Pose2d startPose, Pose2d endPose) {
+        double radius = Math.hypot(botLength, botWidth) / 2.0 + TRANSIT_CLEARANCE_INCHES;
+        BufferParameters parameters = new BufferParameters();
+        parameters.setJoinStyle(BufferParameters.JOIN_MITRE);
+        Geometry forbidden = BufferOp.bufferOp(obstacles, radius, parameters)
+                .union(flowerObstacles.buffer(radius));
+        Pose2d insetStart = insetForTurning(startPose, radius);
+        Pose2d insetEnd = insetForTurning(endPose, radius);
+        List<Pose2d> poses = pathfinder.findPath(insetStart, insetEnd, forbidden);
+        if (poses.size() < 2) {
+            throw new NoRouteException("No body-clear transit route from " + startPose + " to " + endPose);
         }
+        if (startPose.distance(insetStart) > 1e-6) poses.add(0, startPose.copy());
+        if (endPose.distance(insetEnd) > 1e-6) poses.add(endPose.copy());
+        return poses;
+    }
 
-        // FLAGGED CHANGE: end heading = final approach direction, rounded to the
-        // nearest cardinal (0 / 90 / 180 / 270). findPath already preserves the
-        // end pose's position; only its heading is updated here, before the
-        // heading interpolator is built. This is the forward-case end heading
-        // only: when the path arrives reversed, reversingTangent below ignores
-        // it and stays reversed to the end.
-        if (poses.size() >= 2) {
-            Pose2d prev = poses.get(poses.size() - 2);
-            Pose2d end = poses.get(poses.size() - 1);
-            double approach = Math.atan2(end.y - prev.y, end.x - prev.x);
-            end.heading = roundToCardinal(approach);
+    private static Pose2d insetForTurning(Pose2d pose, double radius) {
+        return new Pose2d(Math.max(radius, Math.min(144 - radius, pose.x)),
+                Math.max(radius, Math.min(144 - radius, pose.y)), pose.heading);
+    }
+
+    private static Path transitSegments(List<Pose2d> poses) {
+        Path[] segments = new Path[poses.size() - 1];
+        for (int i = 0; i < segments.length; i++) {
+            Pose2d from = poses.get(i);
+            Pose2d to = poses.get(i + 1);
+            // Endpoints near walls retain their heading; rotation happens at
+            // the inset waypoints, where the full body diagonal fits.
+            segments[i] = Paths.line(from, to).linear(from, to);
         }
-
-        // FLAGGED CHANGE: heading interpolator that compares the curve's actual
-        // initial tangent to the robot heading and reverses if necessary
-        // (CommonKt.reversingTangent), instead of the chord-based
-        // fastInterpolation. From Java the t-values must be passed explicitly
-        // since Kotlin default arguments do not apply across the boundary.
-        Interpolator closestTangent = CommonKt.reversingTangent(
-                robotPose.heading, poses.get(poses.size() - 1).heading, 0.7, 0.9);
-        return Paths.through(poses.toArray(new Pose2d[0])).heading(closestTangent);
+        // A smoothing spline can cut back through the obstacles avoided by Dijkstra.
+        return Paths.path(segments);
     }
 
     /** Rounds a heading in radians to the nearest cardinal, returned in [0, 2*PI). */

@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 
 @Autonomous(name = "Park Auto", preselectTeleOp = MainTeleOp.NAME)
 public class ParkAuto extends ArchitecturalOpMode {
@@ -85,7 +86,7 @@ public class ParkAuto extends ArchitecturalOpMode {
         follower.localizer.setPose(selectedPose.pose);
         if (isStopRequested()) return;
         manager.schedule(DrivetrainCommands.follow(follower,
-                Paths.line(selectedPose.pose, parkPose).linear(selectedPose.pose, parkPose)));
+                new Field(alliance, 17, 17).generateTransitPath(selectedPose.pose, parkPose)));
     }
 
     @Override

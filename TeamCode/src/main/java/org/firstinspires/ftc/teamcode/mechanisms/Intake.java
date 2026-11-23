@@ -39,11 +39,14 @@ public class Intake {
     public boolean allowOverrideOverEject = false;
 
     public Intake(HardwareMap map, AllianceColor color) {
-        mainMotor = new CachedMotor(map.get(DcMotorEx.class, "intake"), 0.1);
+        this(new CachedMotor(map.get(DcMotorEx.class, "intake"), 0.1),
+                map.get(Servo.class, "deployer"), color);
+    }
 
+    Intake(CachedMotor mainMotor, Servo deployer, AllianceColor color) {
+        this.mainMotor = mainMotor;
+        this.deployer = deployer;
         mainMotor.setDirection(Direction.REVERSE.toMotor());
-
-        deployer = map.get(Servo.class, "deployer");
         setDeployed(false);
         internalSet(0);
         this.allianceColor = color;
@@ -54,7 +57,6 @@ public class Intake {
 
     /** Sets the deployable ramp: true = deployed (ramp down), false = stowed. */
     public void setDeployed(boolean deployed) {
-        if (deployed) return;
         this.deployed = deployed;
         double basePosition = deployed ? DEPLOYER_DEPLOYED_POSITION : DEPLOYER_STOWED_POSITION;
         deployer.setPosition(basePosition + DEPLOYER_TRANSLATION_FACTOR);
@@ -82,8 +84,10 @@ public class Intake {
     }
 
     public void stopImmediately() {
+        mode = Mode.IDLE;
+        modeSwitch = true;
         internalSet(0);
-        stop();
+        setDeployed(false);
     }
 
     public void reverse() {

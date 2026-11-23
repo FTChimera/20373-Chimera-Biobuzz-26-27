@@ -1,160 +1,411 @@
 package org.firstinspires.ftc.teamcode.planners.tree;
 
 import com.pedropathing.api.Paths;
+import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.rmsftc.cmdlib.EndCondition;
 import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
-import com.rmsftc.cmdlib.cmd.Commands;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
-import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
+import java.util.function.Consumer;
+import java.util.function.LongSupplier;
+
 /**
- * The tree auto's shoot behavior, replacing the
- * {@code waitForHiveLineup + shootAllPollen} ending of the shared planner
- * modules (which the other autos keep unchanged).
- *
- * <p>Semantics: when the shoot step starts, the camera is checked ONCE
- * ({@code vision.anyAllianceFiducial()}, instantaneous — no waiting, no
- * pose tolerance). If an alliance fiducial is visible the robot shoots
- * where it is; if not, it drives the under-hive path to the other shoot
- * pose and shoots anyway. The decision is made once in {@code start()}; a
- * started switch runs to completion. After shooting, the shot is recorded
- * on the blackboard (cycle count, predicted hive state, position = the
- * side actually shot from).
- *
- * <p>The under-hive path runs between the two shoot poses through the
- * {@code PathPoses.underHiveSouth}/{@code underHiveNorth} corridor
- * waypoints with a constant corridor heading (90 deg red / -90 deg blue,
- * derived from the waypoint direction so blue mirroring just works), with
- * turn-in-place steps before and after — the same pattern as the flower
- * legs. Measured with the real Pedro path geometry (17 in square robot):
- * ~2.0 in body clearance to the west hive base, body max x 70.9 in (west
- * of the x=72 midpoint).
+ * Bounded measured settling, then a post-approach camera decision. Missing
+ * readiness/tag confirmation degrades a planned batch attempt, not a score.
+ * A side switch is attempted at most once and must physically arrive before
+ * feeding or advertising the destination as the next leg's start.
  */
 public final class TreeShooterCommands {
+    private static final double SHOOT_SETTLE_MS = 1500;
+    private static final double SETTLE_DWELL_MS = 150;
+    private static final double POSITION_TOLERANCE_IN = 2;
+    private static final double HEADING_TOLERANCE_RAD = Math.toRadians(3);
+    private static final double LINEAR_SPEED_TOLERANCE = 2;
+    private static final double ANGULAR_SPEED_TOLERANCE = Math.toRadians(5);
+    private static final double SWITCH_POSITION_TOLERANCE_IN = 1;
+    private static final double SWITCH_TRAVERSE_TIMEOUT_MS = 6000;
 
-    private TreeShooterCommands() {
+    private TreeShooterCommands() {}
+
+    /** A continuous measured dwell, never an instantaneous parametric/busy check. */
+    static final class SettleWindow {
+        private final long started;
+        private final double timeoutMs;
+        private long readySince;
+        private boolean dwelling;
+
+        SettleWindow(long now, double timeoutMs) {
+            started = now;
+            this.timeoutMs = timeoutMs;
+        }
+
+        boolean settled(boolean measuredReady, long now) {
+            if (!measuredReady) {
+                dwelling = false;
+                return false;
+            }
+            if (!dwelling) {
+                dwelling = true;
+                readySince = now;
+            }
+            return elapsedMs(now, readySince) >= SETTLE_DWELL_MS;
+        }
+
+        boolean timedOut(long now) {
+            return elapsedMs(now, started) >= timeoutMs;
+        }
     }
 
-    /**
-     * The tree shoot step for a leg that intends to shoot from
-     * {@code intendedSide} (GARDEN_SHOOT or LOADING_SHOOT).
-     */
-    public static Command shoot(Robot robot, TreeState state, Position intendedSide) {
-        return new Command() {
-            private Command inner;
-            private Status innerStatus = Status.RUNNING;
-            private Position shotSide;
+    private static double elapsedMs(long now, long since) {
+        return (now - since) / 1e6;
+    }
 
-            {
-                addRequirements(robot.follower, robot.shooter, robot.transfer, robot.intake);
+    private static boolean settledAt(Robot robot, Pose2d pose, double positionTolerance) {
+        return settledAt(robot.follower, pose, positionTolerance);
+    }
+
+    private static Pose pedroPose(Pose pose) {
+        // Pose2d overrides accessors, but Pedro's distance/hold math reads base fields.
+        return new Pose(pose.x(), pose.y(), pose.heading());
+    }
+
+    static Pose shootingHoldPose(Pose actual, Pose intended) {
+        if (Math.hypot(actual.x() - intended.x(), actual.y() - intended.y()) > POSITION_TOLERANCE_IN) {
+            return new Pose(actual.x(), actual.y(), intended.heading());
+        }
+        return pedroPose(intended);
+    }
+
+    static boolean canSwitchSides(boolean poseSettled, boolean alreadySwitched, double positionError) {
+        return poseSettled && !alreadySwitched && positionError <= SWITCH_POSITION_TOLERANCE_IN;
+    }
+
+    private static boolean settledAt(Follower follower, Pose pose, double positionTolerance) {
+        return follower.holding() && follower.hasControlUpdate()
+                && follower.isPoseSettled(pedroPose(pose), positionTolerance,
+                HEADING_TOLERANCE_RAD, LINEAR_SPEED_TOLERANCE, ANGULAR_SPEED_TOLERANCE);
+    }
+
+    public static ShootCommand shoot(Robot robot, TreeState state, Position intendedSide) {
+        return shoot(robot, state, intendedSide, null);
+    }
+
+    public static ShootCommand shoot(Robot robot, TreeState state, Position intendedSide,
+                                     IntakeArea intakeArea) {
+        return new ShootCommand(robot, state, intendedSide, intakeArea);
+    }
+
+    public static final class ShootCommand extends Command {
+        private enum Phase { SETTLE, VISION, SWITCH, FEED, DONE }
+
+        private final Robot robot;
+        private final TreeState state;
+        private final Position intendedSide;
+        private final IntakeArea intakeArea;
+        private Phase phase;
+        private Position shotSide;
+        private SettleWindow settle;
+        private long visionBoundary;
+        private boolean poseSettled;
+        private boolean freshTag;
+        private boolean switched;
+        private SideSwitchCommand sideSwitch;
+        private ShooterCommands.ShotCommand feed;
+
+        private ShootCommand(Robot robot, TreeState state, Position intendedSide, IntakeArea intakeArea) {
+            TreeState.otherShootPosition(intendedSide);
+            this.robot = robot;
+            this.state = state;
+            this.intendedSide = intendedSide;
+            this.intakeArea = intakeArea;
+            addRequirements(robot.follower, robot.shooter, robot.transfer, robot.intake);
+        }
+
+        public ShooterCommands.ShotOutcome outcome() {
+            return feed == null ? ShooterCommands.ShotOutcome.NOT_STARTED : feed.outcome();
+        }
+
+        public boolean poseSettled() { return poseSettled; }
+        public boolean freshTagConfirmed() { return freshTag; }
+        public boolean switchedSides() { return switched; }
+
+        @Override public void start() {
+            shotSide = intendedSide;
+            poseSettled = false;
+            freshTag = false;
+            switched = false;
+            feed = null;
+            sideSwitch = null;
+            if (state.controlPathAborted()) {
+                phase = Phase.DONE;
+                return;
             }
+            Pose target = pedroPose(TreeState.poseFor(shotSide));
+            Pose actual = robot.follower.localizer.pose();
+            Pose hold = shootingHoldPose(actual, target);
+            if (hold.x() != target.x() || hold.y() != target.y()) {
+                // A timed-out curved approach must not become a straight-line shortcut.
+                warn("Approach endpoint unverified; holding actual position for degraded planned attempt");
+            }
+            robot.follower.hold(hold);
+            settle = new SettleWindow(System.nanoTime(), SHOOT_SETTLE_MS);
+            phase = Phase.SETTLE;
+        }
 
-            @Override
-            public void start() {
-                if (robot.vision.anyAllianceFiducial()) {
-                    shotSide = intendedSide;
-                    inner = ShooterCommands.shootAllPollen(robot);
+        @Override public void loop() {
+            long now = System.nanoTime();
+            switch (phase) {
+                case SETTLE:
+                    poseSettled = settle.settled(
+                            settledAt(robot, TreeState.poseFor(shotSide), POSITION_TOLERANCE_IN), now);
+                    if (!poseSettled && !settle.timedOut(now)) return;
+                    if (!poseSettled) warn("Pose/heading/velocity settle timeout; planned batch will still be attempted");
+                    // This boundary follows the approach/turn, not the command's construction.
+                    visionBoundary = now;
+                    phase = Phase.VISION;
+                    break;
+                case VISION:
+                    freshTag = robot.vision.anyAllianceFiducialAfter(visionBoundary);
+                    if (!freshTag && elapsedMs(now, visionBoundary) < Timings.hiveLineupTimeoutTime * 1000.0) return;
+                    if (!freshTag && canSwitchSides(poseSettled, switched,
+                            robot.getPose().distance(TreeState.poseFor(shotSide)))) {
+                        sideSwitch = switchSides(robot, shotSide);
+                        phase = Phase.SWITCH;
+                        return;
+                    }
+                    if (!freshTag) warn(switched
+                            ? "No fresh alliance frame after side switch; attempting blind batch"
+                            : "No fresh alliance frame; unconfirmed pose prevents safe side switch; attempting planned batch");
+                    beginFeed();
+                    break;
+                case SWITCH:
+                    if (sideSwitch.execute() == Status.RUNNING) return;
+                    if (!sideSwitch.reachedDestination()) {
+                        state.abortControlPath(sideSwitch.failureReason());
+                        warn("CONTROL PATH ABORTED: " + sideSwitch.failureReason());
+                        phase = Phase.DONE;
+                        return;
+                    }
+                    shotSide = TreeState.otherShootPosition(shotSide);
+                    switched = true;
+                    poseSettled = true;
+                    // Recheck a newly captured frame after the final measured turn.
+                    visionBoundary = now;
+                    phase = Phase.VISION;
+                    break;
+                case FEED:
+                    if (feed.execute() == Status.RUNNING) return;
+                    if (feed.attempted()) {
+                        boolean positionVerified = robot.getPose().distance(TreeState.poseFor(shotSide))
+                                <= POSITION_TOLERANCE_IN;
+                        state.recordAttempt(shotSide, feed.outcome(), poseSettled, freshTag, positionVerified);
+                        // Publish selection inputs together, so the reactive tree cannot
+                        // preempt this leg between its batch and intake bookkeeping.
+                        state.markIntakeDone(intakeArea);
+                        robot.telemetry.addData("Tree batch result",
+                                "%s; settled=%s freshTag=%s; scores UNCONFIRMED",
+                                feed.outcome(), poseSettled, freshTag);
+                    } else {
+                        state.abortControlPath("Feed ended without a completed batch attempt: " + feed.outcome());
+                    }
+                    phase = Phase.DONE;
+                    break;
+                case DONE:
+                    break;
+            }
+        }
+
+        private void beginFeed() {
+            poseSettled = poseSettled
+                    && settledAt(robot, TreeState.poseFor(shotSide), POSITION_TOLERANCE_IN);
+            if (!poseSettled) warn("Feeding a planned attempt without measured pose readiness");
+            feed = ShooterCommands.shootAllPollen(robot);
+            phase = Phase.FEED;
+        }
+
+        private void warn(String reason) {
+            robot.telemetry.addData("Tree shooting WARNING", reason);
+        }
+
+        @Override public Status status() { return Status.of(phase != Phase.DONE); }
+
+        @Override public void end(EndCondition condition) {
+            if (condition == EndCondition.INTERRUPTED) {
+                if (phase == Phase.SWITCH && sideSwitch != null) {
+                    sideSwitch.invalidate();
+                    state.abortControlPath("Side switch interrupted before verified destination");
+                }
+                if (feed != null) feed.invalidate();
+                robot.follower.stop();
+            }
+            if (condition == EndCondition.INTERRUPTED || state.controlPathAborted()) {
+                robot.follower.stop();
+                try {
+                    robot.transfer.stopImmediately();
+                } finally {
+                    robot.intake.stopImmediately();
+                }
+            }
+        }
+    }
+
+    public enum SwitchOutcome { NOT_STARTED, RUNNING, REACHED, ABORTED, INTERRUPTED }
+
+    /**
+     * Owns follower control through turn-in, bounded corridor travel and turn-out.
+     * No strict drivetrain command exceptions are caught or converted into success.
+     */
+    public static SideSwitchCommand switchSides(Robot robot, Position fromSide) {
+        return new SideSwitchCommand(robot.follower, fromSide,
+                reason -> robot.telemetry.addData("Tree side switch ABORTED", reason), System::nanoTime);
+    }
+
+    public static final class SideSwitchCommand extends Command {
+        private final Follower follower;
+        private final Consumer<String> warning;
+        private final LongSupplier clock;
+        private final Pose fromPose;
+        private final Pose toPose;
+        private final double corridorHeading;
+        private final Path path;
+        private SwitchOutcome outcome = SwitchOutcome.NOT_STARTED;
+        private String failure = "";
+        private int stage;
+        private Pose turnPose;
+        private SettleWindow settle;
+        private long pathRunId;
+
+        SideSwitchCommand(Follower follower, Position fromSide, Consumer<String> warning, LongSupplier clock) {
+            this.follower = follower;
+            this.warning = warning;
+            this.clock = clock;
+            fromPose = pedroPose(TreeState.poseFor(fromSide));
+            toPose = pedroPose(TreeState.poseFor(TreeState.otherShootPosition(fromSide)));
+            Pose2d wpFrom = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveSouth : PathPoses.underHiveNorth;
+            Pose2d wpTo = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveNorth : PathPoses.underHiveSouth;
+            corridorHeading = Math.atan2(wpTo.y() - wpFrom.y(), wpTo.x() - wpFrom.x());
+            path = Paths.through(fromPose, wpFrom, wpTo, toPose)
+                    .heading(Interpolator.constant(corridorHeading));
+            addRequirements(follower);
+        }
+
+        public SwitchOutcome outcome() { return outcome; }
+        public boolean reachedDestination() { return outcome == SwitchOutcome.REACHED; }
+        public String failureReason() { return failure; }
+
+        @Override public void start() {
+            outcome = SwitchOutcome.RUNNING;
+            failure = "";
+            stage = 0;
+            if (!(follower.localizer.pose().distance(fromPose) <= SWITCH_POSITION_TOLERANCE_IN)) {
+                abort("Side switch start pose not reached");
+                return;
+            }
+            turnPose = fromPose.withHeading(corridorHeading);
+            follower.hold(turnPose);
+            settle = new SettleWindow(clock.getAsLong(), Timings.flowerTurnTimeoutMs);
+        }
+
+        @Override public void loop() {
+            if (outcome != SwitchOutcome.RUNNING) return;
+            long now = clock.getAsLong();
+            if (stage == 1) {
+                if (follower.pathRunId() != pathRunId || follower.manual() || follower.idle()) {
+                    abort("Side switch corridor control replaced");
+                    return;
+                }
+                // Parametric end only changes control to endpoint hold; it never authorizes shooting.
+                if (follower.hasPathProgress() && follower.atParametricEnd()) {
+                    if (!(follower.localizer.pose().distance(toPose) <= POSITION_TOLERANCE_IN)) {
+                        abort("Side switch parametric end without measured destination arrival");
+                        return;
+                    }
+                    follower.hold(toPose.withHeading(corridorHeading));
+                    stage = 2;
+                    settle = new SettleWindow(now, SHOOT_SETTLE_MS);
+                } else if (settle.timedOut(now)) {
+                    abort("Side switch corridor traversal timed out");
+                }
+                return;
+            }
+            Pose target = stage == 0 ? turnPose
+                    : stage == 2 ? toPose.withHeading(corridorHeading) : toPose;
+            if (settle.settled(settledAt(follower, target, SWITCH_POSITION_TOLERANCE_IN), now)) {
+                if (stage == 0) {
+                    follower.follow(path);
+                    pathRunId = follower.pathRunId();
+                    stage = 1;
+                    settle = new SettleWindow(now, SWITCH_TRAVERSE_TIMEOUT_MS);
+                } else if (stage == 2) {
+                    follower.hold(toPose);
+                    stage = 3;
+                    settle = new SettleWindow(now, Timings.flowerTurnTimeoutMs);
                 } else {
-                    shotSide = TreeState.otherShootPosition(intendedSide);
-                    inner = Commands.sequence(
-                            switchSides(robot, intendedSide),
-                            ShooterCommands.shootAllPollen(robot));
+                    outcome = SwitchOutcome.REACHED;
                 }
-                innerStatus = Status.RUNNING;
+            } else if (settle.timedOut(now)) {
+                abort("Side switch did not physically settle at stage " + stage);
             }
+        }
 
-            @Override
-            public void loop() {
-                innerStatus = inner.execute();
-            }
+        private void abort(String reason) {
+            failure = reason;
+            outcome = SwitchOutcome.ABORTED;
+            follower.stop();
+            warning.accept(reason);
+        }
 
-            @Override
-            public Status status() {
-                return innerStatus;
-            }
+        @Override public Status status() { return Status.of(outcome == SwitchOutcome.RUNNING); }
 
-            @Override
-            public void end(EndCondition endCondition) {
-                if (endCondition == EndCondition.NATURALLY) {
-                    state.recordShot(shotSide);
-                } else if (inner != null) {
-                    inner.invalidate();
-                }
+        @Override public void end(EndCondition condition) {
+            if (condition == EndCondition.INTERRUPTED) {
+                failure = "Side switch interrupted";
+                outcome = SwitchOutcome.INTERRUPTED;
+                follower.stop();
             }
-        };
+        }
     }
 
-    /**
-     * Drives the under-hive path from {@code fromSide}'s shoot pose to the
-     * other shoot pose: turn in place to the corridor heading, follow the
-     * corridor path (no timeout, like the other cross-field legs), then
-     * turn in place to the target shoot pose's heading.
-     */
-    public static Command switchSides(Robot robot, Position fromSide) {
-        Position toSide = TreeState.otherShootPosition(fromSide);
-        Pose2d fromPose = TreeState.poseFor(fromSide);
-        Pose2d toPose = TreeState.poseFor(toSide);
-        Pose2d wpFrom = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveSouth : PathPoses.underHiveNorth;
-        Pose2d wpTo = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveNorth : PathPoses.underHiveSouth;
-        double corridorHeading = Math.atan2(wpTo.y() - wpFrom.y(), wpTo.x() - wpFrom.x());
-        Path path = Paths
-                .through(fromPose, wpFrom, wpTo, toPose)
-                .heading(Interpolator.constant(corridorHeading));
-        return Commands.sequence(
-                DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, corridorHeading, Timings.flowerTurnTimeoutMs),
-                DrivetrainCommands.follow(robot.follower, () -> path),
-                DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, toPose.heading(), Timings.flowerTurnTimeoutMs));
-    }
-
-    /**
-     * The tree's reposition step: drives the under-hive path from the
-     * blackboard position to the other shoot position (without shooting)
-     * and updates the blackboard position on completion. The direction is
-     * read from the blackboard when the command starts.
-     */
+    /** Reposition only commits the new blackboard position after measured arrival. */
     public static Command reposition(Robot robot, TreeState state) {
         return new Command() {
-            private Command inner;
-            private Status innerStatus = Status.RUNNING;
+            private SideSwitchCommand inner;
+            private boolean done;
             private Position target;
 
-            {
-                addRequirements(robot.follower);
+            { addRequirements(robot.follower); }
+
+            @Override public void start() {
+                done = state.controlPathAborted();
+                inner = null;
+                if (done) return;
+                target = TreeState.otherShootPosition(state.position());
+                inner = switchSides(robot, state.position());
             }
 
-            @Override
-            public void start() {
-                Position from = state.position();
-                target = TreeState.otherShootPosition(from);
-                inner = switchSides(robot, from);
-                innerStatus = Status.RUNNING;
+            @Override public void loop() {
+                if (done || inner.execute() == Status.RUNNING) return;
+                if (inner.reachedDestination()) state.setPosition(target);
+                else state.abortControlPath(inner.failureReason());
+                done = true;
             }
 
-            @Override
-            public void loop() {
-                innerStatus = inner.execute();
-            }
+            @Override public Status status() { return Status.of(!done); }
 
-            @Override
-            public Status status() {
-                return innerStatus;
-            }
-
-            @Override
-            public void end(EndCondition endCondition) {
-                if (endCondition == EndCondition.NATURALLY) {
-                    state.setPosition(target);
-                } else if (inner != null) {
+            @Override public void end(EndCondition condition) {
+                if (condition == EndCondition.INTERRUPTED && inner != null && !done) {
                     inner.invalidate();
+                    state.abortControlPath("Reposition interrupted before verified destination");
                 }
             }
         };

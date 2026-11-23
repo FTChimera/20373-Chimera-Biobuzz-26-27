@@ -55,15 +55,14 @@ public class FromShootGardenPose {
                     // Turn in place to 180 (west) first, then drive with a
                     // constant west heading -- no tangent sweep, no snap.
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    Commands.waitMs(Timings.flowerIntakeTime * 1000L),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     // Drive back still facing west, then turn in place
                     // to 90 (north) for the garden shoot.
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
-            );
+            ).finallyDo(() -> robot.intake.setDeployed(false));
         }
 
         @Override
@@ -206,12 +205,8 @@ public class FromShootGardenPose {
         protected Command buildCommand() {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    //parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.setMaxPowerOnFly(robot, Values.gardenIntakeMaxPowerSetChangeTValue, Values.gardenIntakeMaxPowerSetChangeNewPower)),
-                    // Race: finish when the follow completes or the timeout
-                    // elapses, whichever comes first. The follower keeps its
-                    // last follow/hold either way (follow's end() is a no-op).
-                    follow(robot.follower, () -> toGarden).withTimeout(Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Timings.gardenIntakeTimeMs),
+                    DrivetrainCommands.followForIntake(robot.follower, () -> toGarden,
+                            Timings.gardenIntakeTimeoutMs, Timings.gardenIntakeTimeMs),
                     follow(robot.follower, () -> back),
                     ShooterCommands.waitForHiveLineup(robot, lineupState()),
                     ShooterCommands.shootAllPollen(robot)
