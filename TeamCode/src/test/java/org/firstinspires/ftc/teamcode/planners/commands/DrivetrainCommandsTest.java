@@ -9,8 +9,9 @@ import com.rmsftc.cmdlib.cmd.Commands;
 import org.firstinspires.ftc.teamcode.pedro.FollowerTestRig;
 import org.junit.Test;
 
+import org.firstinspires.ftc.teamcode.util.FakeClock;
+
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class DrivetrainCommandsTest {
     @Test public void turnDoesNotTrustStaleBusyOrCompleteBeforeMeasurementUpdate() {
@@ -33,10 +34,10 @@ public class DrivetrainCommandsTest {
 
     @Test public void boundedTurnStopsAndContinuesSequenceAfterTimeout() {
         FollowerTestRig rig = new FollowerTestRig();
-        AtomicLong clock = new AtomicLong();
+        FakeClock clock = new FakeClock();
         AtomicInteger next = new AtomicInteger();
         Command turn = new DrivetrainCommands.TurnCommand(rig.follower, 1, 1000,
-                new double[]{.01, .1, .1}, clock::get);
+                new double[]{.01, .1, .1}, clock);
         Command sequence = Commands.sequence(turn, Commands.runOnce(next::incrementAndGet));
         assertTrue(sequence.execute().isRunning());
         clock.set(1_001_000_000);
@@ -90,9 +91,9 @@ public class DrivetrainCommandsTest {
 
     @Test public void intakeKeepsPushingThroughTimeoutAndDwellThenStops() {
         FollowerTestRig rig = new FollowerTestRig();
-        AtomicLong clock = new AtomicLong();
+        FakeClock clock = new FakeClock();
         Command intake = DrivetrainCommands.followForIntake(
-                rig.follower, FollowerTestRig::path, 100, 200, clock::get);
+                rig.follower, FollowerTestRig::path, 100, 200, clock);
         assertTrue(intake.execute().isRunning());
         clock.set(100_000_000);
         assertTrue(intake.execute().isRunning());

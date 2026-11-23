@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import org.firstinspires.ftc.teamcode.util.FakeClock;
 
 public class TreeShooterCommandsTest {
     private static final long MS = 1_000_000L;
@@ -50,21 +50,21 @@ public class TreeShooterCommandsTest {
 
     private static final class SwitchRig {
         final FollowerTestRig drive = new FollowerTestRig();
-        final AtomicLong now = new AtomicLong();
+        final FakeClock now = new FakeClock();
         final List<String> warnings = new ArrayList<>();
         final TreeShooterCommands.SideSwitchCommand command;
 
         SwitchRig(Position from) {
             drive.pose = Pose.fromPedro(TreeState.poseFor(from));
             command = new TreeShooterCommands.SideSwitchCommand(
-                    drive.follower, from, warnings::add, now::get);
+                    drive.follower, from, warnings::add, now);
         }
 
         void settleCurrentHold() {
             drive.pose = drive.follower.holdPose;
             drive.follower.update(0.02);
             assertEquals(Status.RUNNING, command.execute());
-            now.addAndGet(150 * MS);
+            now.add(150 * MS);
             drive.follower.update(0.02);
             command.execute();
         }
@@ -108,7 +108,7 @@ public class TreeShooterCommandsTest {
     public void sideSwitchStalledCorridorIsBoundedAndStopsControl() {
         SwitchRig rig = new SwitchRig(Position.GARDEN_SHOOT);
         rig.enterCorridor();
-        rig.now.addAndGet(6000 * MS);
+        rig.now.add(6000 * MS);
         rig.command.execute();
         assertEquals(TreeShooterCommands.SwitchOutcome.ABORTED, rig.command.outcome());
         assertTrue(rig.drive.follower.idle());

@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import com.rmsftc.utils.math.Pose;
 
 import java.util.function.Consumer;
-import java.util.function.LongSupplier;
+import com.rmsftc.utils.Clock;
 
 /**
  * Bounded measured settling, then a post-approach camera decision. Missing
@@ -157,12 +157,12 @@ public final class TreeShooterCommands {
                 warn("Approach endpoint unverified; holding actual position for degraded planned attempt");
             }
             robot.follower.hold(hold);
-            settle = new SettleWindow(System.nanoTime(), SHOOT_SETTLE_MS);
+            settle = new SettleWindow(Clock.SYSTEM.nowNanos(), SHOOT_SETTLE_MS);
             phase = Phase.SETTLE;
         }
 
         @Override public void loop() {
-            long now = System.nanoTime();
+            long now = Clock.SYSTEM.nowNanos();
             switch (phase) {
                 case SETTLE:
                     poseSettled = settle.settled(
@@ -266,13 +266,13 @@ public final class TreeShooterCommands {
      */
     public static SideSwitchCommand switchSides(Robot robot, Position fromSide) {
         return new SideSwitchCommand(robot.follower, fromSide,
-                reason -> robot.telemetry.addData("Tree side switch ABORTED", reason), System::nanoTime);
+                reason -> robot.telemetry.addData("Tree side switch ABORTED", reason), Clock.SYSTEM);
     }
 
     public static final class SideSwitchCommand extends Command {
         private final Follower follower;
         private final Consumer<String> warning;
-        private final LongSupplier clock;
+        private final Clock clock;
         private final Pose fromPose;
         private final Pose toPose;
         private final double corridorHeading;
@@ -284,7 +284,7 @@ public final class TreeShooterCommands {
         private SettleWindow settle;
         private long pathRunId;
 
-        SideSwitchCommand(Follower follower, Position fromSide, Consumer<String> warning, LongSupplier clock) {
+        SideSwitchCommand(Follower follower, Position fromSide, Consumer<String> warning, Clock clock) {
             this.follower = follower;
             this.warning = warning;
             this.clock = clock;
@@ -312,12 +312,12 @@ public final class TreeShooterCommands {
             }
             turnPose = fromPose.withHeading(corridorHeading);
             follower.hold(turnPose);
-            settle = new SettleWindow(clock.getAsLong(), Timings.flowerTurnTimeoutMs);
+            settle = new SettleWindow(clock.nowNanos(), Timings.flowerTurnTimeoutMs);
         }
 
         @Override public void loop() {
             if (outcome != SwitchOutcome.RUNNING) return;
-            long now = clock.getAsLong();
+            long now = clock.nowNanos();
             if (stage == 1) {
                 if (follower.pathRunId() != pathRunId || follower.manual() || follower.idle()) {
                     abort("Side switch corridor control replaced");

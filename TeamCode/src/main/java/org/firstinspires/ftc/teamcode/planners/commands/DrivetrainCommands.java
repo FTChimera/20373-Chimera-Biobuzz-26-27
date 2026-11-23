@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 
 import java.util.Objects;
-import java.util.function.LongSupplier;
+import com.rmsftc.utils.Clock;
 import java.util.function.Supplier;
 
 /** Drive commands own the follower until completion; cancellation stops it immediately. */
@@ -31,7 +31,7 @@ public class DrivetrainCommands {
         private final boolean stopOnCompletion;
         private final boolean strict;
         private final double[] tolerances;
-        private final LongSupplier clock;
+        private final Clock clock;
         private Pose target;
         private long runId;
         private long started;
@@ -42,7 +42,7 @@ public class DrivetrainCommands {
 
         FollowCommand(Follower follower, Supplier<Path> pathSupplier, double timeoutMs,
                       double dwellMs, boolean stopOnCompletion, boolean strict,
-                      double[] tolerances, LongSupplier clock) {
+                      double[] tolerances, Clock clock) {
             this.follower = Objects.requireNonNull(follower);
             this.pathSupplier = Objects.requireNonNull(pathSupplier);
             this.timeoutMs = timeoutMs;
@@ -58,7 +58,7 @@ public class DrivetrainCommands {
             done = false;
             dwelling = false;
             degraded = false;
-            started = clock.getAsLong();
+            started = clock.nowNanos();
             boolean initialized = false;
             try {
                 Path path = Objects.requireNonNull(pathSupplier.get(), "Path supplier returned null");
@@ -85,7 +85,7 @@ public class DrivetrainCommands {
                 return;
             }
             if (strict && follower.idle() && pathCompleted) follower.hold(target);
-            long now = clock.getAsLong();
+            long now = clock.nowNanos();
             if (!dwelling) {
                 boolean ready = follower.hasPathProgress() && follower.atParametricEnd()
                         && (!strict || follower.isPoseSettled(target,
@@ -124,12 +124,12 @@ public class DrivetrainCommands {
         private final double heading;
         private final double timeoutMs;
         private final double[] tolerances;
-        private final LongSupplier clock;
+        private final Clock clock;
         private long started;
         private boolean ready;
 
         TurnCommand(Follower follower, double heading, double timeoutMs,
-                    double[] tolerances, LongSupplier clock) {
+                    double[] tolerances, Clock clock) {
             this.follower = Objects.requireNonNull(follower);
             if (!Double.isFinite(heading)) throw new IllegalArgumentException("Heading must be finite");
             this.heading = heading;
@@ -141,7 +141,7 @@ public class DrivetrainCommands {
 
         @Override public void start() {
             ready = false;
-            started = clock.getAsLong();
+            started = clock.nowNanos();
             Pose current = follower.localizer.pose();
             follower.hold(new Pose(current.x(), current.y(), heading));
         }
@@ -149,7 +149,7 @@ public class DrivetrainCommands {
         @Override public void loop() {
             ready = follower.holding() && follower.hasControlUpdate()
                     && follower.isHeadingSettled(heading, tolerances[0], tolerances[1], tolerances[2]);
-            if (!ready && elapsedMs(clock.getAsLong(), started) >= timeoutMs) {
+            if (!ready && elapsedMs(clock.nowNanos(), started) >= timeoutMs) {
                 // Timeout: stop and degrade — complete the turn so the
                 // sequence continues from the actual heading, instead of
                 // killing the whole OpMode with an exception.
@@ -172,13 +172,13 @@ public class DrivetrainCommands {
     /** Parametric completion only, not a safety-critical settled-pose gate. */
     public static Command follow(Follower follower, Supplier<Path> pathSupplier) {
         return new FollowCommand(follower, pathSupplier, Double.POSITIVE_INFINITY,
-                0, false, false, null, System::nanoTime);
+                0, false, false, null, Clock.SYSTEM);
     }
 
     /** Best-effort path: stops on timeout. For continued pushing use {@link #followForIntake}. */
     public static Command followWithTimeout(Follower follower, Supplier<Path> pathSupplier, double timeoutMs) {
         requireDuration(timeoutMs);
-        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, false, null, System::nanoTime);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, false, null, Clock.SYSTEM);
     }
 
     /**
@@ -188,11 +188,11 @@ public class DrivetrainCommands {
      */
     public static Command followForIntake(Follower follower, Supplier<Path> pathSupplier,
                                          double timeoutMs, double dwellMs) {
-        return followForIntake(follower, pathSupplier, timeoutMs, dwellMs, System::nanoTime);
+        return followForIntake(follower, pathSupplier, timeoutMs, dwellMs, Clock.SYSTEM);
     }
 
     static Command followForIntake(Follower follower, Supplier<Path> pathSupplier,
-                                  double timeoutMs, double dwellMs, LongSupplier clock) {
+                                  double timeoutMs, double dwellMs, Clock clock) {
         requireDuration(timeoutMs);
         requireDuration(dwellMs);
         return new FollowCommand(follower, pathSupplier, timeoutMs, dwellMs, true, false, null, clock);
@@ -212,13 +212,13 @@ public class DrivetrainCommands {
         requireDuration(timeoutMs);
         double[] tolerances = tolerances(positionTolerance, headingTolerance,
                 linearVelocityTolerance, angularVelocityTolerance);
-        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, true, tolerances, System::nanoTime);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, true, tolerances, Clock.SYSTEM);
     }
 
     public static Command turnToHeading(Follower follower, double targetHeadingRadians) {
         return new TurnCommand(follower, targetHeadingRadians, Double.POSITIVE_INFINITY,
                 tolerances(HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE),
-                System::nanoTime);
+                Clock.SYSTEM);
     }
 
     /** Measured heading and both velocities must settle; timeout stops and throws. */
@@ -233,7 +233,7 @@ public class DrivetrainCommands {
                                                    double linearVelocityTolerance, double angularVelocityTolerance) {
         requireDuration(timeoutMs);
         return new TurnCommand(follower, targetHeadingRadians, timeoutMs,
-                tolerances(headingTolerance, linearVelocityTolerance, angularVelocityTolerance), System::nanoTime);
+                tolerances(headingTolerance, linearVelocityTolerance, angularVelocityTolerance), Clock.SYSTEM);
     }
 
     /**
