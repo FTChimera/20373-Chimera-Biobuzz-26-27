@@ -21,7 +21,7 @@ dependencies {
     implementation 'com.github.aaravdhawan25.FtcAutoTune:pidautotuner-ftc:v1.4.3'
 
     implementation 'com.github.shlok-k720.BehaviorArchitectures:ftc:v0.2.2'
-    implementation 'com.github.shlok-k720.FTCUtils:ftc:v0.1.1'
+    //FTC Utils deleted - included as api in Behavior Architectures
 
     implementation 'com.pedropathing:revhub:3.0.2'
     implementation 'com.pedropathing:tuning:1.0.1'
