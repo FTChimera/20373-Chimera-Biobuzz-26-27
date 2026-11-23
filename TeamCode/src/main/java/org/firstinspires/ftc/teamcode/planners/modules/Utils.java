@@ -2,14 +2,16 @@ package org.firstinspires.ftc.teamcode.planners.modules;
 
 import androidx.annotation.NonNull;
 
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.paths.Path;
+import com.rmsftc.cmdlib.cmd.Command;
+import com.rmsftc.cmdlib.cmd.Commands;
+
 import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
+import org.firstinspires.ftc.teamcode.planners.Position;
+import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 public class Utils {
@@ -29,12 +31,22 @@ public class Utils {
         }
 
         @Override
-        public Command run() {
-            return Command.build().setDone(()->true);
+        public Position from() {
+            return Position.ANY;
         }
 
         @Override
-        public void buildPaths() {
+        public Position to() {
+            return Position.ANY;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.none();
+        }
+
+        @Override
+        protected void buildPaths() {
 
         }
 
@@ -47,9 +59,10 @@ public class Utils {
 
     public static class WaitMs extends PathPlanner {
         double time;
+
         public WaitMs(Robot robot, double timeMs) {
             super(robot);
-            time=timeMs;
+            time = timeMs;
         }
 
         @Override
@@ -58,12 +71,22 @@ public class Utils {
         }
 
         @Override
-        public Command run() {
-            return Commands.waitMs(time);
+        public Position from() {
+            return Position.ANY;
         }
 
         @Override
-        public void buildPaths() {
+        public Position to() {
+            return Position.ANY;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.waitMs((long) time);
+        }
+
+        @Override
+        protected void buildPaths() {
 
         }
 
@@ -76,8 +99,9 @@ public class Utils {
 
     public static class CustomPath extends PathPlanner {
         Path path;
+
         public CustomPath(Robot robot, Path path) {
-            super(robot);
+            super(robot, robot.follower);
             this.path = path;
         }
 
@@ -87,12 +111,22 @@ public class Utils {
         }
 
         @Override
-        public Command run() {
+        public Position from() {
+            return Position.ANY;
+        }
+
+        @Override
+        public Position to() {
+            return Position.ANY;
+        }
+
+        @Override
+        protected Command buildCommand() {
             return follow(robot.follower, () -> path);
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
 
         }
 

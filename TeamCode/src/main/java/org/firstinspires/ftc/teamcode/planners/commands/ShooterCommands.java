@@ -1,14 +1,9 @@
 package org.firstinspires.ftc.teamcode.planners.commands;
 
-
-import static com.pedropathing.ivy.commands.Commands.instant;
-import static com.pedropathing.ivy.groups.Groups.sequential;
-
-import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.behaviors.BlockedBehavior;
-import com.pedropathing.ivy.behaviors.ConflictBehavior;
-import com.pedropathing.ivy.behaviors.InterruptedBehavior;
-import com.pedropathing.utils.Angle;
+import com.rmsftc.cmdlib.EndCondition;
+import com.rmsftc.cmdlib.Status;
+import com.rmsftc.cmdlib.cmd.Command;
+import com.rmsftc.cmdlib.cmd.Commands;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.Timings;
@@ -16,8 +11,6 @@ import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class ShooterCommands {
 
@@ -34,112 +27,139 @@ public class ShooterCommands {
      * command ends on timeout.
      */
     public static Command waitForHiveLineupOld(Robot robot, Field.HiveState wantedState) {
-        AtomicReference<Timer> timer = new AtomicReference<>();
-        AtomicBoolean done = new AtomicBoolean(false);
-        return Command.build()
-                .setStart(() -> {
-                    if (robot.vision == null) {
-                        throw new IllegalStateException("Robot vision subsystem is required for hive lineup.");
-                    }
-                    if (wantedState == null) {
-                        throw new IllegalArgumentException("A wanted hive state is required for hive lineup.");
-                    }
-                    timer.set(new Timer(TimeUnit.SECONDS));
-                    done.set(false);
-                })
-                .setExecute(() -> {
-                    if (done.get()) {
-                        return;
-                    }
-                    robot.vision.applyInferredHiveState(robot.field);
-                    if (robot.vision.hasReliableLocalization()
-                            && robot.field.getHiveState() == wantedState) {
-                        done.set(true);
-                        return;
-                    }
-                    if (timer.get().past(Timings.hiveLineupTimeoutTime)) {
-                        done.set(true);
-                        robot.telemetry.addData(
-                                "Hive lineup timeout",
-                                "state=%s wanted=%s",
-                                robot.field.getHiveState(),
-                                wantedState
-                        );
-                    }
-                })
-                .setDone(done::get);
-    }
-    public static Command shootAllPollen(Robot robot) {
-        AtomicBoolean startShoot = new AtomicBoolean(false);
-        AtomicReference<Timer> timer = new AtomicReference<>();
-        return Command.build()
-                .requiring(robot.shooter, robot.transfer, robot.intake)
-                .setPriority(0)
-                .setStart(() -> {
-                    if (!robot.shooter.hasNonzeroVelocityTarget()) {
-                        throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
-                    }
-                    timer.set(new Timer());
-                })
-                .setExecute(() -> {
-                    if (!robot.shooter.upToSpeed() && !timer.get().past(Timings.upToSpeedShooterTimeoutTimeMs)) {
-                        return;
-                    }
-                    if (startShoot.get()) return;
-                    robot.intake.setFullPower();
-                    robot.transfer.shootAll();
-                    timer.set(new Timer());
-                    startShoot.set(true);
-                })
-                .setDone(() -> startShoot.get() && timer.get().past(Timings.shootingTimeMs))
-                .setEnd((endCondition) -> robot.transfer.stop());
+        return new Command() {
+            private Timer timer;
+            private boolean done;
 
+            @Override
+            public void start() {
+                if (robot.vision == null) {
+                    throw new IllegalStateException("Robot vision subsystem is required for hive lineup.");
+                }
+                if (wantedState == null) {
+                    throw new IllegalArgumentException("A wanted hive state is required for hive lineup.");
+                }
+                timer = new Timer(TimeUnit.SECONDS);
+                done = false;
+            }
+
+            @Override
+            public void loop() {
+                if (done) {
+                    return;
+                }
+                robot.vision.applyInferredHiveState(robot.field);
+                if (robot.vision.hasReliableLocalization()
+                        && robot.field.getHiveState() == wantedState) {
+                    done = true;
+                    return;
+                }
+                if (timer.past(Timings.hiveLineupTimeoutTime)) {
+                    done = true;
+                    robot.telemetry.addData(
+                            "Hive lineup timeout",
+                            "state=%s wanted=%s",
+                            robot.field.getHiveState(),
+                            wantedState
+                    );
+                }
+            }
+
+            @Override
+            public Status status() {
+                return Status.of(!done);
+            }
+
+            @Override
+            public void end(EndCondition endCondition) {
+            }
+        };
+    }
+
+    public static Command shootAllPollen(Robot robot) {
+        return new Command() {
+            private Timer timer;
+            private boolean startShoot;
+
+            {
+                addRequirements(robot.shooter, robot.transfer, robot.intake);
+            }
+
+            @Override
+            public void start() {
+                if (!robot.shooter.hasNonzeroVelocityTarget()) {
+                    throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
+                }
+                timer = new Timer();
+                startShoot = false;
+            }
+
+            @Override
+            public void loop() {
+                if (!robot.shooter.upToSpeed() && !timer.past(Timings.upToSpeedShooterTimeoutTimeMs)) {
+                    return;
+                }
+                if (startShoot) return;
+                robot.intake.setFullPower();
+                robot.transfer.shootAll();
+                timer = new Timer();
+                startShoot = true;
+            }
+
+            @Override
+            public Status status() {
+                return Status.of(!(startShoot && timer.past(Timings.shootingTimeMs)));
+            }
+
+            @Override
+            public void end(EndCondition endCondition) {
+                robot.transfer.stop();
+            }
+        };
     }
 
     public static Command waitForHiveLineup(Robot robot, Field.HiveState unused) {
-        AtomicBoolean done = new AtomicBoolean(false);
-        AtomicReference<Timer> timer = new AtomicReference<>();
-        return Command.build()
-                .setStart(() -> timer.set(new Timer(TimeUnit.SECONDS)))
-                .setExecute(() -> {
-                    if (done.get()) {
-                        return;
-                    }
-                    if (robot.vision.anyAllianceFiducial()) {
-                        done.set(true);
-                        return;
-                    }
-                    if (timer.get().past(Timings.hiveLineupTimeoutTime)) {
-                        done.set(true);
-                    }
-                })
-                .setDone(done::get)
-                .then(Command.build()
-                        .setStart(() -> timer.set(new Timer(TimeUnit.SECONDS)))
-                        .setDone(() -> timer.get().past(Timings.hiveLineupExtraTimeSec)));
-    }
+        Command waitForTag = new Command() {
+            private Timer timer;
+            private boolean done;
 
-    public static Command autoAlignCommand(Robot robot) {
-        AtomicBoolean done = new AtomicBoolean(false);
-        AtomicReference<Timer> timer = new AtomicReference<>();
-        return Command.build()
-                .setStart(
-                        () -> timer.set(new Timer(TimeUnit.SECONDS))
-                )
-                .setExecute(() -> {
-                    if (timer.get().past(Timings.autoAlignTimeoutTime) || Angle.smallestDifference(robot.getPose().getHeading(), robot.autoAimerCalculator.getTargetHeading())<=1) {
-                        done.set(true);
-                        return;
-                    }
-                    robot.setAutoAlign();
-                })
-                .setDone(done::get);
-    }
+            @Override
+            public void start() {
+                timer = new Timer(TimeUnit.SECONDS);
+                done = false;
+            }
 
+            @Override
+            public void loop() {
+                if (done) {
+                    return;
+                }
+                if (robot.vision.anyAllianceFiducial()) {
+                    done = true;
+                    return;
+                }
+                if (timer.past(Timings.hiveLineupTimeoutTime)) {
+                    done = true;
+                }
+            }
+
+            @Override
+            public Status status() {
+                return Status.of(!done);
+            }
+
+            @Override
+            public void end(EndCondition endCondition) {
+            }
+        };
+        return Commands.sequence(
+                waitForTag,
+                Commands.waitMs(Timings.hiveLineupExtraTimeSec * 1000L));
+    }
 
     public static Command shootCmd(Robot robot, Field.HiveState hiveState) {
-        return sequential(
-                instant(() -> robot.follower.hold(robot.getPose().withHeading(robot.autoAimerCalculator.getTargetHeading()))),
+        return Commands.sequence(
+                Commands.runOnce(() -> robot.follower.hold(robot.getPose().withHeading(robot.autoAimerCalculator.getTargetHeading()))),
                 waitForHiveLineup(robot, hiveState),
                 shootAllPollen(robot)
         );

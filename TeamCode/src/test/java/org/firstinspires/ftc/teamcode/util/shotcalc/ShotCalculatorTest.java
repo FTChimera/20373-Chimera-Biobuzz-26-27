@@ -26,10 +26,13 @@ public class ShotCalculatorTest {
 
         ShotSolution solution = ShotCalculator.table().calculateShot(context);
 
-        assertEquals(890.0, solution.flywheelTicksPerSecond, EPSILON);
-        // CounterRoller table is a placeholder copied from the main table
-        // (TODO tune), so it interpolates to the same value for now.
-        assertEquals(1000.0, solution.counterRollerTicksPerSecond, EPSILON);
+        // Distance to the red untipped goal (60, 60) is 40 in. Main table
+        // segment (36.9, 800) -> (49.5, 820): ratio = 3.1/12.6, smoothstep
+        // 3t^2 - 2t^3, so 800 + smoothstep(3.1/12.6) * 20.
+        assertEquals(803.0361891964311, solution.flywheelTicksPerSecond, EPSILON);
+        // CounterRoller table has its own points; 40 in is exactly its
+        // second entry (40, 940).
+        assertEquals(940.0, solution.counterRollerTicksPerSecond, EPSILON);
     }
 
     @Test
@@ -50,7 +53,11 @@ public class ShotCalculatorTest {
 
         ShotSolution solution = ShotCalculator.table().calculateShot(context);
 
-        assertEquals(845.0, solution.flywheelTicksPerSecond, EPSILON);
+        // Release pose is (20 + 100 * 0.05, 60) = (25, 60), 35 in from the
+        // goal — inside the first table distance (36.9), so the shot clamps
+        // to the first calibrated speed, 800. Without compensation the
+        // distance would be 40 in and interpolate to ~803.04.
+        assertEquals(800.0, solution.flywheelTicksPerSecond, EPSILON);
     }
 
     @Test

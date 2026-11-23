@@ -26,14 +26,13 @@ A few of the ideas doing the heavy lifting:
 - **Dijkstra's shortest path for parking.** The endgame park route is planned on a visibility graph: the field is reduced to waypoints (start, goal, a 3x3 lattice of fixed points, and obstacle corners) and [Dijkstra's algorithm](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/util/game/DijkstraPathfinder.java) finds the shortest path around forbidden space — the hive bases and the flowers — using the [JTS Topology Suite](https://github.com/locationtech/jts) for the geometry.
 - **Kalman-filter localization.** [`FusionLocalizer`](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedro/FusionLocalizer.java) fuses dead reckoning with measurements through a Kalman filter (covariance tracking, history buffer), and [`util/control/filters/`](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/util/control/filters) holds a hand-written extended Kalman filter for nonlinear models.
 - **PIDSVA flywheel control, tuned automatically.** The two-motor shooter runs a full velocity controller — PID plus feedforward (kS/kV/kA) with voltage compensation — and its constants come from a custom PIDSVA autotuner (relay test + Ziegler-Nichols + least-squares fit), built on [Aarav Dhawan's FtcAutoTune](https://github.com/aaravdhawan25/FtcAutoTune).
-- **Command-based autonomous.** Autos are composed from [Pedro Ivy](https://github.com/Pedro-Pathing/PedroPathing) commands (`PlanBuilder` + `PathPlanner`), so each routine is a chain of small reusable steps: drive a path, intake, line up on the hive, shoot, park.
+- **Command-based autonomous.** Autos are composed from [BehaviorArchitectures](https://github.com/shlok-k720/BehaviorArchitectures) commands (`Plan.sequence` + `PathPlanner`), so each routine is a chain of small reusable steps: drive a path, intake, line up on the hive, shoot, park.
 
 ## Libraries
 
 - [Pedro Pathing](https://github.com/Pedro-Pathing/PedroPathing) 3.0.2 (+ tuning 1.0.1) — path following and localization
-- [Pedro Ivy](https://github.com/Pedro-Pathing/PedroPathing) 1.1.1 — command framework for autonomous
 - [FtcAutoTune](https://github.com/aaravdhawan25/FtcAutoTune) 1.4.3 — PID/PIDF autotuning (relay + Ziegler-Nichols)
-- [BehaviorArchitectures](https://github.com/shlok-k720/BehaviorArchitectures) 0.2.0 — our own behavior-tree, command, and finite-state-machine library
+- [BehaviorArchitectures](https://github.com/shlok-k720/BehaviorArchitectures) 0.2.2 — our own behavior-tree, command, and finite-state-machine library (drives all competition OpModes)
 - [JTS Topology Suite](https://github.com/locationtech/jts) 1.20.0 — computational geometry for field and obstacle math
 - [Dairy](https://repo.dairy.foundation) Sloth 0.3.2 + FTC Dashboard — telemetry and live tuning
 - FTC SDK 12.0.0
@@ -47,7 +46,7 @@ config/       Robot configuration: alliance color, start poses, hardware names
 mechanisms/   The subsystems: Robot, Shooter (two motors), Intake, Transfer, Vision
 opmodes/      MainTeleOp, Controls, and auto/ (Garden 8, Loading 8, ParkAuto)
 pedro/        Pedro Pathing setup: Follower, Constants, FusionLocalizer, Tuning
-planners/     Autonomous planning: PlanBuilder, PathPlanner, field poses (Common.kt)
+planners/     Autonomous planning: Plan, PathPlanner, field poses (Common.kt)
 robotDev/     Development and tuning tools: AutoTuner, subsystem tests
 util/         Shared building blocks, grouped by job:
   autotune/   Relay tuner, Ziegler-Nichols, S/V/A fit

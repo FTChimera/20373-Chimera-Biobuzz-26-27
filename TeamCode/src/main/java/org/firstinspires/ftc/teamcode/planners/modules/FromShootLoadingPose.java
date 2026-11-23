@@ -1,36 +1,36 @@
 package org.firstinspires.ftc.teamcode.planners.modules;
 
-import static com.pedropathing.ivy.groups.Groups.*;
-import static com.pedropathing.ivy.commands.Commands.*;
-
-import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
-
 import androidx.annotation.NonNull;
 
 import com.pedropathing.api.Paths;
-import com.pedropathing.ivy.Command;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.interpolator.Interpolator;
+import com.rmsftc.cmdlib.cmd.Command;
+import com.rmsftc.cmdlib.cmd.Commands;
+
+import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.PathPoses;
+import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 public class FromShootLoadingPose {
     public static class ToIntakeFromNorthFlower extends PathPlanner {
         Path toFlower;
         Path back;
+
         public ToIntakeFromNorthFlower(Robot robot) {
-            super(robot);
+            super(robot, robot.follower, robot.shooter, robot.transfer, robot.intake);
         }
 
         @Override
@@ -39,18 +39,28 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
+        public Position from() {
+            return Position.LOADING_SHOOT;
+        }
+
+        @Override
+        public Position to() {
+            return Position.LOADING_SHOOT;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.sequence(
+                    Commands.runOnce(robot.intake::setFullPower),
                     // Turn in place from -90 (south) to 90 (north) first,
                     // then drive with a constant north heading -- no
                     // tangent sweep, no heading snap.
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.northFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    waitMs(Timings.flowerIntakeTime * 1000),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    Commands.waitMs(Timings.flowerIntakeTime * 1000L),
                     // Drive back still facing north, then turn in place
                     // to -90 (south) for the shoot.
-                    parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.loading.heading(), Timings.flowerTurnTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
@@ -58,7 +68,7 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
             // Short hop north; rect clearance to the west hive base: 15.3 in.
             // Both legs hold a CONSTANT north heading (90 deg): the turns
             // to 90 and back to -90 are separate turn-in-place steps in
@@ -101,8 +111,9 @@ public class FromShootLoadingPose {
     public static class ToIntakeLoadingToGarden extends PathPlanner {
         Path toWall;
         Path toGarden;
+
         public ToIntakeLoadingToGarden(Robot robot) {
-            super(robot);
+            super(robot, robot.follower, robot.shooter, robot.transfer, robot.intake);
         }
 
         @Override
@@ -111,11 +122,21 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
+        public Position from() {
+            return Position.LOADING_SHOOT;
+        }
+
+        @Override
+        public Position to() {
+            return Position.GARDEN_SHOOT;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.sequence(
+                    Commands.runOnce(robot.intake::setFullPower),
                     follow(robot.follower, () -> toWall),
-                    waitMs(Timings.gardenIntakeTimeMs),
+                    Commands.waitMs(Timings.gardenIntakeTimeMs),
                     follow(robot.follower, () -> toGarden),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
@@ -123,7 +144,7 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
             // Loading intake pose: robot center 9.5 in from the west wall
             // (1 in + half the robot length), centered in the loading
             // zone (y 96-120), facing the wall -- the staged pollen sit
@@ -182,8 +203,9 @@ public class FromShootLoadingPose {
         Path toSweepStart;
         Path sweep;
         Path toGarden;
+
         public ToIntakePartnerPreloadsToGarden(Robot robot) {
-            super(robot);
+            super(robot, robot.follower, robot.shooter, robot.transfer, robot.intake);
         }
 
         @Override
@@ -192,20 +214,30 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
-                    instant(robot.intake::setFullPower),
-                    parallel(follow(robot.follower, () -> toSweepStart), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+        public Position from() {
+            return Position.LOADING_SHOOT;
+        }
+
+        @Override
+        public Position to() {
+            return Position.GARDEN_SHOOT;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.sequence(
+                    Commands.runOnce(robot.intake::setFullPower),
+                    Commands.parallel(follow(robot.follower, () -> toSweepStart), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     follow(robot.follower, () -> sweep),
-                    waitMs(Timings.gardenIntakeTimeMs),
-                    parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    Commands.waitMs(Timings.gardenIntakeTimeMs),
+                    Commands.parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
             // Down to the south end of the loading zone, ending facing
             // north for the sweep. Disc clearance to the west hive base:
             // 7.1 in; to the partner: 13.6 in.
@@ -220,8 +252,8 @@ public class FromShootLoadingPose {
                     .curve(PathPoses.partnerSweepStart, PathPoses.partnerSweepMid, PathPoses.partnerSweepEnd)
                     .heading(CommonKt.fastInterpolationDegraded(PathPoses.partnerSweepEnd.heading(), Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
-            // hive, then east along the bottom. Disc clearance to the west
-            // hive base: 7.4 in. Reverse tangential interpolation, as on
+            // hive, then east along the bottom. Disc clearance to the
+            // west hive base: 7.4 in. Reverse tangential interpolation, as on
             // the other return legs.
             toGarden = Paths
                     .curve(PathPoses.partnerSweepEnd, PathPoses.loadingToGarden, ShootPoses.garden)
@@ -249,7 +281,12 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public void buildPaths() {
+        public Position from() {
+            return Position.LOADING_SHOOT;
+        }
+
+        @Override
+        protected void buildPaths() {
             super.buildPaths();
             // Long diagonal past the north-east corner of the west hive base;
             // rect clearance: 3.6 in out (verified in sim with the physical

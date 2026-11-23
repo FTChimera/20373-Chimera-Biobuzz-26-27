@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import com.pedropathing.ivy.Command;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.rmsftc.cmdlib.cmd.Command;
+import com.rmsftc.ftc.ArchitectureManager;
+import com.rmsftc.ftc.ArchitecturalOpMode;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.pedro.commands.Scheduler;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
@@ -25,8 +25,8 @@ import java.util.List;
  * There is NO 30-second time limit: the OpMode runs until the driver
  * stops it. Place the robot at the garden start pose before pressing
  * start, then press gamepad1 A to run the next planner in the tour.
- * Each step runs the planner's real total(prevPose) through the
- * Scheduler, exactly as the autos do -- drive, deployer, dwell,
+ * Each step runs the planner (a BA Command) through the manager's
+ * scheduler, exactly as the autos do -- drive, deployer, dwell,
  * lineup and shoot included.
  *
  * Tour (garden start; one garden-to-loading leg runs twice, because
@@ -49,7 +49,7 @@ import java.util.List;
  * wrong pose.
  */
 @Autonomous(name = "Planner Test", group = "test", preselectTeleOp = MainTeleOp.NAME)
-public class PlannerTest extends OpMode {
+public class PlannerTest extends ArchitecturalOpMode {
     Robot robot;
     boolean isStopped = false;
     Command currentPlan;
@@ -59,6 +59,7 @@ public class PlannerTest extends OpMode {
     int tourIndex;
     boolean running;
     boolean prevA;
+    private boolean started;
 
     private static class Step {
         final PathPlanner planner;
@@ -79,8 +80,7 @@ public class PlannerTest extends OpMode {
     }
 
     @Override
-    public void init() {
-        Scheduler.INSTANCE.reset();
+    protected void onInit() {
         OpModeStorage.pose = StartPoses.gardenArea;
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
         robot.matchMode = OpModeStorage.matchMode;
@@ -105,16 +105,26 @@ public class PlannerTest extends OpMode {
         prevA = false;
     }
 
-    @Override public void start() {robot.start();}
+    @Override
+    protected void build(ArchitectureManager manager) {
+        // Nothing scheduled up front: each planner is scheduled on an
+        // A press in onLoop().
+    }
 
     @Override
-    public void loop() {
-        Scheduler.INSTANCE.execute();
+    protected void onLoop() {
+        // ArchitecturalOpMode has no start() hook: robot.start() (match
+        // timer, lights, vision) runs on the first loop tick, before the
+        // first robot.update() that reads the timer.
+        if (!started) {
+            robot.start();
+            started = true;
+        }
         robot.update();
 
         // Finish detection runs before any new scheduling below, so a plan
         // scheduled this iteration is not checked until the next one.
-        if (running && currentPlan != null && !Scheduler.INSTANCE.isRunning(currentPlan)) {
+        if (running && currentPlan != null && !manager.scheduler().isScheduled(currentPlan)) {
             currentPose = currentPlanner.getEndPose();
             running = false;
             currentPlan = null;
@@ -128,8 +138,9 @@ public class PlannerTest extends OpMode {
             if (!running && tourIndex < tour.size()) {
                 Step step = tour.get(tourIndex);
                 currentPlanner = step.planner;
-                currentPlan = currentPlanner.total(currentPose);
-                Scheduler.INSTANCE.schedule(currentPlan);
+                currentPlanner.setStartPose(currentPose);
+                currentPlan = currentPlanner;
+                manager.schedule(currentPlan);
                 running = true;
             }
         }
@@ -145,26 +156,26 @@ public class PlannerTest extends OpMode {
         if (currentPlanner != null) {
             telemetry.addData("PlannerTest running", currentPlanner.toString());
         }
-        telemetry.addData("PlannerTest plan running", currentPlan == null ? "none" : Scheduler.INSTANCE.isRunning(currentPlan));
+        telemetry.addData("PlannerTest plan running", currentPlan == null ? "none" : manager.scheduler().isScheduled(currentPlan));
         telemetry.addData("PlannerTest follower mode", robot.follower.mode());
         telemetry.addData("PlannerTest follower path", robot.follower.pathIndex());
         telemetry.addData("PlannerTest pose", robot.getPose());
-        telemetry.update();
     }
 
     @Override
-    public void stop() {
+    public void onStop() {
         if (!isStopped) {
             OpModeStorage.setEndVals(robot.getPoseCompensatedForVelocity());
             cancelPlan();
             robot.stopEverything();
+            isStopped = true;
         }
-        Scheduler.INSTANCE.reset();
+        super.onStop();
     }
 
     private void cancelPlan() {
-        if (currentPlan != null && Scheduler.INSTANCE.isScheduled(currentPlan)) {
-            Scheduler.INSTANCE.cancel(currentPlan);
+        if (currentPlan != null && manager.scheduler().isScheduled(currentPlan)) {
+            manager.cancel(currentPlan);
         }
     }
 }

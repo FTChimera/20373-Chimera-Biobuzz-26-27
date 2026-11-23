@@ -1,28 +1,29 @@
 package org.firstinspires.ftc.teamcode.planners.modules;
 
-import static com.pedropathing.ivy.groups.Groups.sequential;
-
 import androidx.annotation.NonNull;
 
 import com.pedropathing.api.Paths;
-import com.pedropathing.ivy.Command;
+import com.pedropathing.paths.Path;
+import com.rmsftc.cmdlib.cmd.Command;
+import com.rmsftc.cmdlib.cmd.Commands;
 
 import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
-import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
+import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 public class FromStartGardenPose {
     public static class ShootPreloads extends PathPlanner {
         Path pathToShoot;
+
         public ShootPreloads(Robot robot) {
-            super(robot);
+            super(robot, robot.follower, robot.shooter, robot.transfer, robot.intake);
         }
 
         @Override
@@ -31,8 +32,18 @@ public class FromStartGardenPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
+        public Position from() {
+            return Position.GARDEN_START;
+        }
+
+        @Override
+        public Position to() {
+            return Position.GARDEN_SHOOT;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.sequence(
                     follow(robot.follower, () -> pathToShoot),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
@@ -40,7 +51,7 @@ public class FromStartGardenPose {
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
             pathToShoot = Paths.line(startPose, ShootPoses.garden).linear(startPose, ShootPoses.garden);
         }
 
@@ -53,12 +64,13 @@ public class FromStartGardenPose {
 
     public static class ShootPreloadsToVision extends ShootPreloads {
         Path toVision;
+
         public ShootPreloadsToVision(Robot robot) {
             super(robot);
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
             super.buildPaths();
             toVision = Paths.line(ShootPoses.garden, StartPoses.visionAnchorGarden).linear(ShootPoses.garden, StartPoses.visionAnchorGarden);
         }
@@ -69,9 +81,14 @@ public class FromStartGardenPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
-                    super.run(),
+        public Position to() {
+            return Position.GARDEN_VISION_SEARCH;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.sequence(
+                    super.buildCommand(),
                     follow(robot.follower, () -> toVision)
             );
         }
@@ -85,12 +102,13 @@ public class FromStartGardenPose {
 
     public static class ShootPreloadsToLoadingArea extends ShootPreloads {
         Path toLoading;
+
         public ShootPreloadsToLoadingArea(Robot robot) {
             super(robot);
         }
 
         @Override
-        public void buildPaths() {
+        protected void buildPaths() {
             super.buildPaths();
             toLoading = Paths.line(ShootPoses.garden, ShootPoses.loading).linear(ShootPoses.garden, ShootPoses.loading);
         }
@@ -101,9 +119,14 @@ public class FromStartGardenPose {
         }
 
         @Override
-        public Command run() {
-            return sequential(
-                    super.run(),
+        public Position to() {
+            return Position.LOADING_SHOOT;
+        }
+
+        @Override
+        protected Command buildCommand() {
+            return Commands.sequence(
+                    super.buildCommand(),
                     follow(robot.follower, () -> toLoading)
             );
         }

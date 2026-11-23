@@ -9,12 +9,12 @@ import org.junit.Test;
 public class RobotParkingTest {
     @Test
     public void qualificationParkingBeginsAtEndgameWarning() {
-        assertTrue(Robot.shouldAutomaticallyPark(MatchMode.QUALIFICATIONS, 3.0));
+        assertTrue(Robot.shouldAutomaticallyPark(MatchMode.QUALIFICATIONS, 5.0));
     }
 
     @Test
     public void qualificationParkingDoesNotStartBeforeEndgameWarning() {
-        assertFalse(Robot.shouldAutomaticallyPark(MatchMode.QUALIFICATIONS, 3.01));
+        assertFalse(Robot.shouldAutomaticallyPark(MatchMode.QUALIFICATIONS, 5.01));
     }
 
     @Test
