@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
 import com.rmsftc.utils.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -47,8 +47,8 @@ public class AuditCorrectionsTest {
                 new Coordinate(0, 10), new Coordinate(0, 0)
         });
 
-        List<Pose2d> path = new DijkstraPathfinder().findPath(
-                new Pose2d(-1, 0), new Pose2d(11, 0), obstacle);
+        List<Pose> path = new DijkstraPathfinder().findPath(
+                new Pose(-1, 0), new Pose(11, 0), obstacle);
 
         assertEquals(2, path.size());
     }
@@ -61,8 +61,8 @@ public class AuditCorrectionsTest {
                 new Coordinate(0, 10), new Coordinate(0, 0)
         });
 
-        List<Pose2d> path = new DijkstraPathfinder().findPath(
-                new Pose2d(5, 5), new Pose2d(11, 0), obstacle);
+        List<Pose> path = new DijkstraPathfinder().findPath(
+                new Pose(5, 5), new Pose(11, 0), obstacle);
 
         assertEquals(0, path.size());
     }

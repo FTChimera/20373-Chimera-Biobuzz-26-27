@@ -2,15 +2,15 @@ package org.firstinspires.ftc.teamcode.util.localization;
 
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 
 public final class VisionLocalizationMath {
     private VisionLocalizationMath() {
     }
 
-    public static Pose2d toFieldPose(
-            Pose2d limelightPoseInches,
+    public static Pose toFieldPose(
+            Pose limelightPoseInches,
             double xOffsetIn,
             double yOffsetIn,
             double headingOffsetDeg,
@@ -25,9 +25,9 @@ public final class VisionLocalizationMath {
         requireFinite(yOffsetIn, "yOffsetIn");
         requireFinite(headingOffsetDeg, "headingOffsetDeg");
 
-        double x = limelightPoseInches.x;
-        double y = limelightPoseInches.y;
-        double heading = limelightPoseInches.heading;
+        double x = limelightPoseInches.x();
+        double y = limelightPoseInches.y();
+        double heading = limelightPoseInches.heading();
 
         if (invertX) {
             x = -x;

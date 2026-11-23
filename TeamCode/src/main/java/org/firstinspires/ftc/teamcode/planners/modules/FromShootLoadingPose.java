@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 public class FromShootLoadingPose {
     public static class ToIntakeFromNorthFlower extends PathPlanner {
@@ -34,7 +34,7 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return ShootPoses.loading;
         }
 
@@ -116,7 +116,7 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return ShootPoses.garden;
         }
 
@@ -208,7 +208,7 @@ public class FromShootLoadingPose {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return ShootPoses.garden;
         }
 

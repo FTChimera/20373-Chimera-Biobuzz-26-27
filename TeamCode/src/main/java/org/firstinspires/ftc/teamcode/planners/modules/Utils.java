@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 public class Utils {
     public static class NullPlanner extends PathPlanner {
@@ -20,13 +20,13 @@ public class Utils {
             super(null);
         }
 
-        public NullPlanner(Pose2d startPose) {
+        public NullPlanner(Pose startPose) {
             this();
             setStartPose(startPose);
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return startPose;
         }
 
@@ -66,7 +66,7 @@ public class Utils {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return startPose;
         }
 
@@ -106,7 +106,7 @@ public class Utils {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return PoseFactory.of(path.endPose());
         }
 

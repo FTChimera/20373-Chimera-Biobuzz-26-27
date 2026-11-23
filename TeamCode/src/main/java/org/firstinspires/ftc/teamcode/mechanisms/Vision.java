@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.util.localization.CamTransform;
 import org.firstinspires.ftc.teamcode.util.localization.VisionLocalizationMath;
 import org.firstinspires.ftc.teamcode.util.game.BiobuzzAprilTags;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.Collections;
 import java.util.List;
@@ -49,7 +49,7 @@ public class Vision {
     private double lastTxAvgIndicator;
     private LLResult latestResult;
     private final FrameFreshness frameFreshness = new FrameFreshness();
-    private Pose2d fieldPoseEstimate = Pose2d.ZERO;
+    private Pose fieldPoseEstimate = Pose.zero();
     private Field.HiveState inferredHiveState;
     private String localizationReliabilityReason = "Vision update has not run yet.";
 
@@ -112,7 +112,7 @@ public class Vision {
         localizationReliabilityReason = evaluateLocalizationReliability();
     }
 
-    public Pose2d getFieldPoseEstimate() {
+    public Pose getFieldPoseEstimate() {
         return fieldPoseEstimate;
     }
 
@@ -222,6 +222,12 @@ public class Vision {
                     && captureAgeMs + elapsedNanos / 1e6 <= maxAgeMs;
         }
 
+        /** Estimated age (ms) of the newest observed frame, or -1 when none is valid. */
+        double estimatedAgeMs(long nowNanos) {
+            if (!valid) return -1;
+            return captureAgeMs + (nowNanos - observedNanos) / 1e6;
+        }
+
         boolean isFreshAfter(int desiredPipeline, long nowNanos, double maxAgeMs,
                              long notBeforeNanos) {
             return isFresh(desiredPipeline, nowNanos, maxAgeMs)
@@ -260,6 +266,8 @@ public class Vision {
                 + " TagCount=" + camTransform.getTagCount()
                 + " VisibleTagIds=" + visibleTagIds()
                 + " AnyAllianceTag=" + anyAllianceFiducial()
+                + " Fresh=" + frameFreshness.isFresh(getDesiredPipelineIndex(), System.nanoTime(), MAX_RESULT_STALENESS_MS)
+                + " FrameAge(ms)=" + String.format("%.0f", frameFreshness.estimatedAgeMs(System.nanoTime()))
                 + " Ambiguity(m)=" + camTransform.getAmbiguity()
                 + " Staleness(ms)=" + (latestResult == null ? -1 : latestResult.getStaleness())
                 + " Hive=" + inferredHiveState
@@ -269,7 +277,7 @@ public class Vision {
 
     // RELOCALIZATION
 
-    public Pose2d getBotposeMt1() {
+    public Pose getBotposeMt1() {
         return getFieldPoseEstimate();
     }
     public Pose3D getBotposeRaw() {
@@ -439,7 +447,7 @@ public class Vision {
         if (!camTransform.isValid()) {
             return;
         }
-        Pose2d limelightPose = USE_HIVE_CORRECTED_POSE ? camTransform.getPose() : camTransform.getRawPose();
+        Pose limelightPose = USE_HIVE_CORRECTED_POSE ? camTransform.getPose() : camTransform.getRawPose();
         fieldPoseEstimate = VisionLocalizationMath.toFieldPose(
                 limelightPose,
                 FIELD_X_OFFSET_IN,

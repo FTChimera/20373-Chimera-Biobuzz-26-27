@@ -38,6 +38,7 @@ public class DrivetrainCommands {
         private long dwellStarted;
         private boolean dwelling;
         private boolean done;
+        private boolean degraded; // timed out or control replaced: end() must stop, not hold the target
 
         FollowCommand(Follower follower, Supplier<Path> pathSupplier, double timeoutMs,
                       double dwellMs, boolean stopOnCompletion, boolean strict,
@@ -56,6 +57,7 @@ public class DrivetrainCommands {
         @Override public void start() {
             done = false;
             dwelling = false;
+            degraded = false;
             started = clock.getAsLong();
             boolean initialized = false;
             try {
@@ -73,8 +75,14 @@ public class DrivetrainCommands {
             if (done) return;
             boolean pathCompleted = follower.hasPathProgress() && follower.completion() >= 1;
             if (follower.pathRunId() != runId || follower.manual() || (follower.idle() && !pathCompleted)) {
+                // Control was taken over (or the path ended early): stop and
+                // degrade — complete the command so the sequence continues
+                // from wherever the robot actually is, instead of killing
+                // the whole OpMode with an exception.
                 follower.stop();
-                throw new IllegalStateException("Path control was replaced before command completion");
+                degraded = true;
+                done = true;
+                return;
             }
             if (strict && follower.idle() && pathCompleted) follower.hold(target);
             long now = clock.getAsLong();
@@ -84,8 +92,13 @@ public class DrivetrainCommands {
                         tolerances[0], tolerances[1], tolerances[2], tolerances[3]));
                 if (!ready && elapsedMs(now, started) < timeoutMs) return;
                 if (!ready && strict) {
+                    // Timeout: stop and degrade — complete the command so the
+                    // sequence continues from the actual pose, instead of
+                    // killing the whole OpMode with an exception.
                     follower.stop();
-                    throw new IllegalStateException("Path did not settle before timeout at " + target);
+                    degraded = true;
+                    done = true;
+                    return;
                 }
                 dwelling = true;
                 dwellStarted = now;
@@ -97,7 +110,7 @@ public class DrivetrainCommands {
 
         @Override public void end(EndCondition condition) {
             follower.finishPathCommand(runId);
-            if (condition == EndCondition.INTERRUPTED || stopOnCompletion
+            if (degraded || condition == EndCondition.INTERRUPTED || stopOnCompletion
                     || !follower.atParametricEnd()) {
                 follower.stop();
             } else if (strict) {
@@ -137,8 +150,11 @@ public class DrivetrainCommands {
             ready = follower.holding() && follower.hasControlUpdate()
                     && follower.isHeadingSettled(heading, tolerances[0], tolerances[1], tolerances[2]);
             if (!ready && elapsedMs(clock.getAsLong(), started) >= timeoutMs) {
+                // Timeout: stop and degrade — complete the turn so the
+                // sequence continues from the actual heading, instead of
+                // killing the whole OpMode with an exception.
                 follower.stop();
-                throw new IllegalStateException("Turn did not settle before timeout; target heading=" + heading);
+                ready = true;
             }
         }
 

@@ -4,7 +4,7 @@ import com.rmsftc.utils.blackboard.Blackboard;
 
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands.ShotOutcome;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -299,7 +299,7 @@ public final class TreeState {
     }
 
     /** The field pose for a {@link Position} (used as a leg's start pose). */
-    public static Pose2d poseFor(Position position) {
+    public static Pose poseFor(Position position) {
         switch (position) {
             case GARDEN_START: return StartPoses.gardenArea;
             case GARDEN_SHOOT: return ShootPoses.garden;

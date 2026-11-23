@@ -14,10 +14,10 @@ import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.Timer;
-import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
+import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.FancyButton;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.GpFancyButton;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 
 import java.util.Locale;
@@ -48,7 +48,7 @@ public class ParkingTest extends LinearOpMode {
 
     private Robot robot;
     private AllianceColor selectedAlliance;
-    private Pose2d selectedStartPose;
+    private Pose selectedStartPose;
 
     private GpFancyButton requestPark;
     private GpFancyButton retryPark;
@@ -161,7 +161,7 @@ public class ParkingTest extends LinearOpMode {
         cancelPark = new GpFancyButton(FancyButton.PressType.RisingEdge, () -> gamepad1.b);
     }
 
-    private Pose2d resolveStartPose() {
+    private Pose resolveStartPose() {
         if (USE_OPMODE_STORAGE && OpModeStorage.pose.get() != null) {
             return OpModeStorage.pose.get();
         }
@@ -201,7 +201,7 @@ public class ParkingTest extends LinearOpMode {
             return;
         }
 
-        Pose2d correctedPose = robot.getPoseCompensatedForVelocity();
+        Pose correctedPose = robot.getPoseCompensatedForVelocity();
         parkArrived = robot.field.isRobotOverlappingLoadingZone(correctedPose);
         if (parkArrived) {
             robot.breakFollowing();
@@ -221,7 +221,7 @@ public class ParkingTest extends LinearOpMode {
             return;
         }
 
-        Pose2d compensatedPose = robot.getPoseCompensatedForVelocity();
+        Pose compensatedPose = robot.getPoseCompensatedForVelocity();
         boolean overlap = robot.field.isRobotOverlappingLoadingZone(compensatedPose);
         boolean pathComplete = !robot.follower.following() || (robot.follower.atParametricEnd() && !robot.follower.isBusy());
 
@@ -272,8 +272,8 @@ public class ParkingTest extends LinearOpMode {
     }
 
     private void sendTelemetry() {
-        Pose2d pose = robot.getPose();
-        Pose2d compensatedPose = robot.getPoseCompensatedForVelocity();
+        Pose pose = robot.getPose();
+        Pose compensatedPose = robot.getPoseCompensatedForVelocity();
         double distanceRaw = robot.field.getClosestLoadingZoneDistanceToRobot(pose);
         double distanceCompensated = robot.distanceToLoadingZone();
         boolean overlap = robot.field.isRobotOverlappingLoadingZone(compensatedPose);

@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import com.rmsftc.utils.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 
 @Autonomous(name = "Park Auto", preselectTeleOp = MainTeleOp.NAME)
@@ -30,9 +30,9 @@ public class ParkAuto extends ArchitecturalOpMode {
         BLUE_UNTIPPED(ParkAutoStartPoses.blueUntippedStart()),
         BLUE_TIPPED(ParkAutoStartPoses.blueTippedStart());
 
-        public final Pose2d pose;
+        public final Pose pose;
 
-        StartPose(Pose2d pose) {
+        StartPose(Pose pose) {
             this.pose = pose;
         }
     }
@@ -64,8 +64,8 @@ public class ParkAuto extends ArchitecturalOpMode {
 
             telemetry.addLine("=== PARK AUTO CONFIGURATION ===");
             telemetry.addData("Selected Start", selectedPose);
-            telemetry.addData("X", selectedPose.pose.getX());
-            telemetry.addData("Y", selectedPose.pose.getY());
+            telemetry.addData("X", selectedPose.pose.x());
+            telemetry.addData("Y", selectedPose.pose.y());
             telemetry.addLine("");
             telemetry.addLine("D-PAD UP / DOWN: Change start pose, A: Confirm");
             telemetry.addLine("Press PLAY to confirm");
@@ -82,7 +82,7 @@ public class ParkAuto extends ArchitecturalOpMode {
                         : AllianceColor.BLUE;
 
         follower = Constants.createFollower(hardwareMap).withLogger(followerLog -> telemetry.addLine(followerLog.toString()));
-        Pose2d parkPose = ParkAutoStartPoses.destination(alliance);
+        Pose parkPose = ParkAutoStartPoses.destination(alliance);
         follower.localizer.setPose(selectedPose.pose);
         if (isStopRequested()) return;
         manager.schedule(DrivetrainCommands.follow(follower,

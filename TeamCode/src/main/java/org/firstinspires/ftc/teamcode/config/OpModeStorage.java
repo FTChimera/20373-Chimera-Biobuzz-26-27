@@ -9,7 +9,7 @@ import com.rmsftc.utils.ftc.utils.Value;
 
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 /**
  * Cross-OpMode state (alliance, match mode, robot pose), exposed as
@@ -35,13 +35,13 @@ public class OpModeStorage {
         @Override public MatchMode parse(String stored) { return MatchMode.valueOf(stored); }
     };
 
-    private static final Value<Pose2d> POSE_VALUE = new Value<Pose2d>() {
-        @Override public String format(Pose2d value) {
-            return value.getX() + "," + value.getY() + "," + value.getHeading();
+    private static final Value<Pose> POSE_VALUE = new Value<Pose>() {
+        @Override public String format(Pose value) {
+            return value.x() + "," + value.y() + "," + value.heading();
         }
-        @Override public Pose2d parse(String stored) {
+        @Override public Pose parse(String stored) {
             String[] parts = stored.split(",");
-            return new Pose2d(
+            return new Pose(
                     Double.parseDouble(parts[0]),
                     Double.parseDouble(parts[1]),
                     Double.parseDouble(parts[2]));
@@ -69,7 +69,7 @@ public class OpModeStorage {
             storedVar("opmodeStorage.allianceColor", ALLIANCE_VALUE, AllianceColor.BLUE);
     public static final Var<MatchMode> matchMode =
             storedVar("opmodeStorage.matchMode", MATCH_MODE_VALUE, MatchMode.QUALIFICATIONS);
-    public static final Var<Pose2d> pose =
+    public static final Var<Pose> pose =
             storedVar("opmodeStorage.pose", POSE_VALUE, StartPoses.gardenArea);
     /** In memory only (see class javadoc): false after every app restart. */
     public static final Var<Boolean> initialized = new Var<>(false);
@@ -81,7 +81,7 @@ public class OpModeStorage {
         CommonKt.init(allianceColor.get());
     }
 
-    public static void setEndVals(Pose2d newPose) {
+    public static void setEndVals(Pose newPose) {
         pose.set(newPose);
         initialized.set(true);
     }

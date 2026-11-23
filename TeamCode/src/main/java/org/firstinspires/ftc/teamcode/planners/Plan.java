@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.planners;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.Objects;
 
@@ -38,7 +38,7 @@ public final class Plan {
      *
      * @throws IllegalStateException if two consecutive legs do not chain
      */
-    public static Command sequence(Pose2d startPose, PathPlanner... legs) {
+    public static Command sequence(Pose startPose, PathPlanner... legs) {
         return sequence(null, startPose, legs);
     }
 
@@ -50,13 +50,13 @@ public final class Plan {
      * @throws IllegalStateException if the legs do not chain from
      *                               {@code startPosition}
      */
-    public static Command sequence(Position startPosition, Pose2d startPose, PathPlanner... legs) {
+    public static Command sequence(Position startPosition, Pose startPose, PathPlanner... legs) {
         Objects.requireNonNull(startPose, "Start pose cannot be null");
         if (legs.length == 0) {
             throw new IllegalArgumentException("A plan needs at least one leg");
         }
         Position current = startPosition;
-        Pose2d prevEndPose = startPose;
+        Pose prevEndPose = startPose;
         for (PathPlanner leg : legs) {
             if (leg.from() != Position.ANY) {
                 if (current != null && leg.from() != current) {

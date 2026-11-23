@@ -13,12 +13,11 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 public class AutoAimerCalculator {
     public boolean useFollowerHold;
     public boolean pedro = true;
-    Pose2d correctedPose;
+    com.rmsftc.utils.math.Pose correctedPose;
     public Field.HiveState hiveState;
 
     double targetHeading = 0;
@@ -85,11 +84,11 @@ public class AutoAimerCalculator {
         correctedPose = PoseFactory.of(robotPose);
     }
 
-    public Pose2d getCorrectedPose() {
+    public com.rmsftc.utils.math.Pose getCorrectedPose() {
         return correctedPose;
     }
 
-    public Pose2d getCorrectedPoseOrFallback(Pose fallbackPose) {
+    public com.rmsftc.utils.math.Pose getCorrectedPoseOrFallback(Pose fallbackPose) {
         if (correctedPose == null) {
             initializeCorrectedPose(fallbackPose);
         }

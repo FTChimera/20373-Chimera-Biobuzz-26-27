@@ -7,7 +7,7 @@ import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.Objects;
 
@@ -29,7 +29,7 @@ import java.util.Objects;
  */
 public abstract class PathPlanner extends Command {
     protected final Robot robot;
-    protected Pose2d startPose;
+    protected Pose startPose;
 
     private Command inner;
     private Status innerStatus = Status.RUNNING;
@@ -40,7 +40,7 @@ public abstract class PathPlanner extends Command {
     }
 
     /** The pose this leg ends at (the next leg's start pose). */
-    public abstract Pose2d getEndPose();
+    public abstract Pose getEndPose();
 
     /** The position this leg starts from. */
     public abstract Position from();
@@ -55,7 +55,7 @@ public abstract class PathPlanner extends Command {
     protected abstract Command buildCommand();
 
     /** Sets the pose this leg starts from. Called by {@link Plan} before scheduling. */
-    public final void setStartPose(Pose2d newPose) {
+    public final void setStartPose(Pose newPose) {
         this.startPose = Objects.requireNonNull(newPose, "Start pose cannot be null");
     }
 

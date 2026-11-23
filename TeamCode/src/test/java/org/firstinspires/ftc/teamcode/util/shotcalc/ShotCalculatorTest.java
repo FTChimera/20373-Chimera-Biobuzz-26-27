@@ -6,7 +6,7 @@ import com.pedropathing.math.Velocity;
 
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 
 public class ShotCalculatorTest {
@@ -14,7 +14,7 @@ public class ShotCalculatorTest {
 
     @Test
     public void calculatesTargetDistanceAndHeading() {
-        ShotContext context = pollenContext(new Pose2d(30, 60, 0));
+        ShotContext context = pollenContext(new Pose(30, 60, 0));
 
         assertEquals(30.0, context.distanceToTarget(), EPSILON);
         assertEquals(0.0, context.angleToTarget(), EPSILON);
@@ -22,7 +22,7 @@ public class ShotCalculatorTest {
 
     @Test
     public void interpolatesPollenShotInEncoderTicksPerSecond() {
-        ShotContext context = pollenContext(new Pose2d(20, 60, 0));
+        ShotContext context = pollenContext(new Pose(20, 60, 0));
 
         ShotSolution solution = ShotCalculator.table().calculateShot(context);
 
@@ -37,7 +37,7 @@ public class ShotCalculatorTest {
 
     @Test
     public void idealCalculatorMatchesDefaultTableSlope() {
-        ShotContext context = pollenContext(new Pose2d(20, 60, 0));
+        ShotContext context = pollenContext(new Pose(20, 60, 0));
 
         ShotSolution solution = ShotCalculator.ideal().calculateShot(context);
 
@@ -46,7 +46,7 @@ public class ShotCalculatorTest {
 
     @Test
     public void compensatesShotOnMoveOnlyAcrossLoopLatency() {
-        ShotContext context = pollenContext(new Pose2d(20, 60, 0));
+        ShotContext context = pollenContext(new Pose(20, 60, 0));
         context.sotm = true;
         context.dt = 0.05;
         context.velocity = new Velocity(100, 0, 0);
@@ -62,14 +62,14 @@ public class ShotCalculatorTest {
 
     @Test
     public void clampsCloseShotsToFirstCalibratedSpeed() {
-        ShotContext context = pollenContext(new Pose2d(50, 60, 0));
+        ShotContext context = pollenContext(new Pose(50, 60, 0));
 
         ShotSolution solution = ShotCalculator.table().calculateShot(context);
 
         assertEquals(800.0, solution.flywheelTicksPerSecond, EPSILON);
     }
 
-    private ShotContext pollenContext(Pose2d robotPose) {
+    private ShotContext pollenContext(Pose robotPose) {
         ShotContext context = new ShotContext();
         context.robotPose = robotPose;
         context.dt = 0.0;

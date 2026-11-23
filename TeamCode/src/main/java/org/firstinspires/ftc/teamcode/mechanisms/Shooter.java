@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityCon
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.hardware.actuator.SmartFlywheel;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotCalculator;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotContext;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotSolution;
@@ -133,7 +133,7 @@ public class Shooter {
     }
 
     public void solveAndSetVelocity
-            (Pose2d robotPosition, Velocity velocity, Field.HiveState hiveState, double deltaTime)
+            (Pose robotPosition, Velocity velocity, Field.HiveState hiveState, double deltaTime)
     {
         panicking = false;
         reversing = false;

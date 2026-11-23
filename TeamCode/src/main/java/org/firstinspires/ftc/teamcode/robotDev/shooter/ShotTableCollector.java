@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import com.rmsftc.utils.RobotMode;
-import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
+import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.FancyButton;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.GpFancyButton;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotContext;

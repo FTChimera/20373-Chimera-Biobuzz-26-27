@@ -17,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
-import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
+import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
@@ -26,7 +26,7 @@ import com.rmsftc.utils.Clock;
 import com.rmsftc.utils.MatchMode;
 import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
 
 import java.util.List;
@@ -79,7 +79,7 @@ public class Robot {
     public boolean smartShooterControl = false;
     public boolean debug = false;
 
-    public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color, RobotMode robotMode, Pose2d startingPose) {
+    public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color, RobotMode robotMode, Pose startingPose) {
         CommonKt.init(color);
         Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
         Constants.FOLLOWER_BRAKE_AT_END.set(true);
@@ -307,8 +307,8 @@ public class Robot {
         telemetry.addData("=== FOLLOWER DEBUG ===", follower.debug().toString());
         telemetry.addData("Pose", getPose().toString());
         telemetry.addData("Hive state (closest hive pose)", field.getHiveState()
-                + " (untipped " + String.format("%.1f", getPose().distance(new Pose2d(Field.HiveState.UNTIPPED.goalPose(allianceColor))))
-                + " in, tipped " + String.format("%.1f", getPose().distance(new Pose2d(Field.HiveState.TIPPED.goalPose(allianceColor)))) + " in)");
+                + " (untipped " + String.format("%.1f", getPose().distance(Field.HiveState.UNTIPPED.goalPose(allianceColor)))
+                + " in, tipped " + String.format("%.1f", getPose().distance(Field.HiveState.TIPPED.goalPose(allianceColor))) + " in)");
         telemetry.addData("=== INTAKE DEBUG ===", "\n"+intake.getDebugString());
         telemetry.addData("=== TRANSFER DEBUG ===", "\n"+transfer.getDebugString());
         telemetry.addData("=== SHOOTER DEBUG ===", "\n"+shooter.getDebugString());
@@ -387,12 +387,12 @@ public class Robot {
         Constants.FOLLOWER_MAX_PATH_SPEED.set(speed);
     }
 
-    public Pose2d getPose() {
+    public Pose getPose() {
         return PoseFactory.of(follower.localizer.pose());
     }
 
     public double getHeading() {
-        return getPose().getHeading();
+        return getPose().heading();
     }
 
     public double getHeading(AngleUnit unit) {
@@ -415,7 +415,7 @@ public class Robot {
         return getVelocity().scale(dt);
     }
 
-    public Pose2d getPoseCompensatedForVelocity() {
+    public Pose getPoseCompensatedForVelocity() {
         //return PoseFactory.of(follower.localizer.pose().exp(follower.velocity(), dt));
         return autoAimerCalculator.getCorrectedPoseOrFallback(follower.localizer.pose());
     }
@@ -445,7 +445,7 @@ public class Robot {
             return;
         }
         if (autoAimerCalculator.useFollowerHold) {
-            drivePowers.setTurn(follower.algorithm.calculateHold(
+            drivePowers.turn(follower.algorithm.calculateHold(
                     follower.drivetrain,
                     getPoseCompensatedForVelocity().withHeading(autoAimerCalculator.getTargetHeading()),
                     follower.localizer.state(),
@@ -453,7 +453,7 @@ public class Robot {
                     getDt() // in seconds
             ).turn()*0.35); // a dampening factor
         } else {
-            drivePowers.setTurn(autoAimerCalculator.calculateTurningPower(getHeading()));
+            drivePowers.turn(autoAimerCalculator.calculateTurningPower(getHeading()));
         }
         this.setTeleOpDrive = true;
     }
@@ -481,7 +481,7 @@ public class Robot {
     }
 
     public boolean moveToParkZone() {
-        Pose2d correctedPose = getPoseCompensatedForVelocity();
+        Pose correctedPose = getPoseCompensatedForVelocity();
         boolean previousHoldEnd = follower.holdEnd.get();
         boolean previousBrakeAtEnd = Constants.FOLLOWER_BRAKE_AT_END.get();
         follower.holdEnd.set(true); // alliance partner does not push
@@ -535,9 +535,9 @@ public class Robot {
      * undone. Ties go to the untipped goal (UNTIPPED), matching the field's
      * initial state. */
     private void updateHiveStateFromClosestHivePose() {
-        Pose2d pose = getPose();
-        double untippedDistance = pose.distance(new Pose2d(Field.HiveState.UNTIPPED.goalPose(allianceColor)));
-        double tippedDistance = pose.distance(new Pose2d(Field.HiveState.TIPPED.goalPose(allianceColor)));
+        Pose pose = getPose();
+        double untippedDistance = pose.distance(Field.HiveState.UNTIPPED.goalPose(allianceColor));
+        double tippedDistance = pose.distance(Field.HiveState.TIPPED.goalPose(allianceColor));
         field.setHiveState(untippedDistance <= tippedDistance
                 ? Field.HiveState.UNTIPPED
                 : Field.HiveState.TIPPED);

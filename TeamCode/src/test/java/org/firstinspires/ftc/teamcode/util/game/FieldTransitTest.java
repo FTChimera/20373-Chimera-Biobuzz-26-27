@@ -8,7 +8,7 @@ import com.rmsftc.utils.AllianceColor;
 
 import org.firstinspires.ftc.teamcode.planners.FieldCoordinates;
 import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -30,12 +30,12 @@ public class FieldTransitTest {
     public void shootingPoseTransfersClearHiveBasesInBothDirectionsAndAlliances() {
         for (AllianceColor color : new AllianceColor[]{AllianceColor.RED, AllianceColor.BLUE}) {
             Field field = new Field(color, 17, 17);
-            Pose2d garden = color == AllianceColor.RED
-                    ? new Pose2d(40, 10, Math.toRadians(65))
-                    : new Pose2d(104, 134, Math.toRadians(245));
-            Pose2d loading = color == AllianceColor.RED
-                    ? new Pose2d(60, 120, -Math.PI / 2)
-                    : new Pose2d(84, 24, Math.PI / 2);
+            Pose garden = color == AllianceColor.RED
+                    ? new Pose(40, 10, Math.toRadians(65))
+                    : new Pose(104, 134, Math.toRadians(245));
+            Pose loading = color == AllianceColor.RED
+                    ? new Pose(60, 120, -Math.PI / 2)
+                    : new Pose(84, 24, Math.PI / 2);
             assertClear(field.generateTransitPath(garden, loading));
             assertClear(field.generateTransitPath(loading, garden));
         }
@@ -44,19 +44,19 @@ public class FieldTransitTest {
     @Test
     public void loadingStartParksOnItsOwnAllianceSide() {
         Field red = new Field(AllianceColor.RED, 17, 17);
-        Path redPath = red.generatePathToLoadingZoneShortest(new Pose2d(64, 128, -Math.PI / 2), 3);
-        assertEquals(true, red.isRobotOverlappingLoadingZone(new Pose2d(redPath.endPose())));
+        Path redPath = red.generatePathToLoadingZoneShortest(new Pose(64, 128, -Math.PI / 2), 3);
+        assertEquals(true, red.isRobotOverlappingLoadingZone(Pose.fromPedro(redPath.endPose())));
         assertParkClear(redPath);
         Field blue = new Field(AllianceColor.BLUE, 17, 17);
-        Path bluePath = blue.generatePathToLoadingZoneShortest(new Pose2d(80, 16, Math.PI / 2), 3);
-        assertEquals(true, blue.isRobotOverlappingLoadingZone(new Pose2d(bluePath.endPose())));
+        Path bluePath = blue.generatePathToLoadingZoneShortest(new Pose(80, 16, Math.PI / 2), 3);
+        assertEquals(true, blue.isRobotOverlappingLoadingZone(Pose.fromPedro(bluePath.endPose())));
         assertParkClear(bluePath);
     }
 
     @Test(expected = Field.NoRouteException.class)
     public void rejectsTransitStartingInsideAHive() {
         new Field(AllianceColor.RED, 17, 17).generateTransitPath(
-                new Pose2d(48, 72, 0), new Pose2d(18, 108, 0));
+                new Pose(48, 72, 0), new Pose(18, 108, 0));
     }
 
     private static void assertClear(Path path) {

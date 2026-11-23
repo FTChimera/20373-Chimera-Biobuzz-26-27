@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.planners.tree;
 
 import com.pedropathing.api.Paths;
-import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.rmsftc.cmdlib.EndCondition;
@@ -14,7 +13,7 @@ import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
@@ -70,12 +69,12 @@ public final class TreeShooterCommands {
         return (now - since) / 1e6;
     }
 
-    private static boolean settledAt(Robot robot, Pose2d pose, double positionTolerance) {
+    private static boolean settledAt(Robot robot, Pose pose, double positionTolerance) {
         return settledAt(robot.follower, pose, positionTolerance);
     }
 
     private static Pose pedroPose(Pose pose) {
-        // Pose2d overrides accessors, but Pedro's distance/hold math reads base fields.
+        // FTCUtils Pose overrides accessors, but Pedro's distance/hold math reads base fields.
         return new Pose(pose.x(), pose.y(), pose.heading());
     }
 
@@ -151,7 +150,7 @@ public final class TreeShooterCommands {
                 return;
             }
             Pose target = pedroPose(TreeState.poseFor(shotSide));
-            Pose actual = robot.follower.localizer.pose();
+            Pose actual = Pose.fromPedro(robot.follower.localizer.pose());
             Pose hold = shootingHoldPose(actual, target);
             if (hold.x() != target.x() || hold.y() != target.y()) {
                 // A timed-out curved approach must not become a straight-line shortcut.
@@ -291,8 +290,8 @@ public final class TreeShooterCommands {
             this.clock = clock;
             fromPose = pedroPose(TreeState.poseFor(fromSide));
             toPose = pedroPose(TreeState.poseFor(TreeState.otherShootPosition(fromSide)));
-            Pose2d wpFrom = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveSouth : PathPoses.underHiveNorth;
-            Pose2d wpTo = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveNorth : PathPoses.underHiveSouth;
+            Pose wpFrom = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveSouth : PathPoses.underHiveNorth;
+            Pose wpTo = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveNorth : PathPoses.underHiveSouth;
             corridorHeading = Math.atan2(wpTo.y() - wpFrom.y(), wpTo.x() - wpFrom.x());
             path = Paths.through(fromPose, wpFrom, wpTo, toPose)
                     .heading(Interpolator.constant(corridorHeading));

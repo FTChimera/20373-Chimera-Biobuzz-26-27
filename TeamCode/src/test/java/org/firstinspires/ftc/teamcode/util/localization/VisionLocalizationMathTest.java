@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 
 public class VisionLocalizationMathTest {
@@ -13,9 +13,9 @@ public class VisionLocalizationMathTest {
 
     @Test
     public void appliesOffsetsAndHeadingRotation() {
-        Pose2d pose = new Pose2d(10.0, 15.0, 0.0);
+        Pose pose = new Pose(10.0, 15.0, 0.0);
 
-        Pose2d mapped = VisionLocalizationMath.toFieldPose(
+        Pose mapped = VisionLocalizationMath.toFieldPose(
                 pose,
                 -72.0,
                 -72.0,
@@ -25,16 +25,16 @@ public class VisionLocalizationMathTest {
                 false
         );
 
-        assertEquals(-62.0, mapped.x, EPSILON);
-        assertEquals(-57.0, mapped.y, EPSILON);
-        assertEquals(-90.0 * MathUtils.DEG_TO_RAD, mapped.heading, EPSILON);
+        assertEquals(-62.0, mapped.x(), EPSILON);
+        assertEquals(-57.0, mapped.y(), EPSILON);
+        assertEquals(270.0 * MathUtils.DEG_TO_RAD, mapped.heading(), EPSILON); // -90 deg, stored normalized to [0, 2pi) by FTCUtils Pose
     }
 
     @Test
     public void supportsAxisMirroring() {
-        Pose2d pose = new Pose2d(10.0, -15.0, Math.PI / 4.0);
+        Pose pose = new Pose(10.0, -15.0, Math.PI / 4.0);
 
-        Pose2d mapped = VisionLocalizationMath.toFieldPose(
+        Pose mapped = VisionLocalizationMath.toFieldPose(
                 pose,
                 2.0,
                 3.0,
@@ -44,9 +44,9 @@ public class VisionLocalizationMathTest {
                 true
         );
 
-        assertEquals(-8.0, mapped.x, EPSILON);
-        assertEquals(18.0, mapped.y, EPSILON);
-        assertEquals(3.0 * Math.PI / 4.0, mapped.heading, EPSILON);
+        assertEquals(-8.0, mapped.x(), EPSILON);
+        assertEquals(18.0, mapped.y(), EPSILON);
+        assertEquals(3.0 * Math.PI / 4.0, mapped.heading(), EPSILON);
     }
 
     @Test

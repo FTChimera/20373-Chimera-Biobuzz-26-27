@@ -31,7 +31,7 @@ public class DrivetrainCommandsTest {
         assertTrue(rig.follower.holding());
     }
 
-    @Test public void boundedTurnThrowsAndStopsRatherThanContinuingSequence() {
+    @Test public void boundedTurnStopsAndContinuesSequenceAfterTimeout() {
         FollowerTestRig rig = new FollowerTestRig();
         AtomicLong clock = new AtomicLong();
         AtomicInteger next = new AtomicInteger();
@@ -40,10 +40,12 @@ public class DrivetrainCommandsTest {
         Command sequence = Commands.sequence(turn, Commands.runOnce(next::incrementAndGet));
         assertTrue(sequence.execute().isRunning());
         clock.set(1_001_000_000);
-        assertThrows(IllegalStateException.class, sequence::execute);
+        // Timeout degrades: the turn completes (stopped), the sequence
+        // continues from the actual heading instead of throwing.
+        assertFalse(sequence.execute().isRunning());
         assertTrue(rig.follower.idle());
         assertEquals(1, rig.stops);
-        assertEquals(0, next.get());
+        assertEquals(1, next.get());
     }
 
     @Test public void progressWaitsForUpdateAndCallbackCanBeReused() {
@@ -143,14 +145,16 @@ public class DrivetrainCommandsTest {
         assertFalse(path.execute().isRunning());
     }
 
-    @Test public void strictPathTimeoutCannotAuthorizeNextCommand() {
+    @Test public void strictPathTimeoutStopsAndContinuesSequence() {
         FollowerTestRig rig = new FollowerTestRig();
         AtomicInteger next = new AtomicInteger();
         Command sequence = Commands.sequence(
                 DrivetrainCommands.followSettledWithTimeout(rig.follower, FollowerTestRig::path, 0),
                 Commands.runOnce(next::incrementAndGet));
-        assertThrows(IllegalStateException.class, sequence::execute);
-        assertEquals(0, next.get());
+        // Timeout degrades: the path command completes (stopped), the
+        // sequence continues instead of throwing.
+        assertFalse(sequence.execute().isRunning());
+        assertEquals(1, next.get());
         assertTrue(rig.follower.idle());
     }
 

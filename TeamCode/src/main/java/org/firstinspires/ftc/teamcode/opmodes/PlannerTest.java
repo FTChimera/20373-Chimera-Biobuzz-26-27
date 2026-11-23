@@ -13,7 +13,7 @@ import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartGardenPose;
 import com.rmsftc.utils.RobotMode;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,7 +54,7 @@ public class PlannerTest extends ArchitecturalOpMode {
     boolean isStopped = false;
     Command currentPlan;
     PathPlanner currentPlanner;
-    Pose2d currentPose;
+    Pose currentPose;
     List<Step> tour;
     int tourIndex;
     boolean running;

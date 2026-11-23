@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.util.game;
 import androidx.annotation.NonNull;
 
 import com.pedropathing.api.Paths;
-import com.pedropathing.math.Pose;
+import com.rmsftc.utils.math.Pose;
 import com.pedropathing.math.Vector2D;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.interpolator.Interpolator;
@@ -13,7 +13,6 @@ import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.FieldCoordinates;
 import org.firstinspires.ftc.teamcode.planners.FieldPoses;
 import com.rmsftc.utils.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -106,27 +105,27 @@ public class Field {
         return hiveState;
     }
 
-    public double getClosestLoadingZoneDistanceToRobot(Pose2d robotPose) {
-        return loadingZone.distance(geometryFactory.createPoint(robotPose.toCoordinate()));
+    public double getClosestLoadingZoneDistanceToRobot(Pose robotPose) {
+        return loadingZone.distance(geometryFactory.createPoint(new Coordinate(robotPose.x(), robotPose.y())));
     }
 
-    public boolean isRobotOverlappingLoadingZone(Pose2d robotPose) {
+    public boolean isRobotOverlappingLoadingZone(Pose robotPose) {
         return loadingZone.intersects(createRobotGeom(robotPose));
     }
 
-    public Geometry createRobotGeom(Pose2d robotPose) {
+    public Geometry createRobotGeom(Pose robotPose) {
         double halfLength = botLength / 2;
         double halfWidth = botWidth / 2;
         return geometryFactory.createPolygon(new Coordinate[]{
-                new Coordinate(robotPose.x - halfLength, robotPose.y - halfWidth),
-                new Coordinate(robotPose.x + halfLength, robotPose.y - halfWidth),
-                new Coordinate(robotPose.x + halfLength, robotPose.y + halfWidth),
-                new Coordinate(robotPose.x - halfLength, robotPose.y + halfWidth),
-                new Coordinate(robotPose.x - halfLength, robotPose.y - halfWidth)
+                new Coordinate(robotPose.x() - halfLength, robotPose.y() - halfWidth),
+                new Coordinate(robotPose.x() + halfLength, robotPose.y() - halfWidth),
+                new Coordinate(robotPose.x() + halfLength, robotPose.y() + halfWidth),
+                new Coordinate(robotPose.x() - halfLength, robotPose.y() + halfWidth),
+                new Coordinate(robotPose.x() - halfLength, robotPose.y() - halfWidth)
         });
     }
 
-    public Path generatePathToLoadingZoneShortest(Pose2d robotPose, double innerVal) {
+    public Path generatePathToLoadingZoneShortest(Pose robotPose, double innerVal) {
         if (isRobotOverlappingLoadingZone(robotPose)) {
             throw new NoRouteException("Robot already overlaps the loading zone; no park path is required");
         }
@@ -140,7 +139,7 @@ public class Field {
         // boundary; clamp the center so the body never targets through a
         // field wall.
         Coordinate closestPtOnLoadingZone = DistanceOp.nearestPoints(
-                loadingZone, geometryFactory.createPoint(robotPose.toCoordinate()))[0];
+                loadingZone, geometryFactory.createPoint(new Coordinate(robotPose.x(), robotPose.y())))[0];
         Coordinate centroid = loadingZone.getCentroid().getCoordinate();
         double inwardX = centroid.x - closestPtOnLoadingZone.x;
         double inwardY = centroid.y - closestPtOnLoadingZone.y;
@@ -148,8 +147,8 @@ public class Field {
         if (inwardLen < 1e-9) {
             // Closest point is the centroid (robot center inside the zone):
             // fall back to the direction from the robot to that point.
-            inwardX = closestPtOnLoadingZone.x - robotPose.x;
-            inwardY = closestPtOnLoadingZone.y - robotPose.y;
+            inwardX = closestPtOnLoadingZone.x - robotPose.x();
+            inwardY = closestPtOnLoadingZone.y - robotPose.y();
             inwardLen = Math.hypot(inwardX, inwardY);
         }
         double targetX = closestPtOnLoadingZone.x;
@@ -168,48 +167,48 @@ public class Field {
         // from each wall (the red zone is against the west/north walls).
         targetX = Math.max(botLength / 2.0, Math.min(144.0 - botLength / 2.0, targetX));
         targetY = Math.max(botWidth / 2.0, Math.min(144.0 - botWidth / 2.0, targetY));
-        Pose2d aLittleInwardPose = PoseFactory.of(targetX, targetY, 0);
+        Pose aLittleInwardPose = PoseFactory.of(targetX, targetY, 0);
 
         // Convert Pedro Pathing Poses
-        Pose2d startPose = PoseFactory.of(robotPose.x, robotPose.y, robotPose.heading);
-        Pose2d endPose = PoseFactory.of(aLittleInwardPose.x, aLittleInwardPose.y, aLittleInwardPose.heading);
+        Pose startPose = PoseFactory.of(robotPose.x(), robotPose.y(), robotPose.heading());
+        Pose endPose = PoseFactory.of(aLittleInwardPose.x(), aLittleInwardPose.y(), aLittleInwardPose.heading());
 
-        endPose.heading = roundToCardinal(Math.atan2(endPose.y - startPose.y, endPose.x - startPose.x));
+        endPose.setHeading(roundToCardinal(Math.atan2(endPose.y() - startPose.y(), endPose.x() - startPose.x())));
         return generateTransitPath(startPose, endPose);
     }
 
     /** Collision-checked transit with clearance for the body at every heading. */
-    public Path generateTransitPath(Pose2d startPose, Pose2d endPose) {
+    public Path generateTransitPath(Pose startPose, Pose endPose) {
         return transitSegments(transitWaypoints(startPose, endPose));
     }
 
-    private List<Pose2d> transitWaypoints(Pose2d startPose, Pose2d endPose) {
+    private List<Pose> transitWaypoints(Pose startPose, Pose endPose) {
         double radius = Math.hypot(botLength, botWidth) / 2.0 + TRANSIT_CLEARANCE_INCHES;
         BufferParameters parameters = new BufferParameters();
         parameters.setJoinStyle(BufferParameters.JOIN_MITRE);
         Geometry forbidden = BufferOp.bufferOp(obstacles, radius, parameters)
                 .union(flowerObstacles.buffer(radius));
-        Pose2d insetStart = insetForTurning(startPose, radius);
-        Pose2d insetEnd = insetForTurning(endPose, radius);
-        List<Pose2d> poses = pathfinder.findPath(insetStart, insetEnd, forbidden);
+        Pose insetStart = insetForTurning(startPose, radius);
+        Pose insetEnd = insetForTurning(endPose, radius);
+        List<Pose> poses = pathfinder.findPath(insetStart, insetEnd, forbidden);
         if (poses.size() < 2) {
             throw new NoRouteException("No body-clear transit route from " + startPose + " to " + endPose);
         }
-        if (startPose.distance(insetStart) > 1e-6) poses.add(0, startPose.copy());
-        if (endPose.distance(insetEnd) > 1e-6) poses.add(endPose.copy());
+        if (startPose.distance(insetStart) > 1e-6) poses.add(0, Pose.fromPedro(startPose));
+        if (endPose.distance(insetEnd) > 1e-6) poses.add(Pose.fromPedro(endPose));
         return poses;
     }
 
-    private static Pose2d insetForTurning(Pose2d pose, double radius) {
-        return new Pose2d(Math.max(radius, Math.min(144 - radius, pose.x)),
-                Math.max(radius, Math.min(144 - radius, pose.y)), pose.heading);
+    private static Pose insetForTurning(Pose pose, double radius) {
+        return new Pose(Math.max(radius, Math.min(144 - radius, pose.x())),
+                Math.max(radius, Math.min(144 - radius, pose.y())), pose.heading());
     }
 
-    private static Path transitSegments(List<Pose2d> poses) {
+    private static Path transitSegments(List<Pose> poses) {
         Path[] segments = new Path[poses.size() - 1];
         for (int i = 0; i < segments.length; i++) {
-            Pose2d from = poses.get(i);
-            Pose2d to = poses.get(i + 1);
+            Pose from = poses.get(i);
+            Pose to = poses.get(i + 1);
             // Endpoints near walls retain their heading; rotation happens at
             // the inset waypoints, where the full body diagonal fits.
             segments[i] = Paths.line(from, to).linear(from, to);

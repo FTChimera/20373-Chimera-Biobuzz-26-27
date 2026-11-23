@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.concurrent.TimeUnit;
 
@@ -68,7 +68,7 @@ public class VisionTest extends LinearOpMode {
                 follower.localizer.setPose(vision.getFieldPoseEstimate());
             }
 
-            Pose2d fieldPose = vision.getFieldPoseEstimate();
+            Pose fieldPose = vision.getFieldPoseEstimate();
             telemetry.addData("Follower pose", follower.localizer.pose());
             telemetry.addData("Vision field pose", fieldPose);
             telemetry.addData("Vision raw pose", vision.camTransform.getRawPose());

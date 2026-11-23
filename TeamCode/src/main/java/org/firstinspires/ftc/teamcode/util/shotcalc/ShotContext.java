@@ -6,12 +6,12 @@ import com.pedropathing.math.Velocity;
 
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.Objects;
 
 public class ShotContext {
-    public Pose2d robotPose;
+    public Pose robotPose;
     public Velocity velocity;
     public double dt;
 
@@ -29,18 +29,18 @@ public class ShotContext {
         return Math.atan2(targetPose().y() - robotPose.y(), targetPose().x() - robotPose.x());
     }
 
-    public Pose2d targetPose() {
+    public Pose targetPose() {
         validateBaseFields();
-        return new Pose2d(hiveState.goalPose(allianceColor));
+        return hiveState.goalPose(allianceColor);
     }
 
     /**
      * Predicts the pose at ball release. The horizon is the measured control-loop
      * latency, not projectile flight time.
      */
-    public Pose2d poseAtRelease() {
+    public Pose poseAtRelease() {
         validate();
-        return sotm ? robotPose.exp(velocity, dt) : robotPose.copy();
+        return sotm ? robotPose.exp(velocity, dt) : Pose.fromPedro(robotPose);
     }
 
     public void validate() {

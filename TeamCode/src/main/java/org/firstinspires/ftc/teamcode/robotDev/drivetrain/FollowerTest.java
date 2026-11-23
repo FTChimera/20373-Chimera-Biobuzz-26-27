@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
-import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
+import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 

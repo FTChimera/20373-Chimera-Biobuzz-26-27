@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.game;
 
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -44,11 +44,11 @@ public class DijkstraPathfinder {
      * @param start          The current robot pose.
      * @param end            The target destination pose.
      * @param forbiddenSpace The JTS geometry containing all inflated field obstacles.
-     * @return A sequential list of Pose2d objects from start to end. Returns an empty list if trapped.
+     * @return A sequential list of Pose objects from start to end. Returns an empty list if trapped.
      */
-    public List<Pose2d> findPath(Pose2d start, Pose2d end, Geometry forbiddenSpace) {
-        Coordinate startCoord = start.toCoordinate();
-        Coordinate endCoord = end.toCoordinate();
+    public List<Pose> findPath(Pose start, Pose end, Geometry forbiddenSpace) {
+        Coordinate startCoord = new Coordinate(start.x(), start.y());
+        Coordinate endCoord = new Coordinate(end.x(), end.y());
         if (forbiddenSpace != null && !forbiddenSpace.isEmpty()) {
             if (forbiddenSpace.contains(forbiddenSpace.getFactory().createPoint(startCoord))
                     || forbiddenSpace.contains(forbiddenSpace.getFactory().createPoint(endCoord))) {
@@ -133,26 +133,26 @@ public class DijkstraPathfinder {
         }
 
         // 4. Reconstruct the resulting shortest path sequence
-        List<Pose2d> path = new ArrayList<>();
+        List<Pose> path = new ArrayList<>();
         if (endNode.previous == null && startNode != endNode) {
             return Collections.emptyList(); // No valid path found (trapped by obstacles)
         }
 
         for (Node node = endNode; node != null; node = node.previous) {
             // Keep start and target headings intact, intermediate corner headings point towards next point
-            double heading = (node == endNode) ? end.heading : 0.0;
-            if (node == startNode) heading = start.heading;
+            double heading = (node == endNode) ? end.heading() : 0.0;
+            if (node == startNode) heading = start.heading();
 
-            path.add(new Pose2d(node.coordinate.x, node.coordinate.y, heading));
+            path.add(new Pose(node.coordinate.x, node.coordinate.y, heading));
         }
 
         Collections.reverse(path);
 
         // Fill intermediate corner headings so the robot dynamically tracks its vector direction
         for (int i = 1; i < path.size() - 1; i++) {
-            Pose2d current = path.get(i);
-            Pose2d next = path.get(i + 1);
-            current.heading = Math.atan2(next.y - current.y, next.x - current.x);
+            Pose current = path.get(i);
+            Pose next = path.get(i + 1);
+            current.setHeading(Math.atan2(next.y() - current.y(), next.x() - current.x()));
         }
 
         return path;

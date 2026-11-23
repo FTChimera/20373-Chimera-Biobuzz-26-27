@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.pedro.Constants;
-import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
+import com.rmsftc.utils.DriveVector;
 
 @Utility(name = "Drive around test Robot Centric", description = "Drive around Robot Centric")
 public class DriveAroundTest extends OpMode {

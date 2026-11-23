@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.util.hardware.gamepad;
 
 import static org.junit.Assert.assertEquals;
 
+import com.rmsftc.utils.DriveVector;
+
 import org.junit.Test;
 
 public class DriveVectorTest {

@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.game.Field;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 public class FromStartLoadingPose {
     public static class ShootPreloads extends PathPlanner {
@@ -27,7 +27,7 @@ public class FromStartLoadingPose {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return ShootPoses.loading;
         }
 
@@ -76,7 +76,7 @@ public class FromStartLoadingPose {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return StartPoses.visionAnchorLoading;
         }
 
@@ -114,7 +114,7 @@ public class FromStartLoadingPose {
         }
 
         @Override
-        public Pose2d getEndPose() {
+        public Pose getEndPose() {
             return ShootPoses.garden;
         }
 

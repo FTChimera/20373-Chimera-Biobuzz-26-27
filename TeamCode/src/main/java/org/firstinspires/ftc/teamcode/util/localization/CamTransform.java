@@ -9,7 +9,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 import java.util.List;
 
@@ -214,25 +214,25 @@ public final class CamTransform {
 
 
 
-    public Pose2d getPose() {
+    public Pose getPose() {
         if (!valid || botpose == null) {
-            return new Pose2d(0, 0, 0);
+            return new Pose(0, 0, 0);
         }
         if (hiveEstimated) {
-            return new Pose2d(correctedXIn, correctedYIn, correctedYaw);
+            return new Pose(correctedXIn, correctedYIn, correctedYaw);
         }
         return getRawPose();
     }
 
-    public void setPose(Pose2d pose) {
+    public void setPose(Pose pose) {
         // no-op
     }
 
-    public Pose2d getRawPose() {
+    public Pose getRawPose() {
         if (!valid || botpose == null) {
-            return new Pose2d(0, 0, 0);
+            return new Pose(0, 0, 0);
         }
-        return new Pose2d(rawXIn, rawYIn, rawYaw);
+        return new Pose(rawXIn, rawYIn, rawYaw);
     }
 
     public double getRawZIn() {
@@ -262,8 +262,8 @@ public final class CamTransform {
     }
 
     public double[] getPoseArray() {
-        Pose2d pose = getPose();
-        return new double[]{pose.x, pose.y, pose.heading};
+        Pose pose = getPose();
+        return new double[]{pose.x(), pose.y(), pose.heading()};
     }
 
     public Pose3D getBotpose() {

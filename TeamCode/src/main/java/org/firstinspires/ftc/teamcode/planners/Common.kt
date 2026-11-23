@@ -5,8 +5,8 @@ import com.pedropathing.paths.curves.Curve
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory
 import com.rmsftc.utils.AllianceColor
 import org.firstinspires.ftc.teamcode.util.math.MathUtils
-import org.firstinspires.ftc.teamcode.util.poses.AlliancePose2d
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d
+import org.firstinspires.ftc.teamcode.util.poses.AlliancePose
+import com.rmsftc.utils.math.Pose
 import org.locationtech.jts.geom.Coordinate
 import kotlin.math.*
 
@@ -25,10 +25,10 @@ fun fastInterpolationDegraded(endHeading: Double, change: Double, reverse: Boole
         .until(1.0, Interpolator.constant(endHeading))
 }
 
-fun fastInterpolation(pos1: Pose2d, pos2: Pose2d): Interpolator {
+fun fastInterpolation(pos1: Pose, pos2: Pose): Interpolator {
     return fastInterpolation(pos1, pos2, Values.fastInterpolationStartTValue, Values.fastInterpolationEndTValue)
 }
-fun fastInterpolation(pos1: Pose2d, pos2: Pose2d, startTValue: Double, endTValue: Double): Interpolator {
+fun fastInterpolation(pos1: Pose, pos2: Pose, startTValue: Double, endTValue: Double): Interpolator {
     var tangentHeading = atan2(pos2.y() - pos1.y(), pos2.x() - pos1.x())
     val startHeading = pos1.heading()
     val endHeading = pos2.heading()
@@ -250,7 +250,7 @@ object UtilityPoses {
     fun isCornerGardenAreaConfigured(): Boolean = isConfigured(cornerGardenArea)
 
     @JvmStatic
-    fun isConfigured(pose: Pose2d): Boolean {
+    fun isConfigured(pose: Pose): Boolean {
         return !(abs(pose.x()) < PLACEHOLDER_EPSILON
                 && abs(pose.y()) < PLACEHOLDER_EPSILON
                 && abs(pose.heading()) < PLACEHOLDER_EPSILON)
@@ -270,12 +270,12 @@ object ParkAutoStartPoses {
     private val redDestination = pose(9.0, 104.0, 0.0)
     private val blueDestination = pose(135.0, 38.0, 180.0)
 
-    @JvmStatic fun redUntippedStart(): Pose2d = redUntippedStart.copy()
-    @JvmStatic fun redTippedStart(): Pose2d = redTippedStart.copy()
-    @JvmStatic fun blueUntippedStart(): Pose2d = blueUntippedStart.copy()
-    @JvmStatic fun blueTippedStart(): Pose2d = blueTippedStart.copy()
-    @JvmStatic fun destination(color: AllianceColor): Pose2d =
-        if (color.isRed()) redDestination.copy() else blueDestination.copy()
+    @JvmStatic fun redUntippedStart(): Pose = Pose.fromPedro(redUntippedStart)
+    @JvmStatic fun redTippedStart(): Pose = Pose.fromPedro(redTippedStart)
+    @JvmStatic fun blueUntippedStart(): Pose = Pose.fromPedro(blueUntippedStart)
+    @JvmStatic fun blueTippedStart(): Pose = Pose.fromPedro(blueTippedStart)
+    @JvmStatic fun destination(color: AllianceColor): Pose =
+        if (color.isRed()) Pose.fromPedro(redDestination) else Pose.fromPedro(blueDestination)
 }
 
 object FieldPoses {
@@ -284,10 +284,10 @@ object FieldPoses {
     private val blueTippedHiveGoal = pose(84.0, 60.0)
     private val blueUntippedHiveGoal = pose(84.0, 84.0)
 
-    @JvmStatic fun redTippedHiveGoal(): Pose2d = redTippedHiveGoal.copy()
-    @JvmStatic fun redUntippedHiveGoal(): Pose2d = redUntippedHiveGoal.copy()
-    @JvmStatic fun blueTippedHiveGoal(): Pose2d = blueTippedHiveGoal.copy()
-    @JvmStatic fun blueUntippedHiveGoal(): Pose2d = blueUntippedHiveGoal.copy()
+    @JvmStatic fun redTippedHiveGoal(): Pose = Pose.fromPedro(redTippedHiveGoal)
+    @JvmStatic fun redUntippedHiveGoal(): Pose = Pose.fromPedro(redUntippedHiveGoal)
+    @JvmStatic fun blueTippedHiveGoal(): Pose = Pose.fromPedro(blueTippedHiveGoal)
+    @JvmStatic fun blueUntippedHiveGoal(): Pose = Pose.fromPedro(blueUntippedHiveGoal)
 }
 
 object FieldCoordinates {
@@ -334,24 +334,24 @@ object FieldCoordinates {
     )
 }
 
-private fun alliance(red: Pose2d, blu: Pose2d): AlliancePose2d {
-    return AlliancePose2d(red, blu, AllianceColor.RED)
+private fun alliance(red: Pose, blu: Pose): AlliancePose {
+    return AlliancePose(red, blu, AllianceColor.RED)
 }
 
-private fun pose(x: Double, y: Double, heading: Double): Pose2d {
+private fun pose(x: Double, y: Double, heading: Double): Pose {
     return PoseFactory.deg(x, y, heading)
 }
-private fun pose(x: Double, y: Double): Pose2d {
+private fun pose(x: Double, y: Double): Pose {
     return PoseFactory.of(x, y)
 }
-private fun pose(): Pose2d{return pose(0.0,0.0,0.0)}
+private fun pose(): Pose{return pose(0.0,0.0,0.0)}
 
 
-private val mirrorFactory = PoseFactory({pose2d -> PoseFactory.of(144- pose2d.x(), 144-pose2d.y(),
-    MathUtils.units.normalizeHeading(pose2d.heading() + PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE))})
-private fun mirrorPose(red: Pose2d) = mirrorFactory.create(red)
+private val mirrorFactory = PoseFactory({pose -> PoseFactory.of(144- pose.x(), 144-pose.y(),
+    MathUtils.units.normalizeHeading(pose.heading() + PI, MathUtils.AngleUnit.RADIANS, MathUtils.HeadingNormSettings.POSITIVE))})
+private fun mirrorPose(red: Pose) = mirrorFactory.create(red)
 
 
-private fun red(red: Pose2d): AlliancePose2d {
-    return AlliancePose2d(red, mirrorPose(red), AllianceColor.RED)
+private fun red(red: Pose): AlliancePose {
+    return AlliancePose(red, mirrorPose(red), AllianceColor.RED)
 }

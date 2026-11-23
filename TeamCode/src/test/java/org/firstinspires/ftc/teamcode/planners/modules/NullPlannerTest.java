@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,7 +15,7 @@ public class NullPlannerTest {
     public void completesImmediatelySoFollowingPlannersCanStart() {
         AtomicBoolean followingPlannerStarted = new AtomicBoolean(false);
         Command command = Commands.sequence(
-                new Utils.NullPlanner(new Pose2d(0, 0, 0)),
+                new Utils.NullPlanner(new Pose(0, 0, 0)),
                 Commands.runOnce(() -> followingPlannerStarted.set(true))
         );
 

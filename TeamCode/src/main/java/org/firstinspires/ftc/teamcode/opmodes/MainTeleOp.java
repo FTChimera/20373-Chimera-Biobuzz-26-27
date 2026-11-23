@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.util.CompTeleNames;
 import org.firstinspires.ftc.teamcode.util.dashboard.DashboardVars;
-import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
+import com.rmsftc.utils.DriveVector;
 
 /**
  * Competition TeleOp. Controls are sampled once per active loop, before

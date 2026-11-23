@@ -4,12 +4,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
-import com.pedropathing.math.Pose;
+import com.rmsftc.utils.math.Pose;
 import com.rmsftc.cmdlib.Status;
 import org.firstinspires.ftc.teamcode.pedro.FollowerTestRig;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -31,7 +30,7 @@ public class TreeShooterCommandsTest {
     @Test
     public void distantApproachDoesNotBecomeStraightLineDriveToShootingPose() {
         Pose actual = new Pose(20, 30, 0);
-        Pose target = new Pose2d(60, 120, 1);
+        Pose target = new Pose(60, 120, 1);
         Pose hold = TreeShooterCommands.shootingHoldPose(actual, target);
         assertEquals(20, hold.x(), 0);
         assertEquals(30, hold.y(), 0);
@@ -40,9 +39,9 @@ public class TreeShooterCommandsTest {
     }
 
     @Test
-    public void nearbyApproachUsesPlainPedroTargetNotHiddenPose2dBaseFields() {
+    public void nearbyApproachUsesPlainPedroTargetNotHiddenBaseFields() {
         Pose actual = new Pose(60.5, 120, 0);
-        Pose hold = TreeShooterCommands.shootingHoldPose(actual, new Pose2d(60, 120, 1));
+        Pose hold = TreeShooterCommands.shootingHoldPose(actual, new Pose(60, 120, 1));
         assertEquals(60, hold.x(), 0);
         assertEquals(120, hold.y(), 0);
         assertEquals(1, hold.heading(), 0);
@@ -56,7 +55,7 @@ public class TreeShooterCommandsTest {
         final TreeShooterCommands.SideSwitchCommand command;
 
         SwitchRig(Position from) {
-            drive.pose = TreeState.poseFor(from).copy();
+            drive.pose = Pose.fromPedro(TreeState.poseFor(from));
             command = new TreeShooterCommands.SideSwitchCommand(
                     drive.follower, from, warnings::add, now::get);
         }
@@ -81,7 +80,7 @@ public class TreeShooterCommandsTest {
     public void sideSwitchRejectsUnverifiedOrNonfiniteStartWithoutClaimingArrival() {
         for (double offset : new double[]{1.5, Double.NaN}) {
             SwitchRig rig = new SwitchRig(Position.GARDEN_SHOOT);
-            Pose start = rig.drive.pose;
+            Pose start = Pose.fromPedro(rig.drive.pose);
             rig.drive.pose = new Pose(start.x() + offset, start.y(), start.heading());
             rig.command.execute();
             assertEquals(TreeShooterCommands.SwitchOutcome.ABORTED, rig.command.outcome());

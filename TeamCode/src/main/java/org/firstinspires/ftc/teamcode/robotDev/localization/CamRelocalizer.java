@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.localization.CamTransform;
-import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
+import com.rmsftc.utils.math.Pose;
 
 @Utility
 public class CamRelocalizer extends LinearOpMode {
@@ -27,7 +27,7 @@ public class CamRelocalizer extends LinearOpMode {
 
         while (opModeIsActive()) {
             vision.update();
-            Pose2d estimatedPose = vision.getFieldPoseEstimate();
+            Pose estimatedPose = vision.getFieldPoseEstimate();
             int hiveStatePrediction = vision.camTransform.getHiveState();
             telemetry.addData("Estimated Pose", estimatedPose);
             telemetry.addData("Localization Reliability", vision.getLocalizationReliabilityReason());
