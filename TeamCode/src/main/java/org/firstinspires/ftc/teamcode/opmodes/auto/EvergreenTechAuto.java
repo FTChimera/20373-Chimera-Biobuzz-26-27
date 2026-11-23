@@ -17,9 +17,9 @@ import com.pedropathing.api.Paths;
 import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 
 /**
  * Garden start, shoot preloads (4), garden intake and shoot (4), west
@@ -39,10 +39,10 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.allianceColor = AllianceColor.RED;
-        OpModeStorage.pose = StartPoses.loadingArea;
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        OpModeStorage.allianceColor.set(AllianceColor.RED);
+        OpModeStorage.pose.set(StartPoses.loadingArea);
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
     }

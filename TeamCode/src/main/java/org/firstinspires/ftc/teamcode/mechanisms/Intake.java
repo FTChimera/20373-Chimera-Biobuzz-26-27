@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Direction;
 
 public class Intake {

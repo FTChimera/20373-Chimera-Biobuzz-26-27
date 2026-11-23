@@ -22,13 +22,13 @@ public class MechanismControlTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        if (!OpModeStorage.initialized) {
+        if (!OpModeStorage.initialized.get()) {
             OpModeStorage.resetToDefault();
         }
 
-        Intake intake = new Intake(hardwareMap, OpModeStorage.allianceColor);
+        Intake intake = new Intake(hardwareMap, OpModeStorage.allianceColor.get());
         Transfer transfer = new Transfer(hardwareMap);
-        Shooter shooter = new Shooter(hardwareMap, OpModeStorage.allianceColor);
+        Shooter shooter = new Shooter(hardwareMap, OpModeStorage.allianceColor.get());
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.addLine("Gamepad 2: X intake, Back eject, DPad Left deployer, A shooter");

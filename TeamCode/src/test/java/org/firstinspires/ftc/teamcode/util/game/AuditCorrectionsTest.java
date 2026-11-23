@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;

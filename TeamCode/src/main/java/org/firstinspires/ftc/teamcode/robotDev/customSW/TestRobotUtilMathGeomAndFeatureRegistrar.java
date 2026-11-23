@@ -8,8 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.AllianceColor;
+import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 

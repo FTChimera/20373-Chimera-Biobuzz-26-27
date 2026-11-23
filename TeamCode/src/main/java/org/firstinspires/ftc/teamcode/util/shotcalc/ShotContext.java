@@ -4,7 +4,7 @@ package org.firstinspires.ftc.teamcode.util.shotcalc;
 
 import com.pedropathing.math.Velocity;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 

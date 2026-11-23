@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.util.hardware.gamepad
 
 import com.pedropathing.drivetrain.DrivePowers
 import com.sun.tools.javac.api.Formattable
-import org.firstinspires.ftc.teamcode.util.AllianceColor
+import com.rmsftc.utils.AllianceColor
 import org.firstinspires.ftc.teamcode.util.Timer
 import org.firstinspires.ftc.teamcode.util.math.MathUtils.*
 import org.firstinspires.ftc.teamcode.util.math.MathUtils.Companion.DEG_TO_RAD

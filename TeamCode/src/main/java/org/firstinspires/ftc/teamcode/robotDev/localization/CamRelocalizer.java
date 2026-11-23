@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.localization.CamTransform;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 

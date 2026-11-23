@@ -4,13 +4,20 @@ import com.pedropathing.api.Paths;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.rmsftc.ftc.ArchitectureManager;
 import com.rmsftc.ftc.ArchitecturalOpMode;
+import com.rmsftc.utils.ftc.telemetry.GamepadMenu;
+import com.rmsftc.utils.ftc.telemetry.TelemetryLogger;
+import com.rmsftc.utils.telemetry.selection.AnswerChoice;
+import com.rmsftc.utils.telemetry.selection.Choices;
+import com.rmsftc.utils.telemetry.selection.Prompter;
+import com.rmsftc.utils.telemetry.selection.Question;
+import com.rmsftc.utils.telemetry.selection.Select;
 
 import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 
 @Autonomous(name = "Park Auto", preselectTeleOp = MainTeleOp.NAME)
@@ -37,15 +44,29 @@ public class ParkAuto extends ArchitecturalOpMode {
         // Selection happens before Robot initialization. onInit() runs
         // during the init phase, so the selection loop blocks here
         // exactly as it did in runOpMode().
+        Prompter prompter = new Prompter(new TelemetryLogger(telemetry),
+                new Question("Start pose", new Choices(
+                        selectedPose.ordinal(),
+                        Select.a(StartPose.RED_UNTIPPED.name()),
+                        Select.a(StartPose.RED_TIPPED.name()),
+                        Select.a(StartPose.BLUE_UNTIPPED.name()),
+                        Select.a(StartPose.BLUE_TIPPED.name()))));
+        GamepadMenu menu = new GamepadMenu(prompter, gamepad1);
+
         while (opModeInInit()) {
-            handleSelection();
+            menu.update();
+            // PLAY confirms whatever is highlighted (or already answered).
+            AnswerChoice pick = menu.isFinished()
+                    ? menu.getAnswers().get(0)
+                    : prompter.current().choices.getSelected();
+            selectedPose = StartPose.valueOf(pick.name);
 
             telemetry.addLine("=== PARK AUTO CONFIGURATION ===");
             telemetry.addData("Selected Start", selectedPose);
             telemetry.addData("X", selectedPose.pose.getX());
             telemetry.addData("Y", selectedPose.pose.getY());
             telemetry.addLine("");
-            telemetry.addLine("D-PAD LEFT / RIGHT: Change start pose");
+            telemetry.addLine("D-PAD UP / DOWN: Change start pose, A: Confirm");
             telemetry.addLine("Press PLAY to confirm");
 
             telemetry.update();
@@ -82,22 +103,5 @@ public class ParkAuto extends ArchitecturalOpMode {
             follower.drivetrain.stop();
         }
         super.onStop();
-    }
-
-    private void handleSelection() {
-        if (gamepad1.dpadRightWasPressed()) {
-            StartPose[] poses = StartPose.values();
-            selectedPose = poses[
-                    (selectedPose.ordinal() + 1) % poses.length
-                    ];
-        }
-
-        if (gamepad1.dpadLeftWasPressed()) {
-            StartPose[] poses = StartPose.values();
-            selectedPose = poses[
-                    (selectedPose.ordinal() - 1 + poses.length)
-                            % poses.length
-                    ];
-        }
     }
 }

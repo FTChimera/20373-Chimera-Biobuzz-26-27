@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.poses;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 
 public class AlliancePose2d extends Pose2d {
     Pose2d red;

@@ -11,8 +11,8 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.AllianceColor;
+import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.FancyButton;
@@ -127,12 +127,12 @@ public class ParkingTest extends LinearOpMode {
     }
 
     private void setupRobot() {
-        if (!OpModeStorage.initialized) {
+        if (!OpModeStorage.initialized.get()) {
             OpModeStorage.resetToDefault();
         }
 
         selectedAlliance = USE_OPMODE_STORAGE
-                ? OpModeStorage.allianceColor
+                ? OpModeStorage.allianceColor.get()
                 : AllianceColor.Companion.from(RED_ALLIANCE);
 
         CommonKt.init(selectedAlliance);
@@ -162,8 +162,8 @@ public class ParkingTest extends LinearOpMode {
     }
 
     private Pose2d resolveStartPose() {
-        if (USE_OPMODE_STORAGE && OpModeStorage.pose != null) {
-            return OpModeStorage.pose;
+        if (USE_OPMODE_STORAGE && OpModeStorage.pose.get() != null) {
+            return OpModeStorage.pose.get();
         }
 
         if (USE_CUSTOM_START_POSE) {

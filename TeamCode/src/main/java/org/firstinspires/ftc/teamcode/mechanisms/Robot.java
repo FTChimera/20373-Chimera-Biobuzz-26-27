@@ -10,6 +10,8 @@ import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.rmsftc.utils.ftc.DaemonManager;
+import com.rmsftc.utils.ftc.daemons.FTCDaemon;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -19,19 +21,21 @@ import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
-import org.firstinspires.ftc.teamcode.util.MatchMode;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
-import org.firstinspires.ftc.teamcode.util.Timer;
+import com.rmsftc.utils.AllianceColor;
+import com.rmsftc.utils.Clock;
+import com.rmsftc.utils.MatchMode;
+import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class Robot {
     public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 5;
+
+    /** The live Robot, for the static daemon entry points below. */
+    private static Robot current;
 
     public RobotMode robotMode;
     public Follower follower;
@@ -55,7 +59,11 @@ public class Robot {
     public boolean setTeleOpDrive;
     private boolean autoAlignRequested = false;
 
-    public Timer opModeTimer;
+    /** FTCUtils clock: Helper tracks per-loop dt; startNanos anchors
+     * op-mode elapsed time. Both (re)started in {@link #start()}. */
+    public final Clock clock = Clock.SYSTEM;
+    private Clock.Helper clockHelper;
+    private long startNanos;
     double dt = 1;
 
     public boolean smartIntakeControl = false;
@@ -63,6 +71,7 @@ public class Robot {
     public boolean debug = false;
 
     public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color, RobotMode robotMode, Pose2d startingPose) {
+        current = this;
         CommonKt.init(color);
         Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
         Constants.FOLLOWER_BRAKE_AT_END.set(true);
@@ -95,18 +104,42 @@ public class Robot {
 
         this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         this.telemetry.clearAll();
-//        Variables.registerAllToFtcDash();
     }
 
     public void start() {
-        opModeTimer = new Timer(TimeUnit.SECONDS);
-        opModeTimer.reset();
+        clockHelper = new Clock.Helper(clock);
+        startNanos = clock.nowNanos();
         lights.start();
         vision.start();
     }
 
+    /**
+     * One loop of robot work: ticks the FTCUtils daemon registry once.
+     * All periodic work runs in {@link #robotDaemon()} (plus
+     * ClockManager's time snapshot, which nothing here depends on).
+     */
     public void update() {
-        dt = opModeTimer.dt(TimeUnit.SECONDS);
+        DaemonManager.unmodifiable().forEach(d -> d.daemon.execute());
+    }
+
+    /**
+     * Daemon entry point (registered by Sloth scanning): runs the live
+     * Robot's full per-loop sequence. A single ordered daemon — rather
+     * than one daemon per step — because DaemonManager executes in
+     * scan order with no priority API, and these steps have hard order
+     * dependencies (dt before follower, teleop drive before follower,
+     * hive state before aimer, smart control before mechanism updates).
+     */
+    @FTCDaemon(name = "robot-update")
+    public static void robotDaemon() {
+        Robot robot = current;
+        if (robot != null) robot.updateDaemons();
+    }
+
+    /** The per-loop sequence, in the exact order update() used to run. */
+    private void updateDaemons() {
+        clockHelper.update();
+        dt = clockHelper.dtSeconds();
         getBatteryVoltage();
         if (setTeleOpDrive) {
             if (holdIfNoInput) {
@@ -140,7 +173,7 @@ public class Robot {
 
 
     public void debug() {
-        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ opModeTimer.get()+ "\n Time Remaining (sec): " + opModeTimeRemaining() + "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
+        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ getOpModeTimeSeconds()+ "\n Time Remaining (sec): " + opModeTimeRemaining() + "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
         telemetry.addData("=== FOLLOWER DEBUG ===", follower.debug().toString());
         telemetry.addData("Pose", getPose().toString());
         telemetry.addData("Hive state (closest hive pose)", field.getHiveState()
@@ -173,9 +206,9 @@ public class Robot {
 
     double lastVolt = Double.NaN;
     boolean isBatteryLowPower = false;
-    double lastBatteryTime = System.currentTimeMillis();
+    double lastBatteryTime = clock.nowSeconds() * 1000.0;
     public double getBatteryVoltage() {
-        double cur=System.currentTimeMillis();
+        double cur = clock.nowSeconds() * 1000.0;
         if (cur - lastBatteryTime < 300 && !Double.isNaN(lastVolt)) {
             return lastVolt;
         }
@@ -194,7 +227,7 @@ public class Robot {
     }
 
     public double getOpModeTimeSeconds() {
-        return opModeTimer.get(TimeUnit.SECONDS);
+        return (clock.nowNanos() - startNanos) / 1e9;
     }
 
     public double opModeTimeRemaining() {

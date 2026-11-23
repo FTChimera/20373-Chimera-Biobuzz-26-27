@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.util.game;
 
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 
 public enum BallCol {

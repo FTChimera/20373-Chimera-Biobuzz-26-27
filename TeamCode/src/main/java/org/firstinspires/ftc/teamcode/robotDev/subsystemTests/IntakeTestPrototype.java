@@ -6,7 +6,7 @@ import com.pedropathing.revhub.drivetrains.CachedMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Direction;
 
 /** An Intake without the CRServos */

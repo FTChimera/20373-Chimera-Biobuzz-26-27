@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.robotDev.subsystemTests;
 
-import static org.firstinspires.ftc.teamcode.util.vars.kt.TypesKt.IntVar;
+import static com.rmsftc.utils.config.vars.kt.TypesKt.IntVar;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.ValueProvider;
@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-import org.firstinspires.ftc.teamcode.util.vars.Var;
-import org.firstinspires.ftc.teamcode.util.vars.kt.TypesKt;
+import com.rmsftc.utils.config.vars.Var;
+import com.rmsftc.utils.config.vars.kt.TypesKt;
 
 @Utility()
 public class ShooterPrototype extends LinearOpMode {
@@ -21,7 +21,6 @@ public class ShooterPrototype extends LinearOpMode {
         DcMotorEx prototype = hardwareMap.get(DcMotorEx.class, "mainMotor");
         prototype.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         var.section.category = "test";
-        var.uploadToFtcDashboard();
         telemetry = FtcDashboard.getInstance().getTelemetry();
         while (opModeInInit()) {
             telemetry.addData("Initialized. default speed = ", var.get());

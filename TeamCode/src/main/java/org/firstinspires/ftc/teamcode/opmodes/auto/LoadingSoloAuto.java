@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 
 /**
  * Loading solo auto, max points. Assumes the alliance partner tips the
@@ -40,9 +40,9 @@ public class LoadingSoloAuto extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose = StartPoses.loadingArea;
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        OpModeStorage.pose.set(StartPoses.loadingArea);
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
     }

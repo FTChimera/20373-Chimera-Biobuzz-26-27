@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.robotDev.drivetrain;
 
 
-import static org.firstinspires.ftc.teamcode.util.vars.kt.TypesKt.BoolVar;
+import static com.rmsftc.utils.config.vars.kt.TypesKt.BoolVar;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -15,11 +15,11 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
-import org.firstinspires.ftc.teamcode.util.vars.Var;
+import com.rmsftc.utils.config.vars.Var;
 
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +41,6 @@ public class AutoAlignFollowerHoldingTest extends LinearOpMode {
         telemetry.addData("Alliance Color", AllianceColor.RED);
         telemetry.addLine("Position your robot on the Garden start pose for auto (RED)");
         holdScale.section.category = "AutoAlignTest";
-        holdScale.uploadToFtcDashboard();
         telemetry.update();
         autoAimerCalculator.hiveState = Field.HiveState.UNTIPPED;
 

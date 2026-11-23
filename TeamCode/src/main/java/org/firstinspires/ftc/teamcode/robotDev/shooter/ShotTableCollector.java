@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.FancyButton;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.GpFancyButton;
@@ -45,11 +45,11 @@ public class ShotTableCollector extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        if (!OpModeStorage.initialized) {
+        if (!OpModeStorage.initialized.get()) {
             OpModeStorage.resetToDefault();
         }
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.TELEOP, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.TELEOP, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = false;
         // The dashboard velocity drives the shooter directly; the shot
         // calculator must not override it.
@@ -102,7 +102,7 @@ public class ShotTableCollector extends LinearOpMode {
             ShotContext ctx = new ShotContext();
             ctx.robotPose = robot.getPose();
             ctx.hiveState = robot.field.getHiveState();
-            ctx.allianceColor = OpModeStorage.allianceColor;
+            ctx.allianceColor = OpModeStorage.allianceColor.get();
             ctx.sotm = false;
             // Not shoot-on-move: the release pose is the current pose,
             // so the latency is irrelevant.

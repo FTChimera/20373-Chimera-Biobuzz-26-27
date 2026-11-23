@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.util.CompTeleNames;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVector;
 
 /**
@@ -96,9 +96,9 @@ public class MainTeleOp extends ArchitecturalOpMode {
     @Override
     protected void onInit() {
         // ROBOT
-        if (!OpModeStorage.initialized) OpModeStorage.resetToDefault();
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.TELEOP, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        if (!OpModeStorage.initialized.get()) OpModeStorage.resetToDefault();
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.TELEOP, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         parkingInitiated = false;
         parkingRequested = false;

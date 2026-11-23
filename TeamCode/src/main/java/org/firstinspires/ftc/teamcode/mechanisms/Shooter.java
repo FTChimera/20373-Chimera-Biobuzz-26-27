@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import static org.firstinspires.ftc.teamcode.util.vars.kt.TypesKt.BoolVar;
+import static com.rmsftc.utils.config.vars.kt.TypesKt.BoolVar;
 
 import com.pedropathing.math.Velocity;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityConstants;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.util.poses.Pose2d;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotCalculator;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotContext;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotSolution;
-import org.firstinspires.ftc.teamcode.util.vars.Var;
+import com.rmsftc.utils.config.vars.Var;
 
 public class Shooter {
     private static final SmartFlywheel.Params MAIN_MOTOR_PARAMS = new SmartFlywheel.Params(28, 1);

@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.planners
 import com.pedropathing.paths.interpolator.Interpolator
 import com.pedropathing.paths.curves.Curve
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory
-import org.firstinspires.ftc.teamcode.util.AllianceColor
+import com.rmsftc.utils.AllianceColor
 import org.firstinspires.ftc.teamcode.util.math.MathUtils
 import org.firstinspires.ftc.teamcode.util.poses.AlliancePose2d
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d

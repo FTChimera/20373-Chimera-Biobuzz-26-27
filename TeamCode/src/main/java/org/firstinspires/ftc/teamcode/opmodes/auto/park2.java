@@ -16,7 +16,7 @@ import com.pedropathing.api.Paths;
 
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 
 @Autonomous(name = "Loading park2 HEADING 0", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class park2 extends ArchitecturalOpMode {
@@ -30,9 +30,9 @@ public class park2 extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose = StartPoses.loadingArea;
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        OpModeStorage.pose.set(StartPoses.loadingArea);
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
     }

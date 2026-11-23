@@ -49,11 +49,11 @@ public class ShooterPidSvaGraph extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        if (!OpModeStorage.initialized) {
+        if (!OpModeStorage.initialized.get()) {
             OpModeStorage.resetToDefault();
         }
 
-        Shooter shooter = new Shooter(hardwareMap, OpModeStorage.allianceColor);
+        Shooter shooter = new Shooter(hardwareMap, OpModeStorage.allianceColor.get());
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.addLine("Shooter PIDSVA step graph. Set TARGET_TICKS_PER_SECOND on the dashboard, then start.");

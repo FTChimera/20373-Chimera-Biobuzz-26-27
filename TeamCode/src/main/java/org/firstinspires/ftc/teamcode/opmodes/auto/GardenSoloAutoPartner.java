@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartGardenPose;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 
 /**
  * Garden solo auto, partner-PRESENT variant: garden start, shoot
@@ -43,9 +43,9 @@ public class GardenSoloAutoPartner extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose = StartPoses.gardenArea;
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        OpModeStorage.pose.set(StartPoses.gardenArea);
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
     }

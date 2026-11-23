@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.util.localization;
 
 import static org.junit.Assert.assertEquals;
 
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 import org.firstinspires.ftc.teamcode.util.poses.Pose2d;

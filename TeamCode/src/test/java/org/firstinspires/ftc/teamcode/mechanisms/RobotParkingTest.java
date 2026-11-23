@@ -3,7 +3,7 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.firstinspires.ftc.teamcode.util.MatchMode;
+import com.rmsftc.utils.MatchMode;
 import org.junit.Test;
 
 public class RobotParkingTest {

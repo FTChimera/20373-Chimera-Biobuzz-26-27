@@ -14,7 +14,7 @@ import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
-import org.firstinspires.ftc.teamcode.util.RobotMode;
+import com.rmsftc.utils.RobotMode;
 
 @Autonomous(name = "Loading 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class Loading8 extends ArchitecturalOpMode {
@@ -28,9 +28,9 @@ public class Loading8 extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose = StartPoses.loadingArea;
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor, RobotMode.AUTONOMOUS, OpModeStorage.pose);
-        robot.matchMode = OpModeStorage.matchMode;
+        OpModeStorage.pose.set(StartPoses.loadingArea);
+        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
     }

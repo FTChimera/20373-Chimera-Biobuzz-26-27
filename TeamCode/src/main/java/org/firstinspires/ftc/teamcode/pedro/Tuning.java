@@ -22,7 +22,7 @@ import org.firstinspires.ftc.teamcode.pedro.procedures.PinpointTuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.RobotDevelopmentTester;
 import org.firstinspires.ftc.teamcode.pedro.procedures.ShooterPIDSVATuner;
 import org.firstinspires.ftc.teamcode.pedro.procedures.Tests;
-import org.firstinspires.ftc.teamcode.util.AllianceColor;
+import com.rmsftc.utils.AllianceColor;
 
 import dev.frozenmilk.sinister.sdk.apphooks.OnCreateEventLoop;
 
