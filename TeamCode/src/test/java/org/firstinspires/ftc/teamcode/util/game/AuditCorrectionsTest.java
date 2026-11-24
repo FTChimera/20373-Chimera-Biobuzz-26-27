@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.game;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
@@ -40,17 +41,31 @@ public class AuditCorrectionsTest {
     }
 
     @Test
-    public void permitsPathsThatOnlyTouchObstacleBoundary() {
+    public void routesAroundObstacleCornerWithoutEnteringIt() {
+        // Dijkstra-era version of this test asserted a path that only touched
+        // the obstacle boundary (start (-1, 0) to end (11, 0) along y = 0).
+        // A grid pathfinder snaps endpoints to cell centers, so the equivalent
+        // check is a tight route around the corner that never enters the
+        // obstacle: start and goal sit one cell out from the blocked corner.
         GeometryFactory geometryFactory = new GeometryFactory();
         Polygon obstacle = geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(10, 10),
                 new Coordinate(0, 10), new Coordinate(0, 0)
         });
 
-        List<Pose> path = new DijkstraPathfinder().findPath(
-                new Pose(-1, 0), new Pose(11, 0), obstacle);
+        List<Pose> path = new AStarPathfinder().findPath(
+                new Pose(15, 3), new Pose(3, 15), obstacle);
 
-        assertEquals(2, path.size());
+        assertFalse(path.isEmpty());
+        assertEquals(15.0, path.get(0).x(), 1e-9);
+        assertEquals(3.0, path.get(0).y(), 1e-9);
+        assertEquals(3.0, path.get(path.size() - 1).x(), 1e-9);
+        assertEquals(15.0, path.get(path.size() - 1).y(), 1e-9);
+        for (Pose waypoint : path) {
+            assertFalse("Waypoint " + waypoint + " entered the obstacle",
+                    obstacle.contains(geometryFactory.createPoint(
+                            new Coordinate(waypoint.x(), waypoint.y()))));
+        }
     }
 
     @Test
@@ -61,7 +76,7 @@ public class AuditCorrectionsTest {
                 new Coordinate(0, 10), new Coordinate(0, 0)
         });
 
-        List<Pose> path = new DijkstraPathfinder().findPath(
+        List<Pose> path = new AStarPathfinder().findPath(
                 new Pose(5, 5), new Pose(11, 0), obstacle);
 
         assertEquals(0, path.size());
