@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.pedro.FollowerTestRig;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeShooterCommands.VisionAction;
-import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -30,53 +29,37 @@ public class TreeShooterCommandsTest {
     }
 
     @Test
-    public void freshTagAgreeingWithIntendedSideFeedsWithoutSwitch() {
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.UNTIPPED, Position.GARDEN_SHOOT, true, false, 0));
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.TIPPED, Position.LOADING_SHOOT, true, false, 0));
+    public void tagSeenFeedsFromIntendedSide() {
+        // Plain rule: any alliance tag in the latest result means shoot
+        // here — no switch, even when settled in position.
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(true, true, false, 0));
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(true, false, false, 0));
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(true, true, true, 0));
     }
 
     @Test
-    public void freshTagDisagreeingWithIntendedSideSwitchesOnceWhenSettled() {
-        assertEquals(VisionAction.SWITCH, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.TIPPED, Position.GARDEN_SHOOT, true, false, 0));
-        assertEquals(VisionAction.SWITCH, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.UNTIPPED, Position.LOADING_SHOOT, true, false, 1));
+    public void noTagSwitchesOnceWhenSettled() {
+        // Plain rule: no tag within the bounded wait means switch sides —
+        // once, from a settled pose within range of the intended shoot pose.
+        assertEquals(VisionAction.SWITCH, TreeShooterCommands.decideVisionAction(false, true, false, 0));
+        assertEquals(VisionAction.SWITCH, TreeShooterCommands.decideVisionAction(false, true, false, 1));
     }
 
     @Test
-    public void noFreshTagNeverSwitches() {
-        // The reported bug: tag absence used to switch sides. Absence is
-        // also the camera-failure signature, so a blind camera feeds from
-        // the intended side — even when settled in position, and even if a
-        // (stale) inference happens to disagree.
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                false, null, Position.GARDEN_SHOOT, true, false, 0));
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                false, Field.HiveState.TIPPED, Position.GARDEN_SHOOT, true, false, 0));
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                false, null, Position.LOADING_SHOOT, true, false, 0));
+    public void noTagAfterSwitchFeedsBlindFromSwitchedSide() {
+        // The second VISION check (after a switch) runs the same decision:
+        // already switched, so no second switch — feed blind from the
+        // switched side instead of stalling or ping-ponging.
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(false, true, true, 0));
     }
 
     @Test
-    public void ambiguousFreshFrameNeverSwitches() {
-        // A fresh frame whose clusters are too close to call yields a null
-        // inference: no evidence, so no switch even when settled.
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, null, Position.GARDEN_SHOOT, true, false, 0));
-    }
-
-    @Test
-    public void disagreeingEvidenceWithoutSwitchPrerequisitesFeeds() {
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.TIPPED, Position.GARDEN_SHOOT, false, false, 0));
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.TIPPED, Position.GARDEN_SHOOT, true, true, 0));
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.TIPPED, Position.GARDEN_SHOOT, true, false, 1.5));
-        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(
-                true, Field.HiveState.TIPPED, Position.GARDEN_SHOOT, true, false, Double.NaN));
+    public void noTagWithoutSwitchPrerequisitesFeeds() {
+        // Guards failing means no switch even with no tag: feed blind from
+        // the intended side rather than switching from an unverified pose.
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(false, false, false, 0));
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(false, true, false, 1.5));
+        assertEquals(VisionAction.FEED, TreeShooterCommands.decideVisionAction(false, true, false, Double.NaN));
     }
 
     @Test

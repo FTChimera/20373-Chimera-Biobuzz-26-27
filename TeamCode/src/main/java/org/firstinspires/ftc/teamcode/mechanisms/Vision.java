@@ -186,6 +186,20 @@ public class Vision {
         return containsAllianceFiducial();
     }
 
+    /**
+     * True when the LATEST Limelight result contains any AprilTag from OUR
+     * alliance's hive — either cluster counts (RED: IDs 0-7; BLUE: IDs
+     * 38-45). No freshness gate, no post-boundary frame requirement: the
+     * result is whatever the robot-vision daemon last fetched. The tree
+     * auto's shoot step checks this only after settling at the shoot pose
+     * and waits up to 2 s for a tag to appear, so a stale pre-arrival frame
+     * is the known accepted risk of this plain check — it is not re-gated
+     * here.
+     */
+    public boolean anyAllianceFiducialLatest() {
+        return containsAllianceFiducial();
+    }
+
     private boolean containsAllianceFiducial() {
         for (LLResultTypes.FiducialResult fiducialResult : fiducials()) {
             int id = fiducialResult.getFiducialId();
@@ -423,55 +437,7 @@ public class Vision {
         return latestResult.getFiducialResults();
     }
 
-    /**
-     * Hive state inferred from the latest frame's tags only, with no
-     * carry-over from earlier frames. Returns null when the latest frame has
-     * no hive tags, or when the two clusters are within
-     * {@link #HIVE_CLUSTER_AREA_MARGIN} (ambiguous).
-     *
-     * <p>Call this only after {@link #anyAllianceFiducialAfter(long)} has
-     * established the latest frame is fresh and contains alliance tags:
-     * {@link #update()} sets {@code latestResult} to the same frame it
-     * observes for freshness, so at that moment this method reads that fresh
-     * frame — never an older one. The stored {@link #getInferredHiveState()}
-     * cannot be used here: {@link #inferFieldHiveStateFromTags(Field.HiveState)}
-     * carries the previous state forward when a frame is ambiguous, and that
-     * carried value can come from the previous cycle's side. A null result
-     * here means "no evidence", and the caller must not switch on it.
-     */
-    public Field.HiveState inferHiveStateFromLatestFrame() {
-        double[] areas = hiveClusterAreas();
-        if (areas == null) {
-            return null;
-        }
-        return inferHiveStateFromClusterAreas(areas[0], areas[1], allianceColor);
-    }
-
-    /**
-     * Pure cluster decision from the two clusters' total target areas:
-     * the dominant cluster names the hive state, or null when there are no
-     * tags or the clusters are within {@link #HIVE_CLUSTER_AREA_MARGIN}
-     * (too close to call). Package-visible for unit tests; the Limelight
-     * result objects are not constructible outside the SDK.
-     */
-    static Field.HiveState inferHiveStateFromClusterAreas(
-            double allianceArea, double oppositeArea, AllianceColor allianceColor) {
-        if (allianceArea <= 0 && oppositeArea <= 0) {
-            return null;
-        }
-        if (Math.abs(allianceArea - oppositeArea) < HIVE_CLUSTER_AREA_MARGIN) {
-            return null;
-        }
-        return VisionLocalizationMath.clusterToFieldHiveState(allianceArea >= oppositeArea, allianceColor);
-    }
-
-    /**
-     * Total target areas of the two hive clusters in the latest frame,
-     * {@code {alliance, opposite}}, or null when the frame has no hive tags.
-     * Shared by the carried-over inference below and the strict one above,
-     * so both read the same areas from the same frame.
-     */
-    private double[] hiveClusterAreas() {
+    private Field.HiveState inferFieldHiveStateFromTags(Field.HiveState previousState) {
         if (latestResult == null || !latestResult.isValid() || latestResult.getFiducialResults() == null) {
             return null;
         }
@@ -493,19 +459,12 @@ public class Vision {
         if (allianceArea <= 0 && oppositeArea <= 0) {
             return null;
         }
-        return new double[]{allianceArea, oppositeArea};
-    }
-
-    private Field.HiveState inferFieldHiveStateFromTags(Field.HiveState previousState) {
-        double[] areas = hiveClusterAreas();
-        if (areas == null) {
-            return null;
-        }
-        double diff = Math.abs(areas[0] - areas[1]);
+        double diff = Math.abs(allianceArea - oppositeArea);
         if (diff < HIVE_CLUSTER_AREA_MARGIN && previousState != null) {
             return previousState;
         }
-        return VisionLocalizationMath.clusterToFieldHiveState(areas[0] >= areas[1], allianceColor);
+        boolean allianceClusterDetected = allianceArea >= oppositeArea;
+        return VisionLocalizationMath.clusterToFieldHiveState(allianceClusterDetected, allianceColor);
     }
 
     private boolean contains(BiobuzzAprilTags.Cluster cluster, int fiducialId) {

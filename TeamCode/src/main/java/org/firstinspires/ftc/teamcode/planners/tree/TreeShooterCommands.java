@@ -13,7 +13,6 @@ import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
-import org.firstinspires.ftc.teamcode.util.game.Field;
 import com.rmsftc.utils.math.Pose;
 
 import java.util.function.Consumer;
@@ -23,10 +22,9 @@ import com.rmsftc.utils.Clock;
  * Bounded measured settling, then a post-approach camera decision. Missing
  * readiness/tag confirmation degrades a planned batch attempt, not a score.
  * A side switch is attempted at most once and must physically arrive before
- * feeding or advertising the destination as the next leg's start. A switch
- * happens only on positive tag evidence for the other side: seeing no tags
- * is never evidence — a blind camera is also the camera-failure signature —
- * so a batch with no fresh frame is fed from the intended side.
+ * feeding or advertising the destination as the next leg's start. The camera
+ * decision is plain: any alliance tag in the latest result means shoot from
+ * this side; no tag within the bounded wait means switch sides.
  */
 public final class TreeShooterCommands {
     private static final double SHOOT_SETTLE_MS = 1500;
@@ -97,26 +95,19 @@ public final class TreeShooterCommands {
     enum VisionAction { FEED, SWITCH }
 
     /**
-     * The post-approach camera decision. A side switch happens only on
-     * positive tag evidence: a fresh frame whose cluster decision names the
-     * other side. Seeing no tags — or an ambiguous frame ({@code inferred}
-     * null) — is never evidence for a switch; a blind camera is also the
-     * camera-failure signature, so the batch is fed from the intended side
-     * instead. The existing one-switch guard still applies through
-     * {@link #canSwitchSides}.
+     * The post-approach camera decision, plain rule: any alliance tag in the
+     * latest result means shoot here, so feed. No tag within the bounded
+     * wait means switch sides — once, and only when the switch guards pass
+     * ({@link #canSwitchSides}); otherwise feed blind from this side. No
+     * freshness, no cluster inference, no target area.
      */
-    static VisionAction decideVisionAction(boolean freshTag, Field.HiveState inferred,
-                                           Position intendedSide, boolean poseSettled,
+    static VisionAction decideVisionAction(boolean tagSeen, boolean poseSettled,
                                            boolean switched, double positionError) {
-        if (!freshTag || inferred == null) {
+        if (tagSeen) {
             return VisionAction.FEED;
         }
-        Position evidenceSide = TreeState.optimalShootPosition(inferred);
-        if (evidenceSide != intendedSide
-                && canSwitchSides(poseSettled, switched, positionError)) {
-            return VisionAction.SWITCH;
-        }
-        return VisionAction.FEED;
+        return canSwitchSides(poseSettled, switched, positionError)
+                ? VisionAction.SWITCH : VisionAction.FEED;
     }
 
     private static boolean settledAt(Follower follower, Pose pose, double positionTolerance) {
@@ -146,7 +137,7 @@ public final class TreeShooterCommands {
         private SettleWindow settle;
         private long visionBoundary;
         private boolean poseSettled;
-        private boolean freshTag;
+        private boolean tagSeen;
         private boolean switched;
         private SideSwitchCommand sideSwitch;
         private ShooterCommands.ShotCommand feed;
@@ -165,13 +156,13 @@ public final class TreeShooterCommands {
         }
 
         public boolean poseSettled() { return poseSettled; }
-        public boolean freshTagConfirmed() { return freshTag; }
+        public boolean tagSeen() { return tagSeen; }
         public boolean switchedSides() { return switched; }
 
         @Override public void start() {
             shotSide = intendedSide;
             poseSettled = false;
-            freshTag = false;
+            tagSeen = false;
             switched = false;
             feed = null;
             sideSwitch = null;
@@ -204,29 +195,25 @@ public final class TreeShooterCommands {
                     phase = Phase.VISION;
                     break;
                 case VISION:
-                    freshTag = robot.vision.anyAllianceFiducialAfter(visionBoundary);
-                    if (!freshTag && elapsedMs(now, visionBoundary) < Timings.hiveLineupTimeoutTime * 1000.0) return;
-                    // The inference is read only from the fresh frame that
-                    // made the check above pass; an ambiguous frame yields
-                    // null (no evidence), never a carried-over state.
-                    Field.HiveState inferred = freshTag
-                            ? robot.vision.inferHiveStateFromLatestFrame() : null;
-                    if (decideVisionAction(freshTag, inferred, shotSide, poseSettled, switched,
+                    // Plain rule: any alliance tag in the latest result means
+                    // shoot from this side; no tag within the bounded wait
+                    // means switch sides. No freshness gate, no post-boundary
+                    // frame, no cluster inference. The latest result is
+                    // refreshed every loop by the robot-vision daemon, and
+                    // this check only runs after SETTLE at the shoot pose
+                    // plus up to 2 s of waiting, so a stale pre-arrival
+                    // frame is the known accepted risk of the plain rule.
+                    tagSeen = robot.vision.anyAllianceFiducialLatest();
+                    if (!tagSeen && elapsedMs(now, visionBoundary) < Timings.hiveLineupTimeoutTime * 1000.0) return;
+                    if (decideVisionAction(tagSeen, poseSettled, switched,
                             robot.getPose().distance(TreeState.poseFor(shotSide)))
                             == VisionAction.SWITCH) {
+                        warn("No alliance tag; switching sides");
                         sideSwitch = switchSides(robot, shotSide);
                         phase = Phase.SWITCH;
                         return;
                     }
-                    if (!freshTag) {
-                        warn(switched
-                                ? "No fresh alliance frame after side switch; attempting blind batch"
-                                : "No fresh alliance frame; attempting blind batch from intended side");
-                    } else if (inferred == null) {
-                        warn("Fresh alliance frame is ambiguous; no switch evidence; attempting planned batch");
-                    } else if (TreeState.optimalShootPosition(inferred) != shotSide) {
-                        warn("Camera evidence disagrees with intended side but switch not available; attempting planned batch");
-                    }
+                    if (!tagSeen) warn("No alliance tag and switch not available; attempting blind batch");
                     beginFeed();
                     break;
                 case SWITCH:
@@ -249,13 +236,13 @@ public final class TreeShooterCommands {
                     if (feed.attempted()) {
                         boolean positionVerified = robot.getPose().distance(TreeState.poseFor(shotSide))
                                 <= POSITION_TOLERANCE_IN;
-                        state.recordAttempt(shotSide, feed.outcome(), poseSettled, freshTag, positionVerified);
+                        state.recordAttempt(shotSide, feed.outcome(), poseSettled, tagSeen, positionVerified);
                         // Publish selection inputs together, so the reactive tree cannot
                         // preempt this leg between its batch and intake bookkeeping.
                         state.markIntakeDone(intakeArea);
                         robot.telemetry.addData("Tree batch result",
-                                "%s; settled=%s freshTag=%s; scores UNCONFIRMED",
-                                feed.outcome(), poseSettled, freshTag);
+                                "%s; settled=%s tagSeen=%s; scores UNCONFIRMED",
+                                feed.outcome(), poseSettled, tagSeen);
                     } else {
                         state.abortControlPath("Feed ended without a completed batch attempt: " + feed.outcome());
                     }
