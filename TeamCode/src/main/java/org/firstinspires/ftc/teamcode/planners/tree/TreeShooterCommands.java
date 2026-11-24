@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
+import org.firstinspires.ftc.teamcode.util.game.Field;
 import com.rmsftc.utils.math.Pose;
 
 import java.util.function.Consumer;
@@ -22,7 +23,10 @@ import com.rmsftc.utils.Clock;
  * Bounded measured settling, then a post-approach camera decision. Missing
  * readiness/tag confirmation degrades a planned batch attempt, not a score.
  * A side switch is attempted at most once and must physically arrive before
- * feeding or advertising the destination as the next leg's start.
+ * feeding or advertising the destination as the next leg's start. A switch
+ * happens only on positive tag evidence for the other side: seeing no tags
+ * is never evidence — a blind camera is also the camera-failure signature —
+ * so a batch with no fresh frame is fed from the intended side.
  */
 public final class TreeShooterCommands {
     private static final double SHOOT_SETTLE_MS = 1500;
@@ -87,6 +91,32 @@ public final class TreeShooterCommands {
 
     static boolean canSwitchSides(boolean poseSettled, boolean alreadySwitched, double positionError) {
         return poseSettled && !alreadySwitched && positionError <= SWITCH_POSITION_TOLERANCE_IN;
+    }
+
+    /** Outcome of the post-approach camera decision. Pure. */
+    enum VisionAction { FEED, SWITCH }
+
+    /**
+     * The post-approach camera decision. A side switch happens only on
+     * positive tag evidence: a fresh frame whose cluster decision names the
+     * other side. Seeing no tags — or an ambiguous frame ({@code inferred}
+     * null) — is never evidence for a switch; a blind camera is also the
+     * camera-failure signature, so the batch is fed from the intended side
+     * instead. The existing one-switch guard still applies through
+     * {@link #canSwitchSides}.
+     */
+    static VisionAction decideVisionAction(boolean freshTag, Field.HiveState inferred,
+                                           Position intendedSide, boolean poseSettled,
+                                           boolean switched, double positionError) {
+        if (!freshTag || inferred == null) {
+            return VisionAction.FEED;
+        }
+        Position evidenceSide = TreeState.optimalShootPosition(inferred);
+        if (evidenceSide != intendedSide
+                && canSwitchSides(poseSettled, switched, positionError)) {
+            return VisionAction.SWITCH;
+        }
+        return VisionAction.FEED;
     }
 
     private static boolean settledAt(Follower follower, Pose pose, double positionTolerance) {
@@ -176,15 +206,27 @@ public final class TreeShooterCommands {
                 case VISION:
                     freshTag = robot.vision.anyAllianceFiducialAfter(visionBoundary);
                     if (!freshTag && elapsedMs(now, visionBoundary) < Timings.hiveLineupTimeoutTime * 1000.0) return;
-                    if (!freshTag && canSwitchSides(poseSettled, switched,
-                            robot.getPose().distance(TreeState.poseFor(shotSide)))) {
+                    // The inference is read only from the fresh frame that
+                    // made the check above pass; an ambiguous frame yields
+                    // null (no evidence), never a carried-over state.
+                    Field.HiveState inferred = freshTag
+                            ? robot.vision.inferHiveStateFromLatestFrame() : null;
+                    if (decideVisionAction(freshTag, inferred, shotSide, poseSettled, switched,
+                            robot.getPose().distance(TreeState.poseFor(shotSide)))
+                            == VisionAction.SWITCH) {
                         sideSwitch = switchSides(robot, shotSide);
                         phase = Phase.SWITCH;
                         return;
                     }
-                    if (!freshTag) warn(switched
-                            ? "No fresh alliance frame after side switch; attempting blind batch"
-                            : "No fresh alliance frame; unconfirmed pose prevents safe side switch; attempting planned batch");
+                    if (!freshTag) {
+                        warn(switched
+                                ? "No fresh alliance frame after side switch; attempting blind batch"
+                                : "No fresh alliance frame; attempting blind batch from intended side");
+                    } else if (inferred == null) {
+                        warn("Fresh alliance frame is ambiguous; no switch evidence; attempting planned batch");
+                    } else if (TreeState.optimalShootPosition(inferred) != shotSide) {
+                        warn("Camera evidence disagrees with intended side but switch not available; attempting planned batch");
+                    }
                     beginFeed();
                     break;
                 case SWITCH:

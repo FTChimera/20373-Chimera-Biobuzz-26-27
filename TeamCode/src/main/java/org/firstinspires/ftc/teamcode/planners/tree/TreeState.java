@@ -284,11 +284,16 @@ public final class TreeState {
         return (tips % 2 == 1) ? Field.HiveState.TIPPED : Field.HiveState.UNTIPPED;
     }
 
-    /** The shoot position matching the predicted state for the next shoot. */
-    public static Position optimalShootPosition(int cyclesCompleted) {
-        return predictHiveState(cyclesCompleted) == Field.HiveState.UNTIPPED
+    /** The shoot position matching a hive state: UNTIPPED (garden side) or TIPPED (loading side). */
+    public static Position optimalShootPosition(Field.HiveState hiveState) {
+        return hiveState == Field.HiveState.UNTIPPED
                 ? Position.GARDEN_SHOOT
                 : Position.LOADING_SHOOT;
+    }
+
+    /** The shoot position matching the predicted state for the next shoot. */
+    public static Position optimalShootPosition(int cyclesCompleted) {
+        return optimalShootPosition(predictHiveState(cyclesCompleted));
     }
 
     /** The other shoot position (GARDEN_SHOOT &lt;-&gt; LOADING_SHOOT). */

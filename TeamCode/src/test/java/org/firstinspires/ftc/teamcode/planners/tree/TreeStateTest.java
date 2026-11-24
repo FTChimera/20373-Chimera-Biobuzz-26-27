@@ -371,6 +371,19 @@ public class TreeStateTest {
     }
 
     @Test
+    public void optimalSideFollowsHiveStateDirectly() {
+        // The camera decision reuses this mapping on an inferred state,
+        // not a cycle count: UNTIPPED is the garden side, TIPPED the
+        // loading side, and it must agree with the cycle-count version.
+        assertEquals(Position.GARDEN_SHOOT, TreeState.optimalShootPosition(Field.HiveState.UNTIPPED));
+        assertEquals(Position.LOADING_SHOOT, TreeState.optimalShootPosition(Field.HiveState.TIPPED));
+        for (int cycles = 0; cycles < 8; cycles++) {
+            assertEquals(TreeState.optimalShootPosition(TreeState.predictHiveState(cycles)),
+                    TreeState.optimalShootPosition(cycles));
+        }
+    }
+
+    @Test
     public void perfectPredictionReproducesGardenSoloOrder() {
         Sim sim = new Sim();
 

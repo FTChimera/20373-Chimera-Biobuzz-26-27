@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.shotcalc;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.pedropathing.math.Velocity;
 
@@ -108,6 +109,24 @@ public class ShotCalculatorTest {
         ShotSolution solution = ShotCalculator.table().calculateShot(context);
 
         assertEquals(800.0, solution.flywheelTicksPerSecond, EPSILON);
+    }
+
+    @Test
+    public void gardenShootPoseCommandsNonzeroFlywheelForCycleOne() {
+        // Cycle-1 conditions: robot at the garden shoot pose (40, 10, 65 deg,
+        // ShootPoses.garden), hive UNTIPPED, stationary, table calculator —
+        // the exact context the smart shooter daemon solves every loop in
+        // Garden Solo Auto. Distance to the red untipped goal (60, 60) is
+        // ~53.85 in, inside the table's range, so both motors get a nonzero
+        // target and the flywheel spins up during the approach — the late
+        // spin-up Shlok saw was the false side switch delaying the feed,
+        // not a zero solution at the garden pose.
+        ShotContext context = pollenContext(new Pose(40, 10, Math.toRadians(65)));
+
+        ShotSolution solution = ShotCalculator.table().calculateShot(context);
+
+        assertTrue(solution.flywheelTicksPerSecond > 0);
+        assertTrue(solution.counterRollerTicksPerSecond > 0);
     }
 
     private ShotContext pollenContext(Pose robotPose) {
