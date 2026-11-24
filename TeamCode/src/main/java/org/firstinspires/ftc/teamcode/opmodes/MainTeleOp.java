@@ -1,11 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.rmsftc.cmdlib.EndCondition;
-import com.rmsftc.cmdlib.Status;
-import com.rmsftc.cmdlib.cmd.Command;
-import com.rmsftc.cmdlib.cmd.Commands;
-import com.rmsftc.ftc.ArchitectureManager;
 import com.rmsftc.ftc.ArchitecturalOpMode;
 import com.rmsftc.utils.RobotMode;
 import com.rmsftc.utils.config.vars.Var;
@@ -19,8 +14,18 @@ import org.firstinspires.ftc.teamcode.util.dashboard.DashboardVars;
 import com.rmsftc.utils.DriveVector;
 
 /**
- * Competition TeleOp. Controls are sampled once per active loop, before
- * arbitration and robot daemons; held overrides never depend on trigger edges.
+ * Competition TeleOp. One loop, top to bottom: sample the controls once,
+ * then intake, parking, drive, and outtake in that order. Parking is plain
+ * state on this class, not a scheduled command: the robot drives the park
+ * path through the follower, and this loop retries it every half second
+ * until it starts and watches for it to finish.
+ *
+ * <p>Controls are sampled once per active loop, before arbitration and
+ * robot daemons; held overrides never depend on trigger edges.
+ *
+ * <p>The outtake arbitration lives inline in {@link #outtakeLoop()}: shooter
+ * priority is REVERSE &gt; PANIC &gt; SMART &gt; OFF, feed follows the shooter
+ * mode with eject, auto-fire, slow, and the latched manual fast burst.
  */
 @TeleOp(name = CompTeleNames.TWO_DRIVERS, group = Constants.COMPETITION_GROUP)
 public class MainTeleOp extends ArchitecturalOpMode {
@@ -29,65 +34,22 @@ public class MainTeleOp extends ArchitecturalOpMode {
             DashboardVars.doubleVar("TeleOp auto-fire heading tolerance (deg)", 3.0, 0.0, 180.0);
     private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
+    private enum ShooterMode { OFF, SMART, PANIC, REVERSE }
+    private enum FeedMode { STOP, FAST, SLOW, PANIC, EJECT }
+
     private Controls controls;
     private Robot robot;
-    private final TeleOpOuttakeState outtake = new TeleOpOuttakeState();
+    private ShooterMode shooterMode = ShooterMode.OFF;
+    private FeedMode feedMode = FeedMode.STOP;
+    private boolean manualFastStarted;
     private boolean parkingInitiated;
     private boolean parkingRequested;
     private boolean automaticParkingCancelled;
     private double lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
     private boolean started;
     private boolean cleanedUp;
-    private Command parkCommand;
 
     protected boolean oneController = false;
-
-    /** Owns retries and the journey, not just acceptance of a path request. */
-    private class ParkCommand extends Command {
-        @Override
-        public Status execute() {
-            // BA executes a snapshot: cancellation by controlLoop must not
-            // restart this command later in that same scheduler tick.
-            if (cleanedUp || !manager.scheduler().isScheduled(this)
-                    || robot.opModeTimeRemaining() <= 0) return Status.of(false);
-            return super.execute();
-        }
-
-        @Override
-        public void start() {
-            parkingRequested = true;
-            parkingInitiated = false;
-            automaticParkingCancelled = false;
-        }
-
-        @Override
-        public void loop() {
-            if (cleanedUp || !started || parkingInitiated) return;
-            double now = robot.getOpModeTimeSeconds();
-            if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
-                lastParkAttemptTimeSec = now;
-                parkingInitiated = robot.moveToParkZone();
-                if (parkingInitiated) robot.lights.onParkStart();
-            }
-        }
-
-        @Override
-        public Status status() {
-            return Status.of(!cleanedUp
-                    && (!parkingInitiated || robot.follower.following()));
-        }
-
-        @Override
-        public void end(EndCondition endCondition) {
-            parkingRequested = false;
-            if (endCondition == EndCondition.INTERRUPTED) {
-                robot.cancelPark();
-                parkingInitiated = false;
-                automaticParkingCancelled = true;
-            }
-            // Natural completion leaves the follower's endpoint HOLD intact.
-        }
-    }
 
     @Override
     protected void onInit() {
@@ -101,28 +63,28 @@ public class MainTeleOp extends ArchitecturalOpMode {
         robot.setSmartShooterControl(false);
         DashboardVars.upload(AUTO_FIRE_HEADING_TOLERANCE_DEGREES);
         controls = new Controls(gamepad1, gamepad2, oneController);
-        parkCommand = new ParkCommand();
     }
 
     @Override
-    protected void build(ArchitectureManager manager) {
-        manager.schedule(Commands.run(this::controlLoop));
-    }
-
-    private void controlLoop() {
+    protected void onLoop() {
         if (cleanedUp) return;
-        // BA ticks scheduled commands before onLoop, including the first tick.
+        if (robot.opModeTimeRemaining() <= 0) {
+            cleanup();
+            super.interrupt();
+            return;
+        }
         if (!started) {
             robot.start();
             started = true;
         }
-        // Defer interrupt/cancelAll to onLoop, outside the scheduler snapshot.
-        if (robot.opModeTimeRemaining() <= 0) return;
         controls.update();
         intakeLoop();
         parkingLoop();
         driveLoop();
         outtakeLoop();
+        robot.telemetry.addData("Parking", "requested=%s started=%s auto cancelled=%s",
+                parkingRequested, parkingInitiated, automaticParkingCancelled);
+        robot.update();
     }
 
     private void intakeLoop() {
@@ -162,18 +124,29 @@ public class MainTeleOp extends ArchitecturalOpMode {
             if (controls.stopPark().risingEdge()) cancelParking();
             return;
         }
-        boolean manualRequest = controls.moveToParkZone().risingEdge();
-        if (!manager.scheduler().isScheduled(parkCommand)
-                && (manualRequest || (!automaticParkingCancelled
-                && !parkingInitiated && robot.shouldPark()))) {
-            manager.schedule(parkCommand);
+        if (controls.moveToParkZone().risingEdge()) {
+            parkingRequested = true;
+            parkingInitiated = false;
+            automaticParkingCancelled = false;
+        } else if (!automaticParkingCancelled && !parkingInitiated && robot.shouldPark()) {
+            parkingRequested = true;
+        }
+        if (parkingInitiated && !robot.follower.following()) {
+            // Journey finished (or already parked): stay holding the
+            // endpoint, and don't re-request until the driver asks again.
+            parkingRequested = false;
+        }
+        if (parkingRequested && !parkingInitiated) {
+            double now = robot.getOpModeTimeSeconds();
+            if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+                lastParkAttemptTimeSec = now;
+                parkingInitiated = robot.moveToParkZone();
+                if (parkingInitiated) robot.lights.onParkStart();
+            }
         }
     }
 
     private void cancelParking() {
-        manager.cancel(parkCommand);
-        // A pending, not-yet-executed command has no end callback in BA.
-        // This also releases HOLD after the journey completes naturally.
         robot.cancelPark();
         parkingRequested = false;
         parkingInitiated = false;
@@ -196,40 +169,66 @@ public class MainTeleOp extends ArchitecturalOpMode {
     }
 
     private void outtakeLoop() {
-        TeleOpOuttakeState.ShooterMode previous = outtake.shooter;
-        outtake.update(controls.reverseOuttake().isPressed(), controls.panicShoot().isPressed(),
-                controls.keepShooterOn().isPressed()
-                        || controls.autoAlignAndStartShoot().isPressed(),
-                controls.runTransferFast().isPressed(), controls.runTransferSlow().isPressed(),
-                controls.autoAlignAndStartShoot().isPressed(), controls.intakeEject().isPressed(),
-                robot.shooter.upToSpeed(),
-                TeleOpOuttakeState.headingReady(robot.autoAimerCalculator.getTargetHeading(),
-                        robot.getHeading(), AUTO_FIRE_HEADING_TOLERANCE_DEGREES.get()));
+        ShooterMode previous = shooterMode;
+        boolean reverse = controls.reverseOuttake().isPressed();
+        boolean panic = controls.panicShoot().isPressed();
+        boolean shooterEnabled = controls.keepShooterOn().isPressed()
+                || controls.autoAlignAndStartShoot().isPressed();
+        boolean fast = controls.runTransferFast().isPressed();
+        boolean slow = controls.runTransferSlow().isPressed();
+        boolean autoFire = controls.autoAlignAndStartShoot().isPressed();
+        boolean eject = controls.intakeEject().isPressed();
+        boolean upToSpeed = robot.shooter.upToSpeed();
+        boolean headingReady = headingReady(robot.autoAimerCalculator.getTargetHeading(),
+                robot.getHeading(), AUTO_FIRE_HEADING_TOLERANCE_DEGREES.get());
 
-        if (previous != outtake.shooter) {
+        shooterMode = reverse ? ShooterMode.REVERSE
+                : panic ? ShooterMode.PANIC
+                : shooterEnabled ? ShooterMode.SMART : ShooterMode.OFF;
+        // RT is a manual burst: speed-gated on entry, not interrupted by each
+        // ball's speed dip. Explicit shutdown or an override ends that burst.
+        if (!fast || shooterMode != ShooterMode.SMART || eject
+                || previous != ShooterMode.SMART) {
+            manualFastStarted = false;
+        }
+        if (fast && shooterMode == ShooterMode.SMART && !eject
+                && previous == ShooterMode.SMART && upToSpeed) {
+            manualFastStarted = true;
+        }
+
+        if (shooterMode == ShooterMode.REVERSE) feedMode = FeedMode.STOP;
+        else if (shooterMode == ShooterMode.PANIC) feedMode = FeedMode.PANIC;
+        else if (eject) feedMode = FeedMode.EJECT;
+        else if (shooterMode == ShooterMode.SMART && previous == ShooterMode.SMART
+                && autoFire && upToSpeed && headingReady) feedMode = FeedMode.FAST;
+        else if (slow) feedMode = FeedMode.SLOW;
+        else if (manualFastStarted) feedMode = FeedMode.FAST;
+        else feedMode = FeedMode.STOP;
+
+        if (previous != shooterMode) {
             // End old overrides before applying the winner; their end methods
             // stop both shooter and transfer and must never run after it.
-            if (previous == TeleOpOuttakeState.ShooterMode.REVERSE) robot.endReverseOuttake();
-            if (previous == TeleOpOuttakeState.ShooterMode.PANIC) robot.endPanicShoot();
+            if (previous == ShooterMode.REVERSE) robot.endReverseOuttake();
+            if (previous == ShooterMode.PANIC) robot.endPanicShoot();
         }
-        robot.setSmartShooterControl(outtake.shooter == TeleOpOuttakeState.ShooterMode.SMART);
-        switch (outtake.shooter) {
+        robot.setSmartShooterControl(shooterMode == ShooterMode.SMART);
+        switch (shooterMode) {
             case REVERSE:
                 robot.reverseOuttake();
-                if (previous != outtake.shooter) robot.lights.onReverseOuttakeStart();
+                if (previous != shooterMode) robot.lights.onReverseOuttakeStart();
                 break;
             case PANIC:
                 robot.panic();
-                if (previous != outtake.shooter) robot.lights.onPanicStart();
+                if (previous != shooterMode) robot.lights.onPanicStart();
                 break;
             case OFF:
                 robot.shooter.setVelocity(0, 0);
                 break;
             case SMART:
-                if (previous != outtake.shooter) robot.lights.onShootStart();
+                if (previous != shooterMode) robot.lights.onShootStart();
                 break;
         }
-        switch (outtake.feed) {
+        switch (feedMode) {
             case FAST: robot.transfer.shootAll(); break;
             case SLOW: robot.transfer.slow(); break;
             case PANIC: robot.transfer.panicShoot(); break;
@@ -238,17 +237,15 @@ public class MainTeleOp extends ArchitecturalOpMode {
         }
     }
 
-    @Override
-    protected void onLoop() {
-        if (cleanedUp) return;
-        if (robot.opModeTimeRemaining() <= 0) {
-            interrupt();
-            return;
+    /** Wrap-safe heading check for auto-fire: true when the heading error is within tolerance. */
+    static boolean headingReady(double target, double heading, double toleranceDegrees) {
+        if (!Double.isFinite(toleranceDegrees) || toleranceDegrees < 0
+                || toleranceDegrees > 180) {
+            throw new IllegalArgumentException("Heading tolerance must be between 0 and 180 degrees.");
         }
-        robot.telemetry.addData("Parking", "requested=%s started=%s auto cancelled=%s",
-                parkingRequested, parkingInitiated, automaticParkingCancelled);
-        robot.update();
-        robot.telemetry.update();
+        if (!Double.isFinite(target) || !Double.isFinite(heading)) return false;
+        double error = Math.atan2(Math.sin(target - heading), Math.cos(target - heading));
+        return Math.abs(error) <= Math.toRadians(toleranceDegrees);
     }
 
     private void cleanup() {
@@ -276,15 +273,6 @@ public class MainTeleOp extends ArchitecturalOpMode {
             cleanup();
         } finally {
             super.onStop();
-        }
-    }
-
-    @Override
-    public void interrupt() {
-        try {
-            cleanup();
-        } finally {
-            super.interrupt();
         }
     }
 

@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.rmsftc.utils.ftc.daemons.FTCDaemon;
@@ -21,7 +20,11 @@ public class RobotDaemonTest {
         for (Method method : Robot.class.getDeclaredMethods()) {
             FTCDaemon annotation = method.getAnnotation(FTCDaemon.class);
             if (annotation == null) continue;
-            assertSame(Void.class, method.getGenericReturnType());
+            // FTCUtils 0.1.2's scanner accepts primitive void as well as
+            // boxed Void (0.1.1 required the box); either is a valid daemon.
+            assertTrue("daemon " + method.getName() + " must return Void or void",
+                    Void.class.equals(method.getGenericReturnType())
+                            || Void.TYPE.equals(method.getGenericReturnType()));
             int priority = Robot.daemonPriority(annotation.name());
             assertTrue(priority >= 0);
             priorities.add(priority);
