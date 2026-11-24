@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.control;
 
+import com.rmsftc.utils.Clock;
 import java.util.function.Function;
 import java.util.Objects;
 
@@ -98,7 +99,7 @@ public class PIDFController<T> implements Controller<T, T, T> {
         }
 
         boolean isFirstUpdate = !firstUpdate;
-        long now = System.nanoTime();
+        long now = Clock.SYSTEM.nowNanos();
         if (isFirstUpdate) {
             lastError = new double[currentStateArray.length];
             integral = new double[currentStateArray.length];

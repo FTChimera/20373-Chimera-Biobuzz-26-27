@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.control;
 
+import com.rmsftc.utils.Clock;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 
@@ -236,7 +237,7 @@ public class DoubleFlywheelFullVelocityController implements Controller<Double, 
 
     @Override
     public void update(Double state) {
-        long now = System.nanoTime();
+        long now = Clock.SYSTEM.nowNanos();
         double dt;
         if (lastTime == -1) {
             // First call (or just after reset): baseline only, no elapsed time.

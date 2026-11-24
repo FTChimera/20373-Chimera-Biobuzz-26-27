@@ -6,6 +6,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import com.rmsftc.utils.AllianceColor;
@@ -100,7 +101,7 @@ public class Vision {
             frameFreshness.invalidate();
         } else {
             // Read wall-clock staleness after sampling the monotonic clock, conservatively.
-            long observedNanos = System.nanoTime();
+            long observedNanos = Clock.SYSTEM.nowNanos();
             frameFreshness.observe(
                     latestResult.isValid(), latestResult.getPipelineIndex(), latestResult.getTimestamp(),
                     latestResult.getStaleness(), latestResult.getCaptureLatency(),
@@ -141,7 +142,7 @@ public class Vision {
      */
     public boolean anyAllianceFiducial() {
         if (!frameFreshness.isFresh(
-                getDesiredPipelineIndex(), System.nanoTime(), MAX_RESULT_STALENESS_MS)) {
+                getDesiredPipelineIndex(), Clock.SYSTEM.nowNanos(), MAX_RESULT_STALENESS_MS)) {
             return false;
         }
         return containsAllianceFiducial();
@@ -159,7 +160,7 @@ public class Vision {
      */
     public boolean anyAllianceFiducialAfter(long notBeforeNanos) {
         if (!frameFreshness.isFreshAfter(
-                getDesiredPipelineIndex(), System.nanoTime(), MAX_RESULT_STALENESS_MS,
+                getDesiredPipelineIndex(), Clock.SYSTEM.nowNanos(), MAX_RESULT_STALENESS_MS,
                 notBeforeNanos)) {
             return false;
         }
@@ -266,8 +267,8 @@ public class Vision {
                 + " TagCount=" + camTransform.getTagCount()
                 + " VisibleTagIds=" + visibleTagIds()
                 + " AnyAllianceTag=" + anyAllianceFiducial()
-                + " Fresh=" + frameFreshness.isFresh(getDesiredPipelineIndex(), System.nanoTime(), MAX_RESULT_STALENESS_MS)
-                + " FrameAge(ms)=" + String.format("%.0f", frameFreshness.estimatedAgeMs(System.nanoTime()))
+                + " Fresh=" + frameFreshness.isFresh(getDesiredPipelineIndex(), Clock.SYSTEM.nowNanos(), MAX_RESULT_STALENESS_MS)
+                + " FrameAge(ms)=" + String.format("%.0f", frameFreshness.estimatedAgeMs(Clock.SYSTEM.nowNanos()))
                 + " Ambiguity(m)=" + camTransform.getAmbiguity()
                 + " Staleness(ms)=" + (latestResult == null ? -1 : latestResult.getStaleness())
                 + " Hive=" + inferredHiveState

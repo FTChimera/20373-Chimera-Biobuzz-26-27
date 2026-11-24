@@ -9,6 +9,7 @@ import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.pedropathing.utils.Angle;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.teamcode.util.control.filters.Dynamics;
 import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilter;
 import org.firstinspires.ftc.teamcode.util.control.filters.Sensor;
@@ -63,7 +64,7 @@ public class EKFPinpoint implements Localizer {
         pinpoint.update();
         rawPose = pinpoint.pose();
 
-        long now = System.nanoTime();
+        long now = Clock.SYSTEM.nowNanos();
         double dt = (now - lastUpdateNanos) / 1.0e9;
         filter.step(new double[]{rawPose.x(), rawPose.y(), rawPose.heading()}, dt);
         lastUpdateNanos = now;
@@ -93,7 +94,7 @@ public class EKFPinpoint implements Localizer {
                 new ConstantVelocityDynamics(tuning),
                 new PinpointPoseSensor(tuning)
         );
-        lastUpdateNanos = System.nanoTime();
+        lastUpdateNanos = Clock.SYSTEM.nowNanos();
         updateMotionState();
     }
 

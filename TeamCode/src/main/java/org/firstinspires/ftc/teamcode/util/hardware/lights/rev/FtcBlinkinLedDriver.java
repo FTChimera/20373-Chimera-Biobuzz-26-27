@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.configuration.annotations.DevicePropertie
 import com.qualcomm.robotcore.hardware.configuration.annotations.ServoType;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import com.rmsftc.utils.Clock;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -475,7 +476,7 @@ public class FtcBlinkinLedDriver implements HardwareDevice {
 
     private boolean sleepFrame() {
         long remainingNanos = frameDurationMs * 1_000_000L;
-        long deadlineNanos = System.nanoTime() + remainingNanos;
+        long deadlineNanos = Clock.SYSTEM.nowNanos() + remainingNanos;
         boolean interrupted = false;
 
         while (remainingNanos > 0) {
@@ -487,7 +488,7 @@ public class FtcBlinkinLedDriver implements HardwareDevice {
                 break;
             } catch (InterruptedException e) {
                 interrupted = true;
-                remainingNanos = deadlineNanos - System.nanoTime();
+                remainingNanos = deadlineNanos - Clock.SYSTEM.nowNanos();
             }
         }
 

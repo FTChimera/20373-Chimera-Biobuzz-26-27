@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util;
 
+import com.rmsftc.utils.Clock;
 import java.util.concurrent.TimeUnit;
 
 public class Timer {
@@ -11,16 +12,16 @@ public class Timer {
     }
     /** A utility timer with nanosecond accuracy that can also calculate dt */
     public Timer(TimeUnit unit) {
-        startTime = System.nanoTime();
+        startTime = Clock.SYSTEM.nowNanos();
         dtPrev = startTime;
         this.unit = unit;
     }
 
     public double get() {
-        return convertFromNanoseconds(System.nanoTime() - startTime, unit);
+        return convertFromNanoseconds(Clock.SYSTEM.nowNanos() - startTime, unit);
     }
     public double get(TimeUnit timeUnit) {
-        return convertFromNanoseconds(System.nanoTime() - startTime, timeUnit);
+        return convertFromNanoseconds(Clock.SYSTEM.nowNanos() - startTime, timeUnit);
     }
 
     public boolean past(double time) {
@@ -30,13 +31,13 @@ public class Timer {
         return get(timeUnit) > time;
     }
     public double dt() {
-        long now = System.nanoTime();
+        long now = Clock.SYSTEM.nowNanos();
         double dt = convertFromNanoseconds(now - dtPrev, unit);
         dtPrev = now;
         return dt;
     }
     public double dt(TimeUnit timeUnit) {
-        long now = System.nanoTime();
+        long now = Clock.SYSTEM.nowNanos();
         double dt = convertFromNanoseconds(now - dtPrev, timeUnit);
         dtPrev = now;
         return dt;
@@ -48,7 +49,7 @@ public class Timer {
         return this.unit;
     }
     public void reset() {
-        startTime = System.nanoTime();
+        startTime = Clock.SYSTEM.nowNanos();
         dtPrev = startTime;
     }
 

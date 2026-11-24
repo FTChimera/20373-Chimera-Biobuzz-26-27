@@ -5,6 +5,7 @@ import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
+import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.Timings;
@@ -206,7 +207,7 @@ public class ShooterCommands {
 
             @Override
             public void start() {
-                nanoBoundary = System.nanoTime();
+                nanoBoundary = Clock.SYSTEM.nowNanos();
                 if (robot.vision == null) {
                     throw new IllegalStateException("Robot vision subsystem is required for hive lineup.");
                 }

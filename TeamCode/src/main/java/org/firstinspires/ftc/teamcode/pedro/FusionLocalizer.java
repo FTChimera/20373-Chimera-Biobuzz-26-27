@@ -5,6 +5,7 @@
 
 package org.firstinspires.ftc.teamcode.pedro;
 
+import com.rmsftc.utils.Clock;
 import static org.firstinspires.ftc.teamcode.util.math.MathUtils.EPSILON;
 
 import com.pedropathing.localization.Localizer;
@@ -48,7 +49,7 @@ public class FusionLocalizer implements Localizer {
 
     public void update() {
         this.deadReckoning.update();
-        long now = System.nanoTime();
+        long now = Clock.SYSTEM.nowNanos();
         double dt = this.lastUpdateTime < 0L ? (double)0.0F : (double)(now - this.lastUpdateTime) / (double)1.0E9F;
         this.lastUpdateTime = now;
         Velocity currentVelocity = this.deadReckoning.velocity();

@@ -12,6 +12,7 @@ import com.pedropathing.tuning.autotune.TuningOpMode;
 import com.pedropathing.utils.Angle;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 import java.util.ArrayList;
@@ -225,7 +226,7 @@ class EKFPinpointStationaryNoise extends TuningOpMode<EKFPinpointStationaryNoise
         ElapsedTime timer = new ElapsedTime();
         while (opModeIsActive() && timer.seconds() < durationSeconds) {
             localizer.update();
-            samples.add(localizer.state(), System.nanoTime());
+            samples.add(localizer.state(), Clock.SYSTEM.nowNanos());
             telemetry.addData("Samples", samples.sampleCount());
             telemetry.addData("Remaining seconds", Math.max(0.0, durationSeconds - timer.seconds()));
             telemetry.update();
@@ -302,7 +303,7 @@ class EKFPinpointMotionNoise extends TuningOpMode<EKFPinpointMotionNoise> {
             while (opModeIsActive() && timer.seconds() < MAX_STAGE_SECONDS) {
                 localizer.update();
                 MotionState state = localizer.state();
-                samples.add(state, System.nanoTime());
+                samples.add(state, Clock.SYSTEM.nowNanos());
 
                 if (motion == Motion.TURN) {
                     accumulatedHeading += Angle.normalizeSigned(state.pose().heading() - previousHeading);

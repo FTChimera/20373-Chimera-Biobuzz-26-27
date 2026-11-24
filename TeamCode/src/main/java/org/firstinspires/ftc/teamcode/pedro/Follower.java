@@ -21,6 +21,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
+import com.rmsftc.utils.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -81,7 +82,7 @@ public class Follower {
     }
 
     public void update() {
-        long nanoTime = System.nanoTime();
+        long nanoTime = Clock.SYSTEM.nowNanos();
         double deltaTime = (double)0.0F;
         if (this.previousNanoTime != 0L) {
             deltaTime = (double)(nanoTime - this.previousNanoTime) / (double)1.0E9F;

@@ -5,6 +5,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
+import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import com.rmsftc.utils.AllianceColor;
@@ -97,7 +98,7 @@ public final class CamTransform {
 
         captureLatency = latestResult.getCaptureLatency();
         if (isNewFrame) {
-            timestampNano = System.nanoTime() / 1e9 - captureLatency / 1000.0;
+            timestampNano = Clock.SYSTEM.nowNanos() / 1e9 - captureLatency / 1000.0;
         }
 
         maxFiducialSkew = 0.0;

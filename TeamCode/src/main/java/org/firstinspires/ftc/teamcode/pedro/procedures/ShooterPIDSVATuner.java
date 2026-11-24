@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedro.procedures;
 
+import com.rmsftc.utils.Clock;
 import static org.firstinspires.ftc.teamcode.pedro.procedures.ShooterPIDSVATuner.FlywheelPhase.elapsedSeconds;
 
 import com.pedropathing.tuning.autotune.Inputs;
@@ -721,7 +722,7 @@ public class ShooterPIDSVATuner extends Procedure {
         }
 
         static double elapsedSeconds(long startNano) {
-            return (System.nanoTime() - startNano) / 1e9;
+            return (Clock.SYSTEM.nowNanos() - startNano) / 1e9;
         }
 
         void report(String label, Object value) {
@@ -849,7 +850,7 @@ public class ShooterPIDSVATuner extends Procedure {
                 for (DcMotorEx motor : motors) {
                     motor.setPower(TEST_POWER);
                 }
-                long start = System.nanoTime();
+                long start = Clock.SYSTEM.nowNanos();
                 List<Double> velocities = new ArrayList<>();
                 for (int i = 0; i < channels.size(); i++) {
                     velocities.add(0.0);
@@ -926,10 +927,10 @@ public class ShooterPIDSVATuner extends Procedure {
                     breakawayPowers.add(null);
                     motionStarts.add(-1L);
                 }
-                long start = System.nanoTime();
+                long start = Clock.SYSTEM.nowNanos();
                 long previous = start;
                 while (!isStopRequested()) {
-                    long now = System.nanoTime();
+                    long now = Clock.SYSTEM.nowNanos();
                     double dt = Math.max((now - previous) / 1e9, 1e-3);
                     previous = now;
                     double elapsed = elapsedSeconds(start);
@@ -950,8 +951,8 @@ public class ShooterPIDSVATuner extends Procedure {
                         report(label + " velocity (ticks/s)", velocity);
                         if (velocity > MOTION_THRESHOLD_TICKS_PER_SEC) {
                             if (motionStarts.get(i) < 0) {
-                                motionStarts.set(i, System.nanoTime());
-                            } else if ((System.nanoTime() - motionStarts.get(i)) / 1e9 >= MOTION_SUSTAIN_SECONDS) {
+                                motionStarts.set(i, Clock.SYSTEM.nowNanos());
+                            } else if ((Clock.SYSTEM.nowNanos() - motionStarts.get(i)) / 1e9 >= MOTION_SUSTAIN_SECONDS) {
                                 breakawayPowers.set(i, power);
                             }
                         } else {
@@ -1006,10 +1007,10 @@ public class ShooterPIDSVATuner extends Procedure {
                             cyclesToCollect, cyclesToIgnore, timeoutSeconds, 3.0));
                     filters.add(new VelocityFilter(VELOCITY_FILTER_TAU_SECONDS));
                 }
-                long start = System.nanoTime();
+                long start = Clock.SYSTEM.nowNanos();
                 long previous = start;
                 while (!isStopRequested()) {
-                    long now = System.nanoTime();
+                    long now = Clock.SYSTEM.nowNanos();
                     double dt = (now - previous) / 1e9;
                     previous = now;
                     double elapsed = (now - start) / 1e9;
@@ -1092,10 +1093,10 @@ public class ShooterPIDSVATuner extends Procedure {
                         windowVelocities.add(new ArrayList<>());
                         windowVoltages.add(new ArrayList<>());
                     }
-                    long start = System.nanoTime();
+                    long start = Clock.SYSTEM.nowNanos();
                     long previous = start;
                     while (!isStopRequested()) {
-                        long now = System.nanoTime();
+                        long now = Clock.SYSTEM.nowNanos();
                         double dt = Math.max((now - previous) / 1e9, 1e-3);
                         previous = now;
                         double elapsed = (now - start) / 1e9;
@@ -1231,12 +1232,12 @@ public class ShooterPIDSVATuner extends Procedure {
                 for (int i = 0; i < channels.size(); i++) {
                     allSamples.add(new ArrayList<>());
                 }
-                long start = System.nanoTime();
+                long start = Clock.SYSTEM.nowNanos();
                 long previous = start;
                 int segmentIndex = 0;
                 long segmentStart = start;
                 while (!isStopRequested() && segmentIndex < segments.size()) {
-                    long now = System.nanoTime();
+                    long now = Clock.SYSTEM.nowNanos();
                     double dt = Math.max((now - previous) / 1e9, 1e-3);
                     previous = now;
                     double[] segment = segments.get(segmentIndex);
@@ -1381,10 +1382,10 @@ public class ShooterPIDSVATuner extends Procedure {
                     firstBandTimes.add(Double.NaN);
                     lastOutOfBandTimes.add(Double.NaN);
                 }
-                long start = System.nanoTime();
+                long start = Clock.SYSTEM.nowNanos();
                 long previous = start;
                 while (!isStopRequested()) {
-                    long now = System.nanoTime();
+                    long now = Clock.SYSTEM.nowNanos();
                     double dt = Math.max((now - previous) / 1e9, 1e-3);
                     previous = now;
                     double elapsed = (now - start) / 1e9;
