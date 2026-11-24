@@ -107,12 +107,13 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
     private BehaviorNode legBranch(TreeState.LegId legId, Blackboard board) {
         PathPlanner leg = TreeLegs.create(legId, robot, state);
         // The leg's start pose comes from the blackboard position (the
-        // selection condition guarantees it matches leg.from()); the
-        // intake is marked done when the leg completes.
+        // selection condition guarantees it matches leg.from()). The intake
+        // is marked done inside the leg's TreeShooterCommands.shoot, only
+        // when a batch was actually attempted — marking here too would
+        // double-count (and would mark even a failed feed as done).
         Command legCmd = Commands.sequence(
                 Commands.runOnce(() -> leg.setStartPose(TreeState.poseFor(state.position()))),
-                leg,
-                Commands.runOnce(() -> state.markIntakeDone(legId.intakeArea())));
+                leg);
         return new SequenceNode("Leg:" + legId.name(), board, Arrays.asList(
                 new ConditionNode("Select:" + legId.name(), board,
                         () -> state.selectLeg() == TreeState.Selection.of(legId)),

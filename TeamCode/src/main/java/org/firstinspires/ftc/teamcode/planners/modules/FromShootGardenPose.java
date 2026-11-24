@@ -8,7 +8,6 @@ import com.pedropathing.paths.interpolator.Interpolator;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
-import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
@@ -207,7 +206,10 @@ public class FromShootGardenPose {
                     Commands.runOnce(robot.intake::setFullPower),
                     DrivetrainCommands.followForIntake(robot.follower, () -> toGarden,
                             Timings.gardenIntakeTimeoutMs, Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> back),
+                    // Bounded at 5 s like the tree version: an unbounded
+                    // follow() would hang the whole auto on a wedged robot
+                    // until the 5 s park window.
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.gardenIntakeTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, lineupState()),
                     ShooterCommands.shootAllPollen(robot)
             );

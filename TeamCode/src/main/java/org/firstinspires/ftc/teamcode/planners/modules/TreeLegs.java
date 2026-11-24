@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.IntakePoses;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.Position;
+import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
@@ -136,6 +137,11 @@ public final class TreeLegs {
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
                     Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    // Final align turn, mirroring the fixed leg: the return
+                    // leg ends facing the flower, so turn to the shoot
+                    // heading before shooting instead of shooting while
+                    // still rotating.
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
                     TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT, IntakeArea.WEST_FLOWER))
                     .finallyDo(() -> robot.intake.setDeployed(false));
         }
@@ -162,6 +168,11 @@ public final class TreeLegs {
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.northFlower.heading(), Timings.flowerTurnTimeoutMs),
                     Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    // Final align turn, mirroring the fixed leg: the return
+                    // leg ends facing north (90 deg), so turn to the loading
+                    // shoot heading (-90 deg) before shooting instead of
+                    // shooting while still rotating.
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.loading.heading(), Timings.flowerTurnTimeoutMs),
                     TreeShooterCommands.shoot(robot, state, Position.LOADING_SHOOT, IntakeArea.NORTH_FLOWER))
                     .finallyDo(() -> robot.intake.setDeployed(false));
         }
@@ -212,6 +223,11 @@ public final class TreeLegs {
                     DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
                     Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    // Final align turn, mirroring the fixed leg (which turns
+                    // to the garden shoot heading before shooting): the
+                    // return leg ends facing the flower, so turn before
+                    // shooting instead of shooting while still rotating.
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
                     TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT, IntakeArea.WEST_FLOWER))
                     .finallyDo(() -> robot.intake.setDeployed(false));
         }

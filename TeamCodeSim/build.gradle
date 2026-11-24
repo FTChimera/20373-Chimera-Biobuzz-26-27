@@ -12,7 +12,13 @@ kotlin {
 }
 
 def ftcsimLocal = new Properties()
-rootProject.file('local.properties').withInputStream { ftcsimLocal.load(it) }
+// local.properties is gitignored and absent from a fresh clone; loading it
+// unconditionally made every Gradle invocation fail before the ftcsimPath
+// fallback (gradle property / env var) was ever reached.
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withInputStream { ftcsimLocal.load(it) }
+}
 def ftcsimPath = providers.gradleProperty('ftcsimSdkDir').orNull ?: System.getenv('FTCSIM_SDK_DIR') ?: ftcsimLocal.getProperty('ftcsim.sdkDir')
 if (!ftcsimPath) throw new GradleException('Run ftcsim --wizard first')
 def ftcsimLibs = new File(ftcsimPath, 'libs')
@@ -50,7 +56,11 @@ tasks.named('run', JavaExec) {
     workingDir rootDir
     classpath = orderedClasspath()
     doFirst {
-        def modes = providers.gradleProperty('simOpmodes').orElse("org.firstinspires.ftc.teamcode.opmodes.DisplayStand,org.firstinspires.ftc.teamcode.opmodes.MainTeleOp,org.firstinspires.ftc.teamcode.opmodes.auto.GardenSoloAuto,org.firstinspires.ftc.teamcode.opmodes.auto.LoadingSoloAuto,org.firstinspires.ftc.teamcode.opmodes.auto.Garden8,org.firstinspires.ftc.teamcode.opmodes.auto.ParkAuto,org.firstinspires.ftc.teamcode.robotDev.AutoTuner.VelocityPIDFTunerOpMode,org.firstinspires.ftc.teamcode.robotDev.lights.SampleRevBlinkinLedDriver").get()
+        // DisplayStand is intentionally NOT in the default list: it
+        // constructs the real Lights, which throws in sim (no Prism driver
+        // in the desktop runtime). Re-add it once the sim-fakes Lights stub
+        // lands and DisplayStand routes through Lights.stub.
+        def modes = providers.gradleProperty('simOpmodes').orElse("org.firstinspires.ftc.teamcode.opmodes.MainTeleOp,org.firstinspires.ftc.teamcode.opmodes.auto.GardenSoloAuto,org.firstinspires.ftc.teamcode.opmodes.auto.LoadingSoloAuto,org.firstinspires.ftc.teamcode.opmodes.auto.Garden8,org.firstinspires.ftc.teamcode.opmodes.auto.ParkAuto,org.firstinspires.ftc.teamcode.robotDev.AutoTuner.VelocityPIDFTunerOpMode,org.firstinspires.ftc.teamcode.robotDev.lights.SampleRevBlinkinLedDriver").get()
         def values = ['--sim', providers.gradleProperty('simEndpoint').orElse('ws://localhost:9015/sim').get(),
                       '--ds-port', providers.gradleProperty('simDsPort').orElse('1115').get()]
         modes.split(',').collect { it.trim() }.findAll { it }.each { values += ['--opmode', it] }

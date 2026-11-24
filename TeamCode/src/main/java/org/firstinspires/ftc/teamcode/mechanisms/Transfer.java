@@ -41,7 +41,10 @@ public class Transfer {
     public boolean isModeSwitch() {
         return modeSwitch;
     }
-    Mode prevMode;
+    // Initialized to IDLE: kickOne() restores prevMode when the kick ends,
+    // and a null prevMode would NPE there if kickOne() ran before the
+    // first update().
+    Mode prevMode = Mode.IDLE;
     public void kickOne() {
         mode = Mode.KICK_ONE;
         modeSwitch = true;

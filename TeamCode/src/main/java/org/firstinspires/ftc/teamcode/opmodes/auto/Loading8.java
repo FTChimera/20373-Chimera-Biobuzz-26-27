@@ -16,6 +16,12 @@ import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
 import com.rmsftc.utils.RobotMode;
 
+/**
+ * Loading 8-ball auto: loading start, shoot preloads, north flower intake
+ * and shoot at loading, then park. Assumes the alliance partner tips the
+ * hive once at the beginning of auto at garden, so the loading shoot
+ * (TIPPED) works from the start with no garden cycle needed first.
+ */
 @Autonomous(name = "Loading 8 Ball Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class Loading8 extends ArchitecturalOpMode {
     Robot robot;

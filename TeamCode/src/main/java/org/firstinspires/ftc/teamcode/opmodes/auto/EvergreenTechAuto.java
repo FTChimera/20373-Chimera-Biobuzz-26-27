@@ -23,6 +23,8 @@ import com.rmsftc.utils.RobotMode;
 
 /**
  * Red loading start: shoot preloads, then follow a body-clear parking route.
+ * Assumes the alliance partner tips the hive once at the beginning of auto
+ * at garden, so the loading shoot (TIPPED) works from the start.
  */
 
 @Autonomous(name = "Evergreen Tech A-trons Auto RED", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)

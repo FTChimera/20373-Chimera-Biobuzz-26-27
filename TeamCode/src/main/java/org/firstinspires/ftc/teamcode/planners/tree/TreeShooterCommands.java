@@ -319,7 +319,15 @@ public final class TreeShooterCommands {
             if (outcome != SwitchOutcome.RUNNING) return;
             long now = clock.nowNanos();
             if (stage == 1) {
-                if (follower.pathRunId() != pathRunId || follower.manual() || follower.idle()) {
+                // No follower.idle() check here: the follower goes IDLE on
+                // natural path completion (update() calls stop() when the
+                // path tracker finishes with holdEnd=false), so an idle
+                // check would abort the whole auto on the corridor leg's
+                // normal arrival. A genuinely replaced control still aborts
+                // via pathRunId/manual; a mid-corridor stop aborts via the
+                // "parametric end without measured destination arrival"
+                // check below.
+                if (follower.pathRunId() != pathRunId || follower.manual()) {
                     abort("Side switch corridor control replaced");
                     return;
                 }

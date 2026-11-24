@@ -8,7 +8,6 @@ import com.pedropathing.paths.interpolator.Interpolator;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
 
-import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
@@ -132,11 +131,14 @@ public class FromShootLoadingPose {
 
         @Override
         protected Command buildCommand() {
+            // The follow legs are bounded at 5 s (Timings.gardenIntakeTimeoutMs,
+            // same as the tree versions): an unbounded follow() would hang the
+            // whole auto on a wedged robot until the 5 s park window.
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    follow(robot.follower, () -> toWall),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toWall, Timings.gardenIntakeTimeoutMs),
                     Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    follow(robot.follower, () -> toGarden),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Timings.gardenIntakeTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -224,12 +226,15 @@ public class FromShootLoadingPose {
 
         @Override
         protected Command buildCommand() {
+            // The follow legs are bounded at 5 s (Timings.gardenIntakeTimeoutMs):
+            // an unbounded follow() would hang the whole auto on a wedged
+            // robot until the 5 s park window.
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    Commands.parallel(follow(robot.follower, () -> toSweepStart), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    follow(robot.follower, () -> sweep),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toSweepStart, Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> sweep, Timings.gardenIntakeTimeoutMs),
                     Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    Commands.parallel(follow(robot.follower, () -> toGarden), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );

@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class Robot {
     public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 5;
@@ -73,7 +75,9 @@ public class Robot {
     public final Clock clock = Clock.SYSTEM;
     private Clock.Helper clockHelper;
     private long startNanos;
-    double dt = 1;
+    // 0, not 1: a first-loop dt of 1 s would corrupt the first
+    // setAutoAlign hold (calculateHold) and any first-tick control math.
+    double dt = 0;
 
     public boolean smartIntakeControl = false;
     public boolean smartShooterControl = false;
@@ -116,12 +120,22 @@ public class Robot {
     }
 
     public void start() {
-        orderedDaemons = new ArrayList<>(DaemonManager.unmodifiable());
+        // Filter to the 11 robot daemons only: the global registry also
+        // holds library daemons (FTCUtils ClockManager, BA architecture-tick)
+        // that must not run inside the robot loop. A duplicate registration
+        // (e.g. a re-scan) is deduped instead of throwing, so start() does
+        // not die on loop 1; a missing robot daemon still throws.
+        Map<String, DaemonManager.RegisteredDaemon> byName = new LinkedHashMap<>();
+        for (DaemonManager.RegisteredDaemon daemon : DaemonManager.unmodifiable()) {
+            byName.putIfAbsent(daemon.name, daemon);
+        }
+        orderedDaemons = new ArrayList<>();
         for (String name : ROBOT_DAEMON_ORDER) {
-            long registrations = orderedDaemons.stream().filter(d -> name.equals(d.name)).count();
-            if (registrations != 1) {
-                throw new IllegalStateException("Expected one " + name + " daemon; found " + registrations);
+            DaemonManager.RegisteredDaemon daemon = byName.get(name);
+            if (daemon == null) {
+                throw new IllegalStateException("Expected one " + name + " daemon; found 0");
             }
+            orderedDaemons.add(daemon);
         }
         orderedDaemons.sort(Comparator.comparingInt(d -> daemonPriority(d.name)));
         clockHelper = new Clock.Helper(clock);
@@ -490,6 +504,15 @@ public class Robot {
             Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
             telemetry.addData("Park path unavailable", exception.getMessage());
             return false;
+        } catch (RuntimeException exception) {
+            // Path generation (or the overlap check) threw something other
+            // than NoRoute: restore the shared follower flags the same way
+            // and rethrow — the caller decides. (No follower.stop() here:
+            // the throw may have come from the overlap check while an auto
+            // path was already running.)
+            follower.holdEnd.set(previousHoldEnd);
+            Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
+            throw exception;
         }
     }
 
