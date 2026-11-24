@@ -6,30 +6,27 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import com.rmsftc.utils.blackboard.Blackboard;
-
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands.ShotOutcome;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.junit.Test;
 
-import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Tests for blackboard attempt accounting, aborts, the hive tip model, and
- * leg selection. The selection traces simulate the blackboard evolving
+ * Tests for attempt accounting, aborts, the hive tip model, and
+ * leg selection. The selection traces simulate the state evolving
  * as legs complete (a leg's shoot may land on the other side when the
  * camera check forces a switch).
  */
 public class TreeStateTest {
 
-    private final Blackboard board = new Blackboard();
-    private final TreeState state = new TreeState(board);
+    private final TreeState state = new TreeState();
 
     @Test
-    public void emptyBlackboardDefaultsDoNotInventAttemptsOrConfirmation() {
+    public void freshStateDefaultsDoNotInventAttemptsOrConfirmation() {
         assertEquals(Position.GARDEN_START, state.position());
         assertEquals(0, state.attemptedBatches());
         assertEquals(0, state.cyclesCompleted());
@@ -46,62 +43,17 @@ public class TreeStateTest {
     }
 
     @Test
-    public void initializePublishesTypedStartValuesToBlackboard() {
-        state.initialize();
-
-        assertEquals(Position.GARDEN_START, board.get(TreeState.Key.POSITION, Position.class));
-        assertEquals(Integer.valueOf(0), board.get(TreeState.Key.CYCLES_COMPLETED, Integer.class));
-        assertEquals(Field.HiveState.UNTIPPED,
-                board.get(TreeState.Key.PREDICTED_HIVE_STATE, Field.HiveState.class));
-        assertEquals(EnumSet.noneOf(IntakeArea.class),
-                board.get(TreeState.Key.INTAKES_DONE, EnumSet.class));
-        assertEquals(ShotOutcome.NOT_STARTED,
-                board.get(TreeState.Key.LAST_SHOT_OUTCOME, ShotOutcome.class));
-        assertEquals(Boolean.FALSE, board.get(TreeState.Key.LAST_SHOT_SETTLED, Boolean.class));
-        assertEquals(Boolean.FALSE, board.get(TreeState.Key.LAST_SHOT_TAG_CONFIRMED, Boolean.class));
-        assertEquals(Boolean.FALSE, board.get(TreeState.Key.PREDICTION_UNCERTAIN, Boolean.class));
-        assertEquals("", board.get(TreeState.Key.CONTROL_PATH_FAILURE, String.class));
-    }
-
-    @Test
-    public void wrappersShareLiveBlackboardRatherThanCachedState() {
-        state.initialize();
-        TreeState observer = new TreeState(board);
-        state.markIntakeDone(IntakeArea.GARDEN);
-        state.recordAttempt(Position.GARDEN_SHOOT, ShotOutcome.ATTEMPTED, true, false, true);
-
-        assertEquals(1, observer.attemptedBatches());
-        assertEquals(Position.GARDEN_SHOOT, observer.position());
-        assertEquals(EnumSet.of(IntakeArea.GARDEN), observer.intakesDone());
-        assertEquals(ShotOutcome.ATTEMPTED, observer.lastShotOutcome());
-        assertTrue(observer.lastShotSettled());
-        assertFalse(observer.lastShotTagConfirmed());
-        assertTrue(observer.predictionUncertain());
-        assertEquals(Field.HiveState.TIPPED, observer.predictedHiveState());
-        assertEquals(state.selectLeg(), observer.selectLeg());
-
-        board.set(TreeState.Key.POSITION, Position.LOADING_SHOOT);
-        assertEquals(Position.LOADING_SHOOT, state.position());
-        observer.abortControlPath("corridor control replaced");
-        assertTrue(state.controlPathAborted());
-        assertEquals("corridor control replaced", state.controlPathFailure());
-        assertEquals(TreeState.Selection.NONE, state.selectLeg());
-    }
-
-    @Test
     public void completedBatchAdvancesAttemptModelButNeverConfirmsScores() {
         state.initialize();
         state.recordAttempt(Position.GARDEN_SHOOT, ShotOutcome.ATTEMPTED, true, true, true);
 
         assertEquals(1, state.attemptedBatches());
         assertEquals(state.attemptedBatches(), state.cyclesCompleted());
-        assertEquals(Integer.valueOf(1), board.get(TreeState.Key.CYCLES_COMPLETED, Integer.class));
         assertEquals(ShotOutcome.ATTEMPTED, state.lastShotOutcome());
         assertTrue(state.lastShotSettled());
         assertTrue(state.lastShotTagConfirmed());
         // Even readiness plus a fresh tag confirms neither a score nor the tip model.
         assertTrue(state.predictionUncertain());
-        assertEquals(Boolean.TRUE, board.get(TreeState.Key.PREDICTION_UNCERTAIN, Boolean.class));
         assertEquals(Field.HiveState.TIPPED, state.predictedHiveState());
         assertEquals(Position.GARDEN_SHOOT, state.position());
         assertTrue(state.intakesDone().isEmpty());
@@ -115,15 +67,15 @@ public class TreeStateTest {
         for (ShotOutcome outcome : new ShotOutcome[]{
                 ShotOutcome.ATTEMPTED, ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT}) {
             for (boolean settled : new boolean[]{false, true}) {
-                for (boolean freshTag : new boolean[]{false, true}) {
+                for (boolean tagSeen : new boolean[]{false, true}) {
                     state.initialize();
-                    state.recordAttempt(Position.LOADING_SHOOT, outcome, settled, freshTag, true);
+                    state.recordAttempt(Position.LOADING_SHOOT, outcome, settled, tagSeen, true);
 
                     assertEquals(1, state.attemptedBatches());
                     assertEquals(1, state.cyclesCompleted());
                     assertEquals(outcome, state.lastShotOutcome());
                     assertEquals(settled, state.lastShotSettled());
-                    assertEquals(freshTag, state.lastShotTagConfirmed());
+                    assertEquals(tagSeen, state.lastShotTagConfirmed());
                     assertTrue(state.predictionUncertain());
                     assertEquals(Field.HiveState.TIPPED, state.predictedHiveState());
                     assertEquals(Position.LOADING_SHOOT, state.position());
@@ -159,24 +111,24 @@ public class TreeStateTest {
     @Test
     public void incompleteInterruptedAndNullOutcomesCannotMutateProgress() {
         state.initialize();
-        state.markIntakeDone(IntakeArea.GARDEN);
+        state.markIntakeDone(TreeState.IntakeArea.GARDEN);
         state.recordAttempt(Position.GARDEN_SHOOT, ShotOutcome.ATTEMPTED, true, true, true);
-        Map<TreeState.Key, Object> before = snapshot();
+        Map<String, Object> before = snapshot();
 
         for (ShotOutcome outcome : new ShotOutcome[]{
                 ShotOutcome.NOT_STARTED, ShotOutcome.WAITING_FOR_SPEED,
                 ShotOutcome.FEEDING, ShotOutcome.INTERRUPTED, null}) {
             assertThrows("Rejected outcome: " + outcome, IllegalArgumentException.class,
                     () -> state.recordAttempt(Position.LOADING_SHOOT, outcome, false, false, false));
-            assertEquals("Rejected feeds must leave every blackboard key unchanged",
+            assertEquals("Rejected feeds must leave every state field unchanged",
                     before, snapshot());
         }
     }
 
     @Test
-    public void nonShootAndNullPositionsAreRejectedBeforeAnyBlackboardMutation() {
+    public void nonShootAndNullPositionsAreRejectedBeforeAnyStateMutation() {
         state.initialize();
-        Map<TreeState.Key, Object> before = snapshot();
+        Map<String, Object> before = snapshot();
         for (Position position : new Position[]{Position.GARDEN_START, null}) {
             for (ShotOutcome outcome : new ShotOutcome[]{
                     ShotOutcome.ATTEMPTED, ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT}) {
@@ -199,11 +151,8 @@ public class TreeStateTest {
         assertTrue(state.lastShotSettled());
         assertTrue(state.lastShotTagConfirmed());
         assertEquals(Position.GARDEN_SHOOT, state.position());
-        assertEquals(Position.GARDEN_SHOOT, board.get(TreeState.Key.POSITION, Position.class));
         assertTrue(state.controlPathAborted());
         assertFalse(state.controlPathFailure().isEmpty());
-        assertEquals(state.controlPathFailure(),
-                board.get(TreeState.Key.CONTROL_PATH_FAILURE, String.class));
         assertEquals(TreeState.Selection.NONE, state.selectLeg());
         assertFalse(state.sequenceComplete());
     }
@@ -245,7 +194,7 @@ public class TreeStateTest {
 
         for (Position position : new Position[]{Position.GARDEN_SHOOT, Position.LOADING_SHOOT}) {
             state.setPosition(position);
-            state.markIntakeDone(IntakeArea.GARDEN);
+            state.markIntakeDone(TreeState.IntakeArea.GARDEN);
             assertNotEquals(TreeState.Selection.NONE,
                     TreeState.selectLeg(position, state.cyclesCompleted(), state.intakesDone()));
             assertEquals(TreeState.Selection.NONE, state.selectLeg());
@@ -257,7 +206,7 @@ public class TreeStateTest {
     public void abortRequiresReasonAndDoesNotEraseExistingFailure() {
         state.initialize();
         state.abortControlPath("verified failure");
-        Map<TreeState.Key, Object> before = snapshot();
+        Map<String, Object> before = snapshot();
         for (String reason : new String[]{null, ""}) {
             assertThrows(IllegalArgumentException.class, () -> state.abortControlPath(reason));
             assertEquals(before, snapshot());
@@ -267,8 +216,8 @@ public class TreeStateTest {
     @Test
     public void initializeClearsAbortDiagnosticsProgressAndPreviousIntakeSet() {
         state.initialize();
-        state.markIntakeDone(IntakeArea.GARDEN);
-        EnumSet<IntakeArea> oldIntakes = state.intakesDone();
+        state.markIntakeDone(TreeState.IntakeArea.GARDEN);
+        EnumSet<TreeState.IntakeArea> oldIntakes = state.intakesDone();
         state.recordAttempt(Position.LOADING_SHOOT,
                 ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT, true, true, false);
         state.initialize();
@@ -284,7 +233,7 @@ public class TreeStateTest {
         assertFalse(state.controlPathAborted());
         assertEquals("", state.controlPathFailure());
         assertTrue(state.intakesDone().isEmpty());
-        oldIntakes.add(IntakeArea.NORTH_FLOWER);
+        oldIntakes.add(TreeState.IntakeArea.NORTH_FLOWER);
         assertTrue(state.intakesDone().isEmpty());
         assertFalse(state.sequenceComplete());
         assertEquals(TreeState.Selection.SHOOT_PRELOADS, state.selectLeg());
@@ -295,11 +244,11 @@ public class TreeStateTest {
         state.initialize();
         state.markIntakeDone(null);
         assertTrue(state.intakesDone().isEmpty());
-        for (IntakeArea area : IntakeArea.values()) {
+        for (TreeState.IntakeArea area : TreeState.IntakeArea.values()) {
             state.markIntakeDone(area);
             state.markIntakeDone(area);
         }
-        assertEquals(EnumSet.allOf(IntakeArea.class), state.intakesDone());
+        assertEquals(EnumSet.allOf(TreeState.IntakeArea.class), state.intakesDone());
         assertFalse(state.sequenceComplete());
 
         state.recordAttempt(Position.GARDEN_SHOOT,
@@ -312,20 +261,25 @@ public class TreeStateTest {
         assertFalse(state.controlPathAborted());
     }
 
-    private Map<TreeState.Key, Object> snapshot() {
-        Map<TreeState.Key, Object> values = new EnumMap<>(TreeState.Key.class);
-        for (TreeState.Key key : TreeState.Key.values()) {
-            Object value = board.get(key, Object.class);
-            values.put(key, value instanceof EnumSet ? ((EnumSet<?>) value).clone() : value);
-        }
+    private Map<String, Object> snapshot() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("position", state.position());
+        values.put("cyclesCompleted", state.cyclesCompleted());
+        values.put("predictedHiveState", state.predictedHiveState());
+        values.put("intakesDone", EnumSet.copyOf(state.intakesDone()));
+        values.put("lastShotOutcome", state.lastShotOutcome());
+        values.put("lastShotSettled", state.lastShotSettled());
+        values.put("lastShotTagConfirmed", state.lastShotTagConfirmed());
+        values.put("predictionUncertain", state.predictionUncertain());
+        values.put("controlPathFailure", state.controlPathFailure());
         return values;
     }
 
-    /** Simulates blackboard state as legs/repositions complete. */
+    /** Simulates tree state as legs/repositions complete. */
     private static class Sim {
         Position position = Position.GARDEN_START;
         int cycles = 0;
-        EnumSet<IntakeArea> done = EnumSet.noneOf(IntakeArea.class);
+        EnumSet<TreeState.IntakeArea> done = EnumSet.noneOf(TreeState.IntakeArea.class);
 
         TreeState.Selection next() {
             return TreeState.selectLeg(position, cycles, done);
@@ -452,8 +406,8 @@ public class TreeStateTest {
         for (Position position : new Position[]{Position.GARDEN_SHOOT, Position.LOADING_SHOOT}) {
             for (int cycles = 0; cycles <= 6; cycles++) {
                 for (int mask = 0; mask < 16; mask++) {
-                    EnumSet<IntakeArea> done = EnumSet.noneOf(IntakeArea.class);
-                    IntakeArea[] areas = IntakeArea.values();
+                    EnumSet<TreeState.IntakeArea> done = EnumSet.noneOf(TreeState.IntakeArea.class);
+                    TreeState.IntakeArea[] areas = TreeState.IntakeArea.values();
                     for (int i = 0; i < areas.length; i++) {
                         if ((mask & (1 << i)) != 0) done.add(areas[i]);
                     }
@@ -474,20 +428,20 @@ public class TreeStateTest {
         for (Position position : new Position[]{Position.GARDEN_SHOOT, Position.LOADING_SHOOT}) {
             for (int cycles = 1; cycles <= 6; cycles++) {
                 for (int mask = 0; mask < 16; mask++) {
-                    EnumSet<IntakeArea> done = EnumSet.noneOf(IntakeArea.class);
-                    IntakeArea[] areas = IntakeArea.values();
+                    EnumSet<TreeState.IntakeArea> done = EnumSet.noneOf(TreeState.IntakeArea.class);
+                    TreeState.IntakeArea[] areas = TreeState.IntakeArea.values();
                     for (int i = 0; i < areas.length; i++) {
                         if ((mask & (1 << i)) != 0) done.add(areas[i]);
                     }
                     boolean none = TreeState.selectLeg(position, cycles, done) == TreeState.Selection.NONE;
                     assertEquals("position=" + position + " cycles=" + cycles + " done=" + done,
-                            done.size() == IntakeArea.values().length, none);
+                            done.size() == TreeState.IntakeArea.values().length, none);
                 }
             }
         }
         // At the start position with no cycles done, the preload leg is
         // always selected.
         assertEquals(TreeState.Selection.SHOOT_PRELOADS,
-                TreeState.selectLeg(Position.GARDEN_START, 0, EnumSet.noneOf(IntakeArea.class)));
+                TreeState.selectLeg(Position.GARDEN_START, 0, EnumSet.noneOf(TreeState.IntakeArea.class)));
     }
 }

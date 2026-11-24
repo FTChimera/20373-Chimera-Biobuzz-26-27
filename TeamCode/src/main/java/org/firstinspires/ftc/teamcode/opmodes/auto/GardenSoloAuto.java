@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.rmsftc.bttree.BehaviorNode;
+import com.rmsftc.bttree.NodeStatus;
 import com.rmsftc.bttree.nodes.ConditionNode;
 import com.rmsftc.bttree.nodes.ReactiveSelectorNode;
 import com.rmsftc.bttree.nodes.SequenceNode;
@@ -19,7 +20,6 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.TreeLegs;
-import org.firstinspires.ftc.teamcode.planners.tree.ParkNode;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeShooterCommands;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeState;
 import com.rmsftc.utils.RobotMode;
@@ -27,10 +27,12 @@ import com.rmsftc.utils.RobotMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 /**
  * Garden solo auto, behavior-tree version: garden start, shoot preloads,
- * then repeatedly pick the next intake leg from the blackboard state
+ * then repeatedly pick the next intake leg from the tree state
  * (verified position, attempted batches, hypothetical hive state, intakes done) and
  * park when time runs low or everything is done.
  *
@@ -44,20 +46,20 @@ import java.util.List;
  * on schedule) the tree reproduces the old fixed order — ShootPreloads,
  * ToIntakeGardenToLoading, ToIntakeFromNorthFlower,
  * ToIntakeLoadingToGarden, ToIntakeFromWestFlower, park. Each leg's
- * shoot step waits boundedly for physical settling and a post-approach
- * frame before one side-switch decision (see {@link TreeShooterCommands}).
- * A verified switch gets another fresh-frame wait. Missing confirmation
+ * shoot step waits boundedly for physical settling, then applies the
+ * plain tag rule on the latest camera result (see {@link TreeShooterCommands}).
+ * A verified switch gets another bounded wait. Missing confirmation
  * still permits an explicitly degraded attempt, never a confirmed score.
  * Unsafe traversal latches a control-path failure and disables further
  * legs and immediately selects parking from the measured robot pose.
- * The blackboard never commits an unverified destination.
+ * The tree state never commits an unverified destination.
  *
  * <p>Node semantics that matter here: {@code SequenceNode} has memory —
  * once a leg branch passes its condition it stays on the leg node until
  * the leg finishes, so a running leg is never restarted by re-ticking.
  * {@code ReactiveSelectorNode} re-evaluates from the top every tick, so
  * the park branch preempts mid-leg, and finished leg branches re-check
- * their conditions against the updated blackboard.
+ * their conditions against the updated tree state.
  */
 
 @Autonomous(name = "Garden Solo Autonomous", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
@@ -79,7 +81,7 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
     @Override
     protected void build(ArchitectureManager manager) {
         Blackboard board = manager.blackboard();
-        state = new TreeState(board);
+        state = new TreeState();
         state.initialize();
 
         // Park branch: highest priority. The started guard keeps the
@@ -106,7 +108,7 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
 
     private BehaviorNode legBranch(TreeState.LegId legId, Blackboard board) {
         PathPlanner leg = TreeLegs.create(legId, robot, state);
-        // The leg's start pose comes from the blackboard position (the
+        // The leg's start pose comes from the tree state position (the
         // selection condition guarantees it matches leg.from()). The intake
         // is marked done inside the leg's TreeShooterCommands.shoot, only
         // when a batch was actually attempted — marking here too would
@@ -142,7 +144,7 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
         telemetry.addData("GardenSolo tree prediction uncertain", state.predictionUncertain());
         telemetry.addData("GardenSolo tree last batch outcome", state.lastShotOutcome());
         telemetry.addData("GardenSolo tree last pose settled", state.lastShotSettled());
-        telemetry.addData("GardenSolo tree last fresh tag", state.lastShotTagConfirmed());
+        telemetry.addData("GardenSolo tree last tag seen", state.lastShotTagConfirmed());
         telemetry.addData("GardenSolo tree control-path failure", state.controlPathFailure());
         telemetry.addData("GardenSolo tree intakes done", state.intakesDone());
         telemetry.addData("GardenSolo tree next", state.selectLeg());
@@ -168,5 +170,69 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
         robot.stopEverything();
         isStopped = true;
         interrupt();
+    }
+
+    /**
+     * The tree auto's park action: calls {@code robot.moveToParkZone()} with
+     * the same 0.5 s retry semantics the plan-based autos use in onLoop (retry
+     * while it returns false; once it returns true the park path is being
+     * followed and it is not called again). RUNNING until
+     * {@code robot.inParkZone()}, then SUCCESS. The follower still owns its
+     * route and endpoint hold; zone overlap does not stop the autonomous.
+     *
+     * <p>Public (not private) so the node behavior stays unit-tested from
+     * {@code ParkNodeTest}.
+     */
+    public static final class ParkNode extends BehaviorNode {
+        private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
+
+        private final BooleanSupplier inParkZone;
+        private final BooleanSupplier moveToParkZone;
+        private final DoubleSupplier timeSeconds;
+        private boolean handoffPending;
+        private boolean parkStarted;
+        private double lastAttemptTimeSec;
+
+        public ParkNode(String name, Blackboard board, Robot robot) {
+            this(name, board, robot::inParkZone, robot::moveToParkZone, robot::getOpModeTimeSeconds);
+        }
+
+        // Test-only constructor: public so ParkNodeTest (another package)
+        // can drive the node with fake suppliers.
+        public ParkNode(String name, Blackboard board, BooleanSupplier inParkZone,
+                        BooleanSupplier moveToParkZone, DoubleSupplier timeSeconds) {
+            super(name, board);
+            this.inParkZone = inParkZone;
+            this.moveToParkZone = moveToParkZone;
+            this.timeSeconds = timeSeconds;
+        }
+
+        @Override
+        protected void onStart() {
+            handoffPending = true;
+            parkStarted = false;
+            lastAttemptTimeSec = Double.NEGATIVE_INFINITY;
+        }
+
+        @Override
+        protected NodeStatus onTick() {
+            // ReactiveSelector invalidates the outgoing leg after ticking this branch.
+            // Let that cleanup finish before granting parking follower ownership.
+            if (handoffPending) {
+                handoffPending = false;
+                return NodeStatus.RUNNING;
+            }
+            if (inParkZone.getAsBoolean()) {
+                return NodeStatus.SUCCESS;
+            }
+            if (!parkStarted) {
+                double now = timeSeconds.getAsDouble();
+                if (now - lastAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+                    lastAttemptTimeSec = now;
+                    parkStarted = moveToParkZone.getAsBoolean();
+                }
+            }
+            return NodeStatus.RUNNING;
+        }
     }
 }

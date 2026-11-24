@@ -11,6 +11,7 @@ import com.rmsftc.bttree.nodes.ReactiveSelectorNode;
 import com.rmsftc.bttree.nodes.SequenceNode;
 import com.rmsftc.utils.blackboard.Blackboard;
 
+import org.firstinspires.ftc.teamcode.opmodes.auto.GardenSoloAuto;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -25,7 +26,7 @@ public class ParkNodeTest {
         AtomicBoolean driving = new AtomicBoolean();
         AtomicBoolean interrupted = new AtomicBoolean();
         AtomicInteger parkAttempts = new AtomicInteger();
-        ParkNode park = new ParkNode("Park", board, () -> false, () -> {
+        GardenSoloAuto.ParkNode park = new GardenSoloAuto.ParkNode("Park", board, () -> false, () -> {
             parkAttempts.incrementAndGet();
             driving.set(true);
             return true;
@@ -66,7 +67,7 @@ public class ParkNodeTest {
     public void unsuccessfulParkingRetriesAtHalfSecondIntervals() {
         double[] now = {0};
         AtomicInteger attempts = new AtomicInteger();
-        ParkNode park = new ParkNode("Park", new Blackboard(), () -> false,
+        GardenSoloAuto.ParkNode park = new GardenSoloAuto.ParkNode("Park", new Blackboard(), () -> false,
                 () -> attempts.incrementAndGet() >= 2, () -> now[0]);
         park.tick();
         assertEquals(0, attempts.get());
@@ -86,7 +87,7 @@ public class ParkNodeTest {
     @Test
     public void zoneOverlapDoesNotReplaceAnExistingParkRoute() {
         AtomicInteger attempts = new AtomicInteger();
-        ParkNode park = new ParkNode("Park", new Blackboard(), () -> true, () -> {
+        GardenSoloAuto.ParkNode park = new GardenSoloAuto.ParkNode("Park", new Blackboard(), () -> true, () -> {
             attempts.incrementAndGet();
             return true;
         }, () -> 0);

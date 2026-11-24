@@ -4,11 +4,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 
+import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.math.Pose;
 import com.rmsftc.cmdlib.Status;
 import org.firstinspires.ftc.teamcode.pedro.FollowerTestRig;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.Timings;
+import org.firstinspires.ftc.teamcode.util.game.Field;
+import org.firstinspires.ftc.teamcode.util.shotcalc.ShotCalculator;
+import org.firstinspires.ftc.teamcode.util.shotcalc.ShotContext;
+import org.firstinspires.ftc.teamcode.util.shotcalc.ShotSolution;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -25,6 +30,65 @@ public class TreeShooterCommandsTest {
         assertFalse(TreeShooterCommands.canSwitchSides(false, false, 0));
         assertFalse(TreeShooterCommands.canSwitchSides(true, true, 0));
         assertFalse(TreeShooterCommands.canSwitchSides(true, false, Double.NaN));
+    }
+
+    @Test
+    public void plainRuleTagSeenShootsWithoutWaiting() {
+        assertEquals(TreeShooterCommands.VisionDecision.SHOOT,
+                TreeShooterCommands.decideVisionAction(true, 0, false, false, 99));
+        assertEquals(TreeShooterCommands.VisionDecision.SHOOT,
+                TreeShooterCommands.decideVisionAction(true, 5000, true, true, 0));
+    }
+
+    @Test
+    public void plainRuleNoTagWaitsBoundedTimeBeforeDeciding() {
+        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        assertEquals(TreeShooterCommands.VisionDecision.WAIT,
+                TreeShooterCommands.decideVisionAction(false, 0, true, false, 0));
+        assertEquals(TreeShooterCommands.VisionDecision.WAIT,
+                TreeShooterCommands.decideVisionAction(false, waitMs - 1, true, false, 0));
+    }
+
+    @Test
+    public void plainRuleNoTagAfterWaitSwitchesOnceWhenSafe() {
+        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        assertEquals(TreeShooterCommands.VisionDecision.SWITCH,
+                TreeShooterCommands.decideVisionAction(false, waitMs, true, false, 0));
+        assertEquals(TreeShooterCommands.VisionDecision.SWITCH,
+                TreeShooterCommands.decideVisionAction(false, waitMs + 3000, true, false, 1));
+    }
+
+    @Test
+    public void plainRuleNoTagAfterSwitchFeedsBlindInsteadOfSwitchingAgain() {
+        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        assertEquals(TreeShooterCommands.VisionDecision.BLIND_FEED,
+                TreeShooterCommands.decideVisionAction(false, waitMs, true, true, 0));
+    }
+
+    @Test
+    public void plainRuleNoTagWithoutSafeSwitchFeedsBlind() {
+        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        assertEquals(TreeShooterCommands.VisionDecision.BLIND_FEED,
+                TreeShooterCommands.decideVisionAction(false, waitMs, false, false, 0));
+        assertEquals(TreeShooterCommands.VisionDecision.BLIND_FEED,
+                TreeShooterCommands.decideVisionAction(false, waitMs, true, false, 1.5));
+    }
+
+    @Test
+    public void gardenShootPoseHasNonzeroFlywheelSolutionForBothMotors() {
+        // Garden shoot pose (40, 10, 65 deg), mirroring ShootPoses.garden
+        // for RED, to the red untipped hive goal (60, 60): ~53.85 in.
+        // The table must return a real spin-up target for both motors, not 0.
+        ShotContext ctx = new ShotContext();
+        ctx.robotPose = new Pose(40, 10, Math.toRadians(65));
+        ctx.hiveState = Field.HiveState.UNTIPPED;
+        ctx.allianceColor = AllianceColor.RED;
+        ctx.sotm = false;
+        ctx.dt = 0;
+        assertEquals(53.85, ctx.distanceToTarget(), 0.01);
+        ShotSolution solution = ShotCalculator.table().calculateShot(ctx);
+        assertTrue(solution.flywheelTicksPerSecond > 0);
+        assertTrue(solution.counterRollerTicksPerSecond > 0);
     }
 
     @Test

@@ -73,6 +73,7 @@ public class SimFakesTest {
         assertFalse(vision.anyFiducial());
         assertFalse(vision.anyAllianceFiducial());
         assertFalse(vision.anyAllianceFiducialAfter(System.nanoTime()));
+        assertFalse(vision.anyAllianceFiducialLatest());
         assertEquals("none", vision.visibleTagIds());
         assertTrue(vision.fiducials().isEmpty());
         assertFalse(vision.hasReliableLocalization());

@@ -186,6 +186,22 @@ public class Vision {
         return containsAllianceFiducial();
     }
 
+    /**
+     * True when the latest Limelight result contains any AprilTag from OUR
+     * alliance's hive, with no freshness or capture-time requirement. Both
+     * hive clusters count, as in {@link #anyAllianceFiducial()}; tags from
+     * the other alliance's hive do not count.
+     *
+     * <p>This is the tree auto's plain rule: tag seen means shoot from this
+     * side, no tag means switch. It deliberately accepts a stale
+     * pre-arrival frame (the result may predate the robot's arrival at the
+     * shoot pose) instead of the freshness/boundary gate, which was
+     * rejecting frames the camera had actually seen.
+     */
+    public boolean anyAllianceFiducialLatest() {
+        return containsAllianceFiducial();
+    }
+
     private boolean containsAllianceFiducial() {
         for (LLResultTypes.FiducialResult fiducialResult : fiducials()) {
             int id = fiducialResult.getFiducialId();
@@ -539,6 +555,9 @@ public class Vision {
 
         @Override
         public boolean anyAllianceFiducialAfter(long notBeforeNanos) { return false; }
+
+        @Override
+        public boolean anyAllianceFiducialLatest() { return false; }
 
         @Override
         public String visibleTagIds() { return "none"; }
