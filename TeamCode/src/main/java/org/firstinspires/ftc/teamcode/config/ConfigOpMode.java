@@ -32,12 +32,18 @@ public class ConfigOpMode extends LinearOpMode {
                         Select.a("Red"), Select.a("Blue"))),
                 new Question("Match Mode", new Choices(
                         storedMatchMode == MatchMode.PLAYOFFS ? 1 : 0,
-                        Select.a("Qualifications"), Select.a("Playoffs"))));
+                        Select.a("Qualifications"), Select.a("Playoffs"))),
+                // Explicit reset (Blue, Qualifications, garden pose). This is
+                // the only place resetToDefault() is called from a competition
+                // OpMode: MainTeleOp used to call it on init, which silently
+                // clobbered a saved config to BLUE.
+                new Question("Reset to defaults", new Choices(
+                        0, Select.a("No"), Select.a("Yes"))));
         GamepadMenu menu = new GamepadMenu(prompter, gamepad1);
 
         telemetry.addLine("==== CONFIGURATION UTILITY OPMODE (use Gp 1) ====");
         telemetry.addLine("Dpad up/down to choose, A to confirm.");
-        telemetry.addLine("Answer both questions to save; just stop the opmode to not save.");
+        telemetry.addLine("Answer all three questions to save; just stop the opmode to not save.");
         telemetry.update();
 
         // Menu phase: runs during init, before waitForStart.
@@ -48,6 +54,13 @@ public class ConfigOpMode extends LinearOpMode {
 
         if (menu.isFinished()) {
             List<AnswerChoice> answers = menu.getAnswers();
+            if ("Yes".equals(answers.get(2).name)) {
+                OpModeStorage.resetToDefault();
+                telemetry.addLine("Reset to defaults: Blue, Qualifications, garden pose.");
+                telemetry.update();
+                requestOpModeStop();
+                return;
+            }
             AllianceColor color = "Blue".equals(answers.get(0).name)
                     ? AllianceColor.BLUE : AllianceColor.RED;
             MatchMode matchMode = "Playoffs".equals(answers.get(1).name)

@@ -19,9 +19,10 @@ import com.rmsftc.utils.math.Pose;
  *
  * <p>Defaults are unchanged (BLUE, QUALIFICATIONS, garden start pose) and
  * apply when a key has never been stored. {@link #initialized} is the one
- * exception: it stays in memory so it is false after every app restart,
- * preserving the "auto has not run yet, reset to defaults" behavior in
- * teleop.
+ * exception: it stays in memory so it is false after every app restart, so
+ * callers can tell no auto has run yet. Stored values are driver config and
+ * are never reset automatically — the explicit reset is a ConfigOpMode
+ * question ({@link #resetToDefault}).
  */
 public class OpModeStorage {
 
@@ -87,8 +88,12 @@ public class OpModeStorage {
     }
 
     public static void endMatch() {
+        // Only the in-memory flag clears. Stored alliance/mode/pose are
+        // driver config and must survive: the old resetToDefault() call here
+        // persisted BLUE/QUALIFICATIONS/garden after every TeleOp, destroying
+        // the saved config the FTCUtils migration was meant to keep. The
+        // explicit reset lives in ConfigOpMode.
         initialized.set(false);
-        resetToDefault();
     }
 
     public static void resetToDefault() {

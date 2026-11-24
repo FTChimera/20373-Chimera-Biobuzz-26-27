@@ -53,7 +53,11 @@ public class MainTeleOp extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        if (!OpModeStorage.initialized.get()) OpModeStorage.resetToDefault();
+        // Stored config applies as-is (or Storage defaults when nothing was
+        // ever saved — that is the "TeleOp first" case). Nothing here resets
+        // it: resetToDefault() persists, so calling it on init silently
+        // clobbered a saved RED alliance to BLUE. The explicit reset lives
+        // in ConfigOpMode.
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(),
                 RobotMode.TELEOP, OpModeStorage.pose.get());
         robot.matchMode = OpModeStorage.matchMode.get();
@@ -68,14 +72,18 @@ public class MainTeleOp extends ArchitecturalOpMode {
     @Override
     protected void onLoop() {
         if (cleanedUp) return;
+        // Start FIRST: startNanos is 0 until start(), so opModeTimeRemaining()
+        // reads deeply negative on tick 1 if the timer check runs before this
+        // (Clock.SYSTEM is nanoTime, monotonic since boot — any device up
+        // more than ~2 minutes ends the OpMode before start() ever runs).
+        if (!started) {
+            robot.start();
+            started = true;
+        }
         if (robot.opModeTimeRemaining() <= 0) {
             cleanup();
             super.interrupt();
             return;
-        }
-        if (!started) {
-            robot.start();
-            started = true;
         }
         controls.update();
         intakeLoop();
