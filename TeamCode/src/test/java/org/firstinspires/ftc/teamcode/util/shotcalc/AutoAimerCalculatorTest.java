@@ -50,10 +50,25 @@ public class AutoAimerCalculatorTest {
                 new com.pedropathing.math.Velocity(0.0, 30.0, 0.0),
                 0.0);
 
-        // Raw bearing to the goal is 0. Driving 30 in/s sideways, the ball
-        // inherits that velocity, so the aim heading rotates by
-        // atan2(30, Vreq) with Vreq = 199.347 * cos(62.7 deg) = 91.43 in/s:
-        // 0.31705 rad (18.17 deg).
+        // Raw bearing to the goal is 0. Driving 30 in/s sideways (+y), the
+        // ball inherits that velocity, so the aim heading rotates AGAINST
+        // the drift by atan2(-30, Vreq) with Vreq = 199.347 * cos(62.7 deg)
+        // = 91.43 in/s: -0.31705 rad (-18.17 deg). A + sign here aims with
+        // the drift and doubles the miss (see ProjectileShotCalc).
+        // updatePedro wraps the heading with Angle.normalize to [0, 2pi),
+        // so the equivalent value here is 2pi - 0.31705 = 5.96614 rad.
+        assertEquals(5.96613532343673, calculator.getTargetHeading(), EPSILON);
+    }
+
+    @Test
+    public void updatePedroHeadingOffsetMirrorsWithSidewaysDirection() {
+        AutoAimerCalculator calculator = new AutoAimerCalculator(AllianceColor.RED);
+        calculator.updatePedro(
+                new com.pedropathing.math.Pose(20.0, 60.0, 0.0),
+                new com.pedropathing.math.Velocity(0.0, -30.0, 0.0),
+                0.0);
+
+        // Same geometry, drift the other way: the offset mirrors to +18.17 deg.
         assertEquals(0.3170499837428561, calculator.getTargetHeading(), EPSILON);
     }
 }

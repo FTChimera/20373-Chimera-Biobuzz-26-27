@@ -150,9 +150,12 @@ public class ShooterCommands {
         @Override
         public void start() {
             lifecycle.start();
-            if (!robot.shooter.hasNonzeroVelocityTarget()) {
-                throw new IllegalStateException("A nonzero shooter velocity target is required before feeding pollen");
-            }
+            // No throw on a zero velocity target: the smart-shooter daemon
+            // can legitimately set a (0, 0) target for an infeasible shot
+            // (e.g. SOTM over-speed degrades to 0 ticks, "do not shoot"),
+            // and that must degrade, not kill the OpMode — BA does not catch
+            // exceptions from start(). A zero target simply never reaches
+            // up-to-speed, so loop() below times out without feeding.
             timer = new Timer();
         }
 
@@ -169,6 +172,15 @@ public class ShooterCommands {
             }
             boolean upToSpeed = robot.shooter.upToSpeed();
             if (!upToSpeed && !timer.past(Timings.upToSpeedShooterTimeoutTimeMs)) {
+                return;
+            }
+            if (!upToSpeed && !robot.shooter.hasNonzeroVelocityTarget()) {
+                // Infeasible shot (zero target — e.g. SOTM over-speed): never
+                // feed balls into a stopped flywheel. End as not attempted;
+                // the sequence moves on with the pollen still loaded.
+                robot.telemetry.addData("Shooter spinup timeout",
+                        "WARNING: zero shooter velocity target; shot skipped, no feed");
+                lifecycle.end(false);
                 return;
             }
             if (!upToSpeed) {

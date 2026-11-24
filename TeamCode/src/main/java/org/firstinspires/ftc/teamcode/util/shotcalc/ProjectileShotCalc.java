@@ -96,6 +96,14 @@ public final class ProjectileShotCalc {
      * The launch horizontal speed is non-positive exactly when the robot is
      * already moving faster than the ball needs to go along the shot
      * direction — that shot cannot be made at any wheel speed.
+     *
+     * <p>Sign: the wheel must produce {@code L = Vreq * s - v}, whose
+     * perpendicular component is {@code -vPerp}, so the heading offset is
+     * {@code atan2(-vPerp, launchHorizontal)} — the aim rotates <i>against</i>
+     * the robot's sideways drift, not with it. (A {@code +vPerp} here aims
+     * with the drift and doubles the miss.) The wheel speed uses the full
+     * magnitude {@code |L| = hypot(launchHorizontal, vPerp)}, not just the
+     * parallel component — see {@link #compensateTicks}.
      */
     public static double[] compensate(double launchSpeed, double angleDeg,
                                       double robotVelX, double robotVelY,
@@ -104,17 +112,20 @@ public final class ProjectileShotCalc {
         double vParallel = robotVelX * shotDirX + robotVelY * shotDirY;
         double vPerp = -robotVelX * shotDirY + robotVelY * shotDirX;
         double launchHorizontal = horizontal - vParallel;
-        double headingOffset = Math.atan2(vPerp, launchHorizontal);
+        double headingOffset = Math.atan2(-vPerp, launchHorizontal);
         return new double[]{launchHorizontal, headingOffset};
     }
 
     /**
      * Compensates a wheel speed (ticks/s) for robot velocity and returns the
      * compensated wheel speed. The input speed is converted to a launch speed,
-     * the parallel robot-velocity component is subtracted, and the result is
-     * converted back. Returns 0.0 when the shot is infeasible (robot moving
-     * faster than the required launch speed along the shot direction) — the
-     * caller treats 0 as "do not shoot".
+     * the robot-velocity vector is subtracted ({@code L = Vreq * s - v}), and
+     * the result is converted back. The wheel speed comes from the full
+     * magnitude {@code |L| = hypot(launchHorizontal, vPerp)}: the
+     * perpendicular component needs wheel speed too, not just the parallel
+     * one. Returns 0.0 when the shot is infeasible (robot moving faster
+     * than the required launch speed along the shot direction) — the caller
+     * treats 0 as "do not shoot".
      */
     public static double compensateTicks(double ticksPerSecond,
                                          double robotVelX, double robotVelY,
@@ -125,7 +136,9 @@ public final class ProjectileShotCalc {
         if (!(comp[0] > 0.0)) {
             return 0.0;
         }
-        double compensatedSpeed = comp[0] / Math.cos(Math.toRadians(LAUNCH_ANGLE_DEG));
+        double vPerp = -robotVelX * shotDirY + robotVelY * shotDirX;
+        double compensatedSpeed = Math.hypot(comp[0], vPerp)
+                / Math.cos(Math.toRadians(LAUNCH_ANGLE_DEG));
         return ticksPerSecond(compensatedSpeed, WHEEL_RADIUS_IN);
     }
 }

@@ -46,9 +46,9 @@ public class AutoAimerCalculator {
         // Shoot-on-the-move: the ball inherits robot velocity, so the aim
         // heading is the compensated launch direction, not the raw bearing.
         // The offset is the same vector equation the shot calculators use
-        // (L = Vreq*s - v): the perpendicular velocity component rotates the
-        // heading by atan2(vPerp, launchHorizontal). When the projectile
-        // solve is infeasible here (too close for the fixed angle) or the
+        // (L = Vreq*s - v): L's perpendicular component is -vPerp, so the
+        // heading rotates by atan2(-vPerp, launchHorizontal) — against the
+        // robot's sideways drift. When the projectile solve is infeasible
         // compensation is infeasible (robot faster than the required launch
         // speed), keep the raw bearing: this runs in the aimer daemon every
         // tick and must never throw. The offset uses the ideal launch speed;
