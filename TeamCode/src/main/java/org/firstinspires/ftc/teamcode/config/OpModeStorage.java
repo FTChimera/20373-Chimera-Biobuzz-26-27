@@ -97,8 +97,8 @@ public class OpModeStorage {
     }
 
     public static void resetToDefault() {
-        allianceColor.set(AllianceColor.BLUE);
-        CommonKt.init(AllianceColor.BLUE);
+        allianceColor.set(AllianceColor.RED);
+        CommonKt.init(allianceColor.get());
         pose.set(StartPoses.gardenArea); // Chimera's testing start pose in robotics room
         matchMode.set(MatchMode.QUALIFICATIONS);
     }

@@ -4,8 +4,8 @@ import com.rmsftc.utils.AllianceColor;
 
 public class BiobuzzAprilTags {
 
-    public static final Cluster RED_OPPOSITE = new Cluster(0, 1, 2, 3);
-    public static final Cluster RED_AUDIENCE = new Cluster(4, 5, 6, 7);
+    public static final Cluster RED_OPPOSITE = new Cluster(30, 31, 32, 33);
+    public static final Cluster RED_AUDIENCE = new Cluster(34, 35, 36, 37);
 
     public static final Cluster BLUE_OPPOSITE = new Cluster(42, 43, 44, 45);
     public static final Cluster BLUE_AUDIENCE = new Cluster(38, 39, 40, 41);
