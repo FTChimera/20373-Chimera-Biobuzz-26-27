@@ -10,7 +10,9 @@ import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
 
 import java.util.List;
@@ -67,6 +69,7 @@ public class AuditCorrectionsTest {
                     obstacle.contains(geometryFactory.createPoint(
                             new Coordinate(waypoint.x(), waypoint.y()))));
         }
+        assertNoSegmentEnters(path, obstacle, geometryFactory);
         // The route around the corner must stay near the direct line, not
         // wander off across the field.
         double pathLength = 0.0;
@@ -79,8 +82,7 @@ public class AuditCorrectionsTest {
     }
 
     @Test
-    public void returnsNoPathWhenStartIsInsideForbiddenSpace() {
-        GeometryFactory geometryFactory = new GeometryFactory();
+    public void returnsNoPathWhenStartIsInsideForbiddenSpace() {        GeometryFactory geometryFactory = new GeometryFactory();
         Polygon obstacle = geometryFactory.createPolygon(new Coordinate[]{
                 new Coordinate(0, 0), new Coordinate(10, 0), new Coordinate(10, 10),
                 new Coordinate(0, 10), new Coordinate(0, 0)
@@ -90,5 +92,18 @@ public class AuditCorrectionsTest {
                 new Pose(5, 5), new Pose(11, 0), obstacle);
 
         assertEquals(0, path.size());
+    }
+
+    /** No segment between consecutive waypoints may enter the forbidden interior. */
+    private static void assertNoSegmentEnters(List<Pose> path, Geometry forbidden,
+                                              GeometryFactory geometryFactory) {
+        for (int i = 0; i < path.size() - 1; i++) {
+            Pose a = path.get(i);
+            Pose b = path.get(i + 1);
+            LineString segment = geometryFactory.createLineString(new Coordinate[]{
+                    new Coordinate(a.x(), a.y()), new Coordinate(b.x(), b.y())});
+            assertTrue("Segment " + a + " -> " + b + " enters forbidden space",
+                    !segment.intersects(forbidden) || segment.touches(forbidden));
+        }
     }
 }

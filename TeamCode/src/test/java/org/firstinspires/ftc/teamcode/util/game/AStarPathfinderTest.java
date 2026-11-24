@@ -190,6 +190,45 @@ public class AStarPathfinderTest {
         assertHeadingsPointTowardNext(path);
     }
 
+    @Test
+    public void sameCellNoVisibleDetourNeighborReturnsEmpty() {
+        // Start (49, 49) and goal (53, 51) share cell (8, 8); the small box
+        // blocks the direct segment, and the frame walls around the cell
+        // block the line of sight to every neighboring cell center, so no
+        // detour cell is visible from both endpoints.
+        Geometry forbidden = frameWalls().union(box(51.5, 49, 53.5, 50.5));
+
+        List<Pose> path = new AStarPathfinder().findPath(
+                new Pose(49, 49, 0), new Pose(53, 51, 0), forbidden);
+
+        assertTrue(path.isEmpty());
+    }
+
+    @Test
+    public void legalPoseWithNoVisibleFreeCellReturnsEmpty() {
+        // The start (49, 49) is legal, but its own cell center (51, 51) is
+        // inside the box and the frame walls block the line of sight to
+        // every other cell center, so no search cell is reachable.
+        Geometry forbidden = frameWalls().union(box(50, 50, 53, 52));
+
+        List<Pose> path = new AStarPathfinder().findPath(
+                new Pose(49, 49, 0), new Pose(120, 120, 0), forbidden);
+
+        assertTrue(path.isEmpty());
+    }
+
+    /**
+     * Four thin walls forming a closed frame around cell (8, 8) (x 48-54,
+     * y 48-54). The interior is open, but any line of sight from inside the
+     * frame to a cell center outside it crosses a wall.
+     */
+    private static Geometry frameWalls() {
+        return box(46, 46, 48, 56)
+                .union(box(54, 46, 56, 56))
+                .union(box(48, 46, 54, 48))
+                .union(box(48, 54, 54, 56));
+    }
+
     private static Polygon box(double x1, double y1, double x2, double y2) {
         return FACTORY.createPolygon(new Coordinate[]{
                 new Coordinate(x1, y1), new Coordinate(x2, y1), new Coordinate(x2, y2),
