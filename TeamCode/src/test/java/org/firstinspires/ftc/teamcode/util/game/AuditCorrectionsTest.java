@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.util.game;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 
@@ -66,6 +67,15 @@ public class AuditCorrectionsTest {
                     obstacle.contains(geometryFactory.createPoint(
                             new Coordinate(waypoint.x(), waypoint.y()))));
         }
+        // The route around the corner must stay near the direct line, not
+        // wander off across the field.
+        double pathLength = 0.0;
+        for (int i = 0; i < path.size() - 1; i++) {
+            pathLength += path.get(i).distance(path.get(i + 1));
+        }
+        double straight = Math.hypot(15.0 - 3.0, 3.0 - 15.0);
+        assertTrue("Path length " + pathLength + " is wildly longer than straight " + straight,
+                pathLength < 1.5 * straight);
     }
 
     @Test

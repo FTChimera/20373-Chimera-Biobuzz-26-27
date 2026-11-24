@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
 
 import java.util.List;
@@ -26,8 +27,11 @@ public class AStarPathfinderTest {
         List<Pose> path = new AStarPathfinder().findPath(start, goal, box);
 
         assertFalse(path.isEmpty());
+        assertTrue(path.size() > 2);
         assertEndpoints(path, start, goal);
         assertNoWaypointInside(path, box);
+        assertNoSegmentEnters(path, box);
+        assertHeadingsPointTowardNext(path);
         double straight = start.distance(goal);
         assertTrue("Path should detour around the box, length " + pathLength(path),
                 pathLength(path) > straight);
@@ -44,8 +48,11 @@ public class AStarPathfinderTest {
         List<Pose> path = new AStarPathfinder().findPath(start, goal, hive);
 
         assertFalse(path.isEmpty());
+        assertTrue(path.size() > 2);
         assertEndpoints(path, start, goal);
         assertNoWaypointInside(path, hive);
+        assertNoSegmentEnters(path, hive);
+        assertHeadingsPointTowardNext(path);
         double straight = start.distance(goal);
         assertTrue("Path should detour around the hive, length " + pathLength(path),
                 pathLength(path) > straight);
@@ -54,19 +61,46 @@ public class AStarPathfinderTest {
     }
 
     @Test
-    public void returnsEmptyWhenStartCellBlocked() {
-        Polygon box = box(60, 60, 66, 66);
-        List<Pose> path = new AStarPathfinder().findPath(
-                new Pose(63, 63), new Pose(120, 100), box);
-        assertTrue(path.isEmpty());
+    public void startCellBlockedButExactStartLegalRoutes() {
+        // The exact start (60.5, 60.5) is outside the box, but its cell center
+        // (63, 63) is inside it. The old code returned empty here even though
+        // the pose is legal; the search must start from the nearest free cell
+        // visible from the exact start instead.
+        Polygon box = box(61, 61, 67, 67);
+        Pose start = new Pose(60.5, 60.5, 0);
+        Pose goal = new Pose(120, 100, 0);
+
+        List<Pose> path = new AStarPathfinder().findPath(start, goal, box);
+
+        assertFalse(path.isEmpty());
+        assertEndpoints(path, start, goal);
+        assertNoWaypointInside(path, box);
+        assertNoSegmentEnters(path, box);
+        assertHeadingsPointTowardNext(path);
+        assertTrue("Path length " + pathLength(path) + " is wildly longer than straight "
+                        + start.distance(goal),
+                pathLength(path) < 1.5 * start.distance(goal));
     }
 
     @Test
-    public void returnsEmptyWhenGoalCellBlocked() {
-        Polygon box = box(60, 60, 66, 66);
-        List<Pose> path = new AStarPathfinder().findPath(
-                new Pose(20, 20), new Pose(63, 63), box);
-        assertTrue(path.isEmpty());
+    public void goalCellBlockedButExactGoalLegalRoutes() {
+        // Mirror of the start case: the exact goal (60.5, 60.5) is outside the
+        // box, but its cell center (63, 63) is inside it. The search must end
+        // at the nearest free cell visible from the exact goal instead.
+        Polygon box = box(61, 61, 67, 67);
+        Pose start = new Pose(20, 20, 0);
+        Pose goal = new Pose(60.5, 60.5, 0);
+
+        List<Pose> path = new AStarPathfinder().findPath(start, goal, box);
+
+        assertFalse(path.isEmpty());
+        assertEndpoints(path, start, goal);
+        assertNoWaypointInside(path, box);
+        assertNoSegmentEnters(path, box);
+        assertHeadingsPointTowardNext(path);
+        assertTrue("Path length " + pathLength(path) + " is wildly longer than straight "
+                        + start.distance(goal),
+                pathLength(path) < 1.5 * start.distance(goal));
     }
 
     @Test
@@ -91,6 +125,7 @@ public class AStarPathfinderTest {
         assertFalse(path.isEmpty());
         assertEndpoints(path, start, goal);
         assertNoWaypointInside(path, forbidden);
+        assertNoSegmentEnters(path, forbidden);
         for (int i = 0; i < path.size() - 1; i++) {
             Pose a = path.get(i);
             Pose b = path.get(i + 1);
@@ -109,6 +144,50 @@ public class AStarPathfinderTest {
         assertEquals(2, path.size());
         assertEndpoints(path, start, goal);
         assertEquals(start.distance(goal), pathLength(path), 1e-9);
+    }
+
+    @Test
+    public void startEqualsGoalReturnsSinglePose() {
+        Pose pose = new Pose(50, 50, 0.5);
+        Polygon farAway = box(100, 100, 110, 110);
+
+        List<Pose> path = new AStarPathfinder().findPath(pose, pose, farAway);
+
+        assertEquals(1, path.size());
+        assertEquals(pose.x(), path.get(0).x(), EPSILON);
+        assertEquals(pose.y(), path.get(0).y(), EPSILON);
+        assertEquals(pose.heading(), path.get(0).heading(), EPSILON);
+    }
+
+    @Test
+    public void sameCellDirectShot() {
+        // Both poses snap to cell (8, 8); the direct segment is clear.
+        Pose start = new Pose(50, 50, 0.5);
+        Pose goal = new Pose(53, 52, -1.0);
+
+        List<Pose> path = new AStarPathfinder().findPath(start, goal, null);
+
+        assertEquals(2, path.size());
+        assertEndpoints(path, start, goal);
+    }
+
+    @Test
+    public void sameCellBlockedLineOfSightDetoursThroughNeighbor() {
+        // Start (49, 49) and goal (53, 51) share cell (8, 8), whose center
+        // (51, 51) is free, but the box (51.5, 49)-(53.5, 50.5) sits on the
+        // direct segment. The path must detour through a neighboring cell
+        // visible from both endpoints instead of giving up.
+        Polygon box = box(51.5, 49, 53.5, 50.5);
+        Pose start = new Pose(49, 49, 0.5);
+        Pose goal = new Pose(53, 51, -1.0);
+
+        List<Pose> path = new AStarPathfinder().findPath(start, goal, box);
+
+        assertEquals(3, path.size());
+        assertEndpoints(path, start, goal);
+        assertNoWaypointInside(path, box);
+        assertNoSegmentEnters(path, box);
+        assertHeadingsPointTowardNext(path);
     }
 
     private static Polygon box(double x1, double y1, double x2, double y2) {
@@ -134,6 +213,37 @@ public class AStarPathfinderTest {
                     forbidden.contains(FACTORY.createPoint(
                             new Coordinate(waypoint.x(), waypoint.y()))));
         }
+    }
+
+    /** No segment between consecutive waypoints may enter the forbidden interior. */
+    private static void assertNoSegmentEnters(List<Pose> path, Geometry forbidden) {
+        for (int i = 0; i < path.size() - 1; i++) {
+            Pose a = path.get(i);
+            Pose b = path.get(i + 1);
+            LineString segment = FACTORY.createLineString(new Coordinate[]{
+                    new Coordinate(a.x(), a.y()), new Coordinate(b.x(), b.y())});
+            assertTrue("Segment " + a + " -> " + b + " enters forbidden space",
+                    !segment.intersects(forbidden) || segment.touches(forbidden));
+        }
+    }
+
+    /** Every intermediate waypoint's heading points toward the next waypoint. */
+    private static void assertHeadingsPointTowardNext(List<Pose> path) {
+        for (int i = 1; i < path.size() - 1; i++) {
+            Pose current = path.get(i);
+            Pose next = path.get(i + 1);
+            double expected = Math.atan2(next.y() - current.y(), next.x() - current.x());
+            assertHeadingEquals("Waypoint " + current + " heading should point toward " + next,
+                    expected, current.heading());
+        }
+    }
+
+    /** Headings are angles: compare modulo 2*PI (FTCUtils Pose normalizes to [0, 2*PI)). */
+    private static void assertHeadingEquals(String message, double expected, double actual) {
+        double diff = expected - actual;
+        while (diff > Math.PI) diff -= 2.0 * Math.PI;
+        while (diff <= -Math.PI) diff += 2.0 * Math.PI;
+        assertEquals(message, 0.0, diff, 1e-9);
     }
 
     private static double pathLength(List<Pose> path) {

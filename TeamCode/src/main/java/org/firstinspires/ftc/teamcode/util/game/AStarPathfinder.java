@@ -22,19 +22,30 @@ import java.util.PriorityQueue;
  * allowed only when both orthogonal neighbor cells are free, so the path
  * never cuts the corner of a blocked cell.</p>
  *
- * <p>Why center-testing is safe here: every caller passes a forbidden space
- * already inflated by the robot's half-diagonal plus clearance (about 13 in
- * total in {@link Field#transitWaypoints}), while a 6 in cell's corner is at
- * most 6/sqrt(2) ~ 4.3 in from its center. A cell whose center is free can
- * therefore clip the forbidden region by at most ~4.3 in at a corner, leaving
- * roughly 8.5 in of the inflation margin intact, and the returned waypoints
- * are cell centers (or the exact start/end poses), never cell corners.</p>
+ * <p>Guarantee: every segment of the returned path is verified by
+ * line-of-sight against the forbidden geometry. Neighbor steps are checked
+ * during the search, the exact start/end legs are checked when their search
+ * cells are chosen, and the smoothing pass only keeps verified segments. The
+ * robot center therefore never enters the forbidden interior, and the body
+ * keeps whatever clearance the caller built into the forbidden space. In
+ * {@code Field.transitWaypoints} that inflation is the body's half-diagonal,
+ * hypot(17, 17) / 2 ~ 12.02 in, plus TRANSIT_CLEARANCE_INCHES = 1.0 in of
+ * real clearance (~13.02 in total); only that 1.0 in is clearance, the rest
+ * is the body's own extent.</p>
+ *
+ * <p>When the start or goal cell center is blocked but the exact pose is
+ * legal (outside the forbidden space), the search starts from the nearest
+ * free cell visible from the exact pose instead of giving up, so poses that
+ * sit just outside an inflated obstacle still route.</p>
  *
  * <p>Contract (same as the old pathfinder): {@link #findPath} returns a list
  * from the exact start pose to the exact end pose, with intermediate
  * waypoints at cell centers and intermediate headings pointing toward the
  * next point. It returns an empty list when no route exists (start or goal
- * cell blocked, or the search cannot reach the goal).</p>
+ * pose inside the forbidden space, no reachable search cell, or the search
+ * cannot reach the goal). Start and goal in the same cell take the direct
+ * shot when it is clear, detour through a neighboring cell when it is not,
+ * and give up when no neighbor is visible from both endpoints.</p>
  */
 public class AStarPathfinder {
 
@@ -95,19 +106,25 @@ public class AStarPathfinder {
             }
         }
 
-        int startCol = snapCell(start.x());
-        int startRow = snapCell(start.y());
-        int goalCol = snapCell(end.x());
-        int goalRow = snapCell(end.y());
-
         boolean[][] blocked = computeBlockedCells(forbiddenSpace);
-        if (blocked[startCol][startRow] || blocked[goalCol][goalRow]) {
+
+        int[] startCell = nearestReachableCell(startCoord, snapCell(start.x()), snapCell(start.y()),
+                blocked, forbiddenSpace);
+        int[] goalCell = nearestReachableCell(endCoord, snapCell(end.x()), snapCell(end.y()),
+                blocked, forbiddenSpace);
+        if (startCell == null || goalCell == null) {
             return Collections.emptyList();
         }
+        int startCol = startCell[0];
+        int startRow = startCell[1];
+        int goalCol = goalCell[0];
+        int goalRow = goalCell[1];
 
-        // Start and goal in the same cell: no grid search is possible.
+        // Start and goal search from the same cell: no grid search is possible.
         // Mirror the old pathfinder's single-pose path when the poses coincide;
-        // otherwise take the direct shot when it is clear, and give up when it is not.
+        // otherwise take the direct shot when it is clear, detour through a
+        // neighboring cell when it is not, and give up when no neighbor is
+        // visible from both endpoints.
         if (startCol == goalCol && startRow == goalRow) {
             if (startCoord.distance(endCoord) < EPSILON) {
                 return Collections.singletonList(new Pose(start.x(), start.y(), start.heading()));
@@ -118,21 +135,42 @@ public class AStarPathfinder {
                 direct.add(new Pose(end.x(), end.y(), end.heading()));
                 return direct;
             }
-            return Collections.emptyList();
+            Coordinate detour = nearestDetourCell(startCoord, endCoord, startCol, startRow,
+                    blocked, forbiddenSpace);
+            if (detour == null) {
+                return Collections.emptyList();
+            }
+            List<Pose> detourPath = new ArrayList<>(3);
+            detourPath.add(new Pose(start.x(), start.y(), start.heading()));
+            detourPath.add(new Pose(detour.x, detour.y,
+                    Math.atan2(end.y() - detour.y, end.x() - detour.x)));
+            detourPath.add(new Pose(end.x(), end.y(), end.heading()));
+            return detourPath;
         }
 
-        List<Coordinate> cellPath = search(startCol, startRow, goalCol, goalRow, blocked);
+        List<Coordinate> cellPath = search(startCol, startRow, goalCol, goalRow, blocked, forbiddenSpace);
         if (cellPath.isEmpty()) {
             return Collections.emptyList();
         }
 
-        // Exact start/end poses bookend the cell centers.
-        List<Coordinate> rawWaypoints = new ArrayList<>(cellPath.size() + 1);
+        // Exact start/end poses bookend the cell centers, which are kept (not
+        // dropped) so the exact-start and exact-goal legs are part of the
+        // waypoint list. Every consecutive pair is line-of-sight verified:
+        // neighbor steps were checked during the search, and the exact
+        // endpoints were checked against their search cells when those cells
+        // were chosen, so smoothing can only replace verified segments with
+        // verified segments. Consecutive duplicates (an exact pose that is
+        // already a cell center) are dropped so no zero-length leg is emitted.
+        List<Coordinate> rawWaypoints = new ArrayList<>(cellPath.size() + 2);
         rawWaypoints.add(startCoord);
-        for (int i = 1; i < cellPath.size() - 1; i++) {
-            rawWaypoints.add(cellPath.get(i));
+        for (Coordinate center : cellPath) {
+            if (rawWaypoints.get(rawWaypoints.size() - 1).distance(center) >= EPSILON) {
+                rawWaypoints.add(center);
+            }
         }
-        rawWaypoints.add(endCoord);
+        if (rawWaypoints.get(rawWaypoints.size() - 1).distance(endCoord) >= EPSILON) {
+            rawWaypoints.add(endCoord);
+        }
 
         List<Coordinate> waypoints = smooth(rawWaypoints, forbiddenSpace);
 
@@ -155,7 +193,8 @@ public class AStarPathfinder {
     }
 
     /** Standard A* over the cell grid; returns the center coordinates from start cell to goal cell. */
-    private List<Coordinate> search(int startCol, int startRow, int goalCol, int goalRow, boolean[][] blocked) {
+    private List<Coordinate> search(int startCol, int startRow, int goalCol, int goalRow,
+                                    boolean[][] blocked, Geometry forbiddenSpace) {
         double[][] gScore = new double[CELLS_PER_SIDE][CELLS_PER_SIDE];
         int[][] cameFrom = new int[CELLS_PER_SIDE][CELLS_PER_SIDE];
         boolean[][] closed = new boolean[CELLS_PER_SIDE][CELLS_PER_SIDE];
@@ -196,6 +235,11 @@ public class AStarPathfinder {
                         if (blocked[current.col + dc][current.row]
                                 || blocked[current.col][current.row + dr]) continue;
                     }
+                    // A step between cell centers is only usable when the robot
+                    // center can actually drive it: both centers may be free
+                    // while the segment between them clips a forbidden corner.
+                    if (!hasLineOfSight(cellCenter(current.col, current.row),
+                            cellCenter(nextCol, nextRow), forbiddenSpace)) continue;
                     double stepCost = (dc != 0 && dr != 0) ? DIAGONAL_COST : CELL_SIZE_IN;
                     double tentativeG = gScore[current.col][current.row] + stepCost;
                     if (tentativeG + EPSILON < gScore[nextCol][nextRow]) {
@@ -219,6 +263,75 @@ public class AStarPathfinder {
         }
         Collections.reverse(path);
         return path;
+    }
+
+    /**
+     * Nearest cell (by ring, then by distance from the exact point) whose
+     * center is free and visible from the exact point. The snapped cell
+     * itself is ring 0, so a legal pose in a free cell keeps its own cell.
+     * Returns null when no cell on the grid qualifies.
+     */
+    private int[] nearestReachableCell(Coordinate from, int col, int row, boolean[][] blocked,
+                                       Geometry forbiddenSpace) {
+        for (int ring = 0; ring < CELLS_PER_SIDE; ring++) {
+            List<int[]> candidates = new ArrayList<>();
+            for (int[] cell : ringCells(col, row, ring)) {
+                if (!blocked[cell[0]][cell[1]]) {
+                    candidates.add(cell);
+                }
+            }
+            candidates.sort(Comparator.comparingDouble(
+                    cell -> from.distance(cellCenter(cell[0], cell[1]))));
+            for (int[] cell : candidates) {
+                if (hasLineOfSight(from, cellCenter(cell[0], cell[1]), forbiddenSpace)) {
+                    return cell;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Nearest neighboring cell (by ring, then by detour length) whose center
+     * is visible from both exact endpoints. Ring 0 is the shared cell itself,
+     * which cannot detour anywhere, so the search starts at ring 1. Returns
+     * null when no neighbor is visible from both endpoints.
+     */
+    private Coordinate nearestDetourCell(Coordinate start, Coordinate end, int col, int row,
+                                         boolean[][] blocked, Geometry forbiddenSpace) {
+        for (int ring = 1; ring < CELLS_PER_SIDE; ring++) {
+            List<int[]> candidates = new ArrayList<>();
+            for (int[] cell : ringCells(col, row, ring)) {
+                if (!blocked[cell[0]][cell[1]]) {
+                    candidates.add(cell);
+                }
+            }
+            candidates.sort(Comparator.comparingDouble(cell -> {
+                Coordinate center = cellCenter(cell[0], cell[1]);
+                return start.distance(center) + center.distance(end);
+            }));
+            for (int[] cell : candidates) {
+                Coordinate center = cellCenter(cell[0], cell[1]);
+                if (hasLineOfSight(start, center, forbiddenSpace)
+                        && hasLineOfSight(center, end, forbiddenSpace)) {
+                    return center;
+                }
+            }
+        }
+        return null;
+    }
+
+    /** Cells at exactly Chebyshev distance {@code ring} from ({@code col}, {@code row}), clipped to the grid. */
+    private List<int[]> ringCells(int col, int row, int ring) {
+        List<int[]> cells = new ArrayList<>();
+        for (int c = Math.max(0, col - ring); c <= Math.min(CELLS_PER_SIDE - 1, col + ring); c++) {
+            for (int r = Math.max(0, row - ring); r <= Math.min(CELLS_PER_SIDE - 1, row + ring); r++) {
+                if (Math.max(Math.abs(c - col), Math.abs(r - row)) == ring) {
+                    cells.add(new int[]{c, r});
+                }
+            }
+        }
+        return cells;
     }
 
     /**

@@ -59,6 +59,35 @@ public class FieldTransitTest {
                 new Pose(48, 72, 0), new Pose(18, 108, 0));
     }
 
+    @Test
+    public void passOneReprosRouteWithRealFieldGeometry() {
+        // Pass-1 fuzz failures: the exact poses are legal (outside the
+        // inflated hive footprint) but their cell centers are blocked, so the
+        // old code returned empty. The nearest-free-cell fallback must route
+        // them now.
+        Field red = new Field(AllianceColor.RED, 17, 17);
+        assertClear(red.generateTransitPath(new Pose(31.5, 72, 0), new Pose(120, 72, 0)));
+        assertClear(red.generateTransitPath(new Pose(31, 41, 0), new Pose(120, 72, 0)));
+    }
+
+    @Test(expected = Field.NoRouteException.class)
+    public void goalInsideInflatedFlowerFootprintHasNoRoute() {
+        // Pass-1 repro goal (100, 10) does NOT route, correctly: it sits
+        // 5.2 in from the raw south-flower footprint, inside the 13.02 in
+        // inflation (half-diagonal 12.02 + 1.0 clearance), so the exact goal
+        // pose itself is illegal and no fallback can save it.
+        new Field(AllianceColor.RED, 17, 17).generateTransitPath(
+                new Pose(60, 120, 0), new Pose(100, 10, 0));
+    }
+
+    @Test
+    public void nearbyLegalGoalRoutes() {
+        // Same area as the (100, 10) repro, but 10 in north of it: outside
+        // the inflated south-flower footprint, so a route must exist.
+        Field red = new Field(AllianceColor.RED, 17, 17);
+        assertClear(red.generateTransitPath(new Pose(60, 120, 0), new Pose(100, 20, 0)));
+    }
+
     private static void assertClear(Path path) {
         assertClear(path, false);
     }
@@ -70,6 +99,10 @@ public class FieldTransitTest {
     private static void assertClear(Path path, boolean checkWalls) {
         Geometry bases = Field.geometryFactory.createPolygon(FieldCoordinates.westHiveBase())
                 .union(Field.geometryFactory.createPolygon(FieldCoordinates.eastHiveBase()));
+        Geometry flowers = Field.geometryFactory.createPolygon(FieldCoordinates.westFlower())
+                .union(Field.geometryFactory.createPolygon(FieldCoordinates.northFlower()))
+                .union(Field.geometryFactory.createPolygon(FieldCoordinates.eastFlower()))
+                .union(Field.geometryFactory.createPolygon(FieldCoordinates.southFlower()));
         for (int i = 0; i <= 1000; i++) {
             com.pedropathing.math.Pose pose = path.get(i / 1000.0);
             Coordinate[] corners = new Coordinate[5];
@@ -90,6 +123,8 @@ public class FieldTransitTest {
             corners[4] = new Coordinate(corners[0]);
             assertFalse("Body intersects a hive at path parameter " + i / 1000.0,
                     bases.intersects(Field.geometryFactory.createPolygon(corners)));
+            assertFalse("Body intersects a flower at path parameter " + i / 1000.0,
+                    flowers.intersects(Field.geometryFactory.createPolygon(corners)));
         }
     }
 }
