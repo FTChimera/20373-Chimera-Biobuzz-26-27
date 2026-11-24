@@ -9,6 +9,8 @@ import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import com.rmsftc.utils.AllianceColor;
+
+import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 import com.rmsftc.utils.math.Pose;
 
@@ -25,8 +27,6 @@ public final class CamTransform {
     public static boolean isTippingCurrently(int state) {return state==0;}
     private final Limelight3A limelight;
 
-    private static final int PIPELINE_RED = 0;
-    private static final int PIPELINE_BLUE = 1;
 
     private LLResult latestResult;
     private Pose3D botpose;
@@ -63,7 +63,7 @@ public final class CamTransform {
         this.limelight = limelight;
         this.valid = false;
         this.stdDevs = new double[6];
-        limelight.pipelineSwitch(teamColor == AllianceColor.BLUE ? PIPELINE_BLUE : PIPELINE_RED);
+        limelight.pipelineSwitch(teamColor == AllianceColor.BLUE ? Vision.BLUE_PIPELINE_INDEX : Vision.RED_PIPELINE_INDEX);
     }
 
 
