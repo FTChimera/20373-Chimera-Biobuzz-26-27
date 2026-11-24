@@ -38,6 +38,22 @@ public class TableShotCalc implements ShotCalculator {
         debug+=("\ndistanceToTarget: ");debug+=(String.format(Locale.US, "(%.2f)", distanceToTarget));
         double mainVelocity = interpolate(shooterMap, distanceToTarget);
         double counterRollerVelocity = interpolate(counterRollerMap, distanceToTarget);
+        if (ctx.sotm && ctx.velocity != null) {
+            // Shoot-on-the-move: the ball inherits robot velocity, so the
+            // wheel speed that makes the shot is lower when driving toward
+            // the goal (and the aim heading rotates — see
+            // AutoAimerCalculator.updatePedro). Each motor's table speed is
+            // compensated from its own implied launch speed; a shot that
+            // cannot be made degrades to 0 ticks ("do not shoot") instead
+            // of throwing — the shooter loop calls this with no guard.
+            double angleToGoal = ctx.angleToTarget();
+            double shotDirX = Math.cos(angleToGoal);
+            double shotDirY = Math.sin(angleToGoal);
+            mainVelocity = ProjectileShotCalc.compensateTicks(
+                    mainVelocity, ctx.velocity.vx, ctx.velocity.vy, shotDirX, shotDirY);
+            counterRollerVelocity = ProjectileShotCalc.compensateTicks(
+                    counterRollerVelocity, ctx.velocity.vx, ctx.velocity.vy, shotDirX, shotDirY);
+        }
         return recordSolution(new ShotSolution(mainVelocity, counterRollerVelocity));
     }
 

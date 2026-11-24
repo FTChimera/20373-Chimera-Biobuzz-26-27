@@ -1,18 +1,26 @@
 package org.firstinspires.ftc.teamcode.util.shotcalc;
 
 /**
- * A linear, unbounded model matching the slope of the default shot table.
- * It is useful for testing extrapolation; match-calibrated shots use
- * {@link TableShotCalc}.
+ * Constant-angle projectile model (Desmos form, consistent inches) for the
+ * ideal shot: fixed hood angle, solve the wheel speed for the distance.
+ * Replaces the old linear {@code 200 + 20 * distance} model, which matched
+ * the table's slope but had no physics and diverged outside the table —
+ * exactly where the ideal is used (extrapolation).
+ *
+ * <p>Calibration: with the BIOBUZZ hive opening center (59.55 in) the model
+ * fits the 3-point main table within ~0.5% over the fit family
+ * (c = 60–69 deg, h0 = 7–25 in, r = 1.05–1.2 in); the Desmos angle 62.7 deg
+ * sits inside that range. See {@link ProjectileShotCalc} for the model and
+ * {@code shotcalc-model-draft/README.md} for the derivation and the fit.
+ *
+ * <p>Shoot-on-the-move: the wheel speed is compensated for robot velocity
+ * ({@link ProjectileShotCalc#compensateTicks}) on top of the latency-based
+ * release pose. A shot that cannot be made — too close for the fixed angle,
+ * or the robot already moving faster than the required launch speed — degrades
+ * to 0 ticks ("do not shoot") instead of throwing: the shooter loop calls
+ * this with no guard, and its up-to-speed gate is false at a zero target.
  */
 public class IdealShotCalc implements ShotCalculator {
-    public static final double POLLEN_BASE_TICKS_PER_SECOND = 200.0;
-    public static final double TICKS_PER_SECOND_PER_INCH = 20.0;
-    // TODO: tune — counterRoller linear model copied from the main flywheel.
-    // Measure the counterRoller's real base/slope and replace these.
-    public static final double COUNTER_ROLLER_BASE_TICKS_PER_SECOND = 200.0;
-    public static final double COUNTER_ROLLER_TICKS_PER_SECOND_PER_INCH = 20.0;
-
     @Override
     public ShotSolution calculateShot(ShotContext context) {
         if (context == null) {
@@ -25,9 +33,26 @@ public class IdealShotCalc implements ShotCalculator {
         }
 
         double distance = ctx.distanceToTarget();
-        return new ShotSolution(
-                POLLEN_BASE_TICKS_PER_SECOND + TICKS_PER_SECOND_PER_INCH * distance,
-                COUNTER_ROLLER_BASE_TICKS_PER_SECOND + COUNTER_ROLLER_TICKS_PER_SECOND_PER_INCH * distance
-        );
+        double launchSpeed = ProjectileShotCalc.launchSpeed(
+                distance,
+                ProjectileShotCalc.LAUNCH_ANGLE_DEG,
+                ProjectileShotCalc.LAUNCH_HEIGHT_IN,
+                ProjectileShotCalc.GOAL_HEIGHT_IN);
+        if (!Double.isFinite(launchSpeed)) {
+            // Too close for the fixed launch angle: no speed reaches the goal.
+            return new ShotSolution(0.0, 0.0);
+        }
+        double mainTicks = ProjectileShotCalc.ticksPerSecond(launchSpeed, ProjectileShotCalc.WHEEL_RADIUS_IN);
+        double counterTicks = mainTicks * ProjectileShotCalc.COUNTER_ROLLER_RATIO;
+        if (ctx.sotm && ctx.velocity != null) {
+            double angleToGoal = ctx.angleToTarget();
+            double shotDirX = Math.cos(angleToGoal);
+            double shotDirY = Math.sin(angleToGoal);
+            mainTicks = ProjectileShotCalc.compensateTicks(
+                    mainTicks, ctx.velocity.vx, ctx.velocity.vy, shotDirX, shotDirY);
+            counterTicks = ProjectileShotCalc.compensateTicks(
+                    counterTicks, ctx.velocity.vx, ctx.velocity.vy, shotDirX, shotDirY);
+        }
+        return new ShotSolution(mainTicks, counterTicks);
     }
 }

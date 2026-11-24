@@ -43,6 +43,35 @@ public class AutoAimerCalculator {
                 hivePose.y() - correctedPose.y(),
                 hivePose.x() - correctedPose.x()
         ));
+        // Shoot-on-the-move: the ball inherits robot velocity, so the aim
+        // heading is the compensated launch direction, not the raw bearing.
+        // The offset is the same vector equation the shot calculators use
+        // (L = Vreq*s - v): the perpendicular velocity component rotates the
+        // heading by atan2(vPerp, launchHorizontal). When the projectile
+        // solve is infeasible here (too close for the fixed angle) or the
+        // compensation is infeasible (robot faster than the required launch
+        // speed), keep the raw bearing: this runs in the aimer daemon every
+        // tick and must never throw. The offset uses the ideal launch speed;
+        // the table the shooter runs differs from it by <1%, so the heading
+        // error from that is under 0.2 deg.
+        double distance = Math.hypot(
+                hivePose.x() - correctedPose.x(),
+                hivePose.y() - correctedPose.y());
+        double launchSpeed = ProjectileShotCalc.launchSpeed(
+                distance,
+                ProjectileShotCalc.LAUNCH_ANGLE_DEG,
+                ProjectileShotCalc.LAUNCH_HEIGHT_IN,
+                ProjectileShotCalc.GOAL_HEIGHT_IN);
+        if (Double.isFinite(launchSpeed)) {
+            double shotDirX = Math.cos(targetHeading);
+            double shotDirY = Math.sin(targetHeading);
+            double[] compensation = ProjectileShotCalc.compensate(
+                    launchSpeed, ProjectileShotCalc.LAUNCH_ANGLE_DEG,
+                    velocity.vx, velocity.vy, shotDirX, shotDirY);
+            if (compensation[0] > 0.0) {
+                targetHeading = Angle.normalize(targetHeading + compensation[1]);
+            }
+        }
     }
 
     public void updatePedro(Pose robotPose, Velocity velocity) {
@@ -98,11 +127,14 @@ public class AutoAimerCalculator {
     @NonNull
     public String getDebugString() {return "namaste. Your mode is "+ (pedro ? "Pedro Heading" : "Limelight") +" \nyour target heading is "+ getTargetHeading()/DEG_TO_RAD;}
 
-    public double calculateTurningPower(double ehiuafhiushfuidshfsudhfdsufdshfudshfudhfHeading) {
+    public double calculateTurningPower(double currentHeading) {
         if (!pedro) {
             return clamp(turningpower * 0.5);
         }
-        double error = Angle.normalize(targetHeading - ehiuafhiushfuidshfsudhfdsufdshfudshfudhfHeading);
+        // normalizeSigned, not normalize: the error must keep its sign, or a
+        // heading above the target reads as a large positive error and the
+        // robot turns the wrong way (clamped to full power).
+        double error = Angle.normalizeSigned(targetHeading - currentHeading);
         double result = error * 0.5; // TODO: tune on auto align test
         return clamp(result);
     }
