@@ -147,14 +147,12 @@ public class Robot {
         return ROBOT_DAEMON_ORDER.indexOf(name);
     }
 
-    // FTCUtils 0.1.1's scanner requires boxed Void, not primitive void.
 
     /** Step 1: advance the loop clock and cache dt for this loop. */
     @FTCDaemon(name = "robot-clock")
-    public static Void clockDaemon() {
+    public static void clockDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepClock();
-        return null;
     }
 
     private void stepClock() {
@@ -164,10 +162,9 @@ public class Robot {
 
     /** Step 2: refresh the cached battery voltage (300 ms cache). */
     @FTCDaemon(name = "robot-battery")
-    public static Void batteryDaemon() {
+    public static void batteryDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepBattery();
-        return null;
     }
 
     private void stepBattery() {
@@ -176,10 +173,9 @@ public class Robot {
 
     /** Step 3: apply this loop's teleop drive input, if any. */
     @FTCDaemon(name = "robot-teleop-drive")
-    public static Void teleOpDriveDaemon() {
+    public static void teleOpDriveDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepTeleOpDrive();
-        return null;
     }
 
     private void stepTeleOpDrive() {
@@ -195,10 +191,9 @@ public class Robot {
 
     /** Step 4: update vision with the current heading. */
     @FTCDaemon(name = "robot-vision")
-    public static Void visionDaemon() {
+    public static void visionDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepVision();
-        return null;
     }
 
     private void stepVision() {
@@ -207,10 +202,9 @@ public class Robot {
 
     /** Step 5: refresh the hive tip state from the closest hive pose. */
     @FTCDaemon(name = "robot-hive-state")
-    public static Void hiveStateDaemon() {
+    public static void hiveStateDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepHiveState();
-        return null;
     }
 
     private void stepHiveState() {
@@ -219,10 +213,9 @@ public class Robot {
 
     /** Step 6: feed the hive state and pose to the auto-aimer. */
     @FTCDaemon(name = "robot-aimer")
-    public static Void aimerDaemon() {
+    public static void aimerDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepAimer();
-        return null;
     }
 
     private void stepAimer() {
@@ -232,10 +225,9 @@ public class Robot {
 
     /** Step 7: run the follower (path following / teleop drive). */
     @FTCDaemon(name = "robot-follower")
-    public static Void followerDaemon() {
+    public static void followerDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepFollower();
-        return null;
     }
 
     private void stepFollower() {
@@ -251,10 +243,9 @@ public class Robot {
      * (panic / reverse outtake) still win inside smartShooterUpdate.
      */
     @FTCDaemon(name = "robot-smart-control")
-    public static Void smartControlDaemon() {
+    public static void smartControlDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepSmartControl();
-        return null;
     }
 
     private void stepSmartControl() {
@@ -264,10 +255,9 @@ public class Robot {
 
     /** Step 9: per-loop mechanism updates. */
     @FTCDaemon(name = "robot-mechanisms")
-    public static Void mechanismsDaemon() {
+    public static void mechanismsDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepMechanisms();
-        return null;
     }
 
     private void stepMechanisms() {
@@ -278,10 +268,9 @@ public class Robot {
 
     /** Step 10: lights state machine + LED output. */
     @FTCDaemon(name = "robot-lights")
-    public static Void lightsDaemon() {
+    public static void lightsDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepLights();
-        return null;
     }
 
     private void stepLights() {
@@ -291,10 +280,9 @@ public class Robot {
 
     /** Step 11: debug telemetry, when enabled. */
     @FTCDaemon(name = "robot-debug")
-    public static Void debugDaemon() {
+    public static void debugDaemon() {
         Robot robot = current;
         if (robot != null && robot.running) robot.stepDebug();
-        return null;
     }
 
     private void stepDebug() {
@@ -315,7 +303,7 @@ public class Robot {
         telemetry.addData("=== LIGHTS DEBUG ===", "\n"+lights.getDebugString());
         telemetry.addData("=== VISION DEBUG ===", "\n"+vision.getDebugString());
         telemetry.addData("=== AUTO AIMER CALCULATOR DEBUG ===", "\n"+autoAimerCalculator.getDebugString());
-        telemetry.addData("=== SHOT CALC DEBUG", shooter.shotCalculator.getDebugString());
+        telemetry.addData("=== SHOT CALC DEBUG ===", "\n"+shooter.shotCalculator.getDebugString());
     }
     public void stopAllSubsystems() {
         //allHubs.forEach(LynxModule::close);
