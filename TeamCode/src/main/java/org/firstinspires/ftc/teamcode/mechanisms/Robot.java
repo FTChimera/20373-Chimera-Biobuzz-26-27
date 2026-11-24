@@ -18,6 +18,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import com.rmsftc.utils.DriveVector;
+import org.firstinspires.ftc.teamcode.util.SimEnvironment;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
@@ -99,8 +100,12 @@ public class Robot {
         intake = new Intake(hardwareMap, color);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap, color);
-        lights = new Lights(hardwareMap, color);
-        vision = new Vision(hardwareMap, color);
+        // ftcsim provides no Limelight or Prism device, so in sim both are
+        // replaced with no-hardware stubs; on the robot this is unchanged.
+        lights = SimEnvironment.isSimulation()
+                ? Lights.stub(hardwareMap, color) : new Lights(hardwareMap, color);
+        vision = SimEnvironment.isSimulation()
+                ? Vision.stub(hardwareMap, color) : new Vision(hardwareMap, color);
         field = new Field(color, 17, 17);
         this.robotMode = robotMode;
         voltageSensors = hardwareMap.voltageSensor;

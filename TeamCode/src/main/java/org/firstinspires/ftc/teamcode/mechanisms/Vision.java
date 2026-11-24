@@ -55,8 +55,29 @@ public class Vision {
     private String localizationReliabilityReason = "Vision update has not run yet.";
 
     public Vision(HardwareMap hardwareMap, AllianceColor allianceColor) {
+        this(allianceColor, hardwareMap);
+    }
+
+    /**
+     * No-hardware path, for {@link StubVision} in the simulator: ftcsim has no
+     * Limelight3A device, so there is nothing to look up. Leaves
+     * {@code limelight3A} and {@code camTransform} null; StubVision overrides
+     * every method that would touch them.
+     */
+    protected Vision(AllianceColor allianceColor) {
+        this(allianceColor, null);
+    }
+
+    private Vision(AllianceColor allianceColor, HardwareMap hardwareMap) {
         if (allianceColor == null || allianceColor.isUnknown()) {
             throw new IllegalArgumentException("Vision requires alliance color RED or BLUE.");
+        }
+        this.allianceColor = allianceColor;
+        tags = new BiobuzzAprilTags(allianceColor);
+        if (hardwareMap == null) {
+            limelight3A = null;
+            camTransform = null;
+            return;
         }
         try {
             limelight3A = hardwareMap.get(Limelight3A.class, LIMELIGHT_NAME);
@@ -67,8 +88,6 @@ public class Vision {
             );
         }
         camTransform = new CamTransform(limelight3A, allianceColor);
-        tags = new BiobuzzAprilTags(allianceColor);
-        this.allianceColor = allianceColor;
     }
 
     // USUAL
@@ -485,9 +504,16 @@ public class Vision {
         return new StubVision(hardwareMap, allianceColor);
     }
 
+    /**
+     * Sim-only Vision: no Limelight hardware, so no tags are ever visible.
+     * Hive lineup therefore always runs to its timeout (as on the robot when
+     * the camera sees nothing) and the auto sequence continues; localization
+     * stays on the Pinpoint localizer. The {@code hardwareMap} argument is
+     * accepted for call-site compatibility and ignored.
+     */
     public static class StubVision extends Vision {
         public StubVision(HardwareMap hardwareMap, AllianceColor allianceColor) {
-            super(hardwareMap, allianceColor);
+            super(allianceColor);
         }
 
         @Override
@@ -505,6 +531,26 @@ public class Vision {
         @Override
         public boolean hasReliableLocalization() {return false;}
 
+        @Override
+        public boolean anyFiducial() { return false; }
 
+        @Override
+        public boolean anyAllianceFiducial() { return false; }
+
+        @Override
+        public boolean anyAllianceFiducialAfter(long notBeforeNanos) { return false; }
+
+        @Override
+        public String visibleTagIds() { return "none"; }
+
+        @Override
+        public Pose3D getBotposeRaw() { return null; }
+
+        @Override
+        public String getDebugString() {
+            return "SIM stub vision: no Limelight, no tags."
+                    + " Alliance=" + allianceColor
+                    + " DesiredPipeline=" + getDesiredPipelineIndex();
+        }
     }
 }

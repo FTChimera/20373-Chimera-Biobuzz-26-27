@@ -81,16 +81,30 @@ public class Lights {
             .build();
 
     public Lights(HardwareMap hardwareMap, AllianceColor allianceColor) {
+        this(allianceColor, hardwareMap);
+    }
+
+    /**
+     * No-hardware path, for {@link StubLights} in the simulator: ftcsim has no
+     * Prism device, so there is nothing to look up. Leaves {@code prism} null;
+     * StubLights overrides every method that would touch it.
+     */
+    protected Lights(AllianceColor allianceColor) {
+        this(allianceColor, null);
+    }
+
+    private Lights(AllianceColor allianceColor, HardwareMap hardwareMap) {
+        this.allianceColor = allianceColor;
+        if (hardwareMap == null) {
+            prism = null;
+            return;
+        }
         try {
             prism = hardwareMap.get(GoBildaPrismDriver.class, "prism");
         } catch (RuntimeException ignored) {
-            if (false) {}//this instanceof StubLights
-            else {
-                throw new IllegalStateException("Prism not found in config");
-            }
+            throw new IllegalStateException("Prism not found in config");
         }
         prism.clearAllAnimations();
-        this.allianceColor = allianceColor;
         //displayAllianceColor();
         displayTeamColor();
     }
@@ -353,16 +367,88 @@ public class Lights {
         }
     }
 
-//    public static class StubLights extends Lights {
-//
-//        public StubLights(HardwareMap hardwareMap, AllianceColor allianceColor) {
-//            super(hardwareMap, allianceColor);
-//        }
-//
-//        @Override
-//        public void update() {
-//            prism.clearAllAnimations();
-//        }
-//
-//    }
+    public static StubLights stub(HardwareMap hardwareMap, AllianceColor allianceColor) {
+        return new StubLights(hardwareMap, allianceColor);
+    }
+
+    /**
+     * Sim-only Lights: no Prism hardware, so every display call is a no-op.
+     * The {@code hardwareMap} argument is accepted for call-site compatibility
+     * and ignored. Base-status / event state is not tracked: in sim there is
+     * nothing to show, and callers must not depend on light state.
+     */
+    public static class StubLights extends Lights {
+        public StubLights(HardwareMap hardwareMap, AllianceColor allianceColor) {
+            super(allianceColor);
+        }
+
+        @Override
+        public void start() {}
+
+        @Override
+        public void update() {}
+
+        @Override
+        public void displayTeamColor() {}
+
+        @Override
+        public void rainbowParty() {}
+
+        @Override
+        public void displayGreen() {}
+
+        @Override
+        public void flashRed() {}
+
+        @Override
+        public void oneMinThing() {}
+
+        @Override
+        public void off() {}
+
+        @Override
+        public void clearAll() {}
+
+        @Override
+        public void stop() {}
+
+        @Override
+        public void stopEventAnimation() {}
+
+        @Override
+        public void onReZero() {}
+
+        @Override
+        public void onIntakeOn() {}
+
+        @Override
+        public void onIntakeOff() {}
+
+        @Override
+        public void onDeployerToggle(boolean deployed) {}
+
+        @Override
+        public void onEjectStart() {}
+
+        @Override
+        public void onShootStart() {}
+
+        @Override
+        public void onReverseOuttakeStart() {}
+
+        @Override
+        public void onPanicStart() {}
+
+        @Override
+        public void onParkStart() {}
+
+        @Override
+        public void displayTransferColor(BallCol ballCol, boolean readyToShoot) {}
+
+        @Override
+        public void displayAllianceColor() {}
+
+        @Override
+        public String getDebugString() { return "SIM stub lights"; }
+    }
 }

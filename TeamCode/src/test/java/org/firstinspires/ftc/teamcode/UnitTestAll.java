@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.mechanisms.RobotParkingTest;
+import org.firstinspires.ftc.teamcode.mechanisms.SimFakesTest;
 import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuningMathTest;
 import org.firstinspires.ftc.teamcode.planners.UtilityPosesTest;
 import org.firstinspires.ftc.teamcode.planners.modules.NullPlannerTest;
@@ -21,6 +22,7 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         RobotParkingTest.class,
+        SimFakesTest.class,
         EKFPinpointTuningMathTest.class,
         UtilityPosesTest.class,
         NullPlannerTest.class,
