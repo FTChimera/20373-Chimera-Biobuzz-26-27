@@ -50,7 +50,7 @@ tasks.named('run', JavaExec) {
     workingDir rootDir
     classpath = orderedClasspath()
     doFirst {
-        def modes = providers.gradleProperty('simOpmodes').orElse("org.firstinspires.ftc.teamcode.opmodes.DisplayStand,org.firstinspires.ftc.teamcode.opmodes.MainTeleOp,org.firstinspires.ftc.teamcode.opmodes.auto.BasicAutonPreloads,org.firstinspires.ftc.teamcode.opmodes.auto.Garden8,org.firstinspires.ftc.teamcode.opmodes.auto.ParkAuto,org.firstinspires.ftc.teamcode.robotDev.AutoTuner.VelocityPIDFTunerOpMode,org.firstinspires.ftc.teamcode.robotDev.lights.SampleRevBlinkinLedDriver").get()
+        def modes = providers.gradleProperty('simOpmodes').orElse("org.firstinspires.ftc.teamcode.opmodes.DisplayStand,org.firstinspires.ftc.teamcode.opmodes.MainTeleOp,org.firstinspires.ftc.teamcode.opmodes.auto.GardenSoloAuto,org.firstinspires.ftc.teamcode.opmodes.auto.LoadingSoloAuto,org.firstinspires.ftc.teamcode.opmodes.auto.Garden8,org.firstinspires.ftc.teamcode.opmodes.auto.ParkAuto,org.firstinspires.ftc.teamcode.robotDev.AutoTuner.VelocityPIDFTunerOpMode,org.firstinspires.ftc.teamcode.robotDev.lights.SampleRevBlinkinLedDriver").get()
         def values = ['--sim', providers.gradleProperty('simEndpoint').orElse('ws://localhost:9015/sim').get(),
                       '--ds-port', providers.gradleProperty('simDsPort').orElse('1115').get()]
         modes.split(',').collect { it.trim() }.findAll { it }.each { values += ['--opmode', it] }
