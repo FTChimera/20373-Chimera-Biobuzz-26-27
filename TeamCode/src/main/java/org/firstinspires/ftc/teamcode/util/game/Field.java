@@ -60,7 +60,7 @@ public class Field {
 
     private HiveState hiveState;
     public static final GeometryFactory geometryFactory = new GeometryFactory();
-    public static final DijkstraPathfinder pathfinder = new DijkstraPathfinder();
+    public static final AStarPathfinder pathfinder = new AStarPathfinder();
     public Polygon loadingZone;
     private Geometry obstacles;
     private Geometry flowerObstacles;
@@ -213,7 +213,7 @@ public class Field {
             // the inset waypoints, where the full body diagonal fits.
             segments[i] = Paths.line(from, to).linear(from, to);
         }
-        // A smoothing spline can cut back through the obstacles avoided by Dijkstra.
+        // A smoothing spline can cut back through the obstacles avoided by the pathfinder.
         return Paths.path(segments);
     }
 

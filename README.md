@@ -23,7 +23,7 @@ Chimera has been through two builds this season:
 
 A few of the ideas doing the heavy lifting:
 
-- **Dijkstra's shortest path for parking.** The endgame park route is planned on a visibility graph: the field is reduced to waypoints (start, goal, a 3x3 lattice of fixed points, and obstacle corners) and [Dijkstra's algorithm](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/util/game/DijkstraPathfinder.java) finds the shortest path around forbidden space — the hive bases and the flowers — using the [JTS Topology Suite](https://github.com/locationtech/jts) for the geometry.
+- **A\* search for parking.** The endgame park route is planned by [A\*](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/util/game/AStarPathfinder.java) over a 6-inch cell grid of the whole field (24x24): 8-direction moves with no diagonal corner-cutting, an octile heuristic, line-of-sight-checked steps, and a smoothing pass that collapses the grid staircase into straight legs around forbidden space — the hive bases and the flowers — using the [JTS Topology Suite](https://github.com/locationtech/jts) for the geometry.
 - **Kalman-filter localization.** [`FusionLocalizer`](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedro/FusionLocalizer.java) fuses dead reckoning with measurements through a Kalman filter (covariance tracking, history buffer), and [`util/control/filters/`](TeamCode/src/main/java/org/firstinspires/ftc/teamcode/util/control/filters) holds a hand-written extended Kalman filter for nonlinear models.
 - **PIDSVA flywheel control, tuned automatically.** The two-motor shooter runs a full velocity controller — PID plus feedforward (kS/kV/kA) with voltage compensation — and its constants come from a custom PIDSVA autotuner (relay test + Ziegler-Nichols + least-squares fit), built on [Aarav Dhawan's FtcAutoTune](https://github.com/aaravdhawan25/FtcAutoTune).
 - **Command-based autonomous.** Autos are composed from [BehaviorArchitectures](https://github.com/shlok-k720/BehaviorArchitectures) commands (`Plan.sequence` + `PathPlanner`), so each routine is a chain of small reusable steps: drive a path, intake, line up on the hive, shoot, park.
@@ -51,7 +51,7 @@ robotDev/     Development and tuning tools: AutoTuner, subsystem tests
 util/         Shared building blocks, grouped by job:
   autotune/   Relay tuner, Ziegler-Nichols, S/V/A fit
   control/    PID/PIDF controllers, filters (incl. extended Kalman filter)
-  game/       Field model, hive state, Dijkstra pathfinder
+  game/       Field model, hive state, A* pathfinder
   hardware/   SmartFlywheel, cached motors, gamepad helpers
   shotcalc/   Shot tables and the ideal shot model (per motor)
   ...plus math, poses, interpolation, localization

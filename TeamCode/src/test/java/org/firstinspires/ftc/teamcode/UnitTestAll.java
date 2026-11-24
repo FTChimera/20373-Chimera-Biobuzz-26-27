@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.util.autotune.SvaFitTest;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityControllerTest;
 import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilterConvergenceTest;
 import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilterTest;
+import org.firstinspires.ftc.teamcode.util.game.AStarPathfinderTest;
 import org.firstinspires.ftc.teamcode.util.game.AuditCorrectionsTest;
 import org.firstinspires.ftc.teamcode.util.hardware.actuator.SmartFlywheelParamsTest;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVectorTest;
@@ -32,6 +33,7 @@ import org.junit.runners.Suite;
         ExtendedKalmanFilterConvergenceTest.class,
         ExtendedKalmanFilterTest.class,
         AuditCorrectionsTest.class,
+        AStarPathfinderTest.class,
         SmartFlywheelParamsTest.class,
         DriveVectorTest.class,
         VisionLocalizationMathTest.class,
