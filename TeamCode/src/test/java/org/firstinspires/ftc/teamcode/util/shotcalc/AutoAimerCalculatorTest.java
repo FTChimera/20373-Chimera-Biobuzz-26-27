@@ -48,7 +48,7 @@ public class AutoAimerCalculatorTest {
         calculator.updatePedro(
                 new com.pedropathing.math.Pose(20.0, 60.0, 0.0),
                 new com.pedropathing.math.Velocity(0.0, 30.0, 0.0),
-                0.0);
+                0.0, true);
 
         // Raw bearing to the goal is 0. Driving 30 in/s sideways (+y), the
         // ball inherits that velocity, so the aim heading rotates AGAINST
@@ -61,12 +61,41 @@ public class AutoAimerCalculatorTest {
     }
 
     @Test
+    public void updatePedroFlagOffGivesRawBearing() {
+        AutoAimerCalculator calculator = new AutoAimerCalculator(AllianceColor.RED);
+        calculator.updatePedro(
+                new com.pedropathing.math.Pose(20.0, 60.0, 0.0),
+                new com.pedropathing.math.Velocity(0.0, 30.0, 0.0),
+                0.0);
+
+        // Same geometry as updatePedroAppliesShootOnMoveHeadingOffset, but
+        // with the SOTM flag off (the 3-arg overload defaults it off): no
+        // heading offset, so the aim is the raw bearing to the goal (0).
+        assertEquals(0.0, calculator.getTargetHeading(), EPSILON);
+    }
+
+    @Test
+    public void updatePedroFlagOffIgnoresVelocityForPosePrediction() {
+        AutoAimerCalculator calculator = new AutoAimerCalculator(AllianceColor.RED);
+        calculator.updatePedro(
+                new com.pedropathing.math.Pose(20.0, 60.0, 0.0),
+                new com.pedropathing.math.Velocity(0.0, 30.0, 0.0),
+                1.0);
+
+        // With the flag off the latency pose prediction is skipped too: the
+        // corrected pose is the raw pose, so the bearing is still 0. (With
+        // the flag on, the pose would predict forward to (20, 90), so the
+        // bearing would no longer be 0.)
+        assertEquals(0.0, calculator.getTargetHeading(), EPSILON);
+    }
+
+    @Test
     public void updatePedroHeadingOffsetMirrorsWithSidewaysDirection() {
         AutoAimerCalculator calculator = new AutoAimerCalculator(AllianceColor.RED);
         calculator.updatePedro(
                 new com.pedropathing.math.Pose(20.0, 60.0, 0.0),
                 new com.pedropathing.math.Velocity(0.0, -30.0, 0.0),
-                0.0);
+                0.0, true);
 
         // Same geometry, drift the other way: the offset mirrors to +18.17 deg.
         assertEquals(0.3170499837428561, calculator.getTargetHeading(), EPSILON);

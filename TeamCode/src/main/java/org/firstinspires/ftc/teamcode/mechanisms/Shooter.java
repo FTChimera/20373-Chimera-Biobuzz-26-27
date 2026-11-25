@@ -67,7 +67,18 @@ public class Shooter {
     private int target_main_velocity = 0;
     private int target_counter_velocity = 0;
     double distToGoal = 0;
-    public Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
+    /**
+     * THE single shoot-on-the-move master flag: one boolean for all of SOTM.
+     * When false (default) everything behaves stationary — raw-bearing aim,
+     * static table wheel speed, no pose-at-release prediction. When true, the
+     * heading compensation (AutoAimerCalculator), the wheel-speed
+     * compensation and the pose-at-release prediction (shot calculators) all
+     * turn on together. Static so there is exactly one variable (and one FTC
+     * Dashboard entry) shared by every Shooter/Robot; toggled live on the
+     * dashboard — see Robot's constructor, which uploads it. Session only:
+     * it resets to false on app restart.
+     */
+    public static final Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
         this.color = color;

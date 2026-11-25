@@ -20,6 +20,7 @@ import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.SimEnvironment;
+import org.firstinspires.ftc.teamcode.util.dashboard.DashboardVars;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 import com.rmsftc.utils.AllianceColor;
@@ -96,6 +97,11 @@ public class Robot {
         intake = new Intake(hardwareMap, color);
         transfer = new Transfer(hardwareMap);
         shooter = new Shooter(hardwareMap, color);
+        // The single SOTM master flag, on the FTC Dashboard: every OpMode
+        // builds a Robot in onInit, so this covers teleop and all autos.
+        // Idempotent (DashboardVars tracks uploaded vars) and the var is
+        // static, so repeated Robot constructions re-upload the same entry.
+        DashboardVars.upload(Shooter.useSotm);
         // ftcsim provides no Limelight or Prism device, so in sim both are
         // replaced with no-hardware stubs; on the robot this is unchanged.
         lights = SimEnvironment.isSimulation()
@@ -235,7 +241,7 @@ public class Robot {
 
     private void stepAimer() {
         autoAimerCalculator.setHiveState(field.getHiveState());
-        autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt);
+        autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt, Shooter.useSotm.get());
     }
 
     /** Step 7: run the follower (path following / teleop drive). */

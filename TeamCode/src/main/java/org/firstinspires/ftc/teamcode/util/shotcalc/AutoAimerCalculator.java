@@ -30,7 +30,18 @@ public class AutoAimerCalculator {
         this.hiveState = Field.HiveState.UNTIPPED;
     }
 
-    public void updatePedro(Pose robotPose, Velocity velocity, double latencySeconds) {
+    /**
+     * Pedro auto-aim with the shoot-on-the-move flag. When {@code sotm} is
+     * false the robot is treated as stationary: the heading is the raw
+     * bearing from the current pose, with no latency pose prediction and no
+     * velocity compensation. When true, the pose is predicted forward by
+     * the latency and the heading is rotated against the robot's sideways
+     * drift (same vector equation the shot calculators use). This is the
+     * heading third of the single SOTM master flag ({@code Shooter.useSotm});
+     * the other two thirds (wheel-speed compensation, pose-at-release) live
+     * in the shot calculators and read the same flag.
+     */
+    public void updatePedro(Pose robotPose, Velocity velocity, double latencySeconds, boolean sotm) {
         if (robotPose == null || velocity == null) {
             throw new IllegalArgumentException("Robot pose and velocity are required for Pedro auto-aim.");
         }
@@ -38,12 +49,17 @@ public class AutoAimerCalculator {
             throw new IllegalArgumentException("Auto-aim latency must be finite and nonnegative.");
         }
         this.pedro = true;
-        correctedPose = PoseFactory.of(robotPose).exp(velocity, latencySeconds);
+        correctedPose = sotm
+                ? PoseFactory.of(robotPose).exp(velocity, latencySeconds)
+                : PoseFactory.of(robotPose);
         Pose hivePose = hiveState.goalPose(color);
         targetHeading = Angle.normalize(Math.atan2(
                 hivePose.y() - correctedPose.y(),
                 hivePose.x() - correctedPose.x()
         ));
+        if (!sotm) {
+            return;
+        }
         // Shoot-on-the-move: the ball inherits robot velocity, so the aim
         // heading is the compensated launch direction, not the raw bearing.
         // The offset is the same vector equation the shot calculators use
@@ -73,6 +89,11 @@ public class AutoAimerCalculator {
                 targetHeading = Angle.normalize(targetHeading + compensation[1]);
             }
         }
+    }
+
+    /** SOTM off: stationary aim (raw bearing, no pose prediction). */
+    public void updatePedro(Pose robotPose, Velocity velocity, double latencySeconds) {
+        updatePedro(robotPose, velocity, latencySeconds, false);
     }
 
     public void updatePedro(Pose robotPose, Velocity velocity) {
