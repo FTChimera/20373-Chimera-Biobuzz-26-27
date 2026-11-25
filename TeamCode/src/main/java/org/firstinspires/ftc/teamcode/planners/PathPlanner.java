@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import com.rmsftc.cmdlib.EndCondition;
 import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
+import com.rmsftc.cmdlib.cmd.Commands;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import com.rmsftc.utils.math.Pose;
@@ -61,8 +62,20 @@ public abstract class PathPlanner extends Command {
 
     @Override
     public final void start() {
-        buildPaths();
-        inner = buildCommand();
+        try {
+            buildPaths();
+            inner = buildCommand();
+        } catch (RuntimeException pathFailure) {
+            // A leg that cannot build its paths must degrade, not kill the
+            // OpMode: BA does not catch exceptions from start(), so a throw
+            // here would skip onStop (and stopEverything). End the leg at
+            // once; the sequence continues from the declared pose chain.
+            // (NullPlanner tests pass a null Robot, so the telemetry is guarded.)
+            if (robot != null) {
+                robot.telemetry.addData("Leg path failed", "%s: %s", toString(), pathFailure.getMessage());
+            }
+            inner = Commands.waitMs(0);
+        }
         innerStatus = Status.RUNNING;
     }
 

@@ -246,6 +246,18 @@ public final class TreeShooterCommands {
                         robot.telemetry.addData("Tree batch result",
                                 "%s; settled=%s tagSeen=%s; scores UNCONFIRMED",
                                 feed.outcome(), poseSettled, tagSeen);
+                    } else if (feed.outcome() == ShooterCommands.ShotOutcome.SKIPPED) {
+                        // Zero-target shot: nothing was fed, so no batch was
+                        // attempted and the tip model must not advance — but
+                        // the leg is still consumed (its intake area is
+                        // marked done) so selection moves on instead of
+                        // re-selecting the skipped leg.
+                        boolean positionVerified = robot.getPose().distance(TreeState.poseFor(shotSide))
+                                <= POSITION_TOLERANCE_IN;
+                        state.recordSkippedShot(shotSide, poseSettled, tagSeen, positionVerified);
+                        state.markIntakeDone(intakeArea);
+                        robot.telemetry.addData("Tree batch skipped",
+                                "zero shooter target; pollen still loaded, moving on");
                     } else {
                         state.abortControlPath("Feed ended without a completed batch attempt: " + feed.outcome());
                     }

@@ -174,6 +174,66 @@ public class TreeStateTest {
     }
 
     @Test
+    public void skippedShotAdvancesPositionWithoutCountingCycleOrAdvancingTipModel() {
+        state.initialize();
+        state.setPosition(Position.GARDEN_SHOOT);
+        state.recordSkippedShot(Position.GARDEN_SHOOT, true, true, true);
+
+        assertEquals(0, state.attemptedBatches());
+        assertEquals(0, state.cyclesCompleted());
+        assertEquals(ShotOutcome.SKIPPED, state.lastShotOutcome());
+        assertTrue(state.lastShotSettled());
+        assertTrue(state.lastShotTagConfirmed());
+        // A skip feeds nothing, so the tip model must not advance.
+        assertFalse(state.predictionUncertain());
+        assertEquals(Field.HiveState.UNTIPPED, state.predictedHiveState());
+        assertEquals(Position.GARDEN_SHOOT, state.position());
+        assertTrue(state.intakesDone().isEmpty());
+        assertFalse(state.controlPathAborted());
+        assertFalse(state.sequenceComplete());
+    }
+
+    @Test
+    public void skippedShotConsumesItsLegSoSelectionMovesOnInsteadOfLooping() {
+        state.initialize();
+        state.setPosition(Position.GARDEN_SHOOT);
+        // The FEED phase's skip handling: record the skip, then mark the
+        // leg's intake done. Without the mark, selection would re-pick
+        // WEST_FLOWER from the same position with the same cycle count.
+        state.recordSkippedShot(Position.GARDEN_SHOOT, true, false, true);
+        state.markIntakeDone(TreeState.IntakeArea.WEST_FLOWER);
+
+        assertEquals(0, state.attemptedBatches());
+        assertEquals(ShotOutcome.SKIPPED, state.lastShotOutcome());
+        assertEquals(TreeState.Selection.GARDEN, state.selectLeg());
+    }
+
+    @Test
+    public void skippedShotWithoutVerifiedArrivalAbortsWithoutAdvertisingDestination() {
+        state.initialize();
+        state.setPosition(Position.GARDEN_SHOOT);
+        state.recordSkippedShot(Position.LOADING_SHOOT, true, true, false);
+
+        assertEquals(0, state.attemptedBatches());
+        assertEquals(ShotOutcome.SKIPPED, state.lastShotOutcome());
+        assertEquals(Position.GARDEN_SHOOT, state.position());
+        assertTrue(state.controlPathAborted());
+        assertFalse(state.controlPathFailure().isEmpty());
+        assertEquals(TreeState.Selection.NONE, state.selectLeg());
+    }
+
+    @Test
+    public void skippedShotRejectsNonShootPositionsBeforeAnyStateMutation() {
+        state.initialize();
+        Map<String, Object> before = snapshot();
+        for (Position position : new Position[]{Position.GARDEN_START, null}) {
+            assertThrows(IllegalArgumentException.class,
+                    () -> state.recordSkippedShot(position, true, true, true));
+            assertEquals(before, snapshot());
+        }
+    }
+
+    @Test
     public void abortPreventsPreloadWithoutPretendingSequenceCompleted() {
         state.initialize();
         state.abortControlPath("unsafe switch");

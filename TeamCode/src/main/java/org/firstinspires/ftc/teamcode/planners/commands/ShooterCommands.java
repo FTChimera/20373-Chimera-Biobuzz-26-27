@@ -16,13 +16,19 @@ import java.util.concurrent.TimeUnit;
 
 public class ShooterCommands {
 
-    /** A completed timed feed is an attempted batch, never a confirmed score. */
+    /**
+     * A completed timed feed is an attempted batch, never a confirmed score.
+     * SKIPPED is a zero velocity target: nothing was fed, so it is neither
+     * an attempt nor an interruption — the sequence moves on with the pollen
+     * still loaded.
+     */
     public enum ShotOutcome {
         NOT_STARTED,
         WAITING_FOR_SPEED,
         FEEDING,
         ATTEMPTED,
         ATTEMPTED_SPINUP_TIMEOUT,
+        SKIPPED,
         INTERRUPTED
     }
 
@@ -53,12 +59,25 @@ public class ShooterCommands {
         }
 
         void end(boolean interrupted) {
-            if (attempted() || outcome == ShotOutcome.INTERRUPTED) {
+            if (attempted() || outcome == ShotOutcome.INTERRUPTED || outcome == ShotOutcome.SKIPPED) {
                 return;
             }
             outcome = !interrupted && outcome == ShotOutcome.FEEDING
                     ? (spinupTimedOut ? ShotOutcome.ATTEMPTED_SPINUP_TIMEOUT : ShotOutcome.ATTEMPTED)
                     : ShotOutcome.INTERRUPTED;
+        }
+
+        /**
+         * Ends the shot as skipped (zero velocity target): nothing was fed,
+         * so this is neither an attempt nor an interruption. Only valid
+         * while waiting for speed, like {@link #feed(boolean)}. Terminal:
+         * later end() calls leave SKIPPED in place.
+         */
+        void skip() {
+            if (outcome != ShotOutcome.WAITING_FOR_SPEED) {
+                throw new IllegalStateException("Skipping requires waiting for shooter speed");
+            }
+            outcome = ShotOutcome.SKIPPED;
         }
     }
 
@@ -176,11 +195,12 @@ public class ShooterCommands {
             }
             if (!upToSpeed && !robot.shooter.hasNonzeroVelocityTarget()) {
                 // Infeasible shot (zero target — e.g. SOTM over-speed): never
-                // feed balls into a stopped flywheel. End as not attempted;
-                // the sequence moves on with the pollen still loaded.
+                // feed balls into a stopped flywheel. End as skipped, not
+                // interrupted: the sequence moves on with the pollen still
+                // loaded, and the tree must not abort on a skipped batch.
                 robot.telemetry.addData("Shooter spinup timeout",
                         "WARNING: zero shooter velocity target; shot skipped, no feed");
-                lifecycle.end(false);
+                lifecycle.skip();
                 return;
             }
             if (!upToSpeed) {
@@ -195,7 +215,8 @@ public class ShooterCommands {
 
         @Override
         public Status status() {
-            return Status.of(!attempted() && outcome() != ShotOutcome.INTERRUPTED);
+            return Status.of(!attempted() && outcome() != ShotOutcome.INTERRUPTED
+                    && outcome() != ShotOutcome.SKIPPED);
         }
 
         @Override

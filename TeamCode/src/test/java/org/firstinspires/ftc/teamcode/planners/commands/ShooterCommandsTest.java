@@ -73,6 +73,32 @@ public class ShooterCommandsTest {
     }
 
     @Test
+    public void zeroTargetSkipEndsAsSkippedNotInterrupted() {
+        shot.start();
+        shot.skip();
+        assertEquals(SKIPPED, shot.outcome());
+        assertFalse(shot.attempted());
+    }
+
+    @Test
+    public void skippedOutcomeIsTerminalAcrossEndCalls() {
+        shot.start();
+        shot.skip();
+        shot.end(false);
+        assertEquals(SKIPPED, shot.outcome());
+        shot.end(true);
+        assertEquals(SKIPPED, shot.outcome());
+        assertFalse(shot.attempted());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void cannotSkipAfterFeeding() {
+        shot.start();
+        shot.feed(false);
+        shot.skip();
+    }
+
+    @Test
     public void repeatedEndPreservesTerminalOutcomes() {
         shot.start();
         shot.feed(false);

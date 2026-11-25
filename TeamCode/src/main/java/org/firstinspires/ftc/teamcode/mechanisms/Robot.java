@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.localization.MotionState;
 import com.pedropathing.math.Twist;
 import com.pedropathing.math.Velocity;
+import com.pedropathing.paths.Path;
 import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -487,37 +488,47 @@ public class Robot {
         return true;
     }
 
+    /**
+     * Drives to the loading zone (park), or holds if already overlapping it.
+     * Never throws: any path-generation failure returns false, and every
+     * caller retries on a 0.5 s interval. A failure before a new follow
+     * starts (overlap check, path generation, no route) leaves a running
+     * path alone; only a failure from {@code follower.follow()} itself
+     * stops the follower, so a half-started path cannot run.
+     */
     public boolean moveToParkZone() {
-        Pose correctedPose = getPoseCompensatedForVelocity();
         boolean previousHoldEnd = follower.holdEnd.get();
         boolean previousBrakeAtEnd = Constants.FOLLOWER_BRAKE_AT_END.get();
         follower.holdEnd.set(true); // alliance partner does not push
         Constants.FOLLOWER_BRAKE_AT_END.set(false);
-        if (field.isRobotOverlappingLoadingZone(correctedPose)) {
-            follower.hold(getPose());
-            setTeleOpDrive = false;
-            return true;
-        }
         try {
-            follower.follow(field.generatePathToLoadingZoneShortest(correctedPose, 3));// TODO TUNE INNER VAL
+            Pose correctedPose = getPoseCompensatedForVelocity();
+            if (field.isRobotOverlappingLoadingZone(correctedPose)) {
+                follower.hold(getPose());
+                setTeleOpDrive = false;
+                return true;
+            }
+            // Generate the path before starting any follow: a failure here
+            // means no new path was started.
+            Path path = field.generatePathToLoadingZoneShortest(correctedPose, 3); // TODO TUNE INNER VAL
+            try {
+                follower.follow(path);
+            } catch (RuntimeException followFailure) {
+                // A follow was attempted: stop so a half-started path cannot run.
+                follower.stop();
+                throw followFailure;
+            }
             // Prevent the queued manual command from replacing the path this loop.
             setTeleOpDrive = false;
             return true;
-        } catch (Field.NoRouteException exception) {
-            follower.stop();
+        } catch (RuntimeException failure) {
+            // Path generation (or the overlap check) failed before any new
+            // follow started: restore the shared follower flags and report
+            // park as unavailable. Never throws.
             follower.holdEnd.set(previousHoldEnd);
             Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
-            telemetry.addData("Park path unavailable", exception.getMessage());
+            telemetry.addData("Park path unavailable", failure.getMessage());
             return false;
-        } catch (RuntimeException exception) {
-            // Path generation (or the overlap check) threw something other
-            // than NoRoute: restore the shared follower flags the same way
-            // and rethrow — the caller decides. (No follower.stop() here:
-            // the throw may have come from the overlap check while an auto
-            // path was already running.)
-            follower.holdEnd.set(previousHoldEnd);
-            Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
-            throw exception;
         }
     }
 

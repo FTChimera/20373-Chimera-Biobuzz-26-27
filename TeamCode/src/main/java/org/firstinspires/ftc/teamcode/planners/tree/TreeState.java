@@ -265,6 +265,27 @@ public final class TreeState {
         }
     }
 
+    /**
+     * Records a skipped shot (zero velocity target): nothing was fed, so no
+     * batch was attempted and the tip model does not advance. The position
+     * still moves to the verified shot side, so selection moves on to the
+     * next leg instead of re-selecting the skipped one. The caller also
+     * marks the leg's intake area done, for the same reason; a skipped
+     * batch never counts as a completed attempt.
+     */
+    public void recordSkippedShot(Position shotFrom, boolean settled,
+                                  boolean tagSeen, boolean positionVerified) {
+        otherShootPosition(shotFrom);
+        lastShotOutcome = ShotOutcome.SKIPPED;
+        lastShotSettled = settled;
+        lastShotTagConfirmed = tagSeen;
+        if (positionVerified) {
+            position = shotFrom;
+        } else {
+            abortControlPath("Skipped shot without verified arrival at " + shotFrom);
+        }
+    }
+
     /** The leg (or reposition/none) the tree should run next. */
     public Selection selectLeg() {
         if (controlPathAborted()) return Selection.NONE;
