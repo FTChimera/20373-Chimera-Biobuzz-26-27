@@ -121,9 +121,22 @@ public class Robot {
         allHubs.forEach(lynxModule -> lynxModule.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO));
 
 
-        this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+        this.telemetry = buildTelemetry(telemetry);
         this.telemetry.clearAll();
         current = this;
+    }
+
+    /**
+     * Builds the Robot's telemetry. On the robot the FTC Dashboard telemetry
+     * is merged in; in sim the dashboard cannot initialize on the desktop JVM
+     * (FtcDashboard's class initializer eagerly builds the singleton, whose
+     * constructor needs an Android Activity), so plain telemetry only.
+     * Package-private for the regression test.
+     */
+    static MultipleTelemetry buildTelemetry(Telemetry telemetry) {
+        return SimEnvironment.isSimulation()
+                ? new MultipleTelemetry(telemetry)
+                : new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
     }
 
     public void start() {

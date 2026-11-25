@@ -9,6 +9,8 @@ import com.rmsftc.utils.config.vars.Validator;
 import com.rmsftc.utils.config.vars.Var;
 import com.rmsftc.utils.config.vars.Variables;
 
+import org.firstinspires.ftc.teamcode.util.SimEnvironment;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
@@ -78,8 +80,15 @@ public final class DashboardVars {
      * Uploads a named var to the dashboard under its section (idempotent:
      * a second call does nothing). Throws
      * {@link IllegalArgumentException} for an unnamed var.
+     *
+     * <p>In sim there is no dashboard (FtcDashboard cannot initialize on the
+     * desktop JVM), so this is a no-op — and the var is deliberately NOT
+     * marked uploaded, so a later robot-path upload still happens.
      */
     public static <T> void upload(Var<T> var) {
+        if (SimEnvironment.isSimulation()) {
+            return;
+        }
         if (uploadedVars.contains(var)) {
             return;
         }
@@ -87,8 +96,11 @@ public final class DashboardVars {
         uploadedVars.add(var);
     }
 
-    /** Uploads a var under an explicit section (not idempotent). */
+    /** Uploads a var under an explicit section (not idempotent). No-op in sim. */
     public static <T> void upload(Var<T> var, Section section) {
+        if (SimEnvironment.isSimulation()) {
+            return;
+        }
         FtcDashboard.getInstance().addConfigVariable(section.category, section.name,
                 new ValueProvider<T>() {
                     @Override
@@ -109,8 +121,13 @@ public final class DashboardVars {
      * {@link Section#MODIFIERS_CATEGORY} when the var is in
      * {@link Section#VARIABLES_CATEGORY}. Throws
      * {@link IllegalArgumentException} for a modifier of an unnamed var.
+     *
+     * <p>No-op in sim (see {@link #upload(Var)}).
      */
     public static <T> void upload(Modifier<T> modifier) {
+        if (SimEnvironment.isSimulation()) {
+            return;
+        }
         if (uploadedModifiers.contains(modifier)) {
             return;
         }
@@ -118,8 +135,11 @@ public final class DashboardVars {
         uploadedModifiers.add(modifier);
     }
 
-    /** Uploads a modifier under an explicit section (not idempotent). */
+    /** Uploads a modifier under an explicit section (not idempotent). No-op in sim. */
     public static <T> void upload(Modifier<T> modifier, Section section) {
+        if (SimEnvironment.isSimulation()) {
+            return;
+        }
         FtcDashboard.getInstance().addConfigVariable(section.category, section.name,
                 new VariableProvider<>(modifier.applied()));
     }

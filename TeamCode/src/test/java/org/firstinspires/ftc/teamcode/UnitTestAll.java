@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorageSimTest;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDashboardSimTest;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotParkingTest;
 import org.firstinspires.ftc.teamcode.mechanisms.SimFakesTest;
 import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuningMathTest;
@@ -29,6 +30,10 @@ import org.junit.runners.Suite;
         // class's javadoc for the load-order trap). No other test may
         // reference OpModeStorage before it.
         OpModeStorageSimTest.class,
+        // RobotDashboardSimTest second: same load-order trap for FtcDashboard
+        // (see that class's javadoc). No other test may reference
+        // FtcDashboard before it.
+        RobotDashboardSimTest.class,
         RobotParkingTest.class,
         SimFakesTest.class,
         EKFPinpointTuningMathTest.class,
