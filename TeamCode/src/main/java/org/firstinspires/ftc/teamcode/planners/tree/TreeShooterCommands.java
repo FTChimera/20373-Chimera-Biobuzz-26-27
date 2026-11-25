@@ -170,12 +170,12 @@ public final class TreeShooterCommands {
                 warn("Approach endpoint unverified; holding actual position for degraded planned attempt");
             }
             robot.follower.hold(hold);
-            settle = new SettleWindow(Clock.SYSTEM.nowNanos(), Constants.Tree.Shoot.SHOOT_SETTLE_MS);
+            settle = new SettleWindow(robot.clock.nowNanos(), Constants.Tree.Shoot.SHOOT_SETTLE_MS);
             phase = Phase.SETTLE;
         }
 
         @Override public void loop() {
-            long now = Clock.SYSTEM.nowNanos();
+            long now = robot.clock.nowNanos();
             switch (phase) {
                 case SETTLE:
                     poseSettled = settle.settled(
@@ -301,7 +301,7 @@ public final class TreeShooterCommands {
      */
     public static SideSwitchCommand switchSides(Robot robot, Position fromSide) {
         return new SideSwitchCommand(robot.follower, fromSide,
-                reason -> robot.telemetry.addData("Tree side switch ABORTED", reason), Clock.SYSTEM);
+                reason -> robot.telemetry.addData("Tree side switch ABORTED", reason), robot.clock);
     }
 
     public static final class SideSwitchCommand extends Command {

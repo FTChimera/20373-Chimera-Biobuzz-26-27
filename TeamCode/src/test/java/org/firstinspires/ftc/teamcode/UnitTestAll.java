@@ -9,6 +9,11 @@ import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuningMathTest
 import org.firstinspires.ftc.teamcode.planners.UtilityPosesTest;
 import org.firstinspires.ftc.teamcode.planners.modules.NullPlannerTest;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeStateTest;
+import org.firstinspires.ftc.teamcode.robotDev.sim.DriveDiagnosticProgressTest;
+import org.firstinspires.ftc.teamcode.robotDev.sim.SimHoldJitterMetricsTest;
+import org.firstinspires.ftc.teamcode.robotDev.sim.SimIntakeTransferMetricsTest;
+import org.firstinspires.ftc.teamcode.robotDev.sim.SimShooterStepMetricsTest;
+import org.firstinspires.ftc.teamcode.robotDev.sim.SimSotmAimMetricsTest;
 import org.firstinspires.ftc.teamcode.util.autotune.SvaFitTest;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityControllerTest;
 import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilterConvergenceTest;
@@ -26,19 +31,14 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-        // OpModeStorageSimTest MUST stay first: its static initializer sets
-        // the sim override before OpModeStorage first loads (see that
-        // class's javadoc for the load-order trap). No other test may
-        // reference OpModeStorage before it.
         OpModeStorageSimTest.class,
-        // RobotDashboardSimTest second: same load-order trap for FtcDashboard
-        // (see that class's javadoc). No other test may reference
-        // FtcDashboard before it.
         RobotDashboardSimTest.class,
-        // RobotDaemonsSimTest third: same sim-override convention as the
-        // two above (static initializer sets the override). It also
-        // cleans the global daemon registry before/after each test.
         RobotDaemonsSimTest.class,
+        DriveDiagnosticProgressTest.class,
+        SimSotmAimMetricsTest.class,
+        SimShooterStepMetricsTest.class,
+        SimHoldJitterMetricsTest.class,
+        SimIntakeTransferMetricsTest.class,
         RobotParkingTest.class,
         SimFakesTest.class,
         EKFPinpointTuningMathTest.class,

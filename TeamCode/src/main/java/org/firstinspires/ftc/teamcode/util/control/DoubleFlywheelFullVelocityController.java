@@ -98,6 +98,7 @@ public class DoubleFlywheelFullVelocityController implements Controller<Double, 
     static final double DERIVATIVE_FILTER_TAU_SECONDS = 0.02;
 
     private final DoubleFlywheelFullVelocityConstants constants;
+    private final Clock clock;
     private DoubleSupplier voltageSupplier;
     private double appliedVoltageScale = 1.0;
 
@@ -111,7 +112,12 @@ public class DoubleFlywheelFullVelocityController implements Controller<Double, 
     private double output;
 
     public DoubleFlywheelFullVelocityController(DoubleFlywheelFullVelocityConstants constants) {
+        this(constants, Clock.SYSTEM);
+    }
+
+    public DoubleFlywheelFullVelocityController(DoubleFlywheelFullVelocityConstants constants, Clock clock) {
         this.constants = Objects.requireNonNull(constants, "constants must not be null");
+        this.clock = Objects.requireNonNull(clock, "clock must not be null");
         reset();
     }
 
@@ -239,7 +245,7 @@ public class DoubleFlywheelFullVelocityController implements Controller<Double, 
 
     @Override
     public void update(Double state) {
-        long now = Clock.SYSTEM.nowNanos();
+        long now = clock.nowNanos();
         double dt;
         if (lastTime == -1) {
             // First call (or just after reset): baseline only, no elapsed time.

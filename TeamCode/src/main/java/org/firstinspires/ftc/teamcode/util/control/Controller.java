@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.control;
 
+import com.rmsftc.utils.Clock;
+
 public interface Controller<StateT, TargetT, OutputT> {
     void update(StateT state);
     void reset();
@@ -15,6 +17,10 @@ public interface Controller<StateT, TargetT, OutputT> {
 
     static Controller<Double, Double, Double> doubleFlywheelFullVelocity(DoubleFlywheelFullVelocityConstants constants) {
         return new DoubleFlywheelFullVelocityController(constants);
+    }
+
+    static Controller<Double, Double, Double> doubleFlywheelFullVelocity(DoubleFlywheelFullVelocityConstants constants, Clock clock) {
+        return new DoubleFlywheelFullVelocityController(constants, clock);
     }
 
     static DoublePIDFController doublePIDF(DoublePIDFCoeffs coeffs) {

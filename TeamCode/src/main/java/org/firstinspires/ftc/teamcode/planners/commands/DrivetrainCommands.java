@@ -163,16 +163,28 @@ public class DrivetrainCommands {
         return follow(follower, () -> path);
     }
 
+    public static Command follow(Follower follower, Path path, Clock clock) {
+        return follow(follower, () -> path, clock);
+    }
+
     /** Parametric completion only, not a safety-critical settled-pose gate. */
     public static Command follow(Follower follower, Supplier<Path> pathSupplier) {
+        return follow(follower, pathSupplier, Clock.SYSTEM);
+    }
+
+    public static Command follow(Follower follower, Supplier<Path> pathSupplier, Clock clock) {
         return new FollowCommand(follower, pathSupplier, Double.POSITIVE_INFINITY,
-                0, false, false, null, Clock.SYSTEM);
+                0, false, false, null, clock);
     }
 
     /** Best-effort path: stops on timeout. For continued pushing use {@link #followForIntake}. */
     public static Command followWithTimeout(Follower follower, Supplier<Path> pathSupplier, double timeoutMs) {
+        return followWithTimeout(follower, pathSupplier, timeoutMs, Clock.SYSTEM);
+    }
+
+    public static Command followWithTimeout(Follower follower, Supplier<Path> pathSupplier, double timeoutMs, Clock clock) {
         requireDuration(timeoutMs);
-        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, false, null, Clock.SYSTEM);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, false, null, clock);
     }
 
     /**
@@ -185,7 +197,7 @@ public class DrivetrainCommands {
         return followForIntake(follower, pathSupplier, timeoutMs, dwellMs, Clock.SYSTEM);
     }
 
-    static Command followForIntake(Follower follower, Supplier<Path> pathSupplier,
+    public static Command followForIntake(Follower follower, Supplier<Path> pathSupplier,
                                   double timeoutMs, double dwellMs, Clock clock) {
         requireDuration(timeoutMs);
         requireDuration(dwellMs);
@@ -195,39 +207,69 @@ public class DrivetrainCommands {
     /** Fails explicitly and stops on timeout; never authorizes a side switch on timeout alone. */
     public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
                                                    double timeoutMs) {
+        return followSettledWithTimeout(follower, pathSupplier, timeoutMs, Clock.SYSTEM);
+    }
+
+    public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
+                                                   double timeoutMs, Clock clock) {
         return followSettledWithTimeout(follower, pathSupplier, timeoutMs, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.POSITION_TOLERANCE_IN,
-                org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC);
+                org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC, clock);
     }
 
     public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
                                                    double timeoutMs, double positionTolerance,
                                                    double headingTolerance, double linearVelocityTolerance,
                                                    double angularVelocityTolerance) {
+        return followSettledWithTimeout(follower, pathSupplier, timeoutMs, positionTolerance,
+                headingTolerance, linearVelocityTolerance, angularVelocityTolerance, Clock.SYSTEM);
+    }
+
+    public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
+                                                   double timeoutMs, double positionTolerance,
+                                                   double headingTolerance, double linearVelocityTolerance,
+                                                   double angularVelocityTolerance, Clock clock) {
         requireDuration(timeoutMs);
         double[] tolerances = tolerances(positionTolerance, headingTolerance,
                 linearVelocityTolerance, angularVelocityTolerance);
-        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, true, tolerances, Clock.SYSTEM);
+        return new FollowCommand(follower, pathSupplier, timeoutMs, 0, false, true, tolerances, clock);
     }
 
     public static Command turnToHeading(Follower follower, double targetHeadingRadians) {
+        return turnToHeading(follower, targetHeadingRadians, Clock.SYSTEM);
+    }
+
+    public static Command turnToHeading(Follower follower, double targetHeadingRadians, Clock clock) {
         return new TurnCommand(follower, targetHeadingRadians, Double.POSITIVE_INFINITY,
                 tolerances(org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC),
-                Clock.SYSTEM);
+                clock);
     }
 
     /** Measured heading and both velocities must settle; timeout stops and throws. */
     public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
                                                    double timeoutMs) {
+        return turnToHeadingWithTimeout(follower, targetHeadingRadians, timeoutMs, Clock.SYSTEM);
+    }
+
+    public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
+                                                   double timeoutMs, Clock clock) {
         return turnToHeadingWithTimeout(follower, targetHeadingRadians, timeoutMs,
-                org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC);
+                org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC, clock);
     }
 
     public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
                                                    double timeoutMs, double headingTolerance,
                                                    double linearVelocityTolerance, double angularVelocityTolerance) {
+        return turnToHeadingWithTimeout(follower, targetHeadingRadians, timeoutMs, headingTolerance,
+                linearVelocityTolerance, angularVelocityTolerance, Clock.SYSTEM);
+    }
+
+    public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
+                                                   double timeoutMs, double headingTolerance,
+                                                   double linearVelocityTolerance, double angularVelocityTolerance,
+                                                   Clock clock) {
         requireDuration(timeoutMs);
         return new TurnCommand(follower, targetHeadingRadians, timeoutMs,
-                tolerances(headingTolerance, linearVelocityTolerance, angularVelocityTolerance), Clock.SYSTEM);
+                tolerances(headingTolerance, linearVelocityTolerance, angularVelocityTolerance), clock);
     }
 
     /**

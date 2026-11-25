@@ -6,6 +6,53 @@ This module, TeamCode, is the place where you will write/paste the code for your
 robot controller App. This module is currently empty (a clean slate) but the
 process for adding OpModes is straightforward.
 
+## BIOBUZZ ftcsim component diagnostics
+
+`robotDev/sim/` contains six independent, numbered diagnostics. They are the
+default `TeamCodeSim` menu; competition OpModes are not run automatically.
+With ftcsim running, connect using `./gradlew runSimulator --console=plain`,
+then use `http://localhost:9015/ds/` to INIT and START one diagnostic at a time.
+In ftcsim, apply the team's hardware export with **Apply to SDK**, and apply
+mechanisms with **Update simulation**, while connected and no OpMode initialized.
+These tests do not supply or guess hub ports or wheelbase measurements.
+
+| Menu / class | Measurements and local diagnostic criteria |
+| --- | --- |
+| #1 `SimPathPinpointTest` | RED garden start (9,25,0 radians), one line to shared garden shoot pose. PASS requires full route completion, endpoint error <=2 inches and <=8 degrees, raw Pinpoint and follower translation >=0.5 inches, and wheel encoder movement >=12 ticks. Timeout 20 seconds. |
+| #2 `SimSotmAimTest` | Two 3-second drive-and-Y-aim phases, SOTM OFF then ON; 0.15 forward power is a command, not a measured speed. Logs both wheel targets/velocities, heading error, and actual feed-gate decisions. PASS in each phase requires measured movement, moving heading error <=3 degrees, simultaneous auto-fire gates, and a 0.3-second dual-wheel settle. |
+| #3 `SimShooterStepTest` | Both real SmartFlywheel controllers, current positive shot-table targets, from verified rest. Logs first entry and sustained 0.3-second settle inside 40 ticks/second; timeout 8 seconds. About 1.5 seconds is a prior, not a robot specification. |
+| #4 `SimHoldJitterTest` | SOTM ON, neutral Y-aim, no feed. After bounded heading acquisition, records a full 5-second sampled window, circular peak-to-peak and maximum heading error. PASS requires every error <=3 degrees, drift <=0.5 inches and speed <=0.5 inches/second. |
+| #5 `SimAStarParkingTest` | Production 6-inch-cell A* route from RED garden, exact followed waypoints in telemetry. PASS requires full route completion, live Pinpoint/encoder movement and measured robot-body overlap with the park zone; timeout 40 seconds. |
+| #6 `SimIntakeTransferTest` | 5.5-second STOP/STOW, deploy-only, intake, intake-plus-transfer, STOP/STOW sequence. Compares observed applied powers and SDK servo command with expected values (tolerance 0.005), requires sampled phase coverage and measured motion from both motors. No follower required. |
+
+**Run #1 first.** If wheels move but Pinpoint remains fixed for 2 seconds,
+the test stops and reports `FAIL: Pinpoint dead; stop other path diagnostics`.
+Do not interpret #2, #4, or #5 as valid localization/aiming evidence until #1
+passes. Wheel encoders prove wheel motion, not independent chassis ground truth.
+ftcsim sees no AprilTags or game pieces; feed gates are not proof of scoring,
+and a servo's SDK position is not physical ramp feedback.
+
+All diagnostics stop their commanded outputs on completion or STOP. Final
+numbers remain visible until STOP; SOTM and modified follower settings are
+restored. Wheel/rest/acquisition dwell restarts across sampling gaps >0.1 seconds.
+Jitter and sequencing reject incomplete sampling coverage. Diagnostic thresholds
+stay local to `robotDev`, not in a production `Constants.robotDev` section.
+
+To register only one diagnostic, for example:
+
+```zsh
+./gradlew runSimulator --console=plain \
+  -PsimOpmodes=org.firstinspires.ftc.teamcode.robotDev.sim.SimPathPinpointTest
+```
+
+Pure diagnostic checks are registered sim-first in `UnitTestAll`:
+`./gradlew :TeamCode:testDebugUnitTest --tests org.firstinspires.ftc.teamcode.UnitTestAll --console=plain`.
+Actual INIT-to-completion behavior still needs the owner's configured ftcsim
+run. Before any on-robot run, use an empty shooter, clear moving mechanisms and
+travel area, physically place the robot at the displayed RED start pose, and
+keep Driver Station STOP accessible. Confirm motor directions, real timing and
+odometry with measurements; simulator results are only priors.
+
 ## Creating your own OpModes
 
 The easiest way to create your own OpMode is to copy a Sample OpMode and make it your own.

@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.util;
 
 import com.rmsftc.utils.Clock;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class Timer {
+    private final Clock clock;
     long startTime; // nanoseconds
     long dtPrev; // nanoseconds
     public TimeUnit unit;
@@ -12,16 +14,21 @@ public class Timer {
     }
     /** A utility timer with nanosecond accuracy that can also calculate dt */
     public Timer(TimeUnit unit) {
-        startTime = Clock.SYSTEM.nowNanos();
+        this(unit, Clock.SYSTEM);
+    }
+
+    public Timer(TimeUnit unit, Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "clock");
+        startTime = clock.nowNanos();
         dtPrev = startTime;
         this.unit = unit;
     }
 
     public double get() {
-        return convertFromNanoseconds(Clock.SYSTEM.nowNanos() - startTime, unit);
+        return convertFromNanoseconds(clock.nowNanos() - startTime, unit);
     }
     public double get(TimeUnit timeUnit) {
-        return convertFromNanoseconds(Clock.SYSTEM.nowNanos() - startTime, timeUnit);
+        return convertFromNanoseconds(clock.nowNanos() - startTime, timeUnit);
     }
 
     public boolean past(double time) {
@@ -31,13 +38,13 @@ public class Timer {
         return get(timeUnit) > time;
     }
     public double dt() {
-        long now = Clock.SYSTEM.nowNanos();
+        long now = clock.nowNanos();
         double dt = convertFromNanoseconds(now - dtPrev, unit);
         dtPrev = now;
         return dt;
     }
     public double dt(TimeUnit timeUnit) {
-        long now = Clock.SYSTEM.nowNanos();
+        long now = clock.nowNanos();
         double dt = convertFromNanoseconds(now - dtPrev, timeUnit);
         dtPrev = now;
         return dt;
@@ -49,7 +56,7 @@ public class Timer {
         return this.unit;
     }
     public void reset() {
-        startTime = Clock.SYSTEM.nowNanos();
+        startTime = clock.nowNanos();
         dtPrev = startTime;
     }
 

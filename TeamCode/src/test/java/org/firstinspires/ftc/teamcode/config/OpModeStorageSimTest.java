@@ -9,8 +9,8 @@ import com.rmsftc.utils.MatchMode;
 import com.rmsftc.utils.math.Pose;
 
 import org.firstinspires.ftc.teamcode.planners.Constants;
-import org.firstinspires.ftc.teamcode.util.SimEnvironment;
-import org.junit.AfterClass;
+import org.firstinspires.ftc.teamcode.testing.FtcSimulationRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -20,35 +20,14 @@ import org.junit.Test;
  * class for the whole JVM — every later use then fails with
  * NoClassDefFoundError: Could not initialize class OpModeStorage.
  *
- * <p>Load-order trap: the static initializer runs once, at first class load,
- * so the sim override must be set BEFORE any reference to OpModeStorage in
- * the whole suite. That is why the override lives in this class's static
- * initializer (runs at class-load time, before any test method) and why this
- * class is listed FIRST in UnitTestAll. No other test references
- * OpModeStorage (verified), so nothing can trigger the first load earlier.
- * If this test ever errors in its static initializer or on first load, the
- * trap has been reintroduced — check the suite order and the grep above.
+ * <p>The scoped simulation rule enables desktop storage before its first
+ * reference and restores values after every test, independently of suite order.
  */
 public class OpModeStorageSimTest {
 
     private static final double EPSILON = 1e-9;
 
-    static {
-        // Must run before OpModeStorage first loads (see class javadoc).
-        SimEnvironment.setOverride(true);
-    }
-
-    @AfterClass
-    public static void restoreDefaultsAndAutoDetect() {
-        // Restore the stored values FIRST, while the override is still on:
-        // after it is cleared, get()/set() would touch Storage (AppUtil)
-        // on this desktop JVM and throw.
-        OpModeStorage.allianceColor.set(AllianceColor.BLUE);
-        OpModeStorage.matchMode.set(MatchMode.QUALIFICATIONS);
-        OpModeStorage.pose.set(Constants.StartPoses.gardenArea);
-        OpModeStorage.initialized.set(false);
-        SimEnvironment.setOverride(null);
-    }
+    @Rule public final FtcSimulationRule simulation = new FtcSimulationRule();
 
     @Test
     public void classLoadsAndDefaultsAreInMemoryValuesInSim() {

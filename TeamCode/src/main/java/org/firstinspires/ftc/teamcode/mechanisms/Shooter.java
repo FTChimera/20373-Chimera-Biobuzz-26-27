@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.rmsftc.utils.AllianceColor;
+import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityConstants;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -81,10 +82,14 @@ public class Shooter {
     public static final Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
+        this(hardwareMap, color, Clock.SYSTEM);
+    }
+
+    public Shooter(HardwareMap hardwareMap, AllianceColor color, Clock clock) {
         this.color = color;
         mainMotor = new SmartFlywheel(
                 hardwareMap.get(DcMotorEx.class, "mainShooter"),
-                Controller.doubleFlywheelFullVelocity(mainConstants),
+                Controller.doubleFlywheelFullVelocity(mainConstants, clock),
                 new SmartFlywheel.Params(Constants.Shooter.SmartFlywheel.TICKS_PER_REV, 1),
                 hardwareMap.voltageSensor
         );
@@ -93,7 +98,7 @@ public class Shooter {
 
         counterRoller = new SmartFlywheel(
                 hardwareMap.get(DcMotorEx.class, "counterShooter"),
-                Controller.doubleFlywheelFullVelocity(counterConstants),
+                Controller.doubleFlywheelFullVelocity(counterConstants, clock),
                 new SmartFlywheel.Params(Constants.Shooter.SmartFlywheel.TICKS_PER_REV, 1),
                 hardwareMap.voltageSensor
         );

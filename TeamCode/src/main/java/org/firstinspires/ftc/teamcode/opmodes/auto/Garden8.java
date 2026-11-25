@@ -27,10 +27,15 @@ public class Garden8 extends ArchitecturalOpMode {
     @Override
     protected void onInit() {
         OpModeStorage.pose.set(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea);
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot = createRobot();
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
+    }
+
+    protected Robot createRobot() {
+        return new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(),
+                RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
     }
 
     @Override

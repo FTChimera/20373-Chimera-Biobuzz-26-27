@@ -5,6 +5,7 @@ import androidx.annotation.NonNull;
 import com.pedropathing.paths.Path;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
+import com.rmsftc.cmdlib.cmd.WaitCommand;
 
 import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands.follow;
 
@@ -82,7 +83,7 @@ public class Utils {
 
         @Override
         protected Command buildCommand() {
-            return Commands.waitMs((long) time);
+            return new WaitCommand((long) time, robot.clock);
         }
 
         @Override
@@ -122,7 +123,7 @@ public class Utils {
 
         @Override
         protected Command buildCommand() {
-            return follow(robot.follower, () -> path);
+            return follow(robot.follower, () -> path, robot.clock);
         }
 
         @Override

@@ -4,12 +4,14 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 import com.pedropathing.revhub.drivetrains.CachedMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.rmsftc.utils.Clock;
 
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.planners.Constants;
 
 import java.util.concurrent.TimeUnit;
+import java.util.Objects;
 
 public class Transfer {
     public enum Mode {
@@ -24,11 +26,17 @@ public class Transfer {
     }
 
     private final CachedMotor transferMotor;
+    private final Clock clock;
     private boolean modeSwitch = false;
     private Mode mode = Mode.IDLE;
     Timer modeTimer;
 
     public Transfer(HardwareMap hardwareMap) {
+        this(hardwareMap, Clock.SYSTEM);
+    }
+
+    public Transfer(HardwareMap hardwareMap, Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "clock");
         transferMotor = new CachedMotor(hardwareMap.get(DcMotorEx.class, "transfer"), Constants.Transfer.CACHE_INTERVAL_S);
         transferMotor.setDirection(Direction.FORWARD.toMotor());
     }
@@ -94,7 +102,7 @@ public class Transfer {
                 break;
             case KICK_ONE:
                 if (modeSwitch) {
-                    modeTimer = new Timer(TimeUnit.MILLISECONDS);
+                    modeTimer = new Timer(TimeUnit.MILLISECONDS, clock);
                     transferMotor.setPower(Constants.Transfer.KICK_ONE_POWER);
                 }
                 if (modeTimer.past(Constants.Transfer.POLLEN_KICK_TIME_MS)) {

@@ -7,6 +7,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.interpolator.Interpolator;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
+import com.rmsftc.cmdlib.cmd.WaitCommand;
 
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
@@ -50,12 +51,12 @@ public class FromShootLoadingPose {
                     // Turn in place from -90 (south) to 90 (north) first,
                     // then drive with a constant north heading -- no
                     // tangent sweep, no heading snap.
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.IntakePoses.northFlower.heading(), Constants.Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Constants.Timings.flowerFollowTimeoutMs, Constants.Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.IntakePoses.northFlower.heading(), Constants.Timings.flowerTurnTimeoutMs, robot.clock),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Constants.Timings.flowerFollowTimeoutMs, Constants.Timings.flowerIntakeTime * 1000L, robot.clock), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     // Drive back still facing north, then turn in place
                     // to -90 (south) for the shoot.
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.ShootPoses.loading.heading(), Constants.Timings.flowerTurnTimeoutMs),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.flowerFollowTimeoutMs, robot.clock), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.ShootPoses.loading.heading(), Constants.Timings.flowerTurnTimeoutMs, robot.clock),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
             ).finallyDo(() -> robot.intake.setDeployed(false));
@@ -132,9 +133,9 @@ public class FromShootLoadingPose {
             // whole auto on a wedged robot until the 5 s park window.
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toWall, Constants.Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Constants.Timings.gardenIntakeTimeMs),
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Constants.Timings.gardenIntakeTimeoutMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toWall, Constants.Timings.gardenIntakeTimeoutMs, robot.clock),
+                    new WaitCommand(Constants.Timings.gardenIntakeTimeMs, robot.clock),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Constants.Timings.gardenIntakeTimeoutMs, robot.clock),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -227,10 +228,10 @@ public class FromShootLoadingPose {
             // robot until the 5 s park window.
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toSweepStart, Constants.Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> sweep, Constants.Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Constants.Timings.gardenIntakeTimeMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Constants.Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toSweepStart, Constants.Timings.gardenIntakeTimeoutMs, robot.clock), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> sweep, Constants.Timings.gardenIntakeTimeoutMs, robot.clock),
+                    new WaitCommand(Constants.Timings.gardenIntakeTimeMs, robot.clock),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Constants.Timings.gardenIntakeTimeoutMs, robot.clock), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );

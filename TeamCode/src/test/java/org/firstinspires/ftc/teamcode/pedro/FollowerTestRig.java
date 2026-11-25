@@ -26,6 +26,8 @@ public final class FollowerTestRig {
     public boolean holdChangesCompletion;
     public int resets;
     public int stops;
+    public int holdCalls;
+    public double pathHeading;
 
     public final Localizer localizer = proxy(Localizer.class, (method, args) -> {
         switch (method) {
@@ -53,6 +55,7 @@ public final class FollowerTestRig {
                 atEnd = false;
                 return null;
             case "calculatePath":
+                pathHeading = ((PathTracker) args[1]).current().heading(0.5);
                 if (finishSegment) {
                     ((PathTracker) args[1]).advance();
                     progress = 1;
@@ -60,6 +63,7 @@ public final class FollowerTestRig {
                 }
                 return DrivePowers.zero();
             case "calculateHold":
+                holdCalls++;
                 if (holdChangesCompletion) {
                     progress = 1;
                     atEnd = true;

@@ -48,4 +48,6 @@ TeamCode/.DS_Store
 local.properties
 # </ftcsim:ignore>
 
-.run
+# Keep personal IDE launchers local, but share the Gradle JVM-test launcher.
+.run/*
+!.run/Unit_Test_All.run.xml

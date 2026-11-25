@@ -57,8 +57,7 @@ public class MainTeleOp extends ArchitecturalOpMode {
         // it: resetToDefault() persists, so calling it on init silently
         // clobbered a saved RED alliance to BLUE. The explicit reset lives
         // in ConfigOpMode.
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(),
-                RobotMode.TELEOP, OpModeStorage.pose.get());
+        robot = createRobot();
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setManualBrake(false);
@@ -66,6 +65,11 @@ public class MainTeleOp extends ArchitecturalOpMode {
         robot.setSmartShooterControl(false);
         DashboardVars.upload(AUTO_FIRE_HEADING_TOLERANCE_DEGREES);
         controls = new Controls(gamepad1, gamepad2, oneController);
+    }
+
+    protected Robot createRobot() {
+        return new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(),
+                RobotMode.TELEOP, OpModeStorage.pose.get());
     }
 
     @Override

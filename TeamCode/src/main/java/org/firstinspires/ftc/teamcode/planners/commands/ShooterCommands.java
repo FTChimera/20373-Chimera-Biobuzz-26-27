@@ -4,8 +4,9 @@ import com.rmsftc.cmdlib.EndCondition;
 import com.rmsftc.cmdlib.Status;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.cmdlib.cmd.Commands;
-
+import com.rmsftc.cmdlib.cmd.WaitCommand;
 import com.rmsftc.utils.Clock;
+
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.Constants;
@@ -106,7 +107,7 @@ public class ShooterCommands {
                 if (wantedState == null) {
                     throw new IllegalArgumentException("A wanted hive state is required for hive lineup.");
                 }
-                timer = new Timer(TimeUnit.SECONDS);
+                timer = new Timer(TimeUnit.SECONDS, robot.clock);
                 done = false;
             }
 
@@ -175,7 +176,7 @@ public class ShooterCommands {
             // and that must degrade, not kill the OpMode — BA does not catch
             // exceptions from start(). A zero target simply never reaches
             // up-to-speed, so loop() below times out without feeding.
-            timer = new Timer();
+            timer = new Timer(TimeUnit.MILLISECONDS, robot.clock);
         }
 
         @Override
@@ -209,7 +210,7 @@ public class ShooterCommands {
             }
             robot.intake.setFullPower();
             robot.transfer.shootAll();
-            timer = new Timer();
+            timer = new Timer(TimeUnit.MILLISECONDS, robot.clock);
             lifecycle.feed(!upToSpeed);
         }
 
@@ -240,11 +241,12 @@ public class ShooterCommands {
 
             @Override
             public void start() {
+                // Vision's frame observations use SYSTEM; only command durations use robot.clock.
                 nanoBoundary = Clock.SYSTEM.nowNanos();
                 if (robot.vision == null) {
                     throw new IllegalStateException("Robot vision subsystem is required for hive lineup.");
                 }
-                timer = new Timer(TimeUnit.SECONDS);
+                timer = new Timer(TimeUnit.SECONDS, robot.clock);
                 done = false;
             }
 
@@ -275,7 +277,7 @@ public class ShooterCommands {
         };
         return Commands.sequence(
                 waitForTag,
-                Commands.waitMs(Constants.Timings.hiveLineupExtraTimeSec * 1000L));
+                new WaitCommand(Constants.Timings.hiveLineupExtraTimeSec * 1000L, robot.clock));
     }
 
     public static Command shootCmd(Robot robot, Field.HiveState hiveState) {

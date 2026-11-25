@@ -56,3 +56,104 @@ util/         Shared building blocks, grouped by job:
   shotcalc/   Shot tables and the ideal shot model (per motor)
   ...plus math, poses, interpolation, localization
 ```
+
+## Deterministic FTC JVM tests
+
+The JUnit 4 framework lives entirely in `TeamCode/src/test/java`: fake SDK devices
+are not packaged in the Control Hub APK. It takes inspiration from
+[PsiLynx/RobotCore's JVM simulation](https://github.com/PsiLynx/RobotCore/tree/master/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/sim),
+with explicit hardware registration, per-test state isolation, bounded OpMode
+execution, and assertions on real control logic rather than permissive stubs.
+
+```sh
+./gradlew :TeamCode:testDebugUnitTest --console=plain
+./gradlew :TeamCode:testDebugUnitTest --tests '*fakeHw.*' --tests '*testing.*' --tests '*SimulationTest' --console=plain
+./gradlew :TeamCode:assembleDebug --console=plain
+```
+
+In Android Studio, sync Gradle and select **Unit Test All** (the Gradle run
+configuration) to launch the existing `UnitTestAll` suite. For individual tests,
+set **Settings > Build, Execution, Deployment > Build Tools > Gradle > Run tests
+using** to **Gradle** where available. The unfiltered Gradle task above discovers
+all test classes, including the simulation examples.
+
+If the IDE reports `NoClassDefFoundError: junit/textui/TestRunner` and its launch
+classpath contains only IDE runners and `android.jar`, it is using an incomplete
+direct JUnit module classpath. Use the shared Gradle launcher rather than adding
+JUnit to the robot's `implementation` dependencies.
+
+| Boundary | Desktop substitute |
+| --- | --- |
+| FTC hardware | `fakeHw/` stateful motors/controllers, servos, CR servos, voltage, analog/digital, color/distance sensors and IMU |
+| Hardware configuration | `FakeHardwareMap`: explicitly register names; missing devices, wrong types and duplicate names are errors |
+| Time | `FakeClock`, injectable robot/controller/command timers, and scoped `PedroTimerScope` for Pedro's non-injectable timer |
+| Driver Station | `OpModeRunner`, programmable gamepad fields, and `RecordingTelemetry` |
+| Pinpoint/JNI localization | `SimulatedMecanumLocalizer`, integrating measured simulated wheel speeds; real Pedro Foresight and Mecanum remain in use |
+| Limelight and Prism | Existing `Vision.stub` / `Lights.stub` simulation factories; no camera detections or LED-driver I/O |
+| Android dashboard/storage | Existing simulation guards and in-memory storage, enabled and restored by `FtcSimulationRule` |
+| Android/SDK logging | `AndroidLogScope` records log entries and restores the real boundary when closed |
+
+Use `@Rule public final FtcSimulationRule simulation = new FtcSimulationRule();`
+for robot tests. It enables desktop services before storage initialization and
+restores alliance/pose/match state, SOTM, follower settings, daemon registrations
+and environment flags even when a test fails. Advance `simulation.clock` and device physics explicitly;
+never use wall-clock sleeps to wait for a controller to settle. Mockito is a
+**test-only** dependency for final SDK lifecycle/time methods and vendor timers;
+mechanisms, commands, shot calculations and path-control algorithms remain real.
+Unsupported boundaries should fail explicitly, not silently return success.
+Use `hardwareMap.register(name, device)` to populate both general lookups and
+SDK `DeviceMapping`s (especially `voltageSensor`); SDK-style `put()` alone is
+not a substitute for complete registration. Wrap tests constructing real SDK
+devices that log in `try (AndroidLogScope logs = new AndroidLogScope())`.
+
+`OpModeRunner` executes the real `runOpMode()` for linear modes, or the
+`init -> init_loop -> start -> loop -> stop` callbacks for iterative modes.
+Configure `startAfterTicks`, `stopAfterTicks`, `beforeTick` and `onStop`, then
+call `run()` and assert its `COMPLETED`, `STOP_REQUESTED` or `TIMED_OUT` outcome.
+Script gamepad fields in `beforeTick`; SDK button aliases and press/release
+queues are updated before user code runs.
+Assert against `runner.opMode()` rather than the original template: the SDK
+runtime spy copies instance fields. For linear modes, register explicit cleanup
+with `onStop` because the SDK's final `stop()` is a no-op; user `finally` blocks
+still execute. The tick limit bounds cooperative SDK calls, not arbitrary Java
+loops. Test-scoped globals assume ordinary, non-parallel JUnit execution.
+
+The robot constructor accepts a `Clock` and follower factory for simulation.
+The match entries expose a protected `createRobot()` hook so test subclasses can
+inject that robot without replacing the OpMode's initialization, control,
+planning or cleanup. Normal constructors still use the system clock and the
+configured Pinpoint/Mecanum follower.
+
+Examples to copy and adapt:
+
+| Example | What it demonstrates |
+| --- | --- |
+| `fakeHw/FakeMotorTest.java` | SDK motor/controller behavior, encoder integration and device faults |
+| `mechanisms/FlywheelSimulationTest.java` | Real closed-loop flywheel control, voltage sag, load recovery and readiness |
+| `mechanisms/ShootOnMoveSimulationTest.java` | Real moving-shot solutions and heading/velocity compensation |
+| `testing/RobotTestRigTest.java` | Shared battery reaches real consumers; SOTM aiming retains real path translation |
+| `testing/OpModeRunnerTest.java` | Iterative/linear lifecycle, gamepad input, timeout outcomes and failure cleanup |
+| `opmodes/auto/MatchOpModeSimulationTest.java` | Real match OpModes with fake hardware and measured-wheel-speed odometry |
+
+Paths in this table are relative to
+`TeamCode/src/test/java/org/firstinspires/ftc/teamcode/`.
+
+The SOTM regression exposed and fixes a follower allocation bug: the live heading
+override now reaches the path algorithm **before** it allocates translation/turn
+power. Replacing turn power afterward allowed the old heading error to consume
+the power budget and stall translation. Releasing the override restores the
+original interpolation without modifying the reusable path or restarting it.
+
+**Simulation is not robot qualification.** Motor plants and planar odometry are
+configurable idealized models, not measured Chimera dynamics. No-camera tests
+exercise vision timeout behavior, not image processing, tag accuracy or pipeline
+latency. A timed feed is an attempted batch, not proof of a score. Raw
+`System.nanoTime`, `Thread.sleep`, native drivers and arbitrary busy loops are
+outside deterministic stepping; use the provided clock/lifecycle seams.
+
+Before deploying control or autonomous changes, use the existing Driver Station
+flywheel/aim/follower development OpModes to measure both wheel velocities,
+battery-sag response and stopping behavior, then validate localization, SOTM
+accuracy and autonomous paths/clearances on the configured robot. Restore match
+settings after tuning; desktop results do not establish safe physical clearances
+or tuned gains.

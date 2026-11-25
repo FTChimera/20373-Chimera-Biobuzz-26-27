@@ -8,9 +8,10 @@ import static org.junit.Assert.fail;
 import com.rmsftc.utils.ftc.DaemonManager;
 
 import org.firstinspires.ftc.teamcode.util.SimEnvironment;
+import org.firstinspires.ftc.teamcode.testing.FtcSimulationRule;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -40,22 +41,11 @@ import java.util.stream.Collectors;
  * test touches DaemonManager (verified), so the cleanup cannot wipe
  * anyone else's registrations.
  *
- * <p>Load-order convention (same as OpModeStorageSimTest and
- * RobotDashboardSimTest): the sim override lives in this class's static
- * initializer and this class is listed right after RobotDashboardSimTest in
- * UnitTestAll, so the override is set before any test method runs.
+ * <p>Simulation state is scoped to each test rather than class-load order.
  */
 public class RobotDaemonsSimTest {
 
-    static {
-        // Must run before any test method (see class javadoc).
-        SimEnvironment.setOverride(true);
-    }
-
-    @AfterClass
-    public static void restoreAutoDetect() {
-        SimEnvironment.setOverride(null);
-    }
+    @Rule public final FtcSimulationRule simulation = new FtcSimulationRule();
 
     /** The 11 robot daemons, in ROBOT_DAEMON_ORDER (test pin). */
     private static final List<String> EXPECTED_ORDER = Arrays.asList(

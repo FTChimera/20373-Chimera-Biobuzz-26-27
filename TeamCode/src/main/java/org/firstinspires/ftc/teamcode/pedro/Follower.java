@@ -21,6 +21,7 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathSegment;
 import com.pedropathing.paths.PathTracker;
 import com.pedropathing.paths.curves.Curve;
+import com.pedropathing.paths.interpolator.Interpolator;
 import com.rmsftc.utils.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,9 +40,8 @@ public class Follower {
     public DrivePowers manualPowers = null;
     /**
      * Shoot-on-the-move heading override (radians). When non-null during
-     * FOLLOW, the path's turn power is replaced with a hold turn toward
-     * this heading: the robot keeps driving the path but faces the
-     * override heading instead of the path interpolator's heading.
+     * FOLLOW, the path algorithm receives this heading before allocating
+     * drive power, so translation and turning share the same aim target.
      * Cleared by clearState() (follow/hold/manual/stop) so it never leaks
      * into a new path.
      */
@@ -112,11 +112,6 @@ public class Follower {
                     this.pathParametricCompletion = this.pathTracker.done() ? 1.0 : this.algorithm.parametricCompletion();
                     this.pathAtParametricEnd = this.pathTracker.done()
                             || (this.pathTracker.remainingPaths() == 1 && this.algorithm.atParametricEnd());
-                    if (this.headingOverride != null) {
-                        Pose current = this.localizer.pose();
-                        double turn = this.algorithm.calculateHold(this.drivetrain, new Pose(current.x(), current.y(), this.headingOverride), this.localizer.state(), false, deltaTime).turn();
-                        powers = new DrivePowers(powers.forward(), powers.strafe(), turn);
-                    }
                     this.drivetrain.drive(powers, false);
                     this.controlUpdated = true;
                 }
@@ -183,7 +178,14 @@ public class Follower {
         this.mode = Follower.Mode.IDLE;
         boolean initialized = false;
         try {
-            this.pathTracker = new PathTracker(path);
+            // Resolve once; the live heading provider preserves segments/modifiers and never mutates the caller's path.
+            Path trackingPath = path.heading(Interpolator.geometric((curve, t) -> {
+                Double heading = this.headingOverride;
+                if (heading == null) return path.heading(t);
+                if (!Double.isFinite(heading)) throw new IllegalArgumentException("Heading override must be finite");
+                return heading;
+            }));
+            this.pathTracker = new PathTracker(trackingPath);
             this.algorithm.reset();
             initialized = true;
         } finally {

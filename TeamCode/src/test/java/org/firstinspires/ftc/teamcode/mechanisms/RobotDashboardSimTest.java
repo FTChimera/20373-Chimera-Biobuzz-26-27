@@ -9,9 +9,9 @@ import com.rmsftc.utils.config.vars.Section;
 import com.rmsftc.utils.config.vars.Var;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.util.SimEnvironment;
+import org.firstinspires.ftc.teamcode.testing.FtcSimulationRule;
 import org.firstinspires.ftc.teamcode.util.dashboard.DashboardVars;
-import org.junit.AfterClass;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationHandler;
@@ -38,25 +38,12 @@ import java.util.List;
  * heavy for a unit test — the two seams above are exactly the code the
  * constructor runs for its dashboard wiring, so they cover the crash path.
  *
- * <p>Load-order trap (same as OpModeStorageSimTest): FtcDashboard's class
- * initializer runs once, at first class load, so the sim override must be
- * set BEFORE any reference to FtcDashboard in the whole suite. That is why
- * the override lives in this class's static initializer (runs at class-load
- * time, before any test method) and why this class is listed right after
- * OpModeStorageSimTest in UnitTestAll. No other test references FtcDashboard
- * (verified), so nothing can trigger the first load earlier.
+ * <p>The scoped rule enables the simulator dashboard boundary before every
+ * test, including repeated execution through the aggregate suite.
  */
 public class RobotDashboardSimTest {
 
-    static {
-        // Must run before FtcDashboard first loads (see class javadoc).
-        SimEnvironment.setOverride(true);
-    }
-
-    @AfterClass
-    public static void restoreAutoDetect() {
-        SimEnvironment.setOverride(null);
-    }
+    @Rule public final FtcSimulationRule simulation = new FtcSimulationRule();
 
     @Test
     public void dashboardVarsUploadIsNoopInSim() {

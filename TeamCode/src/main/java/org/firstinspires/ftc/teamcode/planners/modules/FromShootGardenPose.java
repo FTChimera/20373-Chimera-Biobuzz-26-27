@@ -49,12 +49,12 @@ public class FromShootGardenPose {
                     Commands.runOnce(robot.intake::setFullPower),
                     // Turn in place to 180 (west) first, then drive with a
                     // constant west heading -- no tangent sweep, no snap.
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.IntakePoses.westFlower.heading(), Constants.Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Constants.Timings.flowerFollowTimeoutMs, Constants.Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.IntakePoses.westFlower.heading(), Constants.Timings.flowerTurnTimeoutMs, robot.clock),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Constants.Timings.flowerFollowTimeoutMs, Constants.Timings.flowerIntakeTime * 1000L, robot.clock), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     // Drive back still facing west, then turn in place
                     // to 90 (north) for the garden shoot.
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.ShootPoses.garden.heading(), Constants.Timings.flowerTurnTimeoutMs),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.flowerFollowTimeoutMs, robot.clock), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.ShootPoses.garden.heading(), Constants.Timings.flowerTurnTimeoutMs, robot.clock),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             ).finallyDo(() -> robot.intake.setDeployed(false));
@@ -201,11 +201,11 @@ public class FromShootGardenPose {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
                     DrivetrainCommands.followForIntake(robot.follower, () -> toGarden,
-                            Constants.Timings.gardenIntakeTimeoutMs, Constants.Timings.gardenIntakeTimeMs),
+                            Constants.Timings.gardenIntakeTimeoutMs, Constants.Timings.gardenIntakeTimeMs, robot.clock),
                     // Bounded at 5 s like the tree version: an unbounded
                     // follow() would hang the whole auto on a wedged robot
                     // until the 5 s park window.
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.gardenIntakeTimeoutMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.gardenIntakeTimeoutMs, robot.clock),
                     ShooterCommands.waitForHiveLineup(robot, lineupState()),
                     ShooterCommands.shootAllPollen(robot)
             );

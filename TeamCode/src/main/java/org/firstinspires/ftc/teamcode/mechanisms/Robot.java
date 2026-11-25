@@ -37,6 +37,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
 
 public class Robot {
     /** The live Robot, for the static daemon entry points below. */
@@ -70,7 +72,7 @@ public class Robot {
 
     /** FTCUtils clock: Helper tracks per-loop dt; startNanos anchors
      * op-mode elapsed time. Both (re)started in {@link #start()}. */
-    public final Clock clock = Clock.SYSTEM;
+    public final Clock clock;
     private Clock.Helper clockHelper;
     private long startNanos;
     // 0, not 1: a first-loop dt of 1 s would corrupt the first
@@ -82,10 +84,21 @@ public class Robot {
     public boolean debug = false;
 
     public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color, RobotMode robotMode, Pose startingPose) {
+        this(telemetry, hardwareMap, color, robotMode, startingPose, Clock.SYSTEM,
+                org.firstinspires.ftc.teamcode.pedro.Constants::createFollower);
+    }
+
+    /** Injects time and localization/drive wiring while keeping the real mechanisms and daemon loop. */
+    public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color,
+                 RobotMode robotMode, Pose startingPose, Clock clock,
+                 Function<HardwareMap, Follower> followerFactory) {
+        this.clock = Objects.requireNonNull(clock, "clock");
+        lastBatteryTime = clock.nowSeconds() * 1000.0;
+        Objects.requireNonNull(followerFactory, "followerFactory");
         CommonKt.init(color);
         org.firstinspires.ftc.teamcode.pedro.Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
         org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_BRAKE_AT_END.set(true);
-        follower = org.firstinspires.ftc.teamcode.pedro.Constants.createFollower(hardwareMap);
+        follower = Objects.requireNonNull(followerFactory.apply(hardwareMap), "followerFactory returned null");
         follower.holdEnd.set(false);
         follower.localizer.setPose(startingPose);
 
@@ -95,8 +108,8 @@ public class Robot {
         autoAimerCalculator.useFollowerHold = true; // IMPORTANT
 
         intake = new Intake(hardwareMap, color);
-        transfer = new Transfer(hardwareMap);
-        shooter = new Shooter(hardwareMap, color);
+        transfer = new Transfer(hardwareMap, clock);
+        shooter = new Shooter(hardwareMap, color, clock);
         // The single SOTM master flag, on the FTC Dashboard: every OpMode
         // builds a Robot in onInit, so this covers teleop and all autos.
         // Idempotent (DashboardVars tracks uploaded vars) and the var is
@@ -398,7 +411,7 @@ public class Robot {
 
     double lastVolt = Double.NaN;
     boolean isBatteryLowPower = false;
-    double lastBatteryTime = clock.nowSeconds() * 1000.0;
+    double lastBatteryTime;
     public double getBatteryVoltage() {
         double cur = clock.nowSeconds() * 1000.0;
         if (cur - lastBatteryTime < Constants.Robot.Battery.CACHE_MS && !Double.isNaN(lastVolt)) {

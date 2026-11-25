@@ -43,7 +43,7 @@ public class FromStartGardenPose {
         @Override
         protected Command buildCommand() {
             return Commands.sequence(
-                    follow(robot.follower, () -> pathToShoot),
+                    follow(robot.follower, () -> pathToShoot, robot.clock),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -88,7 +88,7 @@ public class FromStartGardenPose {
         protected Command buildCommand() {
             return Commands.sequence(
                     super.buildCommand(),
-                    follow(robot.follower, () -> toVision)
+                    follow(robot.follower, () -> toVision, robot.clock)
             );
         }
 
@@ -126,7 +126,7 @@ public class FromStartGardenPose {
         protected Command buildCommand() {
             return Commands.sequence(
                     super.buildCommand(),
-                    follow(robot.follower, () -> toLoading)
+                    follow(robot.follower, () -> toLoading, robot.clock)
             );
         }
 
