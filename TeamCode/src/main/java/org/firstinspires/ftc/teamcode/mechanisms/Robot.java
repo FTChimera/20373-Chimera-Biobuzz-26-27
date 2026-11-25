@@ -140,29 +140,64 @@ public class Robot {
     }
 
     public void start() {
-        // Filter to the 11 robot daemons only: the global registry also
-        // holds library daemons (FTCUtils ClockManager, BA architecture-tick)
-        // that must not run inside the robot loop. A duplicate registration
-        // (e.g. a re-scan) is deduped instead of throwing, so start() does
-        // not die on loop 1; a missing robot daemon still throws.
-        Map<String, DaemonManager.RegisteredDaemon> byName = new LinkedHashMap<>();
-        for (DaemonManager.RegisteredDaemon daemon : DaemonManager.unmodifiable()) {
-            byName.putIfAbsent(daemon.name, daemon);
-        }
-        orderedDaemons = new ArrayList<>();
-        for (String name : ROBOT_DAEMON_ORDER) {
-            DaemonManager.RegisteredDaemon daemon = byName.get(name);
-            if (daemon == null) {
-                throw new IllegalStateException("Expected one " + name + " daemon; found 0");
-            }
-            orderedDaemons.add(daemon);
-        }
-        orderedDaemons.sort(Comparator.comparingInt(d -> daemonPriority(d.name)));
+        // In sim the Sloth classpath scan that registers @FTCDaemon methods
+        // never runs, so the global registry is empty and the lookup below
+        // would throw on "robot-clock". Register this class's daemons
+        // explicitly first (sim only; on the robot Sloth already did).
+        ensureDaemonsRegistered();
+        orderedDaemons = orderedRobotDaemons();
         clockHelper = new Clock.Helper(clock);
         startNanos = clock.nowNanos();
         lights.start();
         vision.start();
         running = true;
+    }
+
+    /**
+     * Builds the ordered list of the 11 robot daemons from the global
+     * registry, filtered to robot daemons only: the registry also holds
+     * library daemons (FTCUtils ClockManager, BA architecture-tick) that
+     * must not run inside the robot loop. A duplicate registration (e.g. a
+     * re-scan) is deduped instead of throwing, so start() does not die on
+     * loop 1; a missing robot daemon still throws.
+     * Package-private for the regression test.
+     */
+    static List<DaemonManager.RegisteredDaemon> orderedRobotDaemons() {
+        Map<String, DaemonManager.RegisteredDaemon> byName = new LinkedHashMap<>();
+        for (DaemonManager.RegisteredDaemon daemon : DaemonManager.unmodifiable()) {
+            byName.putIfAbsent(daemon.name, daemon);
+        }
+        List<DaemonManager.RegisteredDaemon> ordered = new ArrayList<>();
+        for (String name : ROBOT_DAEMON_ORDER) {
+            DaemonManager.RegisteredDaemon daemon = byName.get(name);
+            if (daemon == null) {
+                throw new IllegalStateException("Expected one " + name + " daemon; found 0");
+            }
+            ordered.add(daemon);
+        }
+        ordered.sort(Comparator.comparingInt(d -> daemonPriority(d.name)));
+        return ordered;
+    }
+
+    /**
+     * In sim only, registers this class's @FTCDaemon methods with the global
+     * registry using the library's own scanner — the same scan Sloth runs on
+     * the robot at app startup, which ftcsim never runs on the desktop JVM.
+     * "robot-clock" is the sentinel: the scan registers all 11 daemons
+     * together, so its presence means a scan already ran (Sloth, or an
+     * earlier start() in this JVM) and re-scanning would only duplicate
+     * registrations. No-op on the robot.
+     * Package-private for the regression test.
+     */
+    static void ensureDaemonsRegistered() {
+        if (!SimEnvironment.isSimulation()) {
+            return;
+        }
+        boolean alreadyRegistered = DaemonManager.unmodifiable().stream()
+                .anyMatch(d -> d.name.equals("robot-clock"));
+        if (!alreadyRegistered) {
+            DaemonManager.DaemonFinder.INSTANCE.scan(Robot.class.getClassLoader(), Robot.class);
+        }
     }
 
     /**

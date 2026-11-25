@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorageSimTest;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotDaemonsSimTest;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDashboardSimTest;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotParkingTest;
 import org.firstinspires.ftc.teamcode.mechanisms.SimFakesTest;
@@ -34,6 +35,10 @@ import org.junit.runners.Suite;
         // (see that class's javadoc). No other test may reference
         // FtcDashboard before it.
         RobotDashboardSimTest.class,
+        // RobotDaemonsSimTest third: same sim-override convention as the
+        // two above (static initializer sets the override). It also
+        // cleans the global daemon registry before/after each test.
+        RobotDaemonsSimTest.class,
         RobotParkingTest.class,
         SimFakesTest.class,
         EKFPinpointTuningMathTest.class,
