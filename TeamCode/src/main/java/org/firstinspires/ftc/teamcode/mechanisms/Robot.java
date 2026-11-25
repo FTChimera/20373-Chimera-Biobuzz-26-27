@@ -16,13 +16,12 @@ import com.rmsftc.utils.ftc.daemons.FTCDaemon;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.SimEnvironment;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
 import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.Clock;
 import com.rmsftc.utils.MatchMode;
@@ -39,8 +38,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Robot {
-    public static final double AUTOMATIC_PARK_START_TIME_REMAINING_SEC = 5;
-
     /** The live Robot, for the static daemon entry points below. */
     private static Robot current;
     private static final List<String> ROBOT_DAEMON_ORDER = Arrays.asList(
@@ -61,8 +58,6 @@ public class Robot {
     public Field field;
     public HardwareMap.DeviceMapping<VoltageSensor> voltageSensors;
     public MultipleTelemetry telemetry;
-    public static final double LOW_POWER_VOLTAGE_THRESHOLD = 11.5; // when it starts to become low power
-    public static final double LOW_POWER_VOLTAGE_TOLERANCE = 0.25;
     public List<LynxModule> allHubs;
     public AllianceColor allianceColor;
     public MatchMode matchMode = MatchMode.QUALIFICATIONS;
@@ -87,9 +82,9 @@ public class Robot {
 
     public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color, RobotMode robotMode, Pose startingPose) {
         CommonKt.init(color);
-        Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
-        Constants.FOLLOWER_BRAKE_AT_END.set(true);
-        follower = Constants.createFollower(hardwareMap);
+        org.firstinspires.ftc.teamcode.pedro.Constants.PINPOINT_CONFIG.resetMode.set(robotMode==RobotMode.AUTONOMOUS? PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU: PinpointLocalizer.ResetMode.NONE);
+        org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_BRAKE_AT_END.set(true);
+        follower = org.firstinspires.ftc.teamcode.pedro.Constants.createFollower(hardwareMap);
         follower.holdEnd.set(false);
         follower.localizer.setPose(startingPose);
 
@@ -311,7 +306,7 @@ public class Robot {
 
 
     public void debug() {
-        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ getOpModeTimeSeconds()+ "\n Time Remaining (sec): " + opModeTimeRemaining() + "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
+        telemetry.addData("=== UTILS DEBUG ===", "\n Current Battery Voltage: "+ getBatteryVoltage()+"\n Dt: "+dt*1000+"\n OpMode time (sec): "+ getOpModeTimeSeconds()+ "\n Time Remaining (sec): " + opModeTimeRemaining() + "\n Robot Mode: " +robotMode + "\n Alliance Color: " + allianceColor + "\n TeleOp brake: "+org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_MANUAL_BRAKE_MODE.get());telemetry.addData("\n === DRIVE POWERS ===", drivePowers.toString());
         telemetry.addData("=== FOLLOWER DEBUG ===", follower.debug().toString());
         telemetry.addData("Pose", getPose().toString());
         telemetry.addData("Hive state (closest hive pose)", field.getHiveState()
@@ -352,7 +347,7 @@ public class Robot {
     double lastBatteryTime = clock.nowSeconds() * 1000.0;
     public double getBatteryVoltage() {
         double cur = clock.nowSeconds() * 1000.0;
-        if (cur - lastBatteryTime < 300 && !Double.isNaN(lastVolt)) {
+        if (cur - lastBatteryTime < Constants.Robot.Battery.CACHE_MS && !Double.isNaN(lastVolt)) {
             return lastVolt;
         }
         lastBatteryTime=cur;
@@ -363,8 +358,8 @@ public class Robot {
                 result = Math.min(result, voltage);
             }
         }
-        if (result <= LOW_POWER_VOLTAGE_THRESHOLD-LOW_POWER_VOLTAGE_TOLERANCE) isBatteryLowPower=true;
-        else if (result >= LOW_POWER_VOLTAGE_THRESHOLD+LOW_POWER_VOLTAGE_TOLERANCE) isBatteryLowPower=false;
+        if (result <= Constants.Robot.Battery.LOW_POWER_VOLTAGE_THRESHOLD-Constants.Robot.Battery.LOW_POWER_VOLTAGE_TOLERANCE) isBatteryLowPower=true;
+        else if (result >= Constants.Robot.Battery.LOW_POWER_VOLTAGE_THRESHOLD+Constants.Robot.Battery.LOW_POWER_VOLTAGE_TOLERANCE) isBatteryLowPower=false;
         lastVolt = result;
         return result;
     }
@@ -388,11 +383,11 @@ public class Robot {
     /* FOLLOWER */
 
     public void setManualBrake(boolean manualBrake) {
-        Constants.FOLLOWER_MANUAL_BRAKE_MODE.set(manualBrake);
+        org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_MANUAL_BRAKE_MODE.set(manualBrake);
     }
 
     public void setAutoMaxPathSpeed(double speed) {
-        Constants.FOLLOWER_MAX_PATH_SPEED.set(speed);
+        org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_MAX_PATH_SPEED.set(speed);
     }
 
     public Pose getPose() {
@@ -431,12 +426,12 @@ public class Robot {
     public void breakFollowing() {follower.stop();}
     public void setTeleOpDrive(DriveVector DriveVector, boolean fieldCentric, boolean holdIfNoInput) {
         if (follower.following()) return;
-        if (follower.holding() && follower.holdEnd.get() && !follower.hasInput(DriveVector, 0.1)) return;
+        if (follower.holding() && follower.holdEnd.get() && !follower.hasInput(DriveVector, Constants.Robot.Drive.INPUT_DEADBAND)) return;
         this.drivePowers = DriveVector;
         if (fieldCentric) {
             this.drivePowers.fieldCentric(getHeading(), allianceColor);
         }
-        this.drivePowers.scale(!isBatteryLowPower ? 0.7 : 0.7);
+        this.drivePowers.scale(!isBatteryLowPower ? Constants.Robot.Drive.SCALE : Constants.Robot.Drive.SCALE);
         this.holdIfNoInput = holdIfNoInput;
         this.setTeleOpDrive = true;
     }
@@ -459,7 +454,7 @@ public class Robot {
                     follower.localizer.state(),
                     false, // Use hold scaling
                     getDt() // in seconds
-            ).turn()*0.35); // a dampening factor
+            ).turn()*Constants.Robot.Drive.AUTO_ALIGN_DAMPENING); // a dampening factor
         } else {
             drivePowers.turn(autoAimerCalculator.calculateTurningPower(getHeading()));
         }
@@ -467,24 +462,24 @@ public class Robot {
     }
 
     public boolean reZeroCornerNextToLoadingZone() {
-//        if (!UtilityPoses.isCornerLoadingAreaConfigured()) {
-//            telemetry.addLine("Corner loading re-zero rejected: configure UtilityPoses.cornerLoadingArea.");
+//        if (!Constants.UtilityPoses.isCornerLoadingAreaConfigured()) {
+//            telemetry.addLine("Corner loading re-zero rejected: configure Constants.UtilityPoses.cornerLoadingArea.");
 //            return false;
 //        }
-        follower.localizer.setPose(UtilityPoses.cornerLoadingArea);
-        autoAimerCalculator.initializeCorrectedPose(UtilityPoses.cornerLoadingArea);
-        telemetry.addData("Corner loading re-zero applied", UtilityPoses.cornerLoadingArea);
+        follower.localizer.setPose(Constants.UtilityPoses.cornerLoadingArea);
+        autoAimerCalculator.initializeCorrectedPose(Constants.UtilityPoses.cornerLoadingArea);
+        telemetry.addData("Corner loading re-zero applied", Constants.UtilityPoses.cornerLoadingArea);
         return true;
     }
 
     public boolean reZeroGarden() {
-//        if (!UtilityPoses.isCornerGardenAreaConfigured()) {
-//            telemetry.addLine("Garden corner re-zero rejected: configure UtilityPoses.cornerGardenArea.");
+//        if (!Constants.UtilityPoses.isCornerGardenAreaConfigured()) {
+//            telemetry.addLine("Garden corner re-zero rejected: configure Constants.UtilityPoses.cornerGardenArea.");
 //            return false;
 //        }
-        follower.localizer.setPose(UtilityPoses.cornerGardenArea);
-        autoAimerCalculator.initializeCorrectedPose(UtilityPoses.cornerGardenArea);
-        telemetry.addData("Garden corner re-zero applied", UtilityPoses.cornerGardenArea);
+        follower.localizer.setPose(Constants.UtilityPoses.cornerGardenArea);
+        autoAimerCalculator.initializeCorrectedPose(Constants.UtilityPoses.cornerGardenArea);
+        telemetry.addData("Garden corner re-zero applied", Constants.UtilityPoses.cornerGardenArea);
         return true;
     }
 
@@ -498,9 +493,9 @@ public class Robot {
      */
     public boolean moveToParkZone() {
         boolean previousHoldEnd = follower.holdEnd.get();
-        boolean previousBrakeAtEnd = Constants.FOLLOWER_BRAKE_AT_END.get();
+        boolean previousBrakeAtEnd = org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_BRAKE_AT_END.get();
         follower.holdEnd.set(true); // alliance partner does not push
-        Constants.FOLLOWER_BRAKE_AT_END.set(false);
+        org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_BRAKE_AT_END.set(false);
         try {
             Pose correctedPose = getPoseCompensatedForVelocity();
             if (field.isRobotOverlappingLoadingZone(correctedPose)) {
@@ -526,7 +521,7 @@ public class Robot {
             // follow started: restore the shared follower flags and report
             // park as unavailable. Never throws.
             follower.holdEnd.set(previousHoldEnd);
-            Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
+            org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_BRAKE_AT_END.set(previousBrakeAtEnd);
             telemetry.addData("Park path unavailable", failure.getMessage());
             return false;
         }
@@ -536,7 +531,7 @@ public class Robot {
         follower.stop();
         follower.drivetrain.stop();
         follower.holdEnd.set(false);
-        Constants.FOLLOWER_BRAKE_AT_END.set(true);
+        org.firstinspires.ftc.teamcode.pedro.Constants.FOLLOWER_BRAKE_AT_END.set(true);
     }
 
     public boolean inParkZone() {
@@ -550,7 +545,7 @@ public class Robot {
     static boolean shouldAutomaticallyPark(MatchMode matchMode, double timeRemaining) {
         return matchMode == MatchMode.QUALIFICATIONS
                 && timeRemaining > 0.0
-                && timeRemaining <= AUTOMATIC_PARK_START_TIME_REMAINING_SEC;
+                && timeRemaining <= Constants.Robot.AutoPark.START_TIME_REMAINING_SEC;
     }
 
     /** Hive state from whichever hive pose the robot is closest to: the
@@ -642,8 +637,8 @@ public class Robot {
     /* LIGHTS */
 
     private void lightsControl() {
-        if (opModeTimeRemaining() <= 7.0) {lights.flashRed();}
-        else if (opModeTimeRemaining() >= 58 && opModeTimeRemaining() <= 61) {
+        if (opModeTimeRemaining() <= Constants.Robot.Lights.FLASH_RED_SECONDS_REMAINING) {lights.flashRed();}
+        else if (opModeTimeRemaining() >= Constants.Robot.Lights.ONE_MINUTE_WINDOW_START_SEC && opModeTimeRemaining() <= Constants.Robot.Lights.ONE_MINUTE_WINDOW_END_SEC) {
             lights.oneMinThing();
         } else if (shooter.upToSpeed()) {
             lights.displayGreen();

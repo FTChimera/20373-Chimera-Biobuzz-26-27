@@ -8,8 +8,8 @@ import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.math.Pose;
 import com.rmsftc.cmdlib.Status;
 import org.firstinspires.ftc.teamcode.pedro.FollowerTestRig;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotCalculator;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotContext;
@@ -42,7 +42,7 @@ public class TreeShooterCommandsTest {
 
     @Test
     public void plainRuleNoTagWaitsBoundedTimeBeforeDeciding() {
-        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        double waitMs = Constants.Timings.hiveLineupTimeoutTime * 1000.0;
         assertEquals(TreeShooterCommands.VisionDecision.WAIT,
                 TreeShooterCommands.decideVisionAction(false, 0, true, false, 0));
         assertEquals(TreeShooterCommands.VisionDecision.WAIT,
@@ -51,7 +51,7 @@ public class TreeShooterCommandsTest {
 
     @Test
     public void plainRuleNoTagAfterWaitSwitchesOnceWhenSafe() {
-        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        double waitMs = Constants.Timings.hiveLineupTimeoutTime * 1000.0;
         assertEquals(TreeShooterCommands.VisionDecision.SWITCH,
                 TreeShooterCommands.decideVisionAction(false, waitMs, true, false, 0));
         assertEquals(TreeShooterCommands.VisionDecision.SWITCH,
@@ -60,14 +60,14 @@ public class TreeShooterCommandsTest {
 
     @Test
     public void plainRuleNoTagAfterSwitchFeedsBlindInsteadOfSwitchingAgain() {
-        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        double waitMs = Constants.Timings.hiveLineupTimeoutTime * 1000.0;
         assertEquals(TreeShooterCommands.VisionDecision.BLIND_FEED,
                 TreeShooterCommands.decideVisionAction(false, waitMs, true, true, 0));
     }
 
     @Test
     public void plainRuleNoTagWithoutSafeSwitchFeedsBlind() {
-        double waitMs = Timings.hiveLineupTimeoutTime * 1000.0;
+        double waitMs = Constants.Timings.hiveLineupTimeoutTime * 1000.0;
         assertEquals(TreeShooterCommands.VisionDecision.BLIND_FEED,
                 TreeShooterCommands.decideVisionAction(false, waitMs, false, false, 0));
         assertEquals(TreeShooterCommands.VisionDecision.BLIND_FEED,
@@ -76,7 +76,7 @@ public class TreeShooterCommandsTest {
 
     @Test
     public void gardenShootPoseHasNonzeroFlywheelSolutionForBothMotors() {
-        // Garden shoot pose (40, 10, 65 deg), mirroring ShootPoses.garden
+        // Garden shoot pose (40, 10, 65 deg), mirroring Constants.ShootPoses.garden
         // for RED, to the red untipped hive goal (60, 60): ~53.85 in.
         // The table must return a real spin-up target for both motors, not 0.
         ShotContext ctx = new ShotContext();
@@ -161,7 +161,7 @@ public class TreeShooterCommandsTest {
         rig.drive.busy = false;
         rig.drive.atEnd = true;
         rig.drive.progress = 1;
-        rig.now.set(Timings.flowerTurnTimeoutMs * MS);
+        rig.now.set(Constants.Timings.flowerTurnTimeoutMs * MS);
         rig.command.execute();
         assertEquals(TreeShooterCommands.SwitchOutcome.ABORTED, rig.command.outcome());
         assertTrue(rig.drive.follower.idle());

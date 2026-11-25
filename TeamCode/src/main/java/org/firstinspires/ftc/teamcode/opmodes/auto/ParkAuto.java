@@ -15,7 +15,6 @@ import com.rmsftc.utils.telemetry.selection.Select;
 import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
-import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.math.Pose;
@@ -25,10 +24,10 @@ import org.firstinspires.ftc.teamcode.util.game.Field;
 public class ParkAuto extends ArchitecturalOpMode {
 
     enum StartPose {
-        RED_UNTIPPED(ParkAutoStartPoses.redUntippedStart()),
-        RED_TIPPED(ParkAutoStartPoses.redTippedStart()),
-        BLUE_UNTIPPED(ParkAutoStartPoses.blueUntippedStart()),
-        BLUE_TIPPED(ParkAutoStartPoses.blueTippedStart());
+        RED_UNTIPPED(org.firstinspires.ftc.teamcode.planners.Constants.ParkAutoStartPoses.redUntippedStart()),
+        RED_TIPPED(org.firstinspires.ftc.teamcode.planners.Constants.ParkAutoStartPoses.redTippedStart()),
+        BLUE_UNTIPPED(org.firstinspires.ftc.teamcode.planners.Constants.ParkAutoStartPoses.blueUntippedStart()),
+        BLUE_TIPPED(org.firstinspires.ftc.teamcode.planners.Constants.ParkAutoStartPoses.blueTippedStart());
 
         public final Pose pose;
 
@@ -82,7 +81,7 @@ public class ParkAuto extends ArchitecturalOpMode {
                         : AllianceColor.BLUE;
 
         follower = Constants.createFollower(hardwareMap).withLogger(followerLog -> telemetry.addLine(followerLog.toString()));
-        Pose parkPose = ParkAutoStartPoses.destination(alliance);
+        Pose parkPose = org.firstinspires.ftc.teamcode.planners.Constants.ParkAutoStartPoses.destination(alliance);
         follower.localizer.setPose(selectedPose.pose);
         if (isStopRequested()) return;
         manager.schedule(DrivetrainCommands.follow(follower,

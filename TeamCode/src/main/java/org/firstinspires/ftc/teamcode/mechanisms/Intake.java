@@ -10,14 +10,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Direction;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 
 public class Intake {
     CachedMotor mainMotor;
-
-    public static double DEPLOYER_GROUND_POSITION = 0.20313725590705872;
-    public static double DEPLOYER_TRANSLATION_FACTOR = -0.043725488781929;
-    public static double DEPLOYER_DEPLOYED_POSITION = 0.25;
-    public static double DEPLOYER_STOWED_POSITION = 0.6666666680574418;
 
     Servo deployer;
     private boolean deployed = false;
@@ -39,7 +35,7 @@ public class Intake {
     public boolean allowOverrideOverEject = false;
 
     public Intake(HardwareMap map, AllianceColor color) {
-        this(new CachedMotor(map.get(DcMotorEx.class, "intake"), 0.1),
+        this(new CachedMotor(map.get(DcMotorEx.class, "intake"), Constants.Intake.CACHE_INTERVAL_S),
                 map.get(Servo.class, "deployer"), color);
     }
 
@@ -58,8 +54,8 @@ public class Intake {
     /** Sets the deployable ramp: true = deployed (ramp down), false = stowed. */
     public void setDeployed(boolean deployed) {
         this.deployed = deployed;
-        double basePosition = deployed ? DEPLOYER_DEPLOYED_POSITION : DEPLOYER_STOWED_POSITION;
-        deployer.setPosition(basePosition + DEPLOYER_TRANSLATION_FACTOR);
+        double basePosition = deployed ? Constants.Intake.Deployer.DEPLOYED_POSITION : Constants.Intake.Deployer.STOWED_POSITION;
+        deployer.setPosition(basePosition + Constants.Intake.Deployer.TRANSLATION_FACTOR);
     }
 
     public boolean isDeployed() {
@@ -146,20 +142,20 @@ public class Intake {
                 break;
             case FULL_POWER:
                 //internalSet(twistDir>=0?1:0.8);
-                internalSet(1);
+                internalSet(Constants.Intake.FULL_POWER);
                 break;
             case LOW_POWER:
                 //internalSet(twistDir>=0?0.6:0.4);
-                internalSet(0.7);
+                internalSet(Constants.Intake.LOW_POWER);
                 break;
             case REVERSE:
-                internalSet(-0.5);
+                internalSet(Constants.Intake.REVERSE_POWER);
                 break;
             case CUSTOM_POWER:
                 internalSet(customPower);
                 break;
             case EJECTING:
-                internalSet(prev==Mode.LOW_POWER? -0.5: -0.7);
+                internalSet(prev==Mode.LOW_POWER? -0.5: Constants.Intake.EJECT_POWER);
                 break;
         }
         modeSwitch=false;

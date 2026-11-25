@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.robotDev.customSW;
 
-import static org.firstinspires.ftc.teamcode.mechanisms.Robot.LOW_POWER_VOLTAGE_THRESHOLD;
-import static org.firstinspires.ftc.teamcode.mechanisms.Robot.LOW_POWER_VOLTAGE_TOLERANCE;
+import static org.firstinspires.ftc.teamcode.planners.Constants.Robot.Battery.CACHE_MS;
+import static org.firstinspires.ftc.teamcode.planners.Constants.Robot.Battery.LOW_POWER_VOLTAGE_THRESHOLD;
+import static org.firstinspires.ftc.teamcode.planners.Constants.Robot.Battery.LOW_POWER_VOLTAGE_TOLERANCE;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.Utility;
@@ -27,7 +28,7 @@ public class TestRobotUtilMathGeomAndFeatureRegistrar extends OpMode {
     HardwareMap.DeviceMapping<VoltageSensor> voltageSensors;
     public double getBatteryVoltage() {
         double cur=System.currentTimeMillis();
-        if (lastBatteryTime-cur < 300 && !Double.isNaN(lastVolt)) {
+        if (lastBatteryTime-cur < CACHE_MS && !Double.isNaN(lastVolt)) {
             return lastVolt;
         }
         lastBatteryTime=cur;

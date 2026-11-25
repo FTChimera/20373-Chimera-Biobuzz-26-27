@@ -7,12 +7,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.Direction;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 
 import java.util.concurrent.TimeUnit;
 
 public class Transfer {
-    private static final double POLLEN_KICK_TIME_MS = 300;
-
     public enum Mode {
         KICK_ONE,
         SHOOT_ALL,
@@ -30,7 +29,7 @@ public class Transfer {
     Timer modeTimer;
 
     public Transfer(HardwareMap hardwareMap) {
-        transferMotor = new CachedMotor(hardwareMap.get(DcMotorEx.class, "transfer"), 0.01);
+        transferMotor = new CachedMotor(hardwareMap.get(DcMotorEx.class, "transfer"), Constants.Transfer.CACHE_INTERVAL_S);
         transferMotor.setDirection(Direction.FORWARD.toMotor());
     }
 
@@ -96,28 +95,28 @@ public class Transfer {
             case KICK_ONE:
                 if (modeSwitch) {
                     modeTimer = new Timer(TimeUnit.MILLISECONDS);
-                    transferMotor.setPower(0.5);
+                    transferMotor.setPower(Constants.Transfer.KICK_ONE_POWER);
                 }
-                if (modeTimer.past(POLLEN_KICK_TIME_MS)) {
+                if (modeTimer.past(Constants.Transfer.POLLEN_KICK_TIME_MS)) {
                     mode = Mode.values()[prevMode.ordinal()];
                     modeSwitch = true;
                     return;
                 }
                 break;
             case SHOOT_ALL:
-                transferMotor.setPower(0.7); //decreased for accuracy
+                transferMotor.setPower(Constants.Transfer.SHOOT_ALL_POWER); //decreased for accuracy
                 break;
             case PANIC_SHOOT:
-                transferMotor.setPower(1);
+                transferMotor.setPower(Constants.Transfer.PANIC_SHOOT_POWER);
                 break;
             case SLOW:
-                transferMotor.setPower(0.5);
+                transferMotor.setPower(Constants.Transfer.SLOW_POWER);
                 break;
             case REVERSE_EJECT:
-                transferMotor.setPower(-0.5);
+                transferMotor.setPower(Constants.Transfer.REVERSE_EJECT_POWER);
                 break;
             case BLOCK:
-                transferMotor.setPower(-0.05);
+                transferMotor.setPower(Constants.Transfer.BLOCK_POWER);
                 break;
             case CUSTOM_POWER:
                 transferMotor.setPower(customPower);

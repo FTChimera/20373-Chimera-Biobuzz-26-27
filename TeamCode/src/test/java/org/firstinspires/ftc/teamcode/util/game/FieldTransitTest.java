@@ -6,8 +6,7 @@ import static org.junit.Assert.assertFalse;
 import com.pedropathing.paths.Path;
 import com.rmsftc.utils.AllianceColor;
 
-import org.firstinspires.ftc.teamcode.planners.FieldCoordinates;
-import org.firstinspires.ftc.teamcode.planners.ParkAutoStartPoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import com.rmsftc.utils.math.Pose;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -17,13 +16,13 @@ public class FieldTransitTest {
     @Test
     public void allParkStartsClearHiveBasesWithTheWholeBody() {
         assertParkClear(new Field(AllianceColor.RED, 17, 17).generateTransitPath(
-                ParkAutoStartPoses.redUntippedStart(), ParkAutoStartPoses.destination(AllianceColor.RED)));
+                Constants.ParkAutoStartPoses.redUntippedStart(), Constants.ParkAutoStartPoses.destination(AllianceColor.RED)));
         assertParkClear(new Field(AllianceColor.RED, 17, 17).generateTransitPath(
-                ParkAutoStartPoses.redTippedStart(), ParkAutoStartPoses.destination(AllianceColor.RED)));
+                Constants.ParkAutoStartPoses.redTippedStart(), Constants.ParkAutoStartPoses.destination(AllianceColor.RED)));
         assertParkClear(new Field(AllianceColor.BLUE, 17, 17).generateTransitPath(
-                ParkAutoStartPoses.blueUntippedStart(), ParkAutoStartPoses.destination(AllianceColor.BLUE)));
+                Constants.ParkAutoStartPoses.blueUntippedStart(), Constants.ParkAutoStartPoses.destination(AllianceColor.BLUE)));
         assertParkClear(new Field(AllianceColor.BLUE, 17, 17).generateTransitPath(
-                ParkAutoStartPoses.blueTippedStart(), ParkAutoStartPoses.destination(AllianceColor.BLUE)));
+                Constants.ParkAutoStartPoses.blueTippedStart(), Constants.ParkAutoStartPoses.destination(AllianceColor.BLUE)));
     }
 
     @Test
@@ -97,12 +96,12 @@ public class FieldTransitTest {
     }
 
     private static void assertClear(Path path, boolean checkWalls) {
-        Geometry bases = Field.geometryFactory.createPolygon(FieldCoordinates.westHiveBase())
-                .union(Field.geometryFactory.createPolygon(FieldCoordinates.eastHiveBase()));
-        Geometry flowers = Field.geometryFactory.createPolygon(FieldCoordinates.westFlower())
-                .union(Field.geometryFactory.createPolygon(FieldCoordinates.northFlower()))
-                .union(Field.geometryFactory.createPolygon(FieldCoordinates.eastFlower()))
-                .union(Field.geometryFactory.createPolygon(FieldCoordinates.southFlower()));
+        Geometry bases = Field.geometryFactory.createPolygon(Constants.FieldCoordinates.westHiveBase())
+                .union(Field.geometryFactory.createPolygon(Constants.FieldCoordinates.eastHiveBase()));
+        Geometry flowers = Field.geometryFactory.createPolygon(Constants.FieldCoordinates.westFlower())
+                .union(Field.geometryFactory.createPolygon(Constants.FieldCoordinates.northFlower()))
+                .union(Field.geometryFactory.createPolygon(Constants.FieldCoordinates.eastFlower()))
+                .union(Field.geometryFactory.createPolygon(Constants.FieldCoordinates.southFlower()));
         for (int i = 0; i <= 1000; i++) {
             com.pedropathing.math.Pose pose = path.get(i / 1000.0);
             Coordinate[] corners = new Coordinate[5];

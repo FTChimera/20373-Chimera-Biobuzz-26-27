@@ -9,17 +9,20 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+import org.firstinspires.ftc.teamcode.planners.Constants;
 /**
  * Auto-tunes PIDF gains for a velocity-controlled mechanism (flywheel,
  * intake, etc.) using the relay-feedback method.
  *
- * <p>Set {@link TuningConfig#TARGET_RPM} to your target speed in RPM and
- * {@link TuningConfig#TICKS_PER_REV} to your motor's ticks per revolution.
- * Everything else runs automatically.
+ * <p>Set {@link TuningConfig#TARGET_RPM} to your target speed in RPM.
+ * Ticks per revolution comes from
+ * {@code Constants.Shooter.SmartFlywheel.TICKS_PER_REV} (28 for the
+ * REV HD Hex motor). Everything else runs automatically.
  *
  * <h2>Setup</h2>
  * <ol>
- *     <li>Set {@code MOTOR_NAME}, {@code TARGET_RPM}, and {@code TICKS_PER_REV}
+ *     <li>Set {@code MOTOR_NAME} and {@code TARGET_RPM}
  *         in {@link TuningConfig}. Verify {@code REVERSED} is correct.</li>
  *     <li>Run this OpMode and press Start.</li>
  *     <li><b>Phase 1 (relay test):</b> motor oscillates around TARGET_RPM automatically.</li>
@@ -36,6 +39,7 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
 //        telemetry = new MultipleTelemetry(FtcDashboard.getInstance().getTelemetry(),telemetry); // for Ftc Dash
         telemetry = new AutoTuneTelemetry(hardwareMap,telemetry); // For Pulse
         // Convert RPM target to ticks/sec using: ticks/sec = (RPM * TICKS_PER_REV) / 60.0
+        // (TICKS_PER_REV = Constants.Shooter.SmartFlywheel.TICKS_PER_REV)
         double targetTicksPerSec = TuningConfig.targetTicksPerSec();
 
         PIDMaster pid = new PIDMaster(
@@ -44,11 +48,11 @@ public class VelocityPIDFTunerOpMode extends LinearOpMode {
                 TuningConfig.RELAY_AMPLITUDE, TuningConfig.CYCLES_TO_COLLECT, TuningConfig.CYCLES_TO_IGNORE,
                 TuningConfig.RELAY_TEST_TIMEOUT_S, TuningConfig.FEEDFORWARD_TEST_POWERS,
                 TuningConfig.FEEDFORWARD_SETTLE_TIME_S, TuningConfig.TUNE_INTEGRAL_TERM,
-                TuningConfig.TICKS_PER_REV);
+                Constants.Shooter.SmartFlywheel.TICKS_PER_REV);
 
         telemetry.addLine("=== PIDF Auto Tuner (Velocity) ===");
         telemetry.addData("Motor", TuningConfig.MOTOR_NAME);
-        telemetry.addData("TICKS_PER_REV", TuningConfig.TICKS_PER_REV);
+        telemetry.addData("TICKS_PER_REV", Constants.Shooter.SmartFlywheel.TICKS_PER_REV);
         telemetry.addData("Target", String.format("%.1f RPM  (%.1f ticks/s)",
                 TuningConfig.TARGET_RPM, targetTicksPerSec));
         telemetry.addLine("Press START. Phase 1: relay test (automatic).");

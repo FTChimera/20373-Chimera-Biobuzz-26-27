@@ -8,7 +8,7 @@ import com.rmsftc.cmdlib.cmd.Commands;
 import com.rmsftc.utils.Clock;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.planners.Timings;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 
@@ -121,7 +121,7 @@ public class ShooterCommands {
                     done = true;
                     return;
                 }
-                if (timer.past(Timings.hiveLineupTimeoutTime)) {
+                if (timer.past(Constants.Timings.hiveLineupTimeoutTime)) {
                     done = true;
                     robot.telemetry.addData(
                             "Hive lineup timeout",
@@ -181,7 +181,7 @@ public class ShooterCommands {
         @Override
         public void loop() {
             if (outcome() == ShotOutcome.FEEDING) {
-                if (timer.past(Timings.shootingTimeMs)) {
+                if (timer.past(Constants.Timings.shootingTimeMs)) {
                     lifecycle.end(false);
                 }
                 return;
@@ -190,7 +190,7 @@ public class ShooterCommands {
                 return;
             }
             boolean upToSpeed = robot.shooter.upToSpeed();
-            if (!upToSpeed && !timer.past(Timings.upToSpeedShooterTimeoutTimeMs)) {
+            if (!upToSpeed && !timer.past(Constants.Timings.upToSpeedShooterTimeoutTimeMs)) {
                 return;
             }
             if (!upToSpeed && !robot.shooter.hasNonzeroVelocityTarget()) {
@@ -257,7 +257,7 @@ public class ShooterCommands {
                     done = true;
                     return;
                 }
-                if (timer.past(Timings.hiveLineupTimeoutTime)) {
+                if (timer.past(Constants.Timings.hiveLineupTimeoutTime)) {
                     done = true;
                     robot.telemetry.addData("Hive lineup timeout",
                             "WARNING: no fresh post-start alliance frame; continuing blind");
@@ -275,7 +275,7 @@ public class ShooterCommands {
         };
         return Commands.sequence(
                 waitForTag,
-                Commands.waitMs(Timings.hiveLineupExtraTimeSec * 1000L));
+                Commands.waitMs(Constants.Timings.hiveLineupExtraTimeSec * 1000L));
     }
 
     public static Command shootCmd(Robot robot, Field.HiveState hiveState) {

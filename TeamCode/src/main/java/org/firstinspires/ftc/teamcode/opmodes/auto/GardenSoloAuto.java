@@ -18,7 +18,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.TreeLegs;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeShooterCommands;
 import org.firstinspires.ftc.teamcode.planners.tree.TreeState;
@@ -71,7 +70,7 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose.set(StartPoses.gardenArea);
+        OpModeStorage.pose.set(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea);
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
@@ -184,7 +183,6 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
      * {@code ParkNodeTest}.
      */
     public static final class ParkNode extends BehaviorNode {
-        private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
         private final BooleanSupplier inParkZone;
         private final BooleanSupplier moveToParkZone;
@@ -227,7 +225,7 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
             }
             if (!parkStarted) {
                 double now = timeSeconds.getAsDouble();
-                if (now - lastAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+                if (now - lastAttemptTimeSec >= org.firstinspires.ftc.teamcode.planners.Constants.Robot.Park.RETRY_INTERVAL_SEC) {
                     lastAttemptTimeSec = now;
                     parkStarted = moveToParkZone.getAsBoolean();
                 }

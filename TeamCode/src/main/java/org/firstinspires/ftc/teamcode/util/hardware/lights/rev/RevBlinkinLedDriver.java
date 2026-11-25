@@ -41,6 +41,8 @@ import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
+
 /**
  * Support for the REV Robotics Blinkin LED Driver.
  *
@@ -51,7 +53,7 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
  *
  * See the SampleRevBlinkinLedDriver.java sample for an example of how to use this class.
  */
-@ServoType(flavor = ServoFlavor.CUSTOM, usPulseLower = 500, usPulseUpper = 2500)
+@ServoType(flavor = ServoFlavor.CUSTOM, usPulseLower = Constants.Lights.Blinkin.SERVO_PULSE_MIN_US, usPulseUpper = Constants.Lights.Blinkin.SERVO_PULSE_MAX_US)
 @DeviceProperties(xmlTag = "RevBlinkinLedDriver", name = "@string/rev_blinkin_name", description = "@string/rev_blinkin_description",
         builtIn = true, compatibleControlSystems = ControlSystem.REV_HUB)
 public class RevBlinkinLedDriver implements HardwareDevice {
@@ -198,9 +200,7 @@ public class RevBlinkinLedDriver implements HardwareDevice {
      * range of 500 to 2500 mS.  The first pattern expects 1005mS, ergo the position
      * for the first pattern is 0.2525.
      */
-    protected final static double PULSE_WIDTH_INCREMENTOR = 0.0005;
-    protected final static double BASE_SERVO_POSITION = 505 * PULSE_WIDTH_INCREMENTOR;
-    protected final static int PATTERN_OFFSET = 10;
+    protected final static double BASE_SERVO_POSITION = 505 * Constants.Lights.Blinkin.PULSE_WIDTH_INCREMENTOR;
 
     protected ServoControllerEx controller;
     private final int port;
@@ -231,7 +231,7 @@ public class RevBlinkinLedDriver implements HardwareDevice {
      */
     public void setPattern(BlinkinPattern pattern)
     {
-        double pwm = BASE_SERVO_POSITION + ((PATTERN_OFFSET * pattern.ordinal()) * PULSE_WIDTH_INCREMENTOR);
+        double pwm = BASE_SERVO_POSITION + ((Constants.Lights.Blinkin.PATTERN_STEP_US * pattern.ordinal()) * Constants.Lights.Blinkin.PULSE_WIDTH_INCREMENTOR);
         RobotLog.vv(TAG, "Pattern: %s, %d, %f", pattern.toString(), pattern.ordinal(), pwm);
         controller.setServoPosition(port, pwm);
         currentPattern = pattern;

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes
 
 import com.qualcomm.robotcore.hardware.Gamepad
+import org.firstinspires.ftc.teamcode.planners.Constants
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.FancyButton
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.GpFancyButton
 
@@ -61,13 +62,13 @@ class Controls(
     fun deployer(): GpFancyButton = deployerButton
 
     private val runTransferFastButton = GpFancyButton(FancyButton.PressType.Normal) {
-        secondary().right_trigger>=0.5
+        secondary().right_trigger>=Constants.TeleOp.Controls.TRIGGER_THRESHOLD
     }
 
     fun runTransferFast(): GpFancyButton = runTransferFastButton
 
     private val runTransferSlowButton = GpFancyButton(FancyButton.PressType.Normal) {
-        secondary().left_trigger>=0.5
+        secondary().left_trigger>=Constants.TeleOp.Controls.TRIGGER_THRESHOLD
     }
 
     fun runTransferSlow(): GpFancyButton = runTransferSlowButton

@@ -7,15 +7,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.teamcode.util.Direction;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityController;
 
 import java.util.function.DoubleUnaryOperator;
 
 public class SmartFlywheel {
-    private static final double MIN_VALID_COMPENSATION_RATIO = 0.75;
-    private static final double MAX_VALID_COMPENSATION_RATIO = 1.20;
-
     public CachedMotor motor;
     public double targetTicksPerSecond, targetPower;
     public boolean runningToVelocity;
@@ -30,7 +28,7 @@ public class SmartFlywheel {
                          @NonNull Controller<Double, Double, Double> velocityController,
                          @NonNull Params params,
                          Iterable<VoltageSensor> voltageSensors) {
-        motor = new CachedMotor(dcMotorEx, 0.005);
+        motor = new CachedMotor(dcMotorEx, Constants.Shooter.SmartFlywheel.MOTOR_CACHE_INTERVAL_S);
         this.velocityController = velocityController;
         this.params = params;
         setUpMotor();
@@ -113,8 +111,8 @@ public class SmartFlywheel {
             return Double.NaN;
         }
         double minVoltage = Double.NaN;
-        double minValidVoltage = nominalVoltage * MIN_VALID_COMPENSATION_RATIO;
-        double maxValidVoltage = nominalVoltage * MAX_VALID_COMPENSATION_RATIO;
+        double minValidVoltage = nominalVoltage * Constants.Shooter.SmartFlywheel.MIN_VALID_COMPENSATION_RATIO;
+        double maxValidVoltage = nominalVoltage * Constants.Shooter.SmartFlywheel.MAX_VALID_COMPENSATION_RATIO;
         for (VoltageSensor sensor : voltageSensors) {
             if (sensor == null) {
                 continue;

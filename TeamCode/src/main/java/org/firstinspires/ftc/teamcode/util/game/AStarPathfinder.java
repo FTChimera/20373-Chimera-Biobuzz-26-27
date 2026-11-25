@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.util.game;
 
 import com.rmsftc.utils.math.Pose;
 import org.locationtech.jts.geom.Coordinate;
+
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
@@ -16,7 +18,7 @@ import java.util.PriorityQueue;
  * A* pathfinder over a uniform cell grid of the whole 144x144 in field.
  *
  * <p>Replaces {@code DijkstraPathfinder} (visibility graph over a 3x3 lattice).
- * The grid covers the field in {@link #CELL_SIZE_IN} cells; a cell is blocked
+ * The grid covers the field in {@code Constants.Field.AStar.CELL_SIZE_IN} cells; a cell is blocked
  * iff its center point lies inside the forbidden geometry. Movement is
  * 8-directional with the standard octile heuristic, and a diagonal step is
  * allowed only when both orthogonal neighbor cells are free, so the path
@@ -49,17 +51,8 @@ import java.util.PriorityQueue;
  */
 public class AStarPathfinder {
 
-    /**
-     * Cell edge length in inches. One-line tunable: the grid is
-     * 144 / CELL_SIZE_IN cells per side (24x24 = 576 cells at 6 in).
-     */
-    public static final double CELL_SIZE_IN = 6.0;
-
-    private static final double FIELD_SIZE_IN = 144.0;
-    private static final int CELLS_PER_SIDE = (int) Math.round(FIELD_SIZE_IN / CELL_SIZE_IN);
-    private static final double DIAGONAL_COST = CELL_SIZE_IN * Math.sqrt(2.0);
-    private static final double SQRT2_MINUS_1 = Math.sqrt(2.0) - 1.0;
-    private static final double EPSILON = 1e-9;
+    // Cell geometry lives in Constants.Field.AStar (cell edge 6 in, so the
+    // grid is Constants.Field.SIZE_IN / Constants.Field.AStar.CELL_SIZE_IN = 24 cells per side, 24x24 = 576 cells).
 
     private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
@@ -126,7 +119,7 @@ public class AStarPathfinder {
         // neighboring cell when it is not, and give up when no neighbor is
         // visible from both endpoints.
         if (startCol == goalCol && startRow == goalRow) {
-            if (startCoord.distance(endCoord) < EPSILON) {
+            if (startCoord.distance(endCoord) < Constants.Field.AStar.EPSILON) {
                 return Collections.singletonList(new Pose(start.x(), start.y(), start.heading()));
             }
             if (hasLineOfSight(startCoord, endCoord, forbiddenSpace)) {
@@ -164,11 +157,11 @@ public class AStarPathfinder {
         List<Coordinate> rawWaypoints = new ArrayList<>(cellPath.size() + 2);
         rawWaypoints.add(startCoord);
         for (Coordinate center : cellPath) {
-            if (rawWaypoints.get(rawWaypoints.size() - 1).distance(center) >= EPSILON) {
+            if (rawWaypoints.get(rawWaypoints.size() - 1).distance(center) >= Constants.Field.AStar.EPSILON) {
                 rawWaypoints.add(center);
             }
         }
-        if (rawWaypoints.get(rawWaypoints.size() - 1).distance(endCoord) >= EPSILON) {
+        if (rawWaypoints.get(rawWaypoints.size() - 1).distance(endCoord) >= Constants.Field.AStar.EPSILON) {
             rawWaypoints.add(endCoord);
         }
 
@@ -195,18 +188,18 @@ public class AStarPathfinder {
     /** Standard A* over the cell grid; returns the center coordinates from start cell to goal cell. */
     private List<Coordinate> search(int startCol, int startRow, int goalCol, int goalRow,
                                     boolean[][] blocked, Geometry forbiddenSpace) {
-        double[][] gScore = new double[CELLS_PER_SIDE][CELLS_PER_SIDE];
-        int[][] cameFrom = new int[CELLS_PER_SIDE][CELLS_PER_SIDE];
-        boolean[][] closed = new boolean[CELLS_PER_SIDE][CELLS_PER_SIDE];
-        for (int col = 0; col < CELLS_PER_SIDE; col++) {
-            for (int row = 0; row < CELLS_PER_SIDE; row++) {
+        double[][] gScore = new double[Constants.Field.AStar.CELLS_PER_SIDE][Constants.Field.AStar.CELLS_PER_SIDE];
+        int[][] cameFrom = new int[Constants.Field.AStar.CELLS_PER_SIDE][Constants.Field.AStar.CELLS_PER_SIDE];
+        boolean[][] closed = new boolean[Constants.Field.AStar.CELLS_PER_SIDE][Constants.Field.AStar.CELLS_PER_SIDE];
+        for (int col = 0; col < Constants.Field.AStar.CELLS_PER_SIDE; col++) {
+            for (int row = 0; row < Constants.Field.AStar.CELLS_PER_SIDE; row++) {
                 gScore[col][row] = Double.POSITIVE_INFINITY;
                 cameFrom[col][row] = -1;
             }
         }
 
         gScore[startCol][startRow] = 0.0;
-        PriorityQueue<SearchNode> open = new PriorityQueue<>(64, BY_F_THEN_HEURISTIC);
+        PriorityQueue<SearchNode> open = new PriorityQueue<>(Constants.Field.AStar.OPEN_SET_INITIAL_CAPACITY, BY_F_THEN_HEURISTIC);
         open.add(new SearchNode(startCol, startRow, 0.0,
                 heuristic(startCol, startRow, goalCol, goalRow)));
 
@@ -214,7 +207,7 @@ public class AStarPathfinder {
             SearchNode current = open.poll();
             if (closed[current.col][current.row]) continue;
             // Stale queue entry: a cheaper route to this cell was found after it was pushed.
-            if (current.g > gScore[current.col][current.row] + EPSILON) continue;
+            if (current.g > gScore[current.col][current.row] + Constants.Field.AStar.EPSILON) continue;
             closed[current.col][current.row] = true;
 
             if (current.col == goalCol && current.row == goalRow) {
@@ -226,8 +219,8 @@ public class AStarPathfinder {
                     if (dc == 0 && dr == 0) continue;
                     int nextCol = current.col + dc;
                     int nextRow = current.row + dr;
-                    if (nextCol < 0 || nextCol >= CELLS_PER_SIDE
-                            || nextRow < 0 || nextRow >= CELLS_PER_SIDE) continue;
+                    if (nextCol < 0 || nextCol >= Constants.Field.AStar.CELLS_PER_SIDE
+                            || nextRow < 0 || nextRow >= Constants.Field.AStar.CELLS_PER_SIDE) continue;
                     if (blocked[nextCol][nextRow] || closed[nextCol][nextRow]) continue;
                     if (dc != 0 && dr != 0) {
                         // No corner-cutting: a diagonal step is allowed only when
@@ -240,11 +233,11 @@ public class AStarPathfinder {
                     // while the segment between them clips a forbidden corner.
                     if (!hasLineOfSight(cellCenter(current.col, current.row),
                             cellCenter(nextCol, nextRow), forbiddenSpace)) continue;
-                    double stepCost = (dc != 0 && dr != 0) ? DIAGONAL_COST : CELL_SIZE_IN;
+                    double stepCost = (dc != 0 && dr != 0) ? Constants.Field.AStar.DIAGONAL_COST : Constants.Field.AStar.CELL_SIZE_IN;
                     double tentativeG = gScore[current.col][current.row] + stepCost;
-                    if (tentativeG + EPSILON < gScore[nextCol][nextRow]) {
+                    if (tentativeG + Constants.Field.AStar.EPSILON < gScore[nextCol][nextRow]) {
                         gScore[nextCol][nextRow] = tentativeG;
-                        cameFrom[nextCol][nextRow] = current.col * CELLS_PER_SIDE + current.row;
+                        cameFrom[nextCol][nextRow] = current.col * Constants.Field.AStar.CELLS_PER_SIDE + current.row;
                         open.add(new SearchNode(nextCol, nextRow, tentativeG,
                                 tentativeG + heuristic(nextCol, nextRow, goalCol, goalRow)));
                     }
@@ -256,10 +249,10 @@ public class AStarPathfinder {
 
     private List<Coordinate> reconstructPath(int[][] cameFrom, int goalCol, int goalRow) {
         List<Coordinate> path = new ArrayList<>();
-        int index = goalCol * CELLS_PER_SIDE + goalRow;
+        int index = goalCol * Constants.Field.AStar.CELLS_PER_SIDE + goalRow;
         while (index != -1) {
-            path.add(cellCenter(index / CELLS_PER_SIDE, index % CELLS_PER_SIDE));
-            index = cameFrom[index / CELLS_PER_SIDE][index % CELLS_PER_SIDE];
+            path.add(cellCenter(index / Constants.Field.AStar.CELLS_PER_SIDE, index % Constants.Field.AStar.CELLS_PER_SIDE));
+            index = cameFrom[index / Constants.Field.AStar.CELLS_PER_SIDE][index % Constants.Field.AStar.CELLS_PER_SIDE];
         }
         Collections.reverse(path);
         return path;
@@ -273,7 +266,7 @@ public class AStarPathfinder {
      */
     private int[] nearestReachableCell(Coordinate from, int col, int row, boolean[][] blocked,
                                        Geometry forbiddenSpace) {
-        for (int ring = 0; ring < CELLS_PER_SIDE; ring++) {
+        for (int ring = 0; ring < Constants.Field.AStar.CELLS_PER_SIDE; ring++) {
             List<int[]> candidates = new ArrayList<>();
             for (int[] cell : ringCells(col, row, ring)) {
                 if (!blocked[cell[0]][cell[1]]) {
@@ -299,7 +292,7 @@ public class AStarPathfinder {
      */
     private Coordinate nearestDetourCell(Coordinate start, Coordinate end, int col, int row,
                                          boolean[][] blocked, Geometry forbiddenSpace) {
-        for (int ring = 1; ring < CELLS_PER_SIDE; ring++) {
+        for (int ring = 1; ring < Constants.Field.AStar.CELLS_PER_SIDE; ring++) {
             List<int[]> candidates = new ArrayList<>();
             for (int[] cell : ringCells(col, row, ring)) {
                 if (!blocked[cell[0]][cell[1]]) {
@@ -324,8 +317,8 @@ public class AStarPathfinder {
     /** Cells at exactly Chebyshev distance {@code ring} from ({@code col}, {@code row}), clipped to the grid. */
     private List<int[]> ringCells(int col, int row, int ring) {
         List<int[]> cells = new ArrayList<>();
-        for (int c = Math.max(0, col - ring); c <= Math.min(CELLS_PER_SIDE - 1, col + ring); c++) {
-            for (int r = Math.max(0, row - ring); r <= Math.min(CELLS_PER_SIDE - 1, row + ring); r++) {
+        for (int c = Math.max(0, col - ring); c <= Math.min(Constants.Field.AStar.CELLS_PER_SIDE - 1, col + ring); c++) {
+            for (int r = Math.max(0, row - ring); r <= Math.min(Constants.Field.AStar.CELLS_PER_SIDE - 1, row + ring); r++) {
                 if (Math.max(Math.abs(c - col), Math.abs(r - row)) == ring) {
                     cells.add(new int[]{c, r});
                 }
@@ -358,12 +351,12 @@ public class AStarPathfinder {
     }
 
     private boolean[][] computeBlockedCells(Geometry forbiddenSpace) {
-        boolean[][] blocked = new boolean[CELLS_PER_SIDE][CELLS_PER_SIDE];
+        boolean[][] blocked = new boolean[Constants.Field.AStar.CELLS_PER_SIDE][Constants.Field.AStar.CELLS_PER_SIDE];
         if (forbiddenSpace == null || forbiddenSpace.isEmpty()) {
             return blocked;
         }
-        for (int col = 0; col < CELLS_PER_SIDE; col++) {
-            for (int row = 0; row < CELLS_PER_SIDE; row++) {
+        for (int col = 0; col < Constants.Field.AStar.CELLS_PER_SIDE; col++) {
+            for (int row = 0; row < Constants.Field.AStar.CELLS_PER_SIDE; row++) {
                 Coordinate center = cellCenter(col, row);
                 blocked[col][row] = forbiddenSpace.contains(GEOMETRY_FACTORY.createPoint(center));
             }
@@ -375,17 +368,17 @@ public class AStarPathfinder {
     private static double heuristic(int col, int row, int goalCol, int goalRow) {
         int dx = Math.abs(col - goalCol);
         int dy = Math.abs(row - goalRow);
-        return CELL_SIZE_IN * (Math.max(dx, dy) + SQRT2_MINUS_1 * Math.min(dx, dy));
+        return Constants.Field.AStar.CELL_SIZE_IN * (Math.max(dx, dy) + Constants.Field.AStar.SQRT2_MINUS_1 * Math.min(dx, dy));
     }
 
     private static Coordinate cellCenter(int col, int row) {
-        return new Coordinate(CELL_SIZE_IN * (col + 0.5), CELL_SIZE_IN * (row + 0.5));
+        return new Coordinate(Constants.Field.AStar.CELL_SIZE_IN * (col + 0.5), Constants.Field.AStar.CELL_SIZE_IN * (row + 0.5));
     }
 
     /** Nearest cell index for a field coordinate, clamped to the grid. */
     private static int snapCell(double coordinate) {
-        int cell = (int) Math.round((coordinate - CELL_SIZE_IN / 2.0) / CELL_SIZE_IN);
-        return Math.max(0, Math.min(CELLS_PER_SIDE - 1, cell));
+        int cell = (int) Math.round((coordinate - Constants.Field.AStar.CELL_SIZE_IN / 2.0) / Constants.Field.AStar.CELL_SIZE_IN);
+        return Math.max(0, Math.min(Constants.Field.AStar.CELLS_PER_SIDE - 1, cell));
     }
 
     /**

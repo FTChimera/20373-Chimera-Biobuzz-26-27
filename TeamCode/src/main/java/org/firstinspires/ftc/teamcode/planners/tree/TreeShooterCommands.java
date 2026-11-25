@@ -9,9 +9,8 @@ import com.rmsftc.cmdlib.cmd.Command;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
-import org.firstinspires.ftc.teamcode.planners.PathPoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.Timings;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import com.rmsftc.utils.math.Pose;
 
@@ -28,14 +27,6 @@ import com.rmsftc.utils.Clock;
  * feeding or advertising the destination as the next leg's start.
  */
 public final class TreeShooterCommands {
-    private static final double SHOOT_SETTLE_MS = 1500;
-    private static final double SETTLE_DWELL_MS = 150;
-    private static final double POSITION_TOLERANCE_IN = 2;
-    private static final double HEADING_TOLERANCE_RAD = Math.toRadians(3);
-    private static final double LINEAR_SPEED_TOLERANCE = 2;
-    private static final double ANGULAR_SPEED_TOLERANCE = Math.toRadians(5);
-    private static final double SWITCH_POSITION_TOLERANCE_IN = 1;
-    private static final double SWITCH_TRAVERSE_TIMEOUT_MS = 6000;
 
     private TreeShooterCommands() {}
 
@@ -60,7 +51,7 @@ public final class TreeShooterCommands {
                 dwelling = true;
                 readySince = now;
             }
-            return elapsedMs(now, readySince) >= SETTLE_DWELL_MS;
+            return elapsedMs(now, readySince) >= Constants.Tree.Shoot.SETTLE_DWELL_MS;
         }
 
         boolean timedOut(long now) {
@@ -82,20 +73,20 @@ public final class TreeShooterCommands {
     }
 
     static Pose shootingHoldPose(Pose actual, Pose intended) {
-        if (Math.hypot(actual.x() - intended.x(), actual.y() - intended.y()) > POSITION_TOLERANCE_IN) {
+        if (Math.hypot(actual.x() - intended.x(), actual.y() - intended.y()) > Constants.Tree.Shoot.POSITION_TOLERANCE_IN) {
             return new Pose(actual.x(), actual.y(), intended.heading());
         }
         return pedroPose(intended);
     }
 
     static boolean canSwitchSides(boolean poseSettled, boolean alreadySwitched, double positionError) {
-        return poseSettled && !alreadySwitched && positionError <= SWITCH_POSITION_TOLERANCE_IN;
+        return poseSettled && !alreadySwitched && positionError <= Constants.Tree.SideSwitch.SWITCH_POSITION_TOLERANCE_IN;
     }
 
     private static boolean settledAt(Follower follower, Pose pose, double positionTolerance) {
         return follower.holding() && follower.hasControlUpdate()
                 && follower.isPoseSettled(pedroPose(pose), positionTolerance,
-                HEADING_TOLERANCE_RAD, LINEAR_SPEED_TOLERANCE, ANGULAR_SPEED_TOLERANCE);
+                Math.toRadians(Constants.Tree.Shoot.HEADING_TOLERANCE_DEG), Constants.Tree.Shoot.LINEAR_SPEED_TOLERANCE_IN_PER_SEC, Math.toRadians(Constants.Tree.Shoot.ANGULAR_SPEED_TOLERANCE_DEG_PER_SEC));
     }
 
     public static ShootCommand shoot(Robot robot, TreeState state, Position intendedSide) {
@@ -121,7 +112,7 @@ public final class TreeShooterCommands {
                                              boolean poseSettled, boolean switched,
                                              double positionError) {
         if (tagSeen) return VisionDecision.SHOOT;
-        if (visionElapsedMs < Timings.hiveLineupTimeoutTime * 1000.0) return VisionDecision.WAIT;
+        if (visionElapsedMs < Constants.Timings.hiveLineupTimeoutTime * 1000.0) return VisionDecision.WAIT;
         if (canSwitchSides(poseSettled, switched, positionError)) return VisionDecision.SWITCH;
         return VisionDecision.BLIND_FEED;
     }
@@ -179,7 +170,7 @@ public final class TreeShooterCommands {
                 warn("Approach endpoint unverified; holding actual position for degraded planned attempt");
             }
             robot.follower.hold(hold);
-            settle = new SettleWindow(Clock.SYSTEM.nowNanos(), SHOOT_SETTLE_MS);
+            settle = new SettleWindow(Clock.SYSTEM.nowNanos(), Constants.Tree.Shoot.SHOOT_SETTLE_MS);
             phase = Phase.SETTLE;
         }
 
@@ -188,7 +179,7 @@ public final class TreeShooterCommands {
             switch (phase) {
                 case SETTLE:
                     poseSettled = settle.settled(
-                            settledAt(robot, TreeState.poseFor(shotSide), POSITION_TOLERANCE_IN), now);
+                            settledAt(robot, TreeState.poseFor(shotSide), Constants.Tree.Shoot.POSITION_TOLERANCE_IN), now);
                     if (!poseSettled && !settle.timedOut(now)) return;
                     if (!poseSettled) warn("Pose/heading/velocity settle timeout; planned batch will still be attempted");
                     // The wait window starts here, after the approach/turn,
@@ -238,7 +229,7 @@ public final class TreeShooterCommands {
                     if (feed.execute() == Status.RUNNING) return;
                     if (feed.attempted()) {
                         boolean positionVerified = robot.getPose().distance(TreeState.poseFor(shotSide))
-                                <= POSITION_TOLERANCE_IN;
+                                <= Constants.Tree.Shoot.POSITION_TOLERANCE_IN;
                         state.recordAttempt(shotSide, feed.outcome(), poseSettled, tagSeen, positionVerified);
                         // Publish selection inputs together, so the reactive tree cannot
                         // preempt this leg between its batch and intake bookkeeping.
@@ -253,7 +244,7 @@ public final class TreeShooterCommands {
                         // marked done) so selection moves on instead of
                         // re-selecting the skipped leg.
                         boolean positionVerified = robot.getPose().distance(TreeState.poseFor(shotSide))
-                                <= POSITION_TOLERANCE_IN;
+                                <= Constants.Tree.Shoot.POSITION_TOLERANCE_IN;
                         state.recordSkippedShot(shotSide, poseSettled, tagSeen, positionVerified);
                         state.markIntakeDone(intakeArea);
                         robot.telemetry.addData("Tree batch skipped",
@@ -270,7 +261,7 @@ public final class TreeShooterCommands {
 
         private void beginFeed() {
             poseSettled = poseSettled
-                    && settledAt(robot, TreeState.poseFor(shotSide), POSITION_TOLERANCE_IN);
+                    && settledAt(robot, TreeState.poseFor(shotSide), Constants.Tree.Shoot.POSITION_TOLERANCE_IN);
             if (!poseSettled) warn("Feeding a planned attempt without measured pose readiness");
             feed = ShooterCommands.shootAllPollen(robot);
             phase = Phase.FEED;
@@ -334,8 +325,8 @@ public final class TreeShooterCommands {
             this.clock = clock;
             fromPose = pedroPose(TreeState.poseFor(fromSide));
             toPose = pedroPose(TreeState.poseFor(TreeState.otherShootPosition(fromSide)));
-            Pose wpFrom = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveSouth : PathPoses.underHiveNorth;
-            Pose wpTo = fromSide == Position.GARDEN_SHOOT ? PathPoses.underHiveNorth : PathPoses.underHiveSouth;
+            Pose wpFrom = fromSide == Position.GARDEN_SHOOT ? Constants.PathPoses.underHiveSouth : Constants.PathPoses.underHiveNorth;
+            Pose wpTo = fromSide == Position.GARDEN_SHOOT ? Constants.PathPoses.underHiveNorth : Constants.PathPoses.underHiveSouth;
             corridorHeading = Math.atan2(wpTo.y() - wpFrom.y(), wpTo.x() - wpFrom.x());
             path = Paths.through(fromPose, wpFrom, wpTo, toPose)
                     .heading(Interpolator.constant(corridorHeading));
@@ -350,13 +341,13 @@ public final class TreeShooterCommands {
             outcome = SwitchOutcome.RUNNING;
             failure = "";
             stage = 0;
-            if (!(follower.localizer.pose().distance(fromPose) <= SWITCH_POSITION_TOLERANCE_IN)) {
+            if (!(follower.localizer.pose().distance(fromPose) <= Constants.Tree.SideSwitch.SWITCH_POSITION_TOLERANCE_IN)) {
                 abort("Side switch start pose not reached");
                 return;
             }
             turnPose = fromPose.withHeading(corridorHeading);
             follower.hold(turnPose);
-            settle = new SettleWindow(clock.nowNanos(), Timings.flowerTurnTimeoutMs);
+            settle = new SettleWindow(clock.nowNanos(), Constants.Timings.flowerTurnTimeoutMs);
         }
 
         @Override public void loop() {
@@ -377,13 +368,13 @@ public final class TreeShooterCommands {
                 }
                 // Parametric end only changes control to endpoint hold; it never authorizes shooting.
                 if (follower.hasPathProgress() && follower.atParametricEnd()) {
-                    if (!(follower.localizer.pose().distance(toPose) <= POSITION_TOLERANCE_IN)) {
+                    if (!(follower.localizer.pose().distance(toPose) <= Constants.Tree.Shoot.POSITION_TOLERANCE_IN)) {
                         abort("Side switch parametric end without measured destination arrival");
                         return;
                     }
                     follower.hold(toPose.withHeading(corridorHeading));
                     stage = 2;
-                    settle = new SettleWindow(now, SHOOT_SETTLE_MS);
+                    settle = new SettleWindow(now, Constants.Tree.Shoot.SHOOT_SETTLE_MS);
                 } else if (settle.timedOut(now)) {
                     abort("Side switch corridor traversal timed out");
                 }
@@ -391,16 +382,16 @@ public final class TreeShooterCommands {
             }
             Pose target = stage == 0 ? turnPose
                     : stage == 2 ? toPose.withHeading(corridorHeading) : toPose;
-            if (settle.settled(settledAt(follower, target, SWITCH_POSITION_TOLERANCE_IN), now)) {
+            if (settle.settled(settledAt(follower, target, Constants.Tree.SideSwitch.SWITCH_POSITION_TOLERANCE_IN), now)) {
                 if (stage == 0) {
                     follower.follow(path);
                     pathRunId = follower.pathRunId();
                     stage = 1;
-                    settle = new SettleWindow(now, SWITCH_TRAVERSE_TIMEOUT_MS);
+                    settle = new SettleWindow(now, Constants.Tree.SideSwitch.SWITCH_TRAVERSE_TIMEOUT_MS);
                 } else if (stage == 2) {
                     follower.hold(toPose);
                     stage = 3;
-                    settle = new SettleWindow(now, Timings.flowerTurnTimeoutMs);
+                    settle = new SettleWindow(now, Constants.Timings.flowerTurnTimeoutMs);
                 } else {
                     outcome = SwitchOutcome.REACHED;
                 }

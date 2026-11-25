@@ -16,12 +16,6 @@ import java.util.function.Supplier;
 
 /** Drive commands own the follower until completion; cancellation stops it immediately. */
 public class DrivetrainCommands {
-    // Inches, radians, inches/sec, radians/sec. Caller-supplied tolerances are
-    // available for measured robot/route-specific settling requirements.
-    public static final double POSITION_TOLERANCE = 0.1;
-    public static final double HEADING_TOLERANCE = 0.007;
-    public static final double LINEAR_VELOCITY_TOLERANCE = 0.1;
-    public static final double ANGULAR_VELOCITY_TOLERANCE = 0.1;
 
     static class FollowCommand extends Command {
         private final Follower follower;
@@ -201,8 +195,8 @@ public class DrivetrainCommands {
     /** Fails explicitly and stops on timeout; never authorizes a side switch on timeout alone. */
     public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
                                                    double timeoutMs) {
-        return followSettledWithTimeout(follower, pathSupplier, timeoutMs, POSITION_TOLERANCE,
-                HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE);
+        return followSettledWithTimeout(follower, pathSupplier, timeoutMs, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.POSITION_TOLERANCE_IN,
+                org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC);
     }
 
     public static Command followSettledWithTimeout(Follower follower, Supplier<Path> pathSupplier,
@@ -217,7 +211,7 @@ public class DrivetrainCommands {
 
     public static Command turnToHeading(Follower follower, double targetHeadingRadians) {
         return new TurnCommand(follower, targetHeadingRadians, Double.POSITIVE_INFINITY,
-                tolerances(HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE),
+                tolerances(org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC),
                 Clock.SYSTEM);
     }
 
@@ -225,7 +219,7 @@ public class DrivetrainCommands {
     public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,
                                                    double timeoutMs) {
         return turnToHeadingWithTimeout(follower, targetHeadingRadians, timeoutMs,
-                HEADING_TOLERANCE, LINEAR_VELOCITY_TOLERANCE, ANGULAR_VELOCITY_TOLERANCE);
+                org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.HEADING_TOLERANCE_RAD, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.LINEAR_VELOCITY_TOLERANCE_IN_PER_SEC, org.firstinspires.ftc.teamcode.planners.Constants.Drivetrain.ANGULAR_VELOCITY_TOLERANCE_RAD_PER_SEC);
     }
 
     public static Command turnToHeadingWithTimeout(Follower follower, double targetHeadingRadians,

@@ -12,8 +12,7 @@ import static org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommand
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.ShootPoses;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import com.rmsftc.utils.math.Pose;
@@ -28,7 +27,7 @@ public class FromStartLoadingPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.loading;
+            return Constants.ShootPoses.loading;
         }
 
         @Override
@@ -52,7 +51,7 @@ public class FromStartLoadingPose {
 
         @Override
         protected void buildPaths() {
-            pathToShoot = Paths.line(startPose, ShootPoses.loading).linear(startPose, ShootPoses.loading);
+            pathToShoot = Paths.line(startPose, Constants.ShootPoses.loading).linear(startPose, Constants.ShootPoses.loading);
         }
 
         @NonNull
@@ -72,12 +71,12 @@ public class FromStartLoadingPose {
         @Override
         protected void buildPaths() {
             super.buildPaths();
-            toVision = Paths.line(ShootPoses.loading, StartPoses.visionAnchorLoading).linear(ShootPoses.loading, StartPoses.visionAnchorLoading);
+            toVision = Paths.line(Constants.ShootPoses.loading, Constants.StartPoses.visionAnchorLoading).linear(Constants.ShootPoses.loading, Constants.StartPoses.visionAnchorLoading);
         }
 
         @Override
         public Pose getEndPose() {
-            return StartPoses.visionAnchorLoading;
+            return Constants.StartPoses.visionAnchorLoading;
         }
 
         @Override
@@ -110,12 +109,12 @@ public class FromStartLoadingPose {
         @Override
         protected void buildPaths() {
             super.buildPaths();
-            toGarden = robot.field.generateTransitPath(ShootPoses.loading, ShootPoses.garden);
+            toGarden = robot.field.generateTransitPath(Constants.ShootPoses.loading, Constants.ShootPoses.garden);
         }
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.garden;
+            return Constants.ShootPoses.garden;
         }
 
         @Override

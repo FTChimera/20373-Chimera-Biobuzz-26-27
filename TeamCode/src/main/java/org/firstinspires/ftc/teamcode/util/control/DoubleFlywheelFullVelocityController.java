@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.util.control;
 
 import com.rmsftc.utils.Clock;
+
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import java.util.Objects;
 import java.util.function.DoubleSupplier;
 
@@ -268,8 +270,8 @@ public class DoubleFlywheelFullVelocityController implements Controller<Double, 
             } catch (RuntimeException e) {
                 measured = Double.NaN;
             }
-            double lo = 0.75 * constants.nominalVoltage;
-            double hi = 1.20 * constants.nominalVoltage;
+            double lo = Constants.Shooter.SmartFlywheel.MIN_VALID_COMPENSATION_RATIO * constants.nominalVoltage;
+            double hi = Constants.Shooter.SmartFlywheel.MAX_VALID_COMPENSATION_RATIO * constants.nominalVoltage;
             if (Double.isFinite(measured) && measured >= lo && measured <= hi) {
                 divisor = measured;
             }

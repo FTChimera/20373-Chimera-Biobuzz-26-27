@@ -10,8 +10,7 @@ import com.pedropathing.paths.interpolator.Interpolator;
 
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.FieldCoordinates;
-import org.firstinspires.ftc.teamcode.planners.FieldPoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import com.rmsftc.utils.AllianceColor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -42,16 +41,16 @@ public class Field {
             // Representative coordinate positions for the Red and Blue alliance target zones
             if (allianceColor.isRed()) {
                 if (this == TIPPED) {
-                    return FieldPoses.redTippedHiveGoal();
+                    return Constants.FieldPoses.redTippedHiveGoal();
                 } else {
-                    return FieldPoses.redUntippedHiveGoal();
+                    return Constants.FieldPoses.redUntippedHiveGoal();
                 }
             }
             if (allianceColor.isBlue()) {
                 if (this == TIPPED) {
-                    return FieldPoses.blueTippedHiveGoal();
+                    return Constants.FieldPoses.blueTippedHiveGoal();
                 } else {
-                    return FieldPoses.blueUntippedHiveGoal();
+                    return Constants.FieldPoses.blueUntippedHiveGoal();
                 }
             }
             return Pose.zero();
@@ -65,11 +64,9 @@ public class Field {
     private Geometry obstacles;
     private Geometry flowerObstacles;
 
-    private static final double TRANSIT_CLEARANCE_INCHES = 1.0;
-
     // Defined loading zones using 24x24 inch floor tiles corners on standard 144x144 field layout
-    public static final Coordinate[] RED_LOADING_ZONE = FieldCoordinates.redLoadingZone();
-    public static final Coordinate[] BLUE_LOADING_ZONE = FieldCoordinates.blueLoadingZone();
+    public static final Coordinate[] RED_LOADING_ZONE = Constants.FieldCoordinates.redLoadingZone();
+    public static final Coordinate[] BLUE_LOADING_ZONE = Constants.FieldCoordinates.blueLoadingZone();
 
     public double botWidth, botLength;
 
@@ -83,17 +80,17 @@ public class Field {
                 geometryFactory.createPolygon(BLUE_LOADING_ZONE);
 
         // Model static obstacles on the field (e.g., Hive structure bases modeled as rectangles)
-        Polygon hiveBase1 = geometryFactory.createPolygon(FieldCoordinates.westHiveBase());
-        Polygon hiveBase2 = geometryFactory.createPolygon(FieldCoordinates.eastHiveBase());
+        Polygon hiveBase1 = geometryFactory.createPolygon(Constants.FieldCoordinates.westHiveBase());
+        Polygon hiveBase2 = geometryFactory.createPolygon(Constants.FieldCoordinates.eastHiveBase());
         obstacles = hiveBase1.union(hiveBase2);
         // FLAGGED CHANGE: FLOWER footprints, flush against the perimeter walls.
         // Kept separate from `obstacles`: the safety-radius buffer applies to the
         // hive only, so flowers join the forbidden space RAW (see the forbiddenSpace
         // line in generatePathToLoadingZoneShortest).
-        Polygon flowerWest = geometryFactory.createPolygon(FieldCoordinates.westFlower());
-        Polygon flowerNorth = geometryFactory.createPolygon(FieldCoordinates.northFlower());
-        Polygon flowerEast = geometryFactory.createPolygon(FieldCoordinates.eastFlower());
-        Polygon flowerSouth = geometryFactory.createPolygon(FieldCoordinates.southFlower());
+        Polygon flowerWest = geometryFactory.createPolygon(Constants.FieldCoordinates.westFlower());
+        Polygon flowerNorth = geometryFactory.createPolygon(Constants.FieldCoordinates.northFlower());
+        Polygon flowerEast = geometryFactory.createPolygon(Constants.FieldCoordinates.eastFlower());
+        Polygon flowerSouth = geometryFactory.createPolygon(Constants.FieldCoordinates.southFlower());
         flowerObstacles = flowerWest.union(flowerNorth).union(flowerEast).union(flowerSouth);
     }
 
@@ -165,8 +162,8 @@ public class Field {
         }
         // Keep the whole body on the field: the center stays half a robot
         // from each wall (the red zone is against the west/north walls).
-        targetX = Math.max(botLength / 2.0, Math.min(144.0 - botLength / 2.0, targetX));
-        targetY = Math.max(botWidth / 2.0, Math.min(144.0 - botWidth / 2.0, targetY));
+        targetX = Math.max(botLength / 2.0, Math.min(Constants.Field.SIZE_IN - botLength / 2.0, targetX));
+        targetY = Math.max(botWidth / 2.0, Math.min(Constants.Field.SIZE_IN - botWidth / 2.0, targetY));
         Pose aLittleInwardPose = PoseFactory.of(targetX, targetY, 0);
 
         // Convert Pedro Pathing Poses
@@ -183,7 +180,7 @@ public class Field {
     }
 
     private List<Pose> transitWaypoints(Pose startPose, Pose endPose) {
-        double radius = Math.hypot(botLength, botWidth) / 2.0 + TRANSIT_CLEARANCE_INCHES;
+        double radius = Math.hypot(botLength, botWidth) / 2.0 + Constants.Field.TRANSIT_CLEARANCE_INCHES;
         BufferParameters parameters = new BufferParameters();
         parameters.setJoinStyle(BufferParameters.JOIN_MITRE);
         Geometry forbidden = BufferOp.bufferOp(obstacles, radius, parameters)
@@ -200,8 +197,8 @@ public class Field {
     }
 
     private static Pose insetForTurning(Pose pose, double radius) {
-        return new Pose(Math.max(radius, Math.min(144 - radius, pose.x())),
-                Math.max(radius, Math.min(144 - radius, pose.y())), pose.heading());
+        return new Pose(Math.max(radius, Math.min(Constants.Field.SIZE_IN - radius, pose.x())),
+                Math.max(radius, Math.min(Constants.Field.SIZE_IN - radius, pose.y())), pose.heading());
     }
 
     private static Path transitSegments(List<Pose> poses) {

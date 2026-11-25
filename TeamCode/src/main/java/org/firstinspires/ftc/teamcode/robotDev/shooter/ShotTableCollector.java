@@ -25,7 +25,7 @@ import java.util.ArrayList;
  * from that distance, press A to record the entry. Press B to delete
  * the last entry. Entries are shown as ready-to-paste
  * {@code new TableEntry(distance, velocity)} lines for BOTH shooterMap
- * and counterRollerMap in TableShotCalc (the two flywheels share one
+ * and counterRollerMap in Constants.Shooter.Table (the two flywheels share one
  * velocity here, so one entry covers both maps).
  */
 @Config
@@ -133,7 +133,7 @@ public class ShotTableCollector extends LinearOpMode {
                     telemetry.addData("Entry " + (i + 1),
                             "new TableEntry(%.1f, %.0f)", entry.distance, entry.flywheelTicksPerSecond);
                 }
-                telemetry.addLine("Paste into BOTH shooterMap and counterRollerMap in TableShotCalc.");
+                telemetry.addLine("Paste into BOTH shooterMap and counterRollerMap in Constants.Shooter.Table.");
             }
             telemetry.update();
         }

@@ -3,8 +3,7 @@ package org.firstinspires.ftc.teamcode.planners.tree;
 import org.firstinspires.ftc.teamcode.planners.Position;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands.ShotOutcome;
 import com.rmsftc.utils.math.Pose;
-import org.firstinspires.ftc.teamcode.planners.ShootPoses;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 
 import java.util.EnumSet;
@@ -321,9 +320,9 @@ public final class TreeState {
     /** The field pose for a {@link Position} (used as a leg's start pose). */
     public static Pose poseFor(Position position) {
         switch (position) {
-            case GARDEN_START: return StartPoses.gardenArea;
-            case GARDEN_SHOOT: return ShootPoses.garden;
-            case LOADING_SHOOT: return ShootPoses.loading;
+            case GARDEN_START: return Constants.StartPoses.gardenArea;
+            case GARDEN_SHOOT: return Constants.ShootPoses.garden;
+            case LOADING_SHOOT: return Constants.ShootPoses.loading;
             default: throw new IllegalArgumentException("Unknown position: " + position);
         }
     }

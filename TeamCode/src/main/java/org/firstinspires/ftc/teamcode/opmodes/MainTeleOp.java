@@ -8,7 +8,7 @@ import com.rmsftc.utils.config.vars.Var;
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
-import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.CompTeleNames;
 import org.firstinspires.ftc.teamcode.util.dashboard.DashboardVars;
 import com.rmsftc.utils.DriveVector;
@@ -27,12 +27,11 @@ import com.rmsftc.utils.DriveVector;
  * priority is REVERSE &gt; PANIC &gt; SMART &gt; OFF, feed follows the shooter
  * mode with eject, auto-fire, slow, and the latched manual fast burst.
  */
-@TeleOp(name = CompTeleNames.TWO_DRIVERS, group = Constants.COMPETITION_GROUP)
+@TeleOp(name = CompTeleNames.TWO_DRIVERS, group = org.firstinspires.ftc.teamcode.pedro.Constants.COMPETITION_GROUP)
 public class MainTeleOp extends ArchitecturalOpMode {
     public static final String NAME = CompTeleNames.ONE_DRIVER;
     public static final Var<Double> AUTO_FIRE_HEADING_TOLERANCE_DEGREES =
-            DashboardVars.doubleVar("TeleOp auto-fire heading tolerance (deg)", 3.0, 0.0, 180.0);
-    private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
+            DashboardVars.doubleVar("TeleOp auto-fire heading tolerance (deg)", Constants.TeleOp.AutoFire.HEADING_TOLERANCE_DEG_DEFAULT, Constants.TeleOp.AutoFire.MIN, Constants.TeleOp.AutoFire.MAX);
 
     private enum ShooterMode { OFF, SMART, PANIC, REVERSE }
     private enum FeedMode { STOP, FAST, SLOW, PANIC, EJECT }
@@ -146,7 +145,7 @@ public class MainTeleOp extends ArchitecturalOpMode {
         }
         if (parkingRequested && !parkingInitiated) {
             double now = robot.getOpModeTimeSeconds();
-            if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+            if (now - lastParkAttemptTimeSec >= Constants.Robot.Park.RETRY_INTERVAL_SEC) {
                 lastParkAttemptTimeSec = now;
                 parkingInitiated = robot.moveToParkZone();
                 if (parkingInitiated) robot.lights.onParkStart();
@@ -168,7 +167,7 @@ public class MainTeleOp extends ArchitecturalOpMode {
         // Robot ignores drive during FOLLOW, but currently accepts it in HOLD.
         // Preserve the actual endpoint, not a new hold at the drifting pose.
         boolean parkHold = parkingInitiated && robot.follower.holding();
-        boolean neutral = !robot.follower.hasInput(drive, 0.1);
+        boolean neutral = !robot.follower.hasInput(drive, Constants.Robot.Drive.INPUT_DEADBAND);
         if (!parkHold || !neutral || aligning) {
             if (parkHold && (!neutral || aligning)) cancelParking();
             robot.setTeleOpDrive(drive, true, false);
@@ -284,7 +283,7 @@ public class MainTeleOp extends ArchitecturalOpMode {
         }
     }
 
-    @TeleOp(name = CompTeleNames.ONE_DRIVER, group = Constants.COMPETITION_GROUP)
+    @TeleOp(name = CompTeleNames.ONE_DRIVER, group = org.firstinspires.ftc.teamcode.pedro.Constants.COMPETITION_GROUP)
     public static class MainTeleOneController extends MainTeleOp {
         public MainTeleOneController() {
             this.oneController = true;

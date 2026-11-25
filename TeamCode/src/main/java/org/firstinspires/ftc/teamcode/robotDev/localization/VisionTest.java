@@ -11,7 +11,6 @@ import org.firstinspires.ftc.teamcode.mechanisms.Vision;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -33,7 +32,7 @@ public class VisionTest extends LinearOpMode {
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
 
         Follower follower = Constants.createFollower(hardwareMap);
-        follower.localizer.setPose(StartPoses.gardenArea);
+        follower.localizer.setPose(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea);
         Vision vision = new Vision(hardwareMap, allianceColor);
         Field field = new Field(allianceColor, 13.835, 17.008);
 

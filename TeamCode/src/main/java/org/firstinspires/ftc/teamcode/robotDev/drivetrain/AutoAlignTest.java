@@ -15,7 +15,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Timer;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -46,7 +45,7 @@ public class AutoAlignTest extends LinearOpMode {
         Constants.PINPOINT_CONFIG.resetMode.set(PinpointLocalizer.ResetMode.RESET_AND_RECALIBRATE_IMU);
         follower = Constants.createFollower(hardwareMap);
         CommonKt.init(AllianceColor.RED);
-        follower.localizer.setPose(StartPoses.gardenArea);
+        follower.localizer.setPose(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.addData("Status", "Initialized.");
         telemetry.addData("Alliance Color", AllianceColor.RED);

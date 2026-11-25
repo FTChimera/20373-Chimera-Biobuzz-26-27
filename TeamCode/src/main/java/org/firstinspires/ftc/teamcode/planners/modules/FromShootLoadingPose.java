@@ -11,13 +11,9 @@ import com.rmsftc.cmdlib.cmd.Commands;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.IntakePoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
-import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.ShootPoses;
-import org.firstinspires.ftc.teamcode.planners.Timings;
-import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -34,7 +30,7 @@ public class FromShootLoadingPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.loading;
+            return Constants.ShootPoses.loading;
         }
 
         @Override
@@ -54,12 +50,12 @@ public class FromShootLoadingPose {
                     // Turn in place from -90 (south) to 90 (north) first,
                     // then drive with a constant north heading -- no
                     // tangent sweep, no heading snap.
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.northFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.IntakePoses.northFlower.heading(), Constants.Timings.flowerTurnTimeoutMs),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Constants.Timings.flowerFollowTimeoutMs, Constants.Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     // Drive back still facing north, then turn in place
                     // to -90 (south) for the shoot.
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.loading.heading(), Timings.flowerTurnTimeoutMs),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.ShootPoses.loading.heading(), Constants.Timings.flowerTurnTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.TIPPED),
                     ShooterCommands.shootAllPollen(robot)
             ).finallyDo(() -> robot.intake.setDeployed(false));
@@ -73,11 +69,11 @@ public class FromShootLoadingPose {
             // run(), so the heading never sweeps with the path tangent and
             // never snaps at t=0.8 the way fastInterpolationDegraded did.
             toFlower = Paths
-                    .curve(startPose, PathPoses.northFlowerFromLoading, IntakePoses.northFlower)
-                    .heading(Interpolator.constant(IntakePoses.northFlower.heading()));
+                    .curve(startPose, Constants.PathPoses.northFlowerFromLoading, Constants.IntakePoses.northFlower)
+                    .heading(Interpolator.constant(Constants.IntakePoses.northFlower.heading()));
             back = Paths
-                    .curve(IntakePoses.northFlower, PathPoses.northFlowerFromLoading, ShootPoses.loading)
-                    .heading(Interpolator.constant(IntakePoses.northFlower.heading()));
+                    .curve(Constants.IntakePoses.northFlower, Constants.PathPoses.northFlowerFromLoading, Constants.ShootPoses.loading)
+                    .heading(Interpolator.constant(Constants.IntakePoses.northFlower.heading()));
         }
 
         @NonNull
@@ -116,7 +112,7 @@ public class FromShootLoadingPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.garden;
+            return Constants.ShootPoses.garden;
         }
 
         @Override
@@ -131,14 +127,14 @@ public class FromShootLoadingPose {
 
         @Override
         protected Command buildCommand() {
-            // The follow legs are bounded at 5 s (Timings.gardenIntakeTimeoutMs,
+            // The follow legs are bounded at 5 s (Constants.Timings.gardenIntakeTimeoutMs,
             // same as the tree versions): an unbounded follow() would hang the
             // whole auto on a wedged robot until the 5 s park window.
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toWall, Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Timings.gardenIntakeTimeoutMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toWall, Constants.Timings.gardenIntakeTimeoutMs),
+                    Commands.waitMs(Constants.Timings.gardenIntakeTimeMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Constants.Timings.gardenIntakeTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -151,8 +147,8 @@ public class FromShootLoadingPose {
             // zone (y 96-120), facing the wall -- the staged pollen sit
             // around the zone centre against the wall.
             toWall = Paths
-                    .curve(startPose, PathPoses.loadingIntakeApproach, PathPoses.loadingIntake)
-                    .heading(CommonKt.fastInterpolationDegraded(PathPoses.loadingIntake.heading(), Values.gardenIntakeConstantTValue, false));
+                    .curve(startPose, Constants.PathPoses.loadingIntakeApproach, Constants.PathPoses.loadingIntake)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.PathPoses.loadingIntake.heading(), Constants.Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
             // hive, then east along the bottom. Rect clearance to the
             // west hive base stays west of x=45 until below y=50
@@ -160,8 +156,8 @@ public class FromShootLoadingPose {
             // t=0.75). Reverse tangential interpolation, as on the
             // other return legs.
             toGarden = Paths
-                    .curve(PathPoses.loadingIntake, PathPoses.loadingToGarden, ShootPoses.garden)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
+                    .curve(Constants.PathPoses.loadingIntake, Constants.PathPoses.loadingToGarden, Constants.ShootPoses.garden)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.ShootPoses.garden.heading(), Constants.Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull
@@ -211,7 +207,7 @@ public class FromShootLoadingPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.garden;
+            return Constants.ShootPoses.garden;
         }
 
         @Override
@@ -226,15 +222,15 @@ public class FromShootLoadingPose {
 
         @Override
         protected Command buildCommand() {
-            // The follow legs are bounded at 5 s (Timings.gardenIntakeTimeoutMs):
+            // The follow legs are bounded at 5 s (Constants.Timings.gardenIntakeTimeoutMs):
             // an unbounded follow() would hang the whole auto on a wedged
             // robot until the 5 s park window.
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toSweepStart, Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> sweep, Timings.gardenIntakeTimeoutMs),
-                    Commands.waitMs(Timings.gardenIntakeTimeMs),
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toSweepStart, Constants.Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> sweep, Constants.Timings.gardenIntakeTimeoutMs),
+                    Commands.waitMs(Constants.Timings.gardenIntakeTimeMs),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> toGarden, Constants.Timings.gardenIntakeTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -246,22 +242,22 @@ public class FromShootLoadingPose {
             // north for the sweep. Disc clearance to the west hive base:
             // 7.1 in; to the partner: 13.6 in.
             toSweepStart = Paths
-                    .curve(startPose, PathPoses.partnerApproach, PathPoses.partnerSweepStart)
-                    .heading(CommonKt.fastInterpolationDegraded(PathPoses.partnerSweepStart.heading(), Values.gardenIntakeConstantTValue, false));
+                    .curve(startPose, Constants.PathPoses.partnerApproach, Constants.PathPoses.partnerSweepStart)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.PathPoses.partnerSweepStart.heading(), Constants.Values.gardenIntakeConstantTValue, false));
             // Straight north up the zone, intake deployed. Centre stops at
             // y = 112; front edge reaches y = 120.5 (past the north tape,
             // 1 in short of the partner's assumed south face). Disc
             // clearance to the partner at the end of the sweep: 1.0 in.
             sweep = Paths
-                    .curve(PathPoses.partnerSweepStart, PathPoses.partnerSweepMid, PathPoses.partnerSweepEnd)
-                    .heading(CommonKt.fastInterpolationDegraded(PathPoses.partnerSweepEnd.heading(), Values.gardenIntakeConstantTValue, false));
+                    .curve(Constants.PathPoses.partnerSweepStart, Constants.PathPoses.partnerSweepMid, Constants.PathPoses.partnerSweepEnd)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.PathPoses.partnerSweepEnd.heading(), Constants.Values.gardenIntakeConstantTValue, false));
             // Back to the garden shoot pose: down the west side past the
             // hive, then east along the bottom. Disc clearance to the
             // west hive base: 7.4 in. Reverse tangential interpolation, as on
             // the other return legs.
             toGarden = Paths
-                    .curve(PathPoses.partnerSweepEnd, PathPoses.loadingToGarden, ShootPoses.garden)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
+                    .curve(Constants.PathPoses.partnerSweepEnd, Constants.PathPoses.loadingToGarden, Constants.ShootPoses.garden)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.ShootPoses.garden.heading(), Constants.Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull
@@ -300,8 +296,8 @@ public class FromShootLoadingPose {
             // Constant west heading -- the inherited run() already turns to
             // 180 (west) before this leg, so no tangent sweep here either.
             toFlower = Paths
-                    .curve(startPose, PathPoses.westFlowerFromLoading, IntakePoses.westFlower)
-                    .heading(Interpolator.constant(IntakePoses.westFlower.heading()));
+                    .curve(startPose, Constants.PathPoses.westFlowerFromLoading, Constants.IntakePoses.westFlower)
+                    .heading(Interpolator.constant(Constants.IntakePoses.westFlower.heading()));
         }
 
         @NonNull

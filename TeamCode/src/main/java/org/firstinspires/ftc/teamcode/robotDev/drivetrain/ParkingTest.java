@@ -10,7 +10,6 @@ import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.RobotMode;
 import org.firstinspires.ftc.teamcode.util.Timer;
@@ -18,7 +17,6 @@ import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.FancyButton;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.GpFancyButton;
 import com.rmsftc.utils.math.Pose;
-import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -42,9 +40,6 @@ public class ParkingTest extends LinearOpMode {
     public static boolean RED_ALLIANCE = false;
     public static StartPosePreset START_POSE_PRESET = StartPosePreset.GARDEN;
     public static boolean USE_CUSTOM_START_POSE = false;
-    public static double CUSTOM_START_X_IN = 9.0;
-    public static double CUSTOM_START_Y_IN = 25.0;
-    public static double CUSTOM_START_HEADING_DEG = 0.0;
 
     private Robot robot;
     private AllianceColor selectedAlliance;
@@ -167,14 +162,16 @@ public class ParkingTest extends LinearOpMode {
         }
 
         if (USE_CUSTOM_START_POSE) {
-            return PoseFactory.deg(CUSTOM_START_X_IN, CUSTOM_START_Y_IN, CUSTOM_START_HEADING_DEG);
+            // The custom start pose was exactly the garden start pose
+            // (9, 25, 0 deg); it now reads straight from the Constants tree.
+            return org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea;
         }
 
         if (START_POSE_PRESET == StartPosePreset.LOADING) {
-            return StartPoses.loadingArea;
+            return org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.loadingArea;
         }
 
-        return StartPoses.gardenArea;
+        return org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea;
     }
 
     private void requestParking(String source) {

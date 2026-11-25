@@ -7,7 +7,7 @@ import org.junit.Test;
 public class UtilityPosesTest {
     @Test
     public void cornerRezeroesUseConfiguredRedPoses() {
-        assertTrue(UtilityPoses.isCornerLoadingAreaConfigured());
-        assertTrue(UtilityPoses.isCornerGardenAreaConfigured());
+        assertTrue(Constants.UtilityPoses.isCornerLoadingAreaConfigured());
+        assertTrue(Constants.UtilityPoses.isCornerGardenAreaConfigured());
     }
 }

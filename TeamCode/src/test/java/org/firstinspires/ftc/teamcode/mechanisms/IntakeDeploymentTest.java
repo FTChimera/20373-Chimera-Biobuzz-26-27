@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.rmsftc.utils.AllianceColor;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.junit.Test;
 
 import java.lang.reflect.Proxy;
@@ -21,11 +22,11 @@ public class IntakeDeploymentTest {
         assertFalse(intake.isDeployed());
         intake.setDeployed(true);
         assertTrue(intake.isDeployed());
-        assertEquals(Intake.DEPLOYER_DEPLOYED_POSITION + Intake.DEPLOYER_TRANSLATION_FACTOR,
+        assertEquals(Constants.Intake.Deployer.DEPLOYED_POSITION + Constants.Intake.Deployer.TRANSLATION_FACTOR,
                 servoPosition[0], 1e-9);
         intake.setDeployed(false);
         assertFalse(intake.isDeployed());
-        assertEquals(Intake.DEPLOYER_STOWED_POSITION + Intake.DEPLOYER_TRANSLATION_FACTOR,
+        assertEquals(Constants.Intake.Deployer.STOWED_POSITION + Constants.Intake.Deployer.TRANSLATION_FACTOR,
                 servoPosition[0], 1e-9);
     }
 

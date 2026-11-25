@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.shotcalc;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
+
 /**
  * Constant-angle projectile model (Desmos form, consistent inches) for the
  * ideal shot: fixed hood angle, solve the wheel speed for the distance.
@@ -35,15 +37,15 @@ public class IdealShotCalc implements ShotCalculator {
         double distance = ctx.distanceToTarget();
         double launchSpeed = ProjectileShotCalc.launchSpeed(
                 distance,
-                ProjectileShotCalc.LAUNCH_ANGLE_DEG,
-                ProjectileShotCalc.LAUNCH_HEIGHT_IN,
-                ProjectileShotCalc.GOAL_HEIGHT_IN);
+                Constants.Shooter.ShotCalc.LAUNCH_ANGLE_DEG,
+                Constants.Shooter.ShotCalc.LAUNCH_HEIGHT_IN,
+                Constants.Shooter.ShotCalc.GOAL_HEIGHT_IN);
         if (!Double.isFinite(launchSpeed)) {
             // Too close for the fixed launch angle: no speed reaches the goal.
             return new ShotSolution(0.0, 0.0);
         }
-        double mainTicks = ProjectileShotCalc.ticksPerSecond(launchSpeed, ProjectileShotCalc.WHEEL_RADIUS_IN);
-        double counterTicks = mainTicks * ProjectileShotCalc.COUNTER_ROLLER_RATIO;
+        double mainTicks = ProjectileShotCalc.ticksPerSecond(launchSpeed, Constants.Shooter.ShotCalc.WHEEL_RADIUS_IN);
+        double counterTicks = mainTicks * Constants.Shooter.ShotCalc.COUNTER_ROLLER_RATIO;
         if (ctx.sotm && ctx.velocity != null) {
             double angleToGoal = ctx.angleToTarget();
             double shotDirX = Math.cos(angleToGoal);

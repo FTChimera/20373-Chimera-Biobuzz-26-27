@@ -16,7 +16,7 @@ import java.util.Objects;
  * legs are passed explicitly, in order, as plain constructor calls.
  *
  * <pre>
- * Command plan = Plan.sequence(Position.GARDEN_START, StartPoses.gardenArea,
+ * Command plan = Plan.sequence(Position.GARDEN_START, Constants.StartPoses.gardenArea,
  *         new FromStartGardenPose.ShootPreloads(robot),
  *         new FromShootGardenPose.ToIntakeGarden(robot));
  * manager.schedule(plan);

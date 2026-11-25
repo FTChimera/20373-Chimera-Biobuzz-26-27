@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import com.rmsftc.utils.AllianceColor;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Vision;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 import com.rmsftc.utils.math.Pose;
 
@@ -351,7 +352,7 @@ public final class CamTransform {
 
 
     public boolean isReliable(double ambiguityThreshold) {
-        return valid && tagCount >= 2 && getAmbiguity() < ambiguityThreshold;
+        return valid && tagCount >= Constants.Vision.Cam.MIN_TAGS_FOR_RELIABLE && getAmbiguity() < ambiguityThreshold;
     }
     public static class HypParams {
         public static double hivePivotHeightIn = 43.95;

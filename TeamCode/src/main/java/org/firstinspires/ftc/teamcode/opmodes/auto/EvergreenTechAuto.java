@@ -11,10 +11,8 @@ import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.Plan;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.pedropathing.api.Paths;
 
-import org.firstinspires.ftc.teamcode.planners.ShootPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
 import com.rmsftc.utils.AllianceColor;
@@ -35,12 +33,11 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
     boolean startParked;
     private boolean started;
     private double lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
-    private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
     @Override
     protected void onInit() {
         OpModeStorage.allianceColor.set(AllianceColor.RED);
-        OpModeStorage.pose.set(StartPoses.loadingArea);
+        OpModeStorage.pose.set(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.loadingArea);
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
@@ -49,10 +46,10 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
 
     @Override
     protected void build(ArchitectureManager manager) {
-        plan = Plan.sequence(Position.LOADING_START, StartPoses.loadingArea,
+        plan = Plan.sequence(Position.LOADING_START, org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.loadingArea,
                 new FromStartLoadingPose.ShootPreloads(robot),
                 new Utils.CustomPath(robot,
-                        robot.field.generatePathToLoadingZoneShortest(ShootPoses.loading, 3)));
+                        robot.field.generatePathToLoadingZoneShortest(org.firstinspires.ftc.teamcode.planners.Constants.ShootPoses.loading, 3)));
         manager.schedule(plan);
     }
 
@@ -77,7 +74,7 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
 
         if ((robot.shouldPark() || (plan != null && !manager.scheduler().isScheduled(plan))) && !startParked) {
             double now = robot.getOpModeTimeSeconds();
-            if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+            if (now - lastParkAttemptTimeSec >= org.firstinspires.ftc.teamcode.planners.Constants.Robot.Park.RETRY_INTERVAL_SEC) {
                 lastParkAttemptTimeSec = now;
                 cancelPlan();
                 startParked = robot.moveToParkZone();

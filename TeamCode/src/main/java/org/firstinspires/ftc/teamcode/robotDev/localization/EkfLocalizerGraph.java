@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Utility;
 
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.pedro.Follower;
-import org.firstinspires.ftc.teamcode.planners.UtilityPoses;
 import com.rmsftc.utils.DriveVector;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 
@@ -55,7 +54,7 @@ public class EkfLocalizerGraph extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Follower follower = Constants.createFollower(hardwareMap);
-        follower.localizer.setPose(UtilityPoses.cornerGardenArea);
+        follower.localizer.setPose(org.firstinspires.ftc.teamcode.planners.Constants.UtilityPoses.cornerGardenArea);
 
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetry.addLine("EKF localizer graph. Drive with gamepad 1 sticks (field-centric).");

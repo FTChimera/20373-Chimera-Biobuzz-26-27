@@ -1,26 +1,17 @@
 package org.firstinspires.ftc.teamcode.util.shotcalc;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
+
 import org.firstinspires.ftc.teamcode.util.interpolation.Interpolate;
 import org.firstinspires.ftc.teamcode.util.math.MathUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class TableShotCalc implements ShotCalculator {
     String debug = "";
-    public static final List<TableEntry> shooterMap = new ArrayList<>();
-    static {
-        shooterMap.add(new TableEntry(36.9, 800));
-        shooterMap.add(new TableEntry(49.5, 820));
-        shooterMap.add(new TableEntry(69.5, 880));
-    }
-    public static final List<TableEntry> counterRollerMap = new ArrayList<>();
-    static {
-        counterRollerMap.add(new TableEntry(30, 600));
-        counterRollerMap.add(new TableEntry(40, 940));
-        counterRollerMap.add(new TableEntry(69.5, 880));
-    }
+    // Shot tables live in Constants.Shooter.Table (read-only listOf).
+    // interpolate() only reads them; nothing mutates them.
 
     @Override
     public ShotSolution calculateShot(ShotContext context) {
@@ -36,8 +27,8 @@ public class TableShotCalc implements ShotCalculator {
         }
         double distanceToTarget = ctx.distanceToTarget();
         debug+=("\ndistanceToTarget: ");debug+=(String.format(Locale.US, "(%.2f)", distanceToTarget));
-        double mainVelocity = interpolate(shooterMap, distanceToTarget);
-        double counterRollerVelocity = interpolate(counterRollerMap, distanceToTarget);
+        double mainVelocity = interpolate(Constants.Shooter.Table.shooterMap, distanceToTarget);
+        double counterRollerVelocity = interpolate(Constants.Shooter.Table.counterRollerMap, distanceToTarget);
         if (ctx.sotm && ctx.velocity != null) {
             // Shoot-on-the-move: the ball inherits robot velocity, so the
             // wheel speed that makes the shot is lower when driving toward

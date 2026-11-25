@@ -11,13 +11,9 @@ import com.rmsftc.cmdlib.cmd.Commands;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.IntakePoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
-import org.firstinspires.ftc.teamcode.planners.PathPoses;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.ShootPoses;
-import org.firstinspires.ftc.teamcode.planners.Timings;
-import org.firstinspires.ftc.teamcode.planners.Values;
 import org.firstinspires.ftc.teamcode.planners.commands.DrivetrainCommands;
 import org.firstinspires.ftc.teamcode.planners.commands.ShooterCommands;
 import org.firstinspires.ftc.teamcode.util.game.Field;
@@ -34,7 +30,7 @@ public class FromShootGardenPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.garden;
+            return Constants.ShootPoses.garden;
         }
 
         @Override
@@ -53,12 +49,12 @@ public class FromShootGardenPose {
                     Commands.runOnce(robot.intake::setFullPower),
                     // Turn in place to 180 (west) first, then drive with a
                     // constant west heading -- no tangent sweep, no snap.
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, IntakePoses.westFlower.heading(), Timings.flowerTurnTimeoutMs),
-                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Timings.flowerFollowTimeoutMs, Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.IntakePoses.westFlower.heading(), Constants.Timings.flowerTurnTimeoutMs),
+                    Commands.parallel(DrivetrainCommands.followForIntake(robot.follower, () -> toFlower, Constants.Timings.flowerFollowTimeoutMs, Constants.Timings.flowerIntakeTime * 1000L), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeDeployTValue, () -> robot.intake.setDeployed(true))),
                     // Drive back still facing west, then turn in place
                     // to 90 (north) for the garden shoot.
-                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
-                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, ShootPoses.garden.heading(), Timings.flowerTurnTimeoutMs),
+                    Commands.parallel(DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.flowerFollowTimeoutMs), DrivetrainCommands.runAtCompletion(robot, Constants.Values.flowerIntakeStowTValue, () -> robot.intake.setDeployed(false))),
+                    DrivetrainCommands.turnToHeadingWithTimeout(robot.follower, Constants.ShootPoses.garden.heading(), Constants.Timings.flowerTurnTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, Field.HiveState.UNTIPPED),
                     ShooterCommands.shootAllPollen(robot)
             ).finallyDo(() -> robot.intake.setDeployed(false));
@@ -68,11 +64,11 @@ public class FromShootGardenPose {
         protected void buildPaths() {
             // Rect clearance to the west hive base: 9.4 in out, 12.1 in back.
             toFlower = Paths
-                    .curve(startPose, PathPoses.westFlowerFromGarden, IntakePoses.westFlower)
-                    .heading(Interpolator.constant(IntakePoses.westFlower.heading()));
+                    .curve(startPose, Constants.PathPoses.westFlowerFromGarden, Constants.IntakePoses.westFlower)
+                    .heading(Interpolator.constant(Constants.IntakePoses.westFlower.heading()));
             back = Paths
-                    .curve(IntakePoses.westFlower, PathPoses.westFlowerReturn, ShootPoses.garden)
-                    .heading(Interpolator.constant(IntakePoses.westFlower.heading()));
+                    .curve(Constants.IntakePoses.westFlower, Constants.PathPoses.westFlowerReturn, Constants.ShootPoses.garden)
+                    .heading(Interpolator.constant(Constants.IntakePoses.westFlower.heading()));
         }
 
         @NonNull
@@ -108,8 +104,8 @@ public class FromShootGardenPose {
             // Constant north heading -- the parent's run() already turns to
             // 90 (north) before this leg, so no tangent sweep here either.
             toFlower = Paths
-                    .curve(startPose, PathPoses.northFlowerFromGarden, IntakePoses.northFlower)
-                    .heading(Interpolator.constant(IntakePoses.northFlower.heading()));
+                    .curve(startPose, Constants.PathPoses.northFlowerFromGarden, Constants.IntakePoses.northFlower)
+                    .heading(Interpolator.constant(Constants.IntakePoses.northFlower.heading()));
         }
 
         @NonNull
@@ -133,7 +129,7 @@ public class FromShootGardenPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.loading;
+            return Constants.ShootPoses.loading;
         }
 
         @Override
@@ -157,8 +153,8 @@ public class FromShootGardenPose {
             // so the robot backs up the west side instead of spinning
             // 180 degrees after the garden intake.
             back = Paths
-                    .curve(IntakePoses.gardenEnd, PathPoses.gardenToLoading, ShootPoses.loading)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.loading.heading(), Values.gardenIntakeConstantTValue, true));
+                    .curve(Constants.IntakePoses.gardenEnd, Constants.PathPoses.gardenToLoading, Constants.ShootPoses.loading)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.ShootPoses.loading.heading(), Constants.Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull
@@ -178,7 +174,7 @@ public class FromShootGardenPose {
 
         @Override
         public Pose getEndPose() {
-            return ShootPoses.garden;
+            return Constants.ShootPoses.garden;
         }
 
         @Override
@@ -205,11 +201,11 @@ public class FromShootGardenPose {
             return Commands.sequence(
                     Commands.runOnce(robot.intake::setFullPower),
                     DrivetrainCommands.followForIntake(robot.follower, () -> toGarden,
-                            Timings.gardenIntakeTimeoutMs, Timings.gardenIntakeTimeMs),
+                            Constants.Timings.gardenIntakeTimeoutMs, Constants.Timings.gardenIntakeTimeMs),
                     // Bounded at 5 s like the tree version: an unbounded
                     // follow() would hang the whole auto on a wedged robot
                     // until the 5 s park window.
-                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Timings.gardenIntakeTimeoutMs),
+                    DrivetrainCommands.followWithTimeout(robot.follower, () -> back, Constants.Timings.gardenIntakeTimeoutMs),
                     ShooterCommands.waitForHiveLineup(robot, lineupState()),
                     ShooterCommands.shootAllPollen(robot)
             );
@@ -218,11 +214,11 @@ public class FromShootGardenPose {
         @Override
         protected void buildPaths() {
             toGarden = Paths
-                    .curve(startPose, IntakePoses.gardenControl1, IntakePoses.gardenEnd)
-                    .heading(CommonKt.fastInterpolationDegraded(IntakePoses.gardenEnd.heading(), Values.gardenIntakeConstantTValue, false));
+                    .curve(startPose, Constants.IntakePoses.gardenControl1, Constants.IntakePoses.gardenEnd)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.IntakePoses.gardenEnd.heading(), Constants.Values.gardenIntakeConstantTValue, false));
             back = Paths
-                    .curve(IntakePoses.gardenEnd, IntakePoses.gardenControl1, ShootPoses.garden)
-                    .heading(CommonKt.fastInterpolationDegraded(ShootPoses.garden.heading(), Values.gardenIntakeConstantTValue, true));
+                    .curve(Constants.IntakePoses.gardenEnd, Constants.IntakePoses.gardenControl1, Constants.ShootPoses.garden)
+                    .heading(CommonKt.fastInterpolationDegraded(Constants.ShootPoses.garden.heading(), Constants.Values.gardenIntakeConstantTValue, true));
         }
 
         @NonNull

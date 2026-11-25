@@ -4,7 +4,7 @@ import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.TuningOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 
 public class DeployerTranslationTuner extends Procedure {
     private static final String DEPLOYER_NAME = "deployer";
@@ -32,12 +32,12 @@ public class DeployerTranslationTuner extends Procedure {
         }
 
         double translationFactor = DeployerTuningControls.translationFactor(
-                groundPosition, Intake.DEPLOYER_GROUND_POSITION);
+                groundPosition, Constants.Intake.Deployer.GROUND_POSITION);
 
         result("groundPosition", groundPosition);
         result("translationFactor", translationFactor);
         code(Language.JAVA,
-                "public static double DEPLOYER_TRANSLATION_FACTOR = "
+                "const val TRANSLATION_FACTOR = "
                         + translationFactor + ";");
     }
 }

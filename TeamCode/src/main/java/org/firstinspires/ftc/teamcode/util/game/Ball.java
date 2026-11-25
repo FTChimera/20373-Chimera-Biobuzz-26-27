@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.util.game;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
+
 public enum Ball {
-    POLLEN(2.8),
-    NECTAR(3.6),
+    POLLEN(Constants.Field.Balls.POLLEN),
+    NECTAR(Constants.Field.Balls.NECTAR),
     UNKNOWN(0.0);
 
     private final double diameter;

@@ -7,8 +7,8 @@ import com.rmsftc.ftc.ArchitecturalOpMode;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootGardenPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromShootLoadingPose;
 import org.firstinspires.ftc.teamcode.planners.modules.FromStartGardenPose;
@@ -81,12 +81,12 @@ public class PlannerTest extends ArchitecturalOpMode {
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose.set(StartPoses.gardenArea);
+        OpModeStorage.pose.set(Constants.StartPoses.gardenArea);
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
-        currentPose = StartPoses.gardenArea;
+        currentPose = Constants.StartPoses.gardenArea;
         tour = new ArrayList<>();
         addStep(new FromStartGardenPose.ShootPreloads(robot));
         addStep(new FromShootGardenPose.ToIntakeGarden(robot));

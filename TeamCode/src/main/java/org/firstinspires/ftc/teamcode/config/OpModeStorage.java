@@ -8,7 +8,7 @@ import com.rmsftc.utils.ftc.utils.Storage;
 import com.rmsftc.utils.ftc.utils.Value;
 
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import com.rmsftc.utils.math.Pose;
 
 /**
@@ -71,7 +71,7 @@ public class OpModeStorage {
     public static final Var<MatchMode> matchMode =
             storedVar("opmodeStorage.matchMode", MATCH_MODE_VALUE, MatchMode.QUALIFICATIONS);
     public static final Var<Pose> pose =
-            storedVar("opmodeStorage.pose", POSE_VALUE, StartPoses.gardenArea);
+            storedVar("opmodeStorage.pose", POSE_VALUE, Constants.StartPoses.gardenArea);
     /** In memory only (see class javadoc): false after every app restart. */
     public static final Var<Boolean> initialized = new Var<>(false);
 
@@ -99,7 +99,7 @@ public class OpModeStorage {
     public static void resetToDefault() {
         allianceColor.set(AllianceColor.RED);
         CommonKt.init(allianceColor.get());
-        pose.set(StartPoses.gardenArea); // Chimera's testing start pose in robotics room
+        pose.set(Constants.StartPoses.gardenArea); // Chimera's testing start pose in robotics room
         matchMode.set(MatchMode.QUALIFICATIONS);
     }
 }

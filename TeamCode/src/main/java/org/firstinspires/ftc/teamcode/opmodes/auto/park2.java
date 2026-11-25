@@ -11,7 +11,6 @@ import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.Plan;
 import org.firstinspires.ftc.teamcode.planners.Position;
-import org.firstinspires.ftc.teamcode.planners.StartPoses;
 import com.pedropathing.api.Paths;
 
 import org.firstinspires.ftc.teamcode.planners.modules.Utils;
@@ -26,11 +25,10 @@ public class park2 extends ArchitecturalOpMode {
     boolean startParked;
     private boolean started;
     private double lastParkAttemptTimeSec = Double.NEGATIVE_INFINITY;
-    private static final double PARK_RETRY_INTERVAL_SEC = 0.5;
 
     @Override
     protected void onInit() {
-        OpModeStorage.pose.set(StartPoses.loadingArea);
+        OpModeStorage.pose.set(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.loadingArea);
         robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
@@ -39,9 +37,9 @@ public class park2 extends ArchitecturalOpMode {
 
     @Override
     protected void build(ArchitectureManager manager) {
-        plan = Plan.sequence(Position.LOADING_START, StartPoses.loadingArea,
+        plan = Plan.sequence(Position.LOADING_START, org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.loadingArea,
                 new Utils.CustomPath(robot,
-                        robot.field.generatePathToLoadingZoneShortest(StartPoses.loadingArea, 3)));
+                        robot.field.generatePathToLoadingZoneShortest(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.loadingArea, 3)));
         manager.schedule(plan);
     }
 
@@ -66,7 +64,7 @@ public class park2 extends ArchitecturalOpMode {
 
         if ((robot.shouldPark() || (plan != null && !manager.scheduler().isScheduled(plan))) && !startParked) {
             double now = robot.getOpModeTimeSeconds();
-            if (now - lastParkAttemptTimeSec >= PARK_RETRY_INTERVAL_SEC) {
+            if (now - lastParkAttemptTimeSec >= org.firstinspires.ftc.teamcode.planners.Constants.Robot.Park.RETRY_INTERVAL_SEC) {
                 lastParkAttemptTimeSec = now;
                 cancelPlan();
                 startParked = robot.moveToParkZone();

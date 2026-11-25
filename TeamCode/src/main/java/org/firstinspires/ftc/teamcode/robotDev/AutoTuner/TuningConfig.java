@@ -4,6 +4,7 @@ import com.aaravdhawan25.pidautotuner.ftc.dashboard.AutoTuneDash;
 import com.aaravdhawan25.pidautotuner.ftc.dashboard.AutoTuneDashboard;
 import com.acmerobotics.dashboard.config.Config;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.Direction;
 
 /**
@@ -72,30 +73,18 @@ public class TuningConfig {
     // ---- Velocity / PIDF tuner ------------------------------------------
 
     /**
-     * Encoder ticks per revolution of the OUTPUT shaft (after any gearing).
-     *
-     * Common values:
-     *   GoBILDA 435 RPM  ->  384.5
-     *   GoBILDA 312 RPM  ->  537.7
-     *   GoBILDA 223 RPM  ->  751.8
-     *   REV HD Hex bare  ->   28.0
-     *   NeveRest 40      -> 1120.0
-     *
-     * Used in the conversion: RPM = (velocity * 60.0) / TICKS_PER_REV
-     */
-    public static double TICKS_PER_REV = 28.0;
-
-    /**
      * Target speed for the velocity tuner in RPM.
      * Set this to the RPM you want to tune around (e.g. your shooting speed).
-     * Converted to ticks/sec internally using TICKS_PER_REV:
+     * Converted to ticks/sec internally using
+     * {@code Constants.Shooter.SmartFlywheel.TICKS_PER_REV}:
      *   ticks/sec = (TARGET_RPM * TICKS_PER_REV) / 60.0
      */
     public static double TARGET_RPM = 2875;
 
     /**
      * Relay deadband for the velocity tuner in RPM.
-     * Converted to ticks/sec internally using TICKS_PER_REV.
+     * Converted to ticks/sec internally using
+     * {@code Constants.Shooter.SmartFlywheel.TICKS_PER_REV}.
      */
     public static double VELOCITY_HYSTERESIS_RPM = 30;
 
@@ -117,25 +106,27 @@ public class TuningConfig {
     /**
      * Returns the target velocity in ticks/sec, converted from TARGET_RPM.
      *
-     * Formula: ticks/sec = (RPM * TICKS_PER_REV) / 60.0
+     * Formula: ticks/sec = (RPM * TICKS_PER_REV) / 60.0, where TICKS_PER_REV
+     * is {@code Constants.Shooter.SmartFlywheel.TICKS_PER_REV}.
      * (inverse of: RPM = (velocity * 60.0) / TICKS_PER_REV)
      */
     public static double targetTicksPerSec() {
-        return (TARGET_RPM * TICKS_PER_REV) / 60.0;
+        return (TARGET_RPM * Constants.Shooter.SmartFlywheel.TICKS_PER_REV) / 60.0;
     }
 
     /**
      * Returns the relay hysteresis in ticks/sec, converted from VELOCITY_HYSTERESIS_RPM.
      */
     public static double hysteresisTicksPerSec() {
-        return (VELOCITY_HYSTERESIS_RPM * TICKS_PER_REV) / 60.0;
+        return (VELOCITY_HYSTERESIS_RPM * Constants.Shooter.SmartFlywheel.TICKS_PER_REV) / 60.0;
     }
 
     /**
      * Converts a velocity in ticks/sec to RPM.
-     * Formula: RPM = (velocity * 60.0) / TICKS_PER_REV
+     * Formula: RPM = (velocity * 60.0) / TICKS_PER_REV, where TICKS_PER_REV
+     * is {@code Constants.Shooter.SmartFlywheel.TICKS_PER_REV}.
      */
     public static double toRPM(double ticksPerSec) {
-        return (ticksPerSec * 60.0) / TICKS_PER_REV;
+        return (ticksPerSec * 60.0) / Constants.Shooter.SmartFlywheel.TICKS_PER_REV;
     }
 }

@@ -2,13 +2,15 @@ package org.firstinspires.ftc.teamcode.util.game;
 
 import com.rmsftc.utils.AllianceColor;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
+
 public class BiobuzzAprilTags {
 
-    public static final Cluster RED_OPPOSITE = new Cluster(30, 31, 32, 33);
-    public static final Cluster RED_AUDIENCE = new Cluster(34, 35, 36, 37);
+    public static final Cluster RED_OPPOSITE = new Cluster(Constants.Field.AprilTags.RED_OPPOSITE);
+    public static final Cluster RED_AUDIENCE = new Cluster(Constants.Field.AprilTags.RED_AUDIENCE);
 
-    public static final Cluster BLUE_OPPOSITE = new Cluster(42, 43, 44, 45);
-    public static final Cluster BLUE_AUDIENCE = new Cluster(38, 39, 40, 41);
+    public static final Cluster BLUE_OPPOSITE = new Cluster(Constants.Field.AprilTags.BLUE_OPPOSITE);
+    public static final Cluster BLUE_AUDIENCE = new Cluster(Constants.Field.AprilTags.BLUE_AUDIENCE);
 
     public final Cluster opposite, alliance;
 

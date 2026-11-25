@@ -4,7 +4,7 @@ import com.pedropathing.tuning.autotune.Procedure;
 import com.pedropathing.tuning.autotune.TuningOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.mechanisms.Intake;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 
 public class DeployerManualTuner extends Procedure {
     private static final String DEPLOYER_NAME = "deployer";
@@ -25,25 +25,25 @@ public class DeployerManualTuner extends Procedure {
         double groundPosition = runOpMode(new DeployerPositionOpMode(
                 DEPLOYER_NAME,
                 "Ground",
-                Intake.DEPLOYER_GROUND_POSITION + Intake.DEPLOYER_TRANSLATION_FACTOR));
+                Constants.Intake.Deployer.GROUND_POSITION + Constants.Intake.Deployer.TRANSLATION_FACTOR));
         double deployedPosition = runOpMode(new DeployerPositionOpMode(
                 DEPLOYER_NAME,
                 "Deployed",
-                Intake.DEPLOYER_DEPLOYED_POSITION + Intake.DEPLOYER_TRANSLATION_FACTOR));
+                Constants.Intake.Deployer.DEPLOYED_POSITION + Constants.Intake.Deployer.TRANSLATION_FACTOR));
         double stowedPosition = runOpMode(new DeployerPositionOpMode(
                 DEPLOYER_NAME,
                 "Stowed",
-                Intake.DEPLOYER_STOWED_POSITION + Intake.DEPLOYER_TRANSLATION_FACTOR));
+                Constants.Intake.Deployer.STOWED_POSITION + Constants.Intake.Deployer.TRANSLATION_FACTOR));
 
         result("groundPosition", groundPosition);
         result("deployedPosition", deployedPosition);
         result("stowedPosition", stowedPosition);
         result("translationFactor", 0.0);
         code(Language.JAVA,
-                "public static double DEPLOYER_GROUND_POSITION = " + groundPosition + ";\n"
-                        + "public static double DEPLOYER_TRANSLATION_FACTOR = 0.0;\n"
-                        + "public static double DEPLOYER_DEPLOYED_POSITION = " + deployedPosition + ";\n"
-                        + "public static double DEPLOYER_STOWED_POSITION = " + stowedPosition + ";");
+                "const val GROUND_POSITION = " + groundPosition + "\n"
+                        + "const val TRANSLATION_FACTOR = 0.0\n"
+                        + "const val DEPLOYED_POSITION = " + deployedPosition + "\n"
+                        + "const val STOWED_POSITION = " + stowedPosition + ";");
     }
 }
 

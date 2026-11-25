@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.Color;
 import org.firstinspires.ftc.teamcode.util.Direction;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import org.firstinspires.ftc.teamcode.util.game.BallCol;
 import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.GoBildaPrismDriver;
 import org.firstinspires.ftc.teamcode.util.hardware.lights.gobilda.PrismAnimations;
@@ -55,11 +56,11 @@ public class Lights {
 
     public PrismAnimations.Pulse.Builder ballColorAnimation = PrismAnimations
             .pulse()
-            .period(500)
+            .period(Constants.Lights.TransferDisplay.BALL_COLOR_PERIOD_MS)
             .indexes(0, lightStrips.numLights()/2 - 1);
      public PrismAnimations.Blink.Builder shootReadyAnimation = PrismAnimations
             .blink()
-            .period(500)
+            .period(Constants.Lights.TransferDisplay.SHOOT_READY_PERIOD_MS)
             .indexes(lightStrips.numLights()/2, lightStrips.numLights()-1);
 
      public PrismAnimations.SineWave teamColorAnimation = PrismAnimations
@@ -214,10 +215,10 @@ public class Lights {
                 .blink()
                 .primaryColor(Color.WHITE)
                 .secondaryColor(Color.TRANSPARENT)
-                .period(300)
-                .primaryColorPeriod(150)
+                .period(Constants.Lights.Events.REZERO_PERIOD_MS)
+                .primaryColorPeriod(Constants.Lights.Events.REZERO_ON_TIME_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 600);
+                .build(), Constants.Lights.Events.REZERO_DURATION_MS);
     }
 
     /** Intake toggled on: cyan pulse. */
@@ -226,9 +227,9 @@ public class Lights {
                 .pulse()
                 .primaryColor(Color.CYAN)
                 .secondaryColor(Color.TRANSPARENT)
-                .period(600)
+                .period(Constants.Lights.Events.INTAKE_ON_PERIOD_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 600);
+                .build(), Constants.Lights.Events.INTAKE_ON_DURATION_MS);
     }
 
     /** Intake toggled off: single orange blink. */
@@ -237,10 +238,10 @@ public class Lights {
                 .blink()
                 .primaryColor(Color.ORANGE)
                 .secondaryColor(Color.TRANSPARENT)
-                .period(400)
-                .primaryColorPeriod(200)
+                .period(Constants.Lights.Events.INTAKE_OFF_PERIOD_MS)
+                .primaryColorPeriod(Constants.Lights.Events.INTAKE_OFF_ON_TIME_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 400);
+                .build(), Constants.Lights.Events.INTAKE_OFF_DURATION_MS);
     }
 
     /** Deployer ramp toggled: cyan double-blink deployed, purple stowed. */
@@ -249,10 +250,10 @@ public class Lights {
                 .blink()
                 .primaryColor(deployed ? Color.CYAN : Color.PURPLE)
                 .secondaryColor(Color.TRANSPARENT)
-                .period(300)
-                .primaryColorPeriod(150)
+                .period(Constants.Lights.Events.DEPLOYER_TOGGLE_PERIOD_MS)
+                .primaryColorPeriod(Constants.Lights.Events.DEPLOYER_TOGGLE_ON_TIME_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 600);
+                .build(), Constants.Lights.Events.DEPLOYER_TOGGLE_DURATION_MS);
     }
 
     /** Eject started: fast red strobe. */
@@ -261,19 +262,19 @@ public class Lights {
                 .blink()
                 .primaryColor(Color.RED)
                 .secondaryColor(Color.TRANSPARENT)
-                .period(200)
-                .primaryColorPeriod(100)
+                .period(Constants.Lights.Events.EJECT_START_PERIOD_MS)
+                .primaryColorPeriod(Constants.Lights.Events.EJECT_START_ON_TIME_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 1000);
+                .build(), Constants.Lights.Events.EJECT_START_DURATION_MS);
     }
 
     /** Shooter spin-up started (Y or keep-shooter-on): white sparkle. */
     public void onShootStart() {
         playEventAnimation(PrismAnimations
                 .sparkle()
-                .period(100)
+                .period(Constants.Lights.Events.SHOOT_START_PERIOD_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 800);
+                .build(), Constants.Lights.Events.SHOOT_START_DURATION_MS);
     }
 
     /** Reverse outtake (jam clear): magenta strobe. */
@@ -282,19 +283,19 @@ public class Lights {
                 .blink()
                 .primaryColor(Color.MAGENTA)
                 .secondaryColor(Color.TRANSPARENT)
-                .period(200)
-                .primaryColorPeriod(100)
+                .period(Constants.Lights.Events.REVERSE_OUTTAKE_PERIOD_MS)
+                .primaryColorPeriod(Constants.Lights.Events.REVERSE_OUTTAKE_ON_TIME_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 1000);
+                .build(), Constants.Lights.Events.REVERSE_OUTTAKE_DURATION_MS);
     }
 
     /** Panic shoot: police lights. */
     public void onPanicStart() {
         playEventAnimation(PrismAnimations
                 .policeLights()
-                .period(400)
+                .period(Constants.Lights.Events.PANIC_START_PERIOD_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 1500);
+                .build(), Constants.Lights.Events.PANIC_START_DURATION_MS);
     }
 
     /** Park drive started: team-blue sine wave. */
@@ -302,12 +303,12 @@ public class Lights {
         playEventAnimation(PrismAnimations
                 .sineWave()
                 .primaryColor(Color.TEAM_COLOR_BLUE)
-                .secondaryColor(Color.TEAM_COLOR_BLUE.dimColor(4.0F))
+                .secondaryColor(Color.TEAM_COLOR_BLUE.dimColor(Constants.Lights.Events.PARK_START_DIM_FACTOR))
                 .direction(Direction.FORWARD)
-                .speed(0.4F)
-                .period(1000)
+                .speed(Constants.Lights.Events.PARK_START_SPEED)
+                .period(Constants.Lights.Events.PARK_START_PERIOD_MS)
                 .indexes(0, lightStrips.numLights() - 1)
-                .build(), 1000);
+                .build(), Constants.Lights.Events.PARK_START_DURATION_MS);
     }
 
     // ---- Code-built displays (not artboard-based) ----
@@ -320,7 +321,7 @@ public class Lights {
         prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0,
                 ballColorAnimation.
                         primaryColor(color).
-                        secondaryColor(color.dimColor(1.4)).
+                        secondaryColor(color.dimColor(Constants.Lights.TransferDisplay.DIM_FACTOR)).
                         build());
         prism.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0,
                 shootReadyAnimation.
@@ -331,14 +332,14 @@ public class Lights {
 
     public void displayAllianceColor() {
         Color primary = Color.fromAlliance(allianceColor);
-        Color dimmed = Color.dimColor(primary, 4.0);
+        Color dimmed = Color.dimColor(primary, Constants.Lights.TeamSine.DIM_FACTOR);
         PrismAnimations.AnimationBase animation = prism
                 .sineWave()
                 .direction(Direction.FORWARD)
                 .primaryColor(primary)
                 .secondaryColor(dimmed)
-                .speed(0.4F)
-                .period(1000)
+                .speed(Constants.Lights.TeamSine.SPEED)
+                .period(Constants.Lights.TeamSine.PERIOD_MS)
                 .indexes(0, lightStrips.numLights()-1)
                 .build();
         currentBase = null; // code-built scene; next status call reloads its artboard
@@ -347,7 +348,7 @@ public class Lights {
 
     public String getDebugString() {return "Gobilda prism indicator";} // TODO
 
-    private enum LightSize {SIX_LED_STRIP_104MM(6), TWELVE_LED_STRIP_200MM(12); private final int numLEDs; LightSize(int numLEDs) { this.numLEDs = numLEDs; } public int getNumLEDs() { return numLEDs; } }
+    private enum LightSize {SIX_LED_STRIP_104MM(Constants.Lights.STRIP_6_LEDS), TWELVE_LED_STRIP_200MM(Constants.Lights.STRIP_12_LEDS); private final int numLEDs; LightSize(int numLEDs) { this.numLEDs = numLEDs; } public int getNumLEDs() { return numLEDs; } }
     private static class LightStrips {
         LightSize[] lightSizes;
         private final int numLights;

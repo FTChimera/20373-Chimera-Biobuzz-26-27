@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.configuration.annotations.ServoType;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import com.rmsftc.utils.Clock;
+
+import org.firstinspires.ftc.teamcode.planners.Constants;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * <p>The firmware is write-only today, so setup-mode and current strip-mode state are host-tracked
  * assumptions rather than read-back facts.
  */
-@ServoType(flavor = ServoFlavor.CUSTOM, usPulseLower = 500, usPulseUpper = 2500)
+@ServoType(flavor = ServoFlavor.CUSTOM, usPulseLower = Constants.Lights.Blinkin.SERVO_PULSE_MIN_US, usPulseUpper = Constants.Lights.Blinkin.SERVO_PULSE_MAX_US)
 @DeviceProperties(
         xmlTag = "FtcBlinkinLedDriver",
         name = "FTC Blinkin Led Driver",
@@ -183,15 +185,11 @@ public class FtcBlinkinLedDriver implements HardwareDevice {
     public static final int MIN_PAYLOAD = 0;
     public static final int MAX_PAYLOAD = 99;
     public static final int FIRST_COLOR_PATTERN_ID = Pattern.HOT_PINK.id();
-    public static final int DEFAULT_FRAME_DURATION_MS = 25;
     public static final Pattern DEFAULT_RESTORE_PATTERN = Pattern.COLOR_WAVES_PARTY;
 
     private static final String TAG = "FtcBlinkinLedDriver";
     private static final double SERVO_POSITION_MIN = 0.0;
     private static final double SERVO_POSITION_MAX = 1.0;
-    private static final int SERVO_PULSE_MIN_US = 500;
-    private static final int SERVO_PULSE_MAX_US = 2500;
-    private static final int NORMAL_PULSE_BASE_US = 1005;
     private static final int NORMAL_PULSE_STEP_US = 10;
     private static final int COMMAND_ENTRY_BASE_US = 2105;
 
@@ -230,7 +228,7 @@ public class FtcBlinkinLedDriver implements HardwareDevice {
                     thread.setDaemon(true);
                     return thread;
                 });
-        initialize(ModeLock.UNLOCKED, DEFAULT_RESTORE_PATTERN, DEFAULT_FRAME_DURATION_MS);
+        initialize(ModeLock.UNLOCKED, DEFAULT_RESTORE_PATTERN, Constants.Lights.Blinkin.DEFAULT_FRAME_DURATION_MS);
     }
 
     public synchronized void initialize(
@@ -449,11 +447,11 @@ public class FtcBlinkinLedDriver implements HardwareDevice {
     }
 
     private static double positionForPattern(Pattern pattern) {
-        return pulseWidthUsToServoPosition(NORMAL_PULSE_BASE_US + (pattern.id() * NORMAL_PULSE_STEP_US));
+        return pulseWidthUsToServoPosition(Constants.Lights.Blinkin.NORMAL_PULSE_BASE_US + (pattern.id() * NORMAL_PULSE_STEP_US));
     }
 
     private static double positionForPayload(int payload) {
-        return pulseWidthUsToServoPosition(NORMAL_PULSE_BASE_US + (payload * NORMAL_PULSE_STEP_US));
+        return pulseWidthUsToServoPosition(Constants.Lights.Blinkin.NORMAL_PULSE_BASE_US + (payload * NORMAL_PULSE_STEP_US));
     }
 
     private static double positionForCommandSlot(int slot) {
@@ -461,17 +459,17 @@ public class FtcBlinkinLedDriver implements HardwareDevice {
     }
 
     private static double pulseWidthUsToServoPosition(int pulseWidthUs) {
-        if (pulseWidthUs < SERVO_PULSE_MIN_US || pulseWidthUs > SERVO_PULSE_MAX_US) {
+        if (pulseWidthUs < Constants.Lights.Blinkin.SERVO_PULSE_MIN_US || pulseWidthUs > Constants.Lights.Blinkin.SERVO_PULSE_MAX_US) {
             throw new IllegalArgumentException(
                     "Pulse width must be in ["
-                            + SERVO_PULSE_MIN_US
+                            + Constants.Lights.Blinkin.SERVO_PULSE_MIN_US
                             + ", "
-                            + SERVO_PULSE_MAX_US
+                            + Constants.Lights.Blinkin.SERVO_PULSE_MAX_US
                             + "] microseconds: "
                             + pulseWidthUs);
         }
 
-        return (double) (pulseWidthUs - SERVO_PULSE_MIN_US) / (SERVO_PULSE_MAX_US - SERVO_PULSE_MIN_US);
+        return (double) (pulseWidthUs - Constants.Lights.Blinkin.SERVO_PULSE_MIN_US) / (Constants.Lights.Blinkin.SERVO_PULSE_MAX_US - Constants.Lights.Blinkin.SERVO_PULSE_MIN_US);
     }
 
     private boolean sleepFrame() {

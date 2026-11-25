@@ -13,6 +13,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import com.rmsftc.utils.AllianceColor;
 import org.firstinspires.ftc.teamcode.util.game.Field;
+import org.firstinspires.ftc.teamcode.planners.Constants;
 
 public class AutoAimerCalculator {
     public boolean useFollowerHold;
@@ -59,14 +60,14 @@ public class AutoAimerCalculator {
                 hivePose.y() - correctedPose.y());
         double launchSpeed = ProjectileShotCalc.launchSpeed(
                 distance,
-                ProjectileShotCalc.LAUNCH_ANGLE_DEG,
-                ProjectileShotCalc.LAUNCH_HEIGHT_IN,
-                ProjectileShotCalc.GOAL_HEIGHT_IN);
+                Constants.Shooter.ShotCalc.LAUNCH_ANGLE_DEG,
+                Constants.Shooter.ShotCalc.LAUNCH_HEIGHT_IN,
+                Constants.Shooter.ShotCalc.GOAL_HEIGHT_IN);
         if (Double.isFinite(launchSpeed)) {
             double shotDirX = Math.cos(targetHeading);
             double shotDirY = Math.sin(targetHeading);
             double[] compensation = ProjectileShotCalc.compensate(
-                    launchSpeed, ProjectileShotCalc.LAUNCH_ANGLE_DEG,
+                    launchSpeed, Constants.Shooter.ShotCalc.LAUNCH_ANGLE_DEG,
                     velocity.vx, velocity.vy, shotDirX, shotDirY);
             if (compensation[0] > 0.0) {
                 targetHeading = Angle.normalize(targetHeading + compensation[1]);
@@ -129,17 +130,17 @@ public class AutoAimerCalculator {
 
     public double calculateTurningPower(double currentHeading) {
         if (!pedro) {
-            return clamp(turningpower * 0.5);
+            return clamp(turningpower * Constants.Shooter.Aimer.TURNING_POWER_GAIN);
         }
         // normalizeSigned, not normalize: the error must keep its sign, or a
         // heading above the target reads as a large positive error and the
         // robot turns the wrong way (clamped to full power).
         double error = Angle.normalizeSigned(targetHeading - currentHeading);
-        double result = error * 0.5; // TODO: tune on auto align test
+        double result = error * Constants.Shooter.Aimer.TURNING_POWER_GAIN; // TODO: tune on auto align test
         return clamp(result);
     }
 
     private double clamp(double value) {
-        return Math.max(-1.0, Math.min(1.0, value));
+        return Math.max(-Constants.Shooter.Aimer.TURNING_POWER_MAX, Math.min(Constants.Shooter.Aimer.TURNING_POWER_MAX, value));
     }
 }

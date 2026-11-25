@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.shotcalc;
 
+import org.firstinspires.ftc.teamcode.planners.Constants;
+
 /**
  * Constant-angle projectile model shared by the ideal and table shot paths
  * (Desmos form, consistent inches) + robot-velocity compensation.
@@ -43,21 +45,16 @@ public final class ProjectileShotCalc {
     private ProjectileShotCalc() {
     }
 
-    public static final double GRAVITY_IN_PER_S2 = 386.09;
-
+    // Model constants live in Constants.Shooter.ShotCalc (gravity, launch
+    // angle/height, goal height, wheel radius, counter-roller ratio); the
+    // ticks/rev lives in Constants.Shooter.SmartFlywheel.
     // MEASURE — replace with the robot's real numbers before trusting this.
     // Starting point from the table fit (see shotcalc-model-draft/README.md):
     // (62.7 deg, 19 in, 1.1 in) with H = 59.55 in.
-    public static final double LAUNCH_ANGLE_DEG = 62.7;   // MEASURE: fixed hood angle (Desmos angle; fit 60-69 deg)
-    public static final double LAUNCH_HEIGHT_IN = 19.0;   // MEASURE: ball release height (fit 7-25 in)
-    public static final double GOAL_HEIGHT_IN = 59.55;    // BIOBUZZ hive opening center, manual Fig 9-10 (53.5-65.6 in)
-    public static final double WHEEL_RADIUS_IN = 1.1;     // MEASURE: flywheel radius (fit 1.05-1.2 in)
-    public static final int TICKS_PER_REV = 28;           // SmartFlywheel.Params(28, 1)
     // TODO: tune — the counter-roller table is non-monotonic (940 at 40 in,
     // 880 at 69.5 in) and needs re-measuring before the ratio means anything.
     // 23435's flywheel calibration (range inversion + line fit) is a concrete
     // method for pinning it.
-    public static final double COUNTER_ROLLER_RATIO = 1.0;
 
     /**
      * Launch speed (in/s) for a stationary shot at horizontal distance
@@ -71,7 +68,7 @@ public final class ProjectileShotCalc {
         if (!(denom > 0.0)) {
             return Double.NaN;
         }
-        return Math.sqrt(GRAVITY_IN_PER_S2 * distance * distance / denom);
+        return Math.sqrt(Constants.Shooter.ShotCalc.GRAVITY_IN_PER_S2 * distance * distance / denom);
     }
 
     /** Projectile flight time (s) for a shot at horizontal distance {@code d}. */
@@ -80,11 +77,11 @@ public final class ProjectileShotCalc {
     }
 
     public static double ticksPerSecond(double linearSpeedInPerS, double wheelRadiusIn) {
-        return linearSpeedInPerS / (2.0 * Math.PI * wheelRadiusIn) * TICKS_PER_REV;
+        return linearSpeedInPerS / (2.0 * Math.PI * wheelRadiusIn) * Constants.Shooter.SmartFlywheel.TICKS_PER_REV;
     }
 
     public static double linearSpeed(double ticksPerSecond, double wheelRadiusIn) {
-        return ticksPerSecond / TICKS_PER_REV * 2.0 * Math.PI * wheelRadiusIn;
+        return ticksPerSecond / Constants.Shooter.SmartFlywheel.TICKS_PER_REV * 2.0 * Math.PI * wheelRadiusIn;
     }
 
     /**
@@ -130,15 +127,15 @@ public final class ProjectileShotCalc {
     public static double compensateTicks(double ticksPerSecond,
                                          double robotVelX, double robotVelY,
                                          double shotDirX, double shotDirY) {
-        double launchSpeed = linearSpeed(ticksPerSecond, WHEEL_RADIUS_IN);
-        double[] comp = compensate(launchSpeed, LAUNCH_ANGLE_DEG,
+        double launchSpeed = linearSpeed(ticksPerSecond, Constants.Shooter.ShotCalc.WHEEL_RADIUS_IN);
+        double[] comp = compensate(launchSpeed, Constants.Shooter.ShotCalc.LAUNCH_ANGLE_DEG,
                 robotVelX, robotVelY, shotDirX, shotDirY);
         if (!(comp[0] > 0.0)) {
             return 0.0;
         }
         double vPerp = -robotVelX * shotDirY + robotVelY * shotDirX;
         double compensatedSpeed = Math.hypot(comp[0], vPerp)
-                / Math.cos(Math.toRadians(LAUNCH_ANGLE_DEG));
-        return ticksPerSecond(compensatedSpeed, WHEEL_RADIUS_IN);
+                / Math.cos(Math.toRadians(Constants.Shooter.ShotCalc.LAUNCH_ANGLE_DEG));
+        return ticksPerSecond(compensatedSpeed, Constants.Shooter.ShotCalc.WHEEL_RADIUS_IN);
     }
 }
