@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.teamcode.config.OpModeStorageSimTest;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotParkingTest;
 import org.firstinspires.ftc.teamcode.mechanisms.SimFakesTest;
 import org.firstinspires.ftc.teamcode.pedro.procedures.EKFPinpointTuningMathTest;
@@ -23,6 +24,11 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
+        // OpModeStorageSimTest MUST stay first: its static initializer sets
+        // the sim override before OpModeStorage first loads (see that
+        // class's javadoc for the load-order trap). No other test may
+        // reference OpModeStorage before it.
+        OpModeStorageSimTest.class,
         RobotParkingTest.class,
         SimFakesTest.class,
         EKFPinpointTuningMathTest.class,
