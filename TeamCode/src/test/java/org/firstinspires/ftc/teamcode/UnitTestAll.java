@@ -12,6 +12,7 @@ import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilterC
 import org.firstinspires.ftc.teamcode.util.control.filters.ExtendedKalmanFilterTest;
 import org.firstinspires.ftc.teamcode.util.game.AStarPathfinderTest;
 import org.firstinspires.ftc.teamcode.util.game.AuditCorrectionsTest;
+import org.firstinspires.ftc.teamcode.util.game.BiobuzzAprilTagsTest;
 import org.firstinspires.ftc.teamcode.util.hardware.actuator.SmartFlywheelParamsTest;
 import org.firstinspires.ftc.teamcode.util.hardware.gamepad.DriveVectorTest;
 import org.firstinspires.ftc.teamcode.util.localization.VisionLocalizationMathTest;
@@ -33,6 +34,7 @@ import org.junit.runners.Suite;
         ExtendedKalmanFilterConvergenceTest.class,
         ExtendedKalmanFilterTest.class,
         AuditCorrectionsTest.class,
+        BiobuzzAprilTagsTest.class,
         AStarPathfinderTest.class,
         SmartFlywheelParamsTest.class,
         DriveVectorTest.class,
