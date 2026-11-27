@@ -21,7 +21,7 @@ import com.rmsftc.utils.DriveVector;
  * until it starts and watches for it to finish.
  *
  * <p>Controls are sampled once per active loop, before arbitration and
- * robot daemons; held overrides never depend on trigger edges.
+ * robot updates; held overrides never depend on trigger edges.
  *
  * <p>The outtake arbitration lives inline in {@link #outtakeLoop()}: shooter
  * priority is REVERSE &gt; PANIC &gt; SMART &gt; OFF, feed follows the shooter

@@ -11,8 +11,6 @@ import com.pedropathing.revhub.localizers.PinpointLocalizer;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
-import com.rmsftc.utils.ftc.DaemonManager;
-import com.rmsftc.utils.ftc.daemons.FTCDaemon;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -32,22 +30,10 @@ import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.shotcalc.AutoAimerCalculator;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
 public class Robot {
-    /** The live Robot, for the static daemon entry points below. */
-    private static Robot current;
-    private static final List<String> ROBOT_DAEMON_ORDER = Arrays.asList(
-            "robot-clock", "robot-battery", "robot-teleop-drive", "robot-vision",
-            "robot-hive-state", "robot-aimer", "robot-follower", "robot-smart-control",
-            "robot-mechanisms", "robot-lights", "robot-debug");
-    private List<DaemonManager.RegisteredDaemon> orderedDaemons;
     private boolean running;
 
     public RobotMode robotMode;
@@ -88,7 +74,7 @@ public class Robot {
                 org.firstinspires.ftc.teamcode.pedro.Constants::createFollower);
     }
 
-    /** Injects time and localization/drive wiring while keeping the real mechanisms and daemon loop. */
+    /** Injects time and localization/drive wiring while keeping the real mechanisms and update loop. */
     public Robot(Telemetry telemetry, HardwareMap hardwareMap, AllianceColor color,
                  RobotMode robotMode, Pose startingPose, Clock clock,
                  Function<HardwareMap, Follower> followerFactory) {
@@ -136,7 +122,6 @@ public class Robot {
 
         this.telemetry = buildTelemetry(telemetry);
         this.telemetry.clearAll();
-        current = this;
     }
 
     /**
@@ -153,12 +138,6 @@ public class Robot {
     }
 
     public void start() {
-        // In sim the Sloth classpath scan that registers @FTCDaemon methods
-        // never runs, so the global registry is empty and the lookup below
-        // would throw on "robot-clock". Register this class's daemons
-        // explicitly first (sim only; on the robot Sloth already did).
-        ensureDaemonsRegistered();
-        orderedDaemons = orderedRobotDaemons();
         clockHelper = new Clock.Helper(clock);
         startNanos = clock.nowNanos();
         lights.start();
@@ -166,101 +145,13 @@ public class Robot {
         running = true;
     }
 
-    /**
-     * Builds the ordered list of the 11 robot daemons from the global
-     * registry, filtered to robot daemons only: the registry also holds
-     * library daemons (FTCUtils ClockManager, BA architecture-tick) that
-     * must not run inside the robot loop. A duplicate registration (e.g. a
-     * re-scan) is deduped instead of throwing, so start() does not die on
-     * loop 1; a missing robot daemon still throws.
-     * Package-private for the regression test.
-     */
-    static List<DaemonManager.RegisteredDaemon> orderedRobotDaemons() {
-        Map<String, DaemonManager.RegisteredDaemon> byName = new LinkedHashMap<>();
-        for (DaemonManager.RegisteredDaemon daemon : DaemonManager.unmodifiable()) {
-            byName.putIfAbsent(daemon.name, daemon);
-        }
-        List<DaemonManager.RegisteredDaemon> ordered = new ArrayList<>();
-        for (String name : ROBOT_DAEMON_ORDER) {
-            DaemonManager.RegisteredDaemon daemon = byName.get(name);
-            if (daemon == null) {
-                throw new IllegalStateException("Expected one " + name + " daemon; found 0");
-            }
-            ordered.add(daemon);
-        }
-        ordered.sort(Comparator.comparingInt(d -> daemonPriority(d.name)));
-        return ordered;
-    }
-
-    /**
-     * In sim only, registers this class's @FTCDaemon methods with the global
-     * registry using the library's own scanner — the same scan Sloth runs on
-     * the robot at app startup, which ftcsim never runs on the desktop JVM.
-     * "robot-clock" is the sentinel: the scan registers all 11 daemons
-     * together, so its presence means a scan already ran (Sloth, or an
-     * earlier start() in this JVM) and re-scanning would only duplicate
-     * registrations. No-op on the robot.
-     * Package-private for the regression test.
-     */
-    static void ensureDaemonsRegistered() {
-        if (!SimEnvironment.isSimulation()) {
-            return;
-        }
-        boolean alreadyRegistered = DaemonManager.unmodifiable().stream()
-                .anyMatch(d -> d.name.equals("robot-clock"));
-        if (!alreadyRegistered) {
-            DaemonManager.DaemonFinder.INSTANCE.scan(Robot.class.getClassLoader(), Robot.class);
-        }
-    }
-
-    /**
-     * One loop of robot work: ticks the FTCUtils daemon registry once.
-     * All periodic work runs in the per-step daemons below (plus
-     * ClockManager's time snapshot, which nothing here depends on).
-     */
     public void update() {
         if (!running) {
             throw new IllegalStateException("Robot must be started before update()");
         }
-        orderedDaemons.forEach(d -> d.daemon.execute());
-    }
-
-    static int daemonPriority(String name) {
-        return ROBOT_DAEMON_ORDER.indexOf(name);
-    }
-
-
-    /** Step 1: advance the loop clock and cache dt for this loop. */
-    @FTCDaemon(name = "robot-clock")
-    public static void clockDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepClock();
-    }
-
-    private void stepClock() {
         clockHelper.update();
         dt = clockHelper.dtSeconds();
-    }
-
-    /** Step 2: refresh the cached battery voltage (300 ms cache). */
-    @FTCDaemon(name = "robot-battery")
-    public static void batteryDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepBattery();
-    }
-
-    private void stepBattery() {
         getBatteryVoltage();
-    }
-
-    /** Step 3: apply this loop's teleop drive input, if any. */
-    @FTCDaemon(name = "robot-teleop-drive")
-    public static void teleOpDriveDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepTeleOpDrive();
-    }
-
-    private void stepTeleOpDrive() {
         if (setTeleOpDrive) {
             if (holdIfNoInput) {
                 follower.driveOrHold(drivePowers);
@@ -269,105 +160,25 @@ public class Robot {
             }
             setTeleOpDrive = false;
         }
-    }
 
-    /** Step 4: update vision with the current heading. */
-    @FTCDaemon(name = "robot-vision")
-    public static void visionDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepVision();
-    }
-
-    private void stepVision() {
         vision.update(getHeading());
-    }
-
-    /** Step 5: refresh the hive tip state from the closest hive pose. */
-    @FTCDaemon(name = "robot-hive-state")
-    public static void hiveStateDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepHiveState();
-    }
-
-    private void stepHiveState() {
         updateHiveStateFromClosestHivePose();
-    }
 
-    /** Step 6: feed the hive state and pose to the auto-aimer. */
-    @FTCDaemon(name = "robot-aimer")
-    public static void aimerDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepAimer();
-    }
-
-    private void stepAimer() {
         autoAimerCalculator.setHiveState(field.getHiveState());
         autoAimerCalculator.updatePedro(getPose(), getVelocity(), dt, Shooter.useSotm.get());
-    }
 
-    /** Step 7: run the follower (path following / teleop drive). */
-    @FTCDaemon(name = "robot-follower")
-    public static void followerDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepFollower();
-    }
-
-    private void stepFollower() {
         // Y released (setAutoAlign not called this loop): drop the
         // shoot-on-the-move heading override before the follower runs.
         if (!autoAlignRequested) follower.headingOverride = null;
         follower.update(dt);
         autoAlignRequested = false;
-    }
-
-    /**
-     * Step 8: automatic intake/shooter control. Manual overrides
-     * (panic / reverse outtake) still win inside smartShooterUpdate.
-     */
-    @FTCDaemon(name = "robot-smart-control")
-    public static void smartControlDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepSmartControl();
-    }
-
-    private void stepSmartControl() {
         if (smartIntakeControl) smartIntakeUpdate();
         if (smartShooterControl) smartShooterUpdate();
-    }
-
-    /** Step 9: per-loop mechanism updates. */
-    @FTCDaemon(name = "robot-mechanisms")
-    public static void mechanismsDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepMechanisms();
-    }
-
-    private void stepMechanisms() {
         intake.update(/*follower.twist()*/);
         transfer.update();
         shooter.update();
-    }
-
-    /** Step 10: lights state machine + LED output. */
-    @FTCDaemon(name = "robot-lights")
-    public static void lightsDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepLights();
-    }
-
-    private void stepLights() {
         lightsControl();
         lights.update();
-    }
-
-    /** Step 11: debug telemetry, when enabled. */
-    @FTCDaemon(name = "robot-debug")
-    public static void debugDaemon() {
-        Robot robot = current;
-        if (robot != null && robot.running) robot.stepDebug();
-    }
-
-    private void stepDebug() {
         if (debug) debug();
     }
 
@@ -401,7 +212,6 @@ public class Robot {
         smartIntakeControl = false;
         smartShooterControl = false;
         setTeleOpDrive = false;
-        if (current == this) current = null;
         stopAllSubsystems();
         follower.stop();
         follower.drivetrain.drive(DriveVector.ZERO, false); // this coasts

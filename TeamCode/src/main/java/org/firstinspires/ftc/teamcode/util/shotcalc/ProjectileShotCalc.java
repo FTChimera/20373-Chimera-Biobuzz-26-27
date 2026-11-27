@@ -36,7 +36,7 @@ import org.firstinspires.ftc.teamcode.planners.Constants;
  * exceeds {@code d tan(c)}), and the compensation returns a non-positive
  * launch speed when the robot is already moving faster than the ball needs to
  * go. Callers turn those into "do not shoot" (0 ticks) or keep the raw
- * bearing — never an exception. The shooter loop and the aimer daemon call
+ * bearing — never an exception. The shooter loop and the aimer update call
  * into here with no guard, and the shooter's up-to-speed gate is false at a
  * zero target, so an infeasible shot times out instead of firing a wrong ball
  * or killing the OpMode.

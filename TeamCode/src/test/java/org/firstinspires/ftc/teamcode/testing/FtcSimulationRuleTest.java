@@ -6,8 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.rmsftc.utils.AllianceColor;
-import com.rmsftc.utils.ftc.DaemonManager;
-import com.rmsftc.utils.ftc.daemons.FTCDaemon;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
@@ -16,9 +14,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class FtcSimulationRuleTest {
     @Rule public final FtcSimulationRule simulation = new FtcSimulationRule();
@@ -52,28 +47,4 @@ public class FtcSimulationRuleTest {
         assertTrue(SimEnvironment.isSimulation());
     }
 
-    @Test
-    public void restoresDaemonRegistrationAfterFailure() throws Throwable {
-        List<DaemonManager.RegisteredDaemon> previous = new ArrayList<>(DaemonManager.unmodifiable());
-        AssertionError expected = new AssertionError("intentional daemon test failure");
-        Statement failing = new Statement() {
-            @Override public void evaluate() {
-                DaemonManager.DaemonFinder.INSTANCE.scan(FtcSimulationRuleTest.class.getClassLoader(),
-                        FtcSimulationRuleTest.class);
-                assertTrue(DaemonManager.unmodifiable().stream()
-                        .anyMatch(daemon -> daemon.name.equals("test-scoped-daemon")));
-                throw expected;
-            }
-        };
-        try {
-            new FtcSimulationRule().apply(failing, Description.EMPTY).evaluate();
-            fail("The original test failure must propagate");
-        } catch (AssertionError actual) {
-            assertSame(expected, actual);
-        }
-        assertEquals(previous, new ArrayList<>(DaemonManager.unmodifiable()));
-    }
-
-    @FTCDaemon(name = "test-scoped-daemon")
-    public static void scopedDaemon() { }
 }

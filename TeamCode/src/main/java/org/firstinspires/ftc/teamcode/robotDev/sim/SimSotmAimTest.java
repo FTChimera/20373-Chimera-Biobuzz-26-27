@@ -104,7 +104,7 @@ public class SimSotmAimTest extends OpMode {
                 robot.setTeleOpDrive(new DriveVector(0, 0, 0), false, false);
                 commandGate = false;
             }
-            robot.update(); // Exactly one tick, including all 11 Robot daemons/localization.
+            robot.update(); // Exactly one robot tick, including localization.
             elapsed = (System.nanoTime() - phaseStart) / 1e9;
             readMetrics();
             Pose pose = robot.getPose();

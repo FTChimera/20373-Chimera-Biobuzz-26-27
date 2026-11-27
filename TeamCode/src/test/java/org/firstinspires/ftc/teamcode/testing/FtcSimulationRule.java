@@ -40,7 +40,7 @@ public final class FtcSimulationRule implements TestRule {
                     double maxPathSpeed = Constants.FOLLOWER_MAX_PATH_SPEED.get();
                     PinpointLocalizer.ResetMode resetMode = Constants.PINPOINT_CONFIG.resetMode.get();
                     clock.set(0);
-                    try (DaemonRegistryScope ignored = new DaemonRegistryScope()) {
+                    try {
                         base.evaluate();
                     } finally {
                         SimEnvironment.setOverride(true);

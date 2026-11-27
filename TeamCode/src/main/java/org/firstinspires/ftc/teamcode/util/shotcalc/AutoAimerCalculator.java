@@ -67,7 +67,7 @@ public class AutoAimerCalculator {
         // heading rotates by atan2(-vPerp, launchHorizontal) — against the
         // robot's sideways drift. When the projectile solve is infeasible
         // compensation is infeasible (robot faster than the required launch
-        // speed), keep the raw bearing: this runs in the aimer daemon every
+        // speed), keep the raw bearing: this runs in the aimer update every
         // tick and must never throw. The offset uses the ideal launch speed;
         // the table the shooter runs differs from it by <1%, so the heading
         // error from that is under 0.2 deg.

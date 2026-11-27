@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorageSimTest;
-import org.firstinspires.ftc.teamcode.mechanisms.RobotDaemonsSimTest;
+import org.firstinspires.ftc.teamcode.mechanisms.RobotUpdateTest;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotDashboardSimTest;
 import org.firstinspires.ftc.teamcode.mechanisms.RobotParkingTest;
 import org.firstinspires.ftc.teamcode.mechanisms.SimFakesTest;
@@ -33,7 +33,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         OpModeStorageSimTest.class,
         RobotDashboardSimTest.class,
-        RobotDaemonsSimTest.class,
+        RobotUpdateTest.class,
         DriveDiagnosticProgressTest.class,
         SimSotmAimMetricsTest.class,
         SimShooterStepMetricsTest.class,

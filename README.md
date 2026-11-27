@@ -95,12 +95,15 @@ JUnit to the robot's `implementation` dependencies.
 
 Use `@Rule public final FtcSimulationRule simulation = new FtcSimulationRule();`
 for robot tests. It enables desktop services before storage initialization and
-restores alliance/pose/match state, SOTM, follower settings, daemon registrations
+restores alliance/pose/match state, SOTM, follower settings
 and environment flags even when a test fails. Advance `simulation.clock` and device physics explicitly;
 never use wall-clock sleeps to wait for a controller to settle. Mockito is a
 **test-only** dependency for final SDK lifecycle/time methods and vendor timers;
 mechanisms, commands, shot calculations and path-control algorithms remain real.
 Unsupported boundaries should fail explicitly, not silently return success.
+`Robot.update()` synchronously advances timing, battery, queued drive, vision,
+hive state, aiming, follower, smart controls, mechanisms and lights, then optional
+debug telemetry; call `start()` first and do not update after `stopEverything()`.
 Use `hardwareMap.register(name, device)` to populate both general lookups and
 SDK `DeviceMapping`s (especially `voltageSensor`); SDK-style `put()` alone is
 not a substitute for complete registration. Wrap tests constructing real SDK

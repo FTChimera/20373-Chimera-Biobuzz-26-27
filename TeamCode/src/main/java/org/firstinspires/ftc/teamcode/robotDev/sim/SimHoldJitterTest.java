@@ -74,7 +74,7 @@ public class SimHoldJitterTest extends OpMode {
             robot.setAutoAlign();
             robot.setSmartShooterControl(true);
             robot.transfer.stop(); // Aim-only: show gates, deliberately never feed.
-            robot.update(); // Sole localization/daemon tick.
+            robot.update(); // Sole robot/localization tick.
             target = robot.autoAimerCalculator.getTargetHeading();
             actual = robot.getHeading();
             speed = Math.hypot(robot.getVelocity().vx, robot.getVelocity().vy);

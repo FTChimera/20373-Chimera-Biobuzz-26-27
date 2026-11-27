@@ -22,7 +22,7 @@ import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Real Robot daemon loop, table solver, auto-aimer, wheel controllers and shot lifecycle. */
+/** Real Robot update loop, table solver, auto-aimer, wheel controllers and shot lifecycle. */
 public class ShootOnMoveSimulationTest {
     @Rule public final FtcSimulationRule simulation = new FtcSimulationRule();
     private RobotRig rig;

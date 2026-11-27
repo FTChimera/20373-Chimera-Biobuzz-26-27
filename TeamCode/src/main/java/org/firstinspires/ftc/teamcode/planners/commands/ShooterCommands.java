@@ -170,7 +170,7 @@ public class ShooterCommands {
         @Override
         public void start() {
             lifecycle.start();
-            // No throw on a zero velocity target: the smart-shooter daemon
+            // No throw on a zero velocity target: the smart-shooter update
             // can legitimately set a (0, 0) target for an infeasible shot
             // (e.g. SOTM over-speed degrades to 0 ticks, "do not shoot"),
             // and that must degrade, not kill the OpMode — BA does not catch
