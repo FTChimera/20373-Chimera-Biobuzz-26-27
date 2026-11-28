@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.ftc.ArchitectureManager;
 import com.rmsftc.ftc.ArchitecturalOpMode;
@@ -25,6 +26,7 @@ import com.rmsftc.utils.RobotMode;
  * at garden, so the loading shoot (TIPPED) works from the start.
  */
 
+@Disabled
 @Autonomous(name = "Evergreen Tech A-trons Auto RED", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class EvergreenTechAuto extends ArchitecturalOpMode {
     Robot robot;
@@ -62,7 +64,7 @@ public class EvergreenTechAuto extends ArchitecturalOpMode {
             robot.start();
             started = true;
         }
-        if (robot.opModeTimeRemaining() <= 0) {
+        if (robot.opModeTimeRemaining() <= 0 || (startParked&&robot.inParkZone()&&robot.getVelocity().toVector2D().magnitude()<=0.2)) {
             stopAutonomous();
             return;
         }

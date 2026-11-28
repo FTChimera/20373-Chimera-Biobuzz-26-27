@@ -55,7 +55,7 @@ public class Garden8 extends ArchitecturalOpMode {
             robot.start();
             started = true;
         }
-        if (robot.opModeTimeRemaining() <= 0) {
+        if (robot.opModeTimeRemaining() <= 0 || (startParked&&robot.inParkZone()&&robot.getVelocity().toVector2D().magnitude()<=0.2)) {
             stopAutonomous();
             return;
         }

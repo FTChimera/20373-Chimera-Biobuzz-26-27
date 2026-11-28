@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.rmsftc.cmdlib.cmd.Command;
 import com.rmsftc.ftc.ArchitectureManager;
 import com.rmsftc.ftc.ArchitecturalOpMode;
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.teamcode.planners.modules.Utils;
 import org.firstinspires.ftc.teamcode.util.poses.PoseFactory;
 import com.rmsftc.utils.RobotMode;
 
+@Disabled
 @Autonomous(name = "Loading park2 HEADING 0", group = Constants.COMPETITION_GROUP, preselectTeleOp = MainTeleOp.NAME)
 public class park2 extends ArchitecturalOpMode {
     Robot robot;
@@ -52,7 +54,7 @@ public class park2 extends ArchitecturalOpMode {
             robot.start();
             started = true;
         }
-        if (robot.opModeTimeRemaining() <= 0) {
+        if (robot.opModeTimeRemaining() <= 0 || (startParked&&robot.inParkZone()&&robot.getVelocity().toVector2D().magnitude()<=0.2)) {
             stopAutonomous();
             return;
         }
