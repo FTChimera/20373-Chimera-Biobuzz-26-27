@@ -15,6 +15,7 @@ import com.rmsftc.utils.telemetry.selection.Select;
 import org.firstinspires.ftc.teamcode.planners.CommonKt;
 
 import java.util.List;
+import java.util.Objects;
 
 @TeleOp
 public class ConfigOpMode extends LinearOpMode {
@@ -27,6 +28,11 @@ public class ConfigOpMode extends LinearOpMode {
         MatchMode storedMatchMode = OpModeStorage.matchMode.get();
 
         Prompter prompter = new Prompter(new TelemetryLogger(telemetry),
+                new Question("Reset All To Default", new Choices(
+                        1,
+                        Select.a("Yes"),
+                        Select.a("No")
+                )),
                 new Question("Alliance", new Choices(
                         storedColor == AllianceColor.BLUE ? 1 : 0,
                         Select.a("Red"), Select.a("Blue"))),
@@ -37,7 +43,7 @@ public class ConfigOpMode extends LinearOpMode {
                 // the only place resetToDefault() is called from a competition
                 // OpMode: MainTeleOp used to call it on init, which silently
                 // clobbered a saved config to BLUE.
-                new Question("Reset to defaults", new Choices(
+                new Question("Pose = " + OpModeStorage.pose.get().toString()+ " \n Reset to garden?", new Choices(
                         0, Select.a("No"), Select.a("Yes"))));
         GamepadMenu menu = new GamepadMenu(prompter, gamepad1);
 
@@ -47,23 +53,27 @@ public class ConfigOpMode extends LinearOpMode {
         telemetry.update();
 
         // Menu phase: runs during init, before waitForStart.
-        while (!isStarted() && !isStopRequested() && !menu.isFinished()) {
+        while (!isStarted() && !isStopRequested() && !(menu.isFinished() || isFirstAnswerYes(menu))) {
             menu.update();
             telemetry.update();
         }
 
-        if (menu.isFinished()) {
+        if (menu.isFinished() || Objects.equals(menu.getAnswers().get(0).name, "Yes")) {
             List<AnswerChoice> answers = menu.getAnswers();
-            if ("Yes".equals(answers.get(2).name)) {
+            if ("Yes".equals(answers.get(0).name)) {
                 OpModeStorage.resetToDefault();
-                telemetry.addLine("Reset to defaults: Blue, Qualifications, garden pose.");
+                telemetry.addData("Resetting all to default", "");
                 telemetry.update();
+                sleep(2000);
                 requestOpModeStop();
                 return;
             }
-            AllianceColor color = "Blue".equals(answers.get(0).name)
+            if ("Yes".equals(answers.get(3).name)) {
+                OpModeStorage.resetPose();
+            }
+            AllianceColor color = "Blue".equals(answers.get(1).name)
                     ? AllianceColor.BLUE : AllianceColor.RED;
-            MatchMode matchMode = "Playoffs".equals(answers.get(1).name)
+            MatchMode matchMode = "Playoffs".equals(answers.get(2).name)
                     ? MatchMode.PLAYOFFS : MatchMode.QUALIFICATIONS;
 
             OpModeStorage.allianceColor.set(color);
@@ -72,9 +82,17 @@ public class ConfigOpMode extends LinearOpMode {
 
             telemetry.addData("Saved Alliance Color", color);
             telemetry.addData("Saved Match Mode", matchMode);
+            telemetry.addData("Saved Pose", OpModeStorage.pose.get().toString());
             telemetry.update();
         }
-
+        waitForStart();
+        sleep(20);
         requestOpModeStop();
+    }
+
+    private boolean isFirstAnswerYes(GamepadMenu menu) {
+        if (menu.getAnswers()==null) return false;
+        if (menu.getAnswers().isEmpty()) return false;
+        return Objects.equals(menu.getAnswers().get(0).name, "Yes");
     }
 }

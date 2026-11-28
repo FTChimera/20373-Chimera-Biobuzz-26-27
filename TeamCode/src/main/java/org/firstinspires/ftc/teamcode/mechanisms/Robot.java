@@ -329,7 +329,7 @@ public class Robot {
                     follower.drivetrain,
                     getPoseCompensatedForVelocity().withHeading(autoAimerCalculator.getTargetHeading()),
                     follower.localizer.state(),
-                    false, // Use hold scaling
+                    true, // Use hold scaling
                     getDt() // in seconds
             ).turn()*Constants.Robot.Drive.AUTO_ALIGN_DAMPENING); // a dampening factor
         } else {

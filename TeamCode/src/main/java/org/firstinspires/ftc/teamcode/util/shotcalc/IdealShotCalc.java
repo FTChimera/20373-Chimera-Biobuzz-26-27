@@ -57,4 +57,9 @@ public class IdealShotCalc implements ShotCalculator {
         }
         return new ShotSolution(mainTicks, counterTicks);
     }
+
+    @Override
+    public String getDebugString() {
+        return "Ideal Shot Calc";
+    }
 }

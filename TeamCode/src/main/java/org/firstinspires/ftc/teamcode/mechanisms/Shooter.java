@@ -1,18 +1,21 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
-import static com.rmsftc.utils.config.vars.kt.TypesKt.BoolVar;
-
 import com.pedropathing.math.Velocity;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import com.rmsftc.utils.AllianceColor;
 import com.rmsftc.utils.Clock;
+
+import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.util.control.Controller;
 import org.firstinspires.ftc.teamcode.util.control.DoubleFlywheelFullVelocityConstants;
 import org.firstinspires.ftc.teamcode.util.game.Field;
 import org.firstinspires.ftc.teamcode.util.Direction;
 import org.firstinspires.ftc.teamcode.util.hardware.actuator.SmartFlywheel;
+
+import com.rmsftc.utils.config.vars.VarProvider;
+import com.rmsftc.utils.ftc.utils.Value;
 import com.rmsftc.utils.math.Pose;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotCalculator;
 import org.firstinspires.ftc.teamcode.util.shotcalc.ShotContext;
@@ -76,10 +79,20 @@ public class Shooter {
      * compensation and the pose-at-release prediction (shot calculators) all
      * turn on together. Static so there is exactly one variable (and one FTC
      * Dashboard entry) shared by every Shooter/Robot; toggled live on the
-     * dashboard — see Robot's constructor, which uploads it. Session only:
-     * it resets to false on app restart.
+     * dashboard — see Robot's constructor, which uploads it.
+     * It uses FTCUtils' storage class to persist after turning the robot off.
      */
-    public static final Var<Boolean> useSotm = BoolVar("Use ShootOnMove (SOTM)", false);
+    public static final Var<Boolean> useSotm = new Var<Boolean>("Use Shoot-On-The-Move", new VarProvider<Boolean>() {
+        @Override
+        public void set(Boolean aBoolean) {
+            OpModeStorage.storage().set("USE SOTM", Value.BOOLEAN, aBoolean);
+        }
+
+        @Override
+        public Boolean get() {
+            return OpModeStorage.storage().get("USE SOTM", Value.BOOLEAN, false);
+        }
+    });
 
     public Shooter(HardwareMap hardwareMap, AllianceColor color) {
         this(hardwareMap, color, Clock.SYSTEM);
@@ -105,7 +118,7 @@ public class Shooter {
         counterRoller.motor.setDirection(Direction.REVERSE.toMotor());
         counterRoller.motor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
-        shotCalculator = ShotCalculator.table();
+        shotCalculator = ShotCalculator.ideal(); //TODO
     }
 
     /** Sets velocity of both motors in ticks per second */
@@ -184,6 +197,13 @@ public class Shooter {
         return "Set Velocity: main=" + target_main_velocity + " counter=" + target_counter_velocity
                 + "\n Get Velocity: main=" + mainMotor.getTicksPerSecond()
                 + " counter=" + counterRoller.getTicksPerSecond()
+                + "\n Motor Power: main=" + mainMotor.motor.raw().getPower()
+                + " counter=" + counterRoller.motor.raw().getPower()
+                + "\n Controller Power: main=" + mainMotor.velocityController.getOutput()
+                + " counter=" + counterRoller.velocityController.getOutput()
+                + "\n Velocity Control: main=" + mainMotor.runningToVelocity
+                + " counter=" + counterRoller.runningToVelocity
+                + "\n Shot Calculator=" + shotCalculator.getClass().getSimpleName()
                 + "\n distance to goal=" + distToGoal;
     }
 

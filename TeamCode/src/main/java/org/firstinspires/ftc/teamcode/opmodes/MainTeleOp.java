@@ -267,6 +267,7 @@ public class MainTeleOp extends ArchitecturalOpMode {
                 robot.setSmartIntakeControl(false);
                 robot.setSmartShooterControl(false);
                 robot.setTeleOpDrive = false;
+                OpModeStorage.setEndVals(robot.getPoseCompensatedForVelocity());
                 try {
                     cancelParking();
                 } finally {
@@ -274,7 +275,7 @@ public class MainTeleOp extends ArchitecturalOpMode {
                 }
             }
         } finally {
-            OpModeStorage.endMatch();
+            //OpModeStorage.endMatch();
         }
     }
 

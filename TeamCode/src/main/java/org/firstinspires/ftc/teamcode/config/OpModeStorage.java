@@ -64,7 +64,7 @@ public class OpModeStorage {
     // exactly as before.
     private static Storage storage;
 
-    private static Storage storage() {
+    public static Storage storage() {
         if (storage == null) storage = new Storage();
         return storage;
     }
@@ -138,7 +138,12 @@ public class OpModeStorage {
     public static void resetToDefault() {
         allianceColor.set(AllianceColor.RED);
         CommonKt.init(allianceColor.get());
-        pose.set(Constants.StartPoses.gardenArea); // Chimera's testing start pose in robotics room
+        resetPose();
         matchMode.set(MatchMode.QUALIFICATIONS);
     }
+
+    public static void resetPose() {
+        pose.set(Constants.StartPoses.gardenArea); // Chimera's testing start pose in robotics room
+    }
+
 }

@@ -23,8 +23,9 @@ import com.rmsftc.utils.Clock;
  * the bounded wait means one measured side switch; still no tag after the
  * switch means a blind feed from the switched side. Missing
  * readiness/tag confirmation degrades a planned batch attempt, not a score.
- * A side switch is attempted at most once and must physically arrive before
- * feeding or advertising the destination as the next leg's start.
+ * Garden preloads stay at garden even without a tag. Later shots attempt at
+ * most one side switch and must physically arrive before feeding or
+ * advertising the destination as the next leg's start.
  */
 public final class TreeShooterCommands {
 
@@ -95,7 +96,11 @@ public final class TreeShooterCommands {
 
     public static ShootCommand shoot(Robot robot, TreeState state, Position intendedSide,
                                      TreeState.IntakeArea intakeArea) {
-        return new ShootCommand(robot, state, intendedSide, intakeArea);
+        return new ShootCommand(robot, state, intendedSide, intakeArea, true);
+    }
+
+    public static ShootCommand shootPreloads(Robot robot, TreeState state) {
+        return new ShootCommand(robot, state, Position.GARDEN_SHOOT, null, false);
     }
 
     /** What the VISION phase does with the latest camera result. Pure. */
@@ -111,9 +116,15 @@ public final class TreeShooterCommands {
     static VisionDecision decideVisionAction(boolean tagSeen, double visionElapsedMs,
                                              boolean poseSettled, boolean switched,
                                              double positionError) {
+        return decideVisionAction(tagSeen, visionElapsedMs, poseSettled, switched, positionError, true);
+    }
+
+    static VisionDecision decideVisionAction(boolean tagSeen, double visionElapsedMs,
+                                             boolean poseSettled, boolean switched,
+                                             double positionError, boolean allowSideSwitch) {
         if (tagSeen) return VisionDecision.SHOOT;
         if (visionElapsedMs < Constants.Timings.hiveLineupTimeoutTime * 1000.0) return VisionDecision.WAIT;
-        if (canSwitchSides(poseSettled, switched, positionError)) return VisionDecision.SWITCH;
+        if (allowSideSwitch && canSwitchSides(poseSettled, switched, positionError)) return VisionDecision.SWITCH;
         return VisionDecision.BLIND_FEED;
     }
 
@@ -124,6 +135,7 @@ public final class TreeShooterCommands {
         private final TreeState state;
         private final Position intendedSide;
         private final TreeState.IntakeArea intakeArea;
+        private final boolean allowSideSwitch;
         private Phase phase;
         private Position shotSide;
         private SettleWindow settle;
@@ -134,12 +146,14 @@ public final class TreeShooterCommands {
         private SideSwitchCommand sideSwitch;
         private ShooterCommands.ShotCommand feed;
 
-        private ShootCommand(Robot robot, TreeState state, Position intendedSide, TreeState.IntakeArea intakeArea) {
+        private ShootCommand(Robot robot, TreeState state, Position intendedSide,
+                             TreeState.IntakeArea intakeArea, boolean allowSideSwitch) {
             TreeState.otherShootPosition(intendedSide);
             this.robot = robot;
             this.state = state;
             this.intendedSide = intendedSide;
             this.intakeArea = intakeArea;
+            this.allowSideSwitch = allowSideSwitch;
             addRequirements(robot.follower, robot.shooter, robot.transfer, robot.intake);
         }
 
@@ -176,6 +190,10 @@ public final class TreeShooterCommands {
 
         @Override public void loop() {
             long now = robot.clock.nowNanos();
+            robot.telemetry.addData("Tree shooting phase", phase);
+            robot.telemetry.addData("Tree shooting side", shotSide);
+            robot.telemetry.addData("Tree shooting tag seen", tagSeen);
+            robot.telemetry.addData("Tree shooting side switch allowed", allowSideSwitch);
             switch (phase) {
                 case SETTLE:
                     poseSettled = settle.settled(
@@ -193,9 +211,10 @@ public final class TreeShooterCommands {
                     // pre-arrival frame; that is the accepted risk of the
                     // plain rule (no freshness/boundary gate).
                     tagSeen = robot.vision.anyAllianceFiducialLatest();
+                    robot.telemetry.addData("Tree shooting tag seen", tagSeen);
                     VisionDecision decision = decideVisionAction(tagSeen, elapsedMs(now, visionStart),
                             poseSettled, switched,
-                            robot.getPose().distance(TreeState.poseFor(shotSide)));
+                            robot.getPose().distance(TreeState.poseFor(shotSide)), allowSideSwitch);
                     if (decision == VisionDecision.WAIT) return;
                     if (decision == VisionDecision.SWITCH) {
                         sideSwitch = switchSides(robot, shotSide);
@@ -203,7 +222,9 @@ public final class TreeShooterCommands {
                         return;
                     }
                     if (decision == VisionDecision.BLIND_FEED) {
-                        warn(switched
+                        warn(!allowSideSwitch
+                                ? "No alliance tag for garden preloads; attempting planned garden batch"
+                                : switched
                                 ? "No alliance tag after side switch; attempting blind batch"
                                 : "No alliance tag; unconfirmed pose prevents safe side switch; attempting planned batch");
                     }

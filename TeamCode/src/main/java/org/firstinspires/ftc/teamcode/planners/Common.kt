@@ -470,15 +470,12 @@ object Constants {
         }
 
         object ShotCalc {
-            // From ProjectileShotCalc. LAUNCH_ANGLE_DEG / LAUNCH_HEIGHT_IN /
-            // WHEEL_RADIUS_IN are MEASURE placeholders (table-fit values).
-            // TICKS_PER_REV lives in SmartFlywheel above, not here.
             const val GRAVITY_IN_PER_S2 = 386.09
-            const val LAUNCH_ANGLE_DEG = 62.7
-            const val LAUNCH_HEIGHT_IN = 19.0
+            const val LAUNCH_ANGLE_DEG = 64.0
+            const val LAUNCH_HEIGHT_IN = 0.0
             const val GOAL_HEIGHT_IN = 59.55
             const val WHEEL_RADIUS_IN = 1.1
-            const val COUNTER_ROLLER_RATIO = 1.0
+            const val COUNTER_ROLLER_RATIO = 0.9
         }
 
         object Table {
@@ -656,14 +653,14 @@ object Constants {
         }
 
         object Drive {
-            // From Robot.update(): drivePowers.scale(0.7) and the 0.35
+            // From Robot.update(): drivePowers.scale(0.7) and the
             // auto-align dampening. NOTE: the source scales by 0.7 in BOTH
             // branches (!isBatteryLowPower ? 0.7 : 0.7) — the low-power
             // branch does nothing (inventory discrepancy #6); kept as-is.
             // INPUT_DEADBAND is the 0.1 in hasInput(DriveVector, 0.1).
             const val SCALE = 0.7
             const val INPUT_DEADBAND = 0.1
-            const val AUTO_ALIGN_DAMPENING = 0.35
+            const val AUTO_ALIGN_DAMPENING = 1.0
         }
 
         object Lights {

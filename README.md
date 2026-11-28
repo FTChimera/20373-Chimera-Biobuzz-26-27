@@ -137,9 +137,18 @@ Examples to copy and adapt:
 | `testing/RobotTestRigTest.java` | Shared battery reaches real consumers; SOTM aiming retains real path translation |
 | `testing/OpModeRunnerTest.java` | Iterative/linear lifecycle, gamepad input, timeout outcomes and failure cleanup |
 | `opmodes/auto/MatchOpModeSimulationTest.java` | Real match OpModes with fake hardware and measured-wheel-speed odometry |
+| `opmodes/auto/GardenSoloAutoSimulationTest.java` | Real GardenSolo tree preloads on both alliances, wheel power/velocity before feed, zero-target safety and Driver STOP |
 
 Paths in this table are relative to
 `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/`.
+
+GardenSolo preloads stay at garden through bounded settling and the no-tag
+lineup wait; missing tags never switch the preload to loading. Zero velocity
+targets skip feeding. Later tree shots retain the intentional no-tag side switch.
+Regression tests use the
+real ideal calculator and production gains, not a replacement tree or readiness
+stub. Nominal simulated wheel motion does not establish physical flywheel motion,
+correct hardware configuration or the cause of a robot-side spinup failure.
 
 The SOTM regression exposed and fixes a follower allocation bug: the live heading
 override now reaches the path algorithm **before** it allocates translation/turn

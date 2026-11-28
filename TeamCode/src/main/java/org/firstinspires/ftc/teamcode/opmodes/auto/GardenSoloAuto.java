@@ -15,6 +15,7 @@ import com.rmsftc.utils.blackboard.Blackboard;
 
 import org.firstinspires.ftc.teamcode.config.OpModeStorage;
 import org.firstinspires.ftc.teamcode.mechanisms.Robot;
+import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
 import org.firstinspires.ftc.teamcode.opmodes.MainTeleOp;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 import org.firstinspires.ftc.teamcode.planners.PathPlanner;
@@ -71,10 +72,15 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
     @Override
     protected void onInit() {
         OpModeStorage.pose.set(org.firstinspires.ftc.teamcode.planners.Constants.StartPoses.gardenArea);
-        robot = new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(), RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
+        robot = createRobot();
         robot.matchMode = OpModeStorage.matchMode.get();
         robot.debug = true;
         robot.setSmartShooterControl(true);
+    }
+
+    protected Robot createRobot() {
+        return new Robot(telemetry, hardwareMap, OpModeStorage.allianceColor.get(),
+                RobotMode.AUTONOMOUS, OpModeStorage.pose.get());
     }
 
     @Override
@@ -136,6 +142,10 @@ public class GardenSoloAuto extends ArchitecturalOpMode {
         }
 
         robot.update();
+        telemetry.addData("GardenSolo smart shooter enabled", robot.smartShooterControl);
+        telemetry.addData("GardenSolo shooter panicking", robot.shooter.panicking());
+        telemetry.addData("GardenSolo shooter reversing", robot.shooter.reversing());
+        telemetry.addData("GardenSolo shooter SOTM", Shooter.useSotm.get());
         telemetry.addData("GardenSolo tree position", state.position());
         telemetry.addData("GardenSolo tree hypothetical hive", state.predictedHiveState());
         telemetry.addData("GardenSolo tree attempted batches", state.attemptedBatches());

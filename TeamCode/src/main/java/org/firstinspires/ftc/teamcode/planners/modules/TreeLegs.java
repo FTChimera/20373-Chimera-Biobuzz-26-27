@@ -21,7 +21,8 @@ import org.firstinspires.ftc.teamcode.planners.tree.TreeState;
  * tree shoot step ({@link TreeShooterCommands#shoot}), which checks the
  * latest camera result after bounded physical settling (plain tag rule:
  * any alliance tag shoots from this side, else one measured side switch).
- * At most one measured side switch is allowed; blind attempts remain explicit.
+ * Garden preloads remain at garden. Later shots allow at most one measured
+ * side switch; blind attempts remain explicit.
  * The shared modules (and the autos that use them) are
  * untouched.
  *
@@ -60,7 +61,7 @@ public final class TreeLegs {
         protected Command buildCommand() {
             return Commands.sequence(
                     DrivetrainCommands.followWithTimeout(robot.follower, () -> pathToShoot, Constants.Tree.Shoot.SHOOT_APPROACH_TIMEOUT_MS, robot.clock),
-                    TreeShooterCommands.shoot(robot, state, Position.GARDEN_SHOOT));
+                    TreeShooterCommands.shootPreloads(robot, state));
         }
 
         @NonNull
